@@ -1568,7 +1568,7 @@ dial charges mass and buys nothing** (how `Amphibious` and `Fluid` were caught).
 | # | Door | Input surface (where to grep) | Size | Why here |
 |---|---|---|---|---|
 | ~~**1**~~ | ✅ **Sensors — DERIVED 2026-07-30 (PART FIVE §32–36).** **Five** dials fail the write-something test (`Resolution` dead AND free · `Scan Time` free · **antenna size free across its whole usable range** · the jammer's self-signature opt-out · two fire-control size dials that cost mass and write nothing, a free 16× saving). And the headline: **the band-matching gate never checks the receiver's upper edge**, so the only receiver in the game (tuned to 600 nm — visible light) detects a reactor at 1705 nm, the wavelength dial has a dominant setting, and the one honest trade (coverage × range² = 39.34) is cancelled — **and the game depends on the bug**, because fixing it alone makes a parked ship undetectable. Seven slices named in §35, **none built**; S0 is blocked on one ruling that also closes the deferred FTL-band question. | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
-| **2** | **Power** | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
+| ~~**2**~~ | ✅ **Power — DERIVED 2026-07-30 (PART SIX §38–44).** Six findings, and the fix was already in the codebase: **the RTG carries `power × lifetime = const × mass`** and the reactor (`50 × Mass`, linear) and turbine do not — so the door needs the law **copied, not invented**. `Lifetime` is a free dial that multiplies onboard fuel without costing mass; the turbine's `Output vs Efficency` is **named after a trade that does not exist** (fuel duration is a constant 4×10⁸ s regardless, and `GennyMass` is computed and unused); a reactor silently adds **kW into a kJ store**; the solar array runs on the **sensor** code so the S0 band ruling reaches Power too; and 🔴 **no power component mounts on a colony** while `SustenanceProcessor` already reads a colony power supply. Six slices in §44, **none blocked on a ruling**. | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
 | **3** | **Chassis** | `Ships/ShipHullAtb` · `GroundCombat/GroundChassisAtb` · `Stations/StationChassisAtb` · `Colonies/BuildingChassisAtb` (all four already share `IChassisAtb`) | 4 | **The door every other door mounts on.** Its budget is what every *"and it costs mass"* claim spends against — so deriving it here means the remaining four derive against a **real** budget. Mostly derivation-not-build: the interface, the mass-budget computation and an enforcement flag all exist. |
 | **4** | **Logistical** | `Storage/` CargoStorageAtb · CargoTransferAtb; `Combat/ShipMagazineAtb`; `GroundCombat/` GroundMagazineAtb · GroundBayAtb; `Logistics/LogiBaseAtb` | ~6 | **It is owed two debts.** Propulsion's intrinsic test **cut fuel load and sent it here** (§23.1); Weapons and Propulsion both sent **magazines** here. Also holds the **one confirmed dead attribute found so far — `LogiBaseAtb` has ZERO readers anywhere outside its own file.** |
 | **5** | **Command** | `People/AdminSpaceAtb` · `Sites/CommandBerthAtb` | 2 | Small, but it is the chassis the **Governance/Delegation** design bolts onto — and that design already says it is *mostly CONNECT, not build*. Do it **before Civic**, whose academies and admin overlap it. |
@@ -1587,7 +1587,7 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
 | Door | Prediction |
 |---|---|
 | **Sensors** | Richest remaining door. Expect the two axes to be **what you can see × what you emit**, with EMCON as the posture. `CloakAtb`/`JammerAtb` are the likeliest dead-or-thin pair. The **band** question (§26c.1) becomes a real dial once a second receiver type exists. → **SCORED §36: two axes ✅ · richest ✅ · dead pair ❌** — cloak and jammer are among the best-built attributes in the door; the rot is in the OLDEST (the passive sensor and the fire control). 🔒 *Look hardest at the oldest attribute, not the newest.* |
-| **Power** | Healthy but **under-dialled** — likely one honest trade (**output ↔ storage**, or output ↔ mass) and little else. May turn out to need *adding*, like Propulsion. |
+| **Power** | Healthy but **under-dialled** — likely one honest trade (**output ↔ storage**, or output ↔ mass) and little else. May turn out to need *adding*, like Propulsion. → **SCORED §43: under-dialled ✅ · needs-adding-like-Propulsion ✅ · the guessed trade ❌** (it is output ↔ **endurance**, and it is **already implemented on the RTG**) · **"little else" ❌** (six findings, including an unbuildable colony power plant with a live consumer). 🔒 *And the §36 "look at the oldest attribute" lesson held on its first test.* |
 | **Chassis** | Mostly already right. The finding will be about the **budget**, not the dials: whether four chassis kinds need four budget *currencies* or one. |
 | **Logistical** | At least one confirmed dead dial (`LogiBaseAtb`). Expect the door to collapse to **capacity × what-it-holds**, with the two owed items (fuel tankage, magazines) landing cleanly. |
 | **Command** | Thin. Expect *"this is a delegation seat, not a component dial"* — i.e. most of it belongs to the Governance design, not here. |
@@ -1910,3 +1910,208 @@ outputs decide _whether_ you fight (row 2), _whether you can shoot back_ (row 3)
 _whether the economy can start at all_ (row 6).** It is the most load-bearing door derived so far — and it is the one
 with five dials that write nothing and a broken gate underneath. **The gap between what this door decides and how
 carefully it is built is the widest found in the project.**
+
+---
+
+# PART SIX — POWER (door 2 of the remaining eight, derived 2026-07-30)
+
+Smallest door on the list — three attributes — and it took the §36 lesson as its first instruction: **look hardest at
+the oldest attribute.** That is exactly where the findings were.
+
+## 38. STEP 1 — THE INPUT SURFACE (three attributes, five templates)
+
+| Attribute | Templates | Player dials | What the sim reads it for |
+|---|---|---|---|
+| `Energy/EnergyGenerationAtb` | `reactor` · `rtg` · `steam-turbine-reactor` | **Mass · Lifetime** (reactor) · **Mass · Operational Lifetime** (RTG) · **Mass · Output vs Efficency** (turbine) | `EnergyGenAbilityDB.MaxOutputFromReactor`, `LocalFuel` |
+| `Energy/EnergyStoreAtb` | `battery-bank` | **Mass** | `EnergyGenAbilityDB.EnergyStoreMax` |
+| `Energy/EnergySolarGenerationAtb` | `solarArray` | **Area · Ideal Absorption Wavelength · Bandwidth** | solar output, via the **sensor receiver** code |
+
+**Where it goes** — and the list is short but load-bearing:
+
+| Consumer | What power decides there |
+|---|---|
+| `WarpMoveCommand:258` | **the departure gate** — stored energy below the bubble creation cost and the ship cannot leave |
+| `WarpMoveProcessor:244–246` | **the transit bill** — sustain charged per second, so a long crossing can strand you |
+| `MilitaryReach:156–160` | **the AI's reachability read** — it checks a ship's stored energy against its bubble cost before planning |
+| `WeaponSupply` → `GroundUnitAssembly` | 🔒 **the ground supply GATE** — an energy weapon on a ground unit is refused unless mounted reactors supply its watts |
+| `SustenanceProcessor:51` | colony **power shortage** → morale — *see §39.6, which is the problem* |
+
+## 39. STEP 3–4 — BOTH TESTS APPLIED. SIX FINDINGS, AND THE FIX IS ALREADY IN THE CODEBASE.
+
+### 39.1 🔑 THE HEADLINE — the RTG already has the trade the reactor lacks. Copy it, do not invent it.
+
+Work the three generators' arithmetic out and they are **not three variations on one law — they are one that has the
+law and two that do not.**
+
+```
+REACTOR   Power Output = 50 × Mass                      ← strictly LINEAR. bigger is better, full stop.
+          Lifetime is a separate FREE dial (§39.2)
+
+RTG       Fuel             = Mass × 0.5
+          Fuel Consumption = 0.001 ÷ Operational Lifetime
+          Power Output     = Fuel × Efficiency × Fuel Consumption
+        ⇒ Power ∝ Mass ÷ Lifetime      i.e.   POWER × LIFETIME = const × MASS      ← the zero-sum, already built
+
+TURBINE   Generator Output ∝ Output-vs-Efficency        ← and nothing pays for it (§39.3)
+```
+
+> 🔒 **So the Power door does not need a trade invented; it needs the RTG's law applied to the other two.**
+> `output × endurance = const × size` — **run hot and refuel often, or sip and run for years.** That is the same
+> `T·v = 2P` shape as thrust ↔ exhaust velocity, the gearbox, the warp bubble, the jump range and the gate cycle.
+> **Six places now, one law.**
+
+And it is a genuinely good decision because the two ends serve different fleets: a warship wants peak output for the
+warp bubble and the beam batteries; a picket or an outpost wants to sit still for a decade without a tanker.
+
+### 39.2 🔴 `Lifetime` is a FREE dial — and it is physically wrong as well
+
+`EnergyGenerationAtb.cs:60` — `genDB.LocalFuel = maxUse * Lifetime`. So Lifetime multiplies the fuel you carry
+aboard. And the reactor's mass formula is `PropertyValue('Mass')` — **`Lifetime` is not in it.** Its range is
+**1 to 87,600 hours**, so a player sets it to the maximum and carries **ten times the fuel for nothing.**
+
+**Fuel has mass.** This is not merely a free win, it is a free win that breaks conservation — and it is the same class
+of error as Sensors' scan time (§34.2). Fixing it *is* §39.1: once output × lifetime is the trade, a long life costs
+output, and the fuel it carries costs mass.
+
+### 39.3 🔴 The turbine's `Output vs Efficency` is a dial NAMED AFTER A TRADE THAT DOES NOT EXIST
+
+Follow the chain in `energy.json`:
+
+```
+CoreMass       = Mass × OvE × 0.01
+FuelMass       = CoreMass × 0.6
+CoreOutput     = FuelMass × 100 × 1.0
+Fuel Burn Rate = CoreOutput ÷ 40e9
+FuelDuration   = FuelMass ÷ Fuel Burn Rate
+               = FuelMass × 40e9 ÷ (FuelMass × 100)
+               = 4 × 10⁸ seconds        ← CONSTANT. independent of the dial AND of mass.
+```
+
+**Every steam turbine in the game has exactly the same fuel duration (~12.7 years), whatever you set.** Meanwhile
+`GeneratorOutput = CoreOutput × 0.8` rises straight with the dial. So the dial only ever adds output, at no cost in
+efficiency or endurance: **crank it to 70.**
+
+And `GennyMass` (`= Mass − CoreMass`) is **computed and never used** — the generator efficiency is a hard-coded `0.8`,
+not derived from the generator's mass. The design clearly intended *core vs generator* to be the trade. The arithmetic
+forgot to connect it. **This is the clearest "the name promises a decision the numbers do not deliver" case found so
+far** — and it is a warning about reading a template's dial names as evidence.
+
+### 39.4 🔴 A reactor is silently also a BATTERY, and the units do not match
+
+`EnergyGenerationAtb.cs:65,70` — `genDB.EnergyStoreMax[EnergyTypeID] += PowerOutputMax`.
+
+`PowerOutputMax` is **kW**; `EnergyStoreMax` is **kJ**. So installing a reactor adds storage equal to **exactly one
+second of its own output**, by dimensional accident. Two consequences: the `battery-bank` is partly redundant (a
+reactor is its own small battery), and the number is dimensionally wrong, so any future balance pass on storage will
+be fighting a hidden term. **Either make it deliberate (`store += output × someSeconds`, a stated buffer) or remove
+it.**
+
+### 39.5 🔑 THE SOLAR ARRAY RUNS ON THE SENSOR CODE — so §34.5's bug reaches into POWER
+
+`solarArray` builds an `EnergySolarGenerationAtb` whose constructor is the **same waveform + best/worst-efficiency
+shape** as `SensorReceiverAtb`, and `SensorReceiverAtb` itself carries an `IsEnergyGen` flag with a dedicated
+constructor overload. Absorption is band-matched the same way detection is.
+
+```
+Best Efficiency = tech-panel-efficiency × (tech-panel-bandwidth × 0.5 ÷ Bandwidth)     ← narrower band, better panel
+```
+
+**That is the same coverage ↔ efficiency zero-sum as the sensor's bandwidth dial (§34.6)** — the seventh place one law
+turns up. And it means the ruling on **S0** (fix the overlap test + add an infrared band) **changes solar output too.**
+🔒 **One decision now touches three doors: Sensors, Power, and the deferred FTL band.** Worth knowing before it is
+made, not after.
+
+### 39.6 🔴 NO POWER COMPONENT CAN BE BUILT ON A COLONY — and the colony power-shortage code reads a supply that cannot exist
+
+Mount types, straight from `energy.json`:
+
+| Template | Mounts |
+|---|---|
+| `reactor` | ShipComponent, ShipCargo, Fighter, GroundUnit, Station |
+| `rtg` · `steam-turbine-reactor` | ShipComponent, ShipCargo, Fighter, GroundUnit |
+| `battery-bank` | ShipComponent, ShipCargo, Fighter |
+| `solarArray` | **`1`** — a raw integer that happens to equal `ComponentMountType.ShipComponent` |
+
+**Not one of the five includes `PlanetInstallation`.** So a colony can never mount a generator — and yet
+`SustenanceProcessor:51` reads `province.TryGetDataBlob<EnergyGenAbilityDB>()` for the colony's power supply, feeding
+the power-shortage term that drives morale. **The consumer is built and the producer is unbuildable.**
+
+It does not bite *today* only because colony power demand is still calibrated to zero (`SustenanceTests`: *"inert by
+default — 0 demand → 0 shortage"*). **The moment M5b's demand is turned on, there is no power plant a player can
+build to answer it.** That is a cradle-to-grave hole with a live consumer already waiting at the end of it.
+
+*(And `solarArray`'s `MountType: 1` works only by numeric coincidence. Every other template names its mounts. It also
+means the one generator that needs no fuel cannot be put on a colony — the most obvious thing a player would try.)*
+
+## 40. STEP 2 — THE DOOR: three answers, and they are exclusive per part
+
+| Answer | Job | Its sliders | State |
+|---|---|---|---|
+| **Generate** | burn something | size · **output ↔ endurance** | 🔴 the trade exists on the RTG only (§39.1) |
+| **Collect** | absorb starlight | area · band centre · bandwidth | ✅ honest — and it is the sensor's trade (§39.5) |
+| **Store** | hold it | size | ⚠ linear, and reactors already add storage by accident (§39.4) |
+
+**Exclusive per part** (§1a: a part burns, collects or holds — never two), and the whole door is **one question: where
+does the energy come from, and how long do you want it to last?**
+
+## 41. STEP 5 — DOES IT REPRODUCE WHAT EXISTS? Yes, and it tightens two of them.
+
+| Component today | Answer | Under the derived door |
+|---|---|---|
+| Reactor | Generate | size + **output ↔ endurance** *(gains the trade; Lifetime stops being free)* |
+| RTG | Generate | **already exactly this** — the reference implementation |
+| Steam Turbine | Generate | size + **output ↔ endurance** *(replaces a dial that promised a trade it never had)* |
+| Battery Bank | Store | size — unchanged |
+| Solar Array | Collect | area + band centre + bandwidth — unchanged, and honest |
+
+**Nothing needs inventing and nothing needs deleting.** Two of the three generators adopt a law the third already runs.
+
+## 42. STEP 6 — WHAT GOES OUT, EVERY ROW MARKED
+
+| # | What leaves | Goes to | Play state | **What it changes about how the game is PLAYED** |
+|---|---|---|---|---|
+| 1 | **Stored energy** | `WarpMoveCommand:258` | ✅ LIVE | 🔴 **A flat battery is a ship that cannot leave.** Power generation and FTL reach are one decision, and the player is never told. |
+| 2 | **Stored energy** | `MilitaryReach:156` | ✅ LIVE | **The AI will not plan an attack it cannot power** — so your enemy's generator sizing decides when it comes for you. |
+| 3 | **Sustained output** | `WarpMoveProcessor:246` (per second) | ✅ LIVE | **How far one charge carries you.** Output sets the crossing you can afford, not just the one you can start. |
+| 4 | **Sustained output** | `WeaponSupply` → `GroundUnitAssembly` | ✅ LIVE | 🔒 **The ground supply gate** — *a Titan can carry a laser, infantry cannot.* The clearest place in the game where Power decides what a unit may even be. |
+| 5 | **Output, as SIGNATURE** | `SensorSignatureAtb(1700 K, output × 0.1 × mass)` | ✅ LIVE | 🔴 **The reactor is the loudest thing on a ship** — 100× a thruster plume (§34.5). **Your generator sizing is your stealth**, and nothing in either door says so. |
+| 6 | **Solar output** | band-matched absorption | ✅ LIVE | **Orbit and star colour matter** — and the S0 ruling will change this number (§39.5). |
+| 7 | **Colony power supply** | `SustenanceProcessor:51` → morale | 🔵 **HALF** | 🔴 **Unreachable — no generator mounts on a colony (§39.6).** The consumer is built; the producer cannot be constructed. |
+| 8 | **`Lifetime`** | `LocalFuel` | ✅ LIVE **but free** | **Nothing, because it costs nothing.** Priced (§39.1) it becomes the endurance half of the door's only trade. |
+| 9 | **Turbine `Output vs Efficency`** | `GeneratorOutput` only | 🔵 **HALF** | 🔴 **A dial named after a trade that does not exist** — fuel duration is a constant 4×10⁸ s regardless. |
+| 10 | **Reactor-as-battery** | `EnergyStoreMax += PowerOutputMax` | 🔵 **HALF** | **A hidden dimensional term** (kW into a kJ store) that any storage balance pass will fight. |
+| 11 | **output ↔ endurance** | would gate warp reach *and* ground weapons | 🔴 PROPOSED | **The door's whole decision.** A warship runs hot for its bubble and its beams; a picket sips and sits for a decade. Two fleets, one dial. |
+| 12 | **The generator destroyed** | Damage → `ReCalcAbilities` | ✅ LIVE | 🔑 **Shoot the reactor out and the ship is stranded** — it cannot warp, and its energy weapons go quiet. The grave rung, and it is already real. |
+
+**7 LIVE · 4 HALF · 1 PROPOSED · 0 NEW.** Same pattern as Sensors: the outputs are load-bearing and the dials are not.
+
+## 43. SCORING THE §30 PREDICTION — the diagnosis right, the specifics wrong
+
+§30 predicted: *"Healthy but **under-dialled** — likely one honest trade (**output ↔ storage**, or output ↔ mass) and
+little else. May turn out to need *adding*, like Propulsion."*
+
+- ✅ **"Under-dialled" and "needs adding, like Propulsion": CONFIRMED**, and strongly — the reactor is `50 × Mass` and
+  nothing else.
+- ❌ **The guessed trade was wrong.** Not output ↔ storage. **Output ↔ endurance** — and I did not predict that it
+  would **already be implemented on one of the three generators.**
+- ❌ **"And little else" was wrong.** Six findings, including a colony that can never build a power plant while the
+  code that consumes colony power is already written.
+
+🔒 **And the §36 lesson held on its first test.** It said *look hardest at the oldest attribute*. `EnergyGenerationAtb`
+and `EnergyStoreAtb` are original, un-annotated, convention-free files — and they hold §39.1, §39.2 and §39.4. The
+newest thing in the door (the solar/sensor band sharing) is the only part that is already honest.
+
+## 44. THE CHEAP WINS, ranked (not built)
+
+| # | Slice | Why it is cheap | What it changes about PLAY |
+|---|---|---|---|
+| **P1** | **Give the reactor and the turbine the RTG's law** — `output × lifetime = const × size` | the formula already exists on a shipped template; it is a copy, not a design | 🔴 **The door gets its decision.** Warship-hot vs outpost-frugal, and it prices `Lifetime` at the same time. |
+| **P2** | **Replace the turbine's `Output vs Efficency`** with that same trade (§39.3) | one template; the dial's slot already exists | Removes a dial that promises a decision it never delivers, and connects `GennyMass`. |
+| **P3** | **Add `PlanetInstallation` to a generator** — the solar array is the obvious one (§39.6) | one mount flag | 🔴 **A colony can answer a power shortage.** Closes a cradle-to-grave hole whose consumer already exists. |
+| **P4** | **Fix `solarArray`'s `MountType: 1`** to named flags | data hygiene | None directly — but it is a landmine (it works by numeric coincidence). |
+| **P5** | **Decide the reactor-as-battery term** (§39.4) — deliberate buffer, or remove | one line | Makes storage balanceable instead of secretly pre-loaded. |
+| **P6** | **Publish output ↔ signature** as a readout (row 5 of §42) | Failure-A: the number exists, unwired | 🔴 **Tells the player their generator is their stealth.** The single biggest unstated coupling in the game. |
+
+**No ruling is blocked here** — every slice above is decidable from the derivation. ⚠ But **S0 (Sensors) now touches
+this door** (§39.5), so the band ruling should be made before P6 is calibrated.
+
