@@ -200,6 +200,132 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>
+        /// 🔒 EVERY AUTHORED COLONY, NOT JUST EARTH — the data-only gauge that closes the hole the
+        /// Earth-shaped one left, and it exists because that hole cost a red CI run.
+        ///
+        /// <para><b>The mistake it prevents, stated plainly:</b> the sibling test below asserts the start colony can
+        /// hold what it mines, and I reported its blast radius as <em>"Earth is the only colony blueprint in the base
+        /// mod"</em>. <b>That was wrong.</b> Earth is the only file spelling the key <c>StartingItems</c>; the three
+        /// NPC faction files spell it <c>startingItems</c> and carry <b>five more colonies between them</b>
+        /// (uef-devtest ×1, umf ×4). A grep for the exact PascalCase string found one file and I read that as
+        /// "one colony". <b>A blast-radius check that keys on spelling is not a blast-radius check.</b></para>
+        ///
+        /// <para>Two real regressions got through on that reading: <c>battery-bank</c> was re-costed to
+        /// <c>lithium-battery</c> while three factions unlocked the bank and not the cell (a hard
+        /// <c>resourceCosting</c> throw on New Game — it red-lit three CI shards), and UMF's <b>Venus</b> starts with
+        /// 3,000 <c>hydrocarbons</c>, which had just been moved from dry bulk to <c>fuel-storage</c> — a class Venus
+        /// provided none of, so its opening stockpile had nowhere to go.</para>
+        ///
+        /// <para><b>This walks the JSON directly</b> — every scenario file, every colony in it, accepting either
+        /// spelling — and asserts two things per colony: every good in its opening <c>cargo</c> has a compartment among
+        /// its <c>installations</c> that can hold that cargo class, and every id it references is defined. No running
+        /// game, so it is fast and it covers the NPC factions the scenario harness never builds.</para>
+        /// </summary>
+        [Test]
+        [Description("Every colony in every scenario file — not just Earth — can physically hold the cargo it starts with. Walks the JSON directly, accepting both the StartingItems and startingItems spellings, because keying a blast-radius check on one spelling is what let two regressions through: a battery bank re-costed to a cell three factions had not unlocked, and a Venus stockpile of hydrocarbons after that good moved to fuel storage.")]
+        public void EveryAuthoredColony_CanHoldTheCargoItStartsWith()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            var templates = AllTemplates(s);
+
+            string root = System.IO.Path.Combine("Data", "basemod", "ScenarioFiles");
+            Assert.That(System.IO.Directory.Exists(root), Is.True,
+                $"scenario files are laid down next to the tests ({root})");
+
+            // ── good id → the cargo class it needs ───────────────────────────────────────────────
+            // Minerals and materials come from the faction store. COMPONENT DESIGNS are cargo too
+            // (a crated part rides in a hold — uef.json ships 5 'default-design-merlin'), and their
+            // class lives on the TEMPLATE, so they are resolved separately. Reading the raw designs
+            // file rather than the faction's ComponentDesigns is deliberate: the faction store holds
+            // only what THIS faction unlocked, and this gauge must judge NPC colonies too.
+            var classOf = new Dictionary<string, string>();
+            foreach (var g in data.CargoGoods.GetAll().Values) classOf[g.UniqueID] = g.CargoTypeID;
+
+            var providesOf = new Dictionary<string, List<string>>();
+            string designsFile = System.IO.Path.Combine(root, "designs", "componentDesigns.json");
+            foreach (var e in Newtonsoft.Json.Linq.JArray.Parse(System.IO.File.ReadAllText(designsFile)))
+            {
+                var pay = e["Payload"]; if (pay == null) continue;
+                string did = (string)pay["UniqueId"], tid = (string)pay["TemplateId"];
+                if (did == null || tid == null || !templates.TryGetValue(tid, out var t)) continue;
+
+                if (!string.IsNullOrEmpty(t.CargoTypeID)) classOf[did] = t.CargoTypeID;   // crated part as cargo
+
+                foreach (var prop in t.Properties ?? new List<ComponentTemplatePropertyBlueprint>())
+                {
+                    if (!(prop.AttributeType ?? "").Contains("CargoStorageAtb")) continue;
+                    // AtbConstrArgs('general-storage', …)  and  AtbConstrArgs(UniqueID('fuel-storage'), …)
+                    var m = Regex.Match(prop.PropertyFormula ?? "", @"'([\w-]+)'");
+                    if (!m.Success) continue;
+                    if (!providesOf.TryGetValue(did, out var l)) providesOf[did] = l = new List<string>();
+                    l.Add(m.Groups[1].Value);
+                }
+            }
+
+            // ── files that are NOT live, each with its reason (the §46f allow-list idiom) ────────
+            var superseded = new Dictionary<string, string>
+            {
+                ["uef.json"] = "SUPERSEDED and dead — nothing loads it. The DevTest start names its three files "
+                             + "explicitly (NewGameMenu.cs:955 → uef-devtest.json · umf.json · kithrin.json) and this "
+                             + "is not one of them; it also still uses the old file-path design format "
+                             + "('componentDesigns/cargoHold-1t.json') rather than design ids. Left unpatched on "
+                             + "purpose: fixing dead data hides the fact that it is dead.",
+            };
+
+            int checkedColonies = 0, skipped = 0;
+            var problems = new List<string>();
+
+            foreach (var file in System.IO.Directory.GetFiles(root, "*.json", System.IO.SearchOption.AllDirectories))
+            {
+                string name = System.IO.Path.GetFileName(file);
+                Newtonsoft.Json.Linq.JObject doc;
+                try { doc = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(file)); }
+                catch { continue; }                                    // not an object-shaped scenario file
+                if (!(doc["colonies"] is Newtonsoft.Json.Linq.JArray colonies)) continue;
+
+                if (superseded.TryGetValue(name, out var why))
+                { skipped += colonies.Count; Log($"  ⏭ {name} skipped — {why}"); continue; }
+
+                foreach (var col in colonies)
+                {
+                    string where = $"{name}/{col["location"]}";
+                    checkedColonies++;
+
+                    var provided = new HashSet<string>();
+                    foreach (var inst in (col["installations"] as Newtonsoft.Json.Linq.JArray)
+                                         ?? new Newtonsoft.Json.Linq.JArray())
+                    {
+                        string id = (string)(inst["id"] ?? inst);
+                        if (id != null && providesOf.TryGetValue(id, out var cls))
+                            foreach (var c in cls) provided.Add(c);
+                    }
+
+                    foreach (var item in (col["cargo"] as Newtonsoft.Json.Linq.JArray)
+                                         ?? new Newtonsoft.Json.Linq.JArray())
+                    {
+                        string id = (string)item["id"];
+                        if (id == null) continue;
+                        if (!classOf.TryGetValue(id, out var need))
+                        { problems.Add($"{where}: starting cargo '{id}' is not a defined good or design"); continue; }
+                        if (!provided.Contains(need))
+                            problems.Add($"{where}: starts with '{id}' (needs {need}) but installs nothing providing {need}"
+                                         + $" — it provides [{string.Join(", ", provided.OrderBy(x => x))}]");
+                    }
+                    Log($"  {where,-30} provides [{string.Join(", ", provided.OrderBy(x => x))}]");
+                }
+            }
+
+            Log($"checked {checkedColonies} live authored colonies ({skipped} skipped as superseded)");
+            Assert.That(checkedColonies, Is.GreaterThan(1),
+                "🔒 this gauge exists BECAUSE \"Earth is the only colony blueprint\" was wrong. If it ever finds one "
+                + "colony again, the WALK has broken — not the data.");
+            Assert.That(problems, Is.Empty,
+                "a colony cannot physically hold the cargo it is authored to start with:\n  "
+                + string.Join("\n  ", problems));
+        }
+
+        /// <summary>
         /// 🔒 CAN THIS HOST HOLD WHAT IT MINES? — the gauge that had to exist before any good could be moved
         /// between compartments, and the reason the reclassification waited a slice.
         ///
@@ -300,8 +426,40 @@ namespace Pulsar4X.Tests
                 foreach (var inp in kv.Value.ResourceCost?.Keys ?? Enumerable.Empty<string>())
                     Consume(inp, "build:" + kv.Key);
                 foreach (var prop in kv.Value.Properties ?? new List<ComponentTemplatePropertyBlueprint>())
+                {
                     foreach (Match m in Regex.Matches(prop.PropertyFormula ?? "", @"UniqueID\('([\w-]+)'\)"))
                         Consume(m.Groups[1].Value, "fuel/formula:" + kv.Key);
+
+                    // ⑤ 🔑 THE FIFTH REFERENCE FORM — and this gauge went RED on its very first CI run for
+                    // missing it, which is the §46f lesson repeating one iteration later.
+                    //
+                    // A fuel dial does NOT name every fuel it can burn. `GuiFuelTypeSelection` names only the
+                    // engine's DEFAULT (`UniqueID('rp-1')`), and the OTHER selectable fuels are found by FILTER:
+                    // `ComponentDesignDisplay.GetFuelTypes` walks the property's DataDict, reads each KEY as a
+                    // CARGO CLASS and each VALUE as a fuel-type tag, and offers every material in that class whose
+                    // `Formulas["FuelType"]` matches. So `methalox` and `hydrolox` are perfectly buildable and
+                    // burnable — they are simply never NAMED anywhere, and a scan that only reads formulas
+                    // pronounced them dead goods.
+                    //
+                    // 🔒 The rule, stated for the third time in this campaign: AN AUDIT IS ONLY AS GOOD AS THE
+                    // REFERENCE FORMS IT KNOWS ABOUT. First it was armour's `ResourceID`; now it is the fuel
+                    // dial's filter. When this gauge flags something, check how the good is REACHED before
+                    // concluding nothing reaches it.
+                    if (prop.DataDict == null) continue;
+                    foreach (var dd in prop.DataDict)
+                    {
+                        string cargoClass = dd.Key;
+                        string fuelTag = (dd.Value ?? "").Trim().Trim('\'', '"');
+                        if (fuelTag.Length == 0) continue;
+                        foreach (var good in data.CargoGoods.GetAll().Values)
+                            if (good is Pulsar4X.Industry.ProcessedMaterial fm
+                                && fm.CargoTypeID == cargoClass
+                                && fm.Formulas != null
+                                && fm.Formulas.TryGetValue("FuelType", out var ft)
+                                && ft == fuelTag)
+                                Consume(fm.UniqueID, "fuel/dial-filter:" + kv.Key);
+                    }
+                }
             }
 
             // ③ armour — the reference form the first pass MISSED, which is why six goods looked dead
@@ -529,10 +687,20 @@ namespace Pulsar4X.Tests
                 Is.True, "and it is refinable at the start colony (in StartingItems, so it becomes an IndustryDesign)");
             Log($"{food.Name}: {food.CargoTypeID}, {food.MassPerUnit} kg and {food.VolumePerUnit:0.####} m³ per unit");
 
-            // A bare general hold must REFUSE it — this is the taxonomy biting, not decoration.
+            // A hold that is only GENERAL storage must REFUSE it — this is the taxonomy biting, not decoration.
+            //
+            // ⚠ Asserted on a PURPOSE-BUILT bare hold, NOT on the start colony's, and that distinction is a
+            // scar. It used to read `s.Colony.GetDataBlob<CargoStorageDB>()`, and it went red the moment the
+            // very same commit installed a `cold-store` on Earth (10,000 m³ of perishable room, added so the
+            // colony had somewhere to put the food it refines). The assertion was right and the FIXTURE was
+            // wrong: "general storage refuses food" is a claim about a CLASS, so testing it against whatever
+            // the scenario happens to have installed makes it hostage to unrelated data edits. A bare
+            // CargoStorageDB needs no entity and cannot drift.
+            var bareGeneralHold = new CargoStorageDB("general-storage", 10_000);
+            Assert.That(bareGeneralHold.GetFreeVolume(food), Is.EqualTo(0),
+                "a hold with only general storage cannot take food at all — that is the point of the class");
+
             var hold = s.Colony.GetDataBlob<CargoStorageDB>();
-            Assert.That(hold.GetFreeVolume(food), Is.EqualTo(0),
-                "a colony with only general storage cannot hold food at all — that is the point of the class");
 
             // Give it a refrigerated hold and stock it.
             var reefer = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns["default-design-refrigerated-hold"];

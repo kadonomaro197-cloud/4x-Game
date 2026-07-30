@@ -487,7 +487,13 @@ namespace Pulsar4X.Engine
         public async void RemoveDatablob<T>(int entityId) where T : BaseDataBlob
         {
             var type = typeof(T);
-            if (_datablobStores.ContainsKey(type))
+            // ⚠ BOTH keys must be checked. This method is `async void` (landmine L2), so an exception here does
+            // not fail a caller — it escapes to the thread pool unobserved and TAKES THE PROCESS DOWN. That is
+            // not theoretical: an unguarded `[entityId]` on an entity that no longer carries this blob threw
+            // KeyNotFoundException off a Task continuation and killed the whole NUnit test host mid-run
+            // ("Test host process crashed"), aborting every remaining test in the shard. Removing a blob that
+            // is not there is a no-op, not an error.
+            if (_datablobStores.ContainsKey(type) && _datablobStores[type].ContainsKey(entityId))
             {
                 var blob = _datablobStores[type][entityId];
                 blob.OnRemovedFromEntity();

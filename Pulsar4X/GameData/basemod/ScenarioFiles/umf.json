@@ -106,6 +106,7 @@
     "copper",
     "titanium",
     "lithium",
+    "lithium-battery",
     "chromium",
     "fissionables",
     "silicon",
@@ -460,6 +461,10 @@
         "population": 15000000
       },
       "installations": [
+        {
+          "id": "default-design-fuel-tank-1000",
+          "amount": 1
+        },
         {
           "id": "default-design-mine",
           "amount": 1
