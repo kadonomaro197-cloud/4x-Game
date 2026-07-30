@@ -792,6 +792,12 @@ that shows neither is lying twice.**
 
 ### 23.3 THE CHOICE PICKS YOUR DIAL SET — the corrected structure
 
+> ⚠ **The FAMILY AXIS below was superseded 2026-07-30 — read §26d first.** The four families were treated as one
+> exclusive choice ("what do you push against"), but **a ship carries a thruster AND a warp drive**, so Warp was
+> never a rival to Reaction. The door asks **two** questions: ① sublight (Reaction | Traction) and ② FTL method
+> (Warp | hyperspace | jump | none). The per-family **dial sets** in this table are still correct — only the
+> single-axis framing was wrong.
+
 The sim reads **different things per family**, so the doors do not share one slider wall:
 
 | Family | Its dials | State |
@@ -1114,6 +1120,82 @@ see it. Flagged, not done. The gauge pins the band so nobody moves it by halves.
 
 ---
 
+## 26d. 🔒 CORRECTION — "SPACETIME" WAS A CATEGORY ERROR. The Propulsion door asks TWO questions (developer, 2026-07-30)
+
+> *"the ftl is the ftl method like what we discussed earlier — the warp, hyperspace, etc. Survey is for sensors. And
+> does the spacetime actually make sense?"*
+
+**No, it does not, and the developer caught a real error.** §23.3 had the door as *one* question — "what do you push
+against" — with four exclusive answers: **Reaction mass · A surface · Spacetime · FTL network.** Two of those four
+are not alternatives to the other two.
+
+### 26d.1 The test a door must pass, and how it failed
+
+**A door's answers must be MUTUALLY EXCLUSIVE.** That is the whole reason a door is a door and not four sliders. Ran
+that test against the base mod's own ships:
+
+| Base-mod ship design | sublight thrusters mounted | warp drives mounted |
+|---|---|---|
+| Sanctum Adroit Gunship | 2 | 1 |
+| Ob'enn Dropship | 2 | 1 |
+| Freighter · Cargo Courier · Surveyor · Lander Troop Transport · Target Drone | 1 | 1 |
+| Starship | 1 | 0 |
+| Sensor Sat | 0 | 0 |
+
+**Every warship carries BOTH.** "Reaction mass" and "spacetime" were never rivals — a ship needs a thruster to
+manoeuvre *and* a warp drive to leave. A door whose options can all be true at once is **two doors wearing one label.**
+
+### 26d.2 The fix — name what each one asks
+
+| # | The question | Answers | Exclusive? |
+|---|---|---|---|
+| ① | **Sublight** — how do you move *inside* a system? | **Reaction mass** · **A surface** | ✅ yes — nothing both flies on rockets and walks |
+| ② | **FTL method** — how do you cross *between* systems? | **Warp** (built) · hyperspace · jump drive · nothing-but-gates | ✅ yes among themselves, and **optional** |
+
+The word **"spacetime" is cut.** Warp survives as **one FTL method** — which is exactly the frame §26c already
+surveyed the genre with (route × transit × seen). The three-axis matrix was right; the *door label above it* was wrong.
+
+**Note the intrinsic test (§1a) is what makes the picker still exclusive:** you are designing **one part**. A part is
+a thruster or a warp drive, never both. The *ship* is where the two questions add up — which is an **Entity Assembler**
+concern, not a designer one. Same boundary, applied one level up: it separates doors, not just dials.
+
+### 26d.3 ➡ The grav surveyor LEAVES this door for Sensors (developer's call, same message)
+
+> *"Survey is for sensors."*
+
+**Agreed and applied.** §26c had the fourth family as "FTL network", whose entire component surface was
+`GravSurveyAtb` (one dial, Survey Speed, mass `(10 × speed)²`). **Finding a jump point is not moving through one.**
+It is a detection instrument with a receiver, a speed, and a mass that grows quadratically with capability — the
+same shape as every other sensor. It goes on the **Sensors ▸ Survey** door's list (§29 has Sensors next), and comes
+off Propulsion's.
+
+### 26d.4 🔴 What renaming it "method" then exposed — TWO findings
+
+Once the question is *which method*, you can go and ask the code which methods it supports. **One, and it is
+compulsory.**
+
+| Finding | Evidence | Why it matters |
+|---|---|---|
+| **There is no way to build a ship with NO FTL drive** | Three movement paths gate on the blob: `JumpOrder.cs:63` (`if (!ship.HasDataBlob<WarpAbilityDB>()) continue;`), `MoveToNearestAction.cs:102`, `MoveToSystemBodyOrder.cs:70,81` | A hull with a thruster and no warp drive **cannot be ordered anywhere strategically — including through a gate that would do the moving for it.** That kills the gate-only civilisation (B5 · Stargate · Mass Effect — the *cheapest* FTL flavour, since the map does the work). It is also a **Cradle-to-Grave hole**: by these three checks a ship whose warp drive is shot off should be *stranded*, which is a far more interesting loss than the game currently expresses |
+| **You transit a jump point USING your warp drive** | grepped for a jump-drive component: none exists. No charge time, no jump range, no cooldown, no per-jump cost | A gate transit is **free and instant** if you happen to own a warp drive. So "Jump drive" is genuinely unbuilt — not a dial gap, a **whole movement mode** (§26c already costed it ⚠ medium) |
+
+Plus the third piece, unchanged from §26c: `JumpPointDB.IsStabilized` is read in exactly one place and the branch
+behind it is `// TODO: Introduce a random chance to stablize jumppoints.` — **a dead capability**, set once at galaxy
+generation from a game setting, changeable by nothing in play. `IsDiscovered` (the per-faction discovery set) is the
+genuinely good part and stays.
+
+### 26d.5 Open for the developer — added to the door's list
+
+- **Whether a ship may legally carry no FTL drive.** Three one-line gates to relax; the payoff is that losing a warp
+  drive means something. Blast radius: fleet movement orders + the AI's `JumpRouter`/`MilitaryReach` reach maths.
+- **Whether jump-point stabilisation becomes a real spend.** The obvious home for a player decision; the code for it
+  is a comment.
+
+*(Carried unchanged: the locomotion-mode override, the drive-heat feed, untouchable transit, FTL's own sensor band,
+the fate of `GroundLocomotionAtb`.)*
+
+---
+
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 
 > *"Keep amphibious."*
@@ -1190,7 +1272,7 @@ dial charges mass and buys nothing** (how `Amphibious` and `Fluid` were caught).
 
 | # | Door | Input surface (where to grep) | Size | Why here |
 |---|---|---|---|---|
-| **1** | **Sensors** | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. |
+| **1** | **Sensors** | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
 | **2** | **Power** | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
 | **3** | **Chassis** | `Ships/ShipHullAtb` · `GroundCombat/GroundChassisAtb` · `Stations/StationChassisAtb` · `Colonies/BuildingChassisAtb` (all four already share `IChassisAtb`) | 4 | **The door every other door mounts on.** Its budget is what every *"and it costs mass"* claim spends against — so deriving it here means the remaining four derive against a **real** budget. Mostly derivation-not-build: the interface, the mass-budget computation and an enforcement flag all exist. |
 | **4** | **Logistical** | `Storage/` CargoStorageAtb · CargoTransferAtb; `Combat/ShipMagazineAtb`; `GroundCombat/` GroundMagazineAtb · GroundBayAtb; `Logistics/LogiBaseAtb` | ~6 | **It is owed two debts.** Propulsion's intrinsic test **cut fuel load and sent it here** (§23.1); Weapons and Propulsion both sent **magazines** here. Also holds the **one confirmed dead attribute found so far — `LogiBaseAtb` has ZERO readers anywhere outside its own file.** |
