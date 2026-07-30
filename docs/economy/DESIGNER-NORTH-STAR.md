@@ -1937,6 +1937,12 @@ carefully it is built is the widest found in the project.**
 
 # PART SIX — POWER (door 2 of the remaining eight, derived 2026-07-30)
 
+**Live reference (the worked result, driveable):** `power-derived.html` — each job opens on its **exact shipped
+template** (reactor 1500 kg → 75,000 kW; RTG 1000 kg / 5 yr; turbine 2000 kg / 50%; solar 100 m²; battery 2000 kg →
+1.00 M kJ), and it carries an **"apply the RTG's law"** switch so the headline is something you can watch happen:
+tick it on the reactor and its flat 75,000 kW starts trading against endurance. Ticking it at the stock setting is
+**byte-identical** on both generators — verified across 750 dial/setting combinations.
+
 Smallest door on the list — three attributes — and it took the §36 lesson as its first instruction: **look hardest at
 the oldest attribute.** That is exactly where the findings were.
 
