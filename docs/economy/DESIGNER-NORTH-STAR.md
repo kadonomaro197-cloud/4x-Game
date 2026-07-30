@@ -2123,6 +2123,61 @@ field declaration, a `SensorScan` line that *overwrites* it for solar arrays, an
    adrift, which is exactly what "non refuelable" promises. Wiring that one gate turns `Lifetime` from a build-cost
    multiplier into **the most consequential dial in the door.**
 
+### 39.7a ✅ BUILT — and "longer" turned out to be a UNIT BUG, not a balance call
+
+The developer's three asks, done as one slice (they are interdependent — a gate without a real lifetime strands the
+fleet, and a burn-rate dial without a gate writes nothing).
+
+**① The gate.** `EnergyGenProcessor.EnableFuelExhaustion` (static, **default OFF** — the
+`RequireDetectionToEngage`/`EnableJamming` discipline, so CI inherits nothing and the client arms it). A generator that
+burns fuel and has none left produces **nothing**; `LocalFuel` now floors at 0 instead of running negative; and
+`EnergyGenAbilityDB.IsFuelStarved` is a `[JsonIgnore]` computed read (no save-format change, no copy-ctor entry).
+Solar is never starved — `maxUse == 0`, nothing to run out of.
+
+**② 🔴 "Make lifetime longer" was a UNIT BUG.** `EnergyGenerationAtb` consumes `Lifetime` in **seconds**
+(`LocalFuel[kg] = maxUse[kg/s] × Lifetime`, drained by `fueluse × t.TotalSeconds`). But:
+
+| Template | Authored as | Fed to the atb as | Real endurance |
+|---|---|---|---|
+| `reactor` | **8760 hours** | 8760 seconds | 🔴 **2.43 hours** |
+| `rtg` | **5 years** | 5 seconds | 🔴 **5 seconds** |
+| `steam-turbine-reactor` | `FuelMass ÷ BurnRate` = **seconds** | seconds | ✅ 12.7 years |
+
+**Only the turbine was dimensionally correct — and it is the only one with a shipped design, which is exactly why
+nobody had ever noticed.** Both now convert explicitly (`Fuel Load Seconds = Lifetime × 3600`;
+`Lifetime Seconds = Operational Lifetime × 31,557,600`), which makes the reactor's life **3600× longer without
+changing a single authored number.** The reactor's `Lifetime` Max also rises 87,600 → 876,000 h (100 years) so a player
+*can* build a long-life plant and watch the fissile bill scale honestly. Its `ResourceCost` is unchanged in value — it
+already multiplied by 3600, so the cost block was right all along and only the atb argument was wrong.
+
+**③ ✅ The burn rate is now a dial — `Output vs Economy` (0.5–2.0, default 1).**
+
+```
+Power Output     = 50 × Mass × OvE
+Fuel Consumption = Power Output × k × OvE          ⇒  fuel per kilowatt ∝ OvE
+⇒  2× the power costs 4× the fuel for the same endurance.
+```
+
+**Driving a core harder costs more fuel for every kilowatt it makes**, not merely more fuel — so it passes the §34.7a
+ladder test (benefit rises, cost rises faster). At OvE 1.0 it is **byte-identical**. Two buildable designs ship it
+cradle-to-grave: `default-design-fission-reactor` (75,000 kW, 73.9 kg of fuel for a year) and
+`default-design-fission-reactor-derated` (37,500 kW on **18.5 kg** — half the power, a quarter of the fuel, twice as
+economical per kilowatt).
+
+**⚠ One calibration decision, stated because it is a judgement:** the reactor's specific fuel rate was
+`Power × 1e-7`, which is **~3200× the steam turbine's measured 3.125e-11 kg/s per kW** and would have made a year of
+fuel weigh **236 tonnes** for a 1500 kg reactor. It is now anchored on the turbine's rate — the only *calibrated*
+fuelled generator in the game, being the only one with a shipped design. Nothing in the game changed: no design used
+the `reactor` template before this slice.
+
+**Gauge: `PowerFuelGateTests`** — the seconds conversion (exact), carried fuel == charged fuel (the books balance),
+the dial's exact ½-power/¼-fuel ratios, the turbine anchor as a *ratio* (so a future turbine re-tune fails loudly
+instead of drifting), and the gate biting on / inert off with the flag reset in a `finally`.
+
+**Still open for the developer:** whether to **arm the flag** (a one-line client change) and whether a reactor should
+be **refuelable** — its own description says *"A non refuelable reactor"*, so today `Lifetime` is a genuine service
+life and a dead reactor is a dead ship. That is a good mechanic; it just wants to be a deliberate one.
+
 **The cheapest honest version of the gate:** when `LocalFuel <= 0`, clamp `TotalOutputMax` to 0 (a dead reactor
 generates nothing) and publish an event. Everything downstream already handles zero power correctly — the warp
 departure gate refuses (`WarpMoveCommand:258`), the ground supply gate refuses (`WeaponSupply`), the AI stops planning
@@ -2194,7 +2249,7 @@ newest thing in the door (the solar/sensor band sharing) is the only part that i
 
 | # | Slice | Why it is cheap | What it changes about PLAY |
 |---|---|---|---|
-| **P0** | 🔑 **WIRE THE FUEL GATE FIRST** (§39.7) — `LocalFuel <= 0` ⇒ output 0 | one condition; **every consumer already handles zero power** (warp departure, ground supply gate, AI reach) | 🔴 **Makes endurance mean something at all.** Without this, P1 gives the reactor a trade against a cost that does not exist. ⚠ Needs a lifetime/refuelling ruling first — at the shipped 8760 h the starting fleet would go dark in a game year. |
+| ~~**P0**~~ | ✅ **BUILT 2026-07-30 (§39.7a)** — the gate, the unit fix, and the burn-rate dial as one slice. `EnableFuelExhaustion` (default off) · `Lifetime` reaches the atb in **seconds** at last (the reactor's real endurance was **2.43 hours**, the RTG's **5 seconds** — only the turbine was correct, and it is the only one with a shipped design) · **`Output vs Economy`** makes the burn rate settable, costing fuel-per-kilowatt so 2× power = 4× fuel · two buildable reactor designs · fuel rate anchored on the turbine's measured 3.125e-11 kg/s per kW (the old `1e-7` made a year of fuel weigh 236 t). Gauge `PowerFuelGateTests`. | ✅ **Endurance means something now**, and the burn rate is a real decision. |
 | **P1** | **Give the reactor and the turbine the RTG's law** — `output × lifetime = const × size` | the formula already exists on a shipped template; it is a copy, not a design | 🔴 **The door gets its decision** — warship-hot vs outpost-frugal. **Order: after or with P0.** |
 | **P1b** | **Make carried fuel weigh something** (§39.2) — the RTG already does it (`Fuel = Mass × 0.5`) | one formula per template | **Closes the one channel where `Lifetime` really is free.** Mass is what Chassis gates on, so this is the half that matters for ship design. |
 | **P2** | **Replace the turbine's `Output vs Efficency`** with that same trade (§39.3) | one template; the dial's slot already exists | Removes a dial that promises a decision it never delivers, and connects `GennyMass`. |

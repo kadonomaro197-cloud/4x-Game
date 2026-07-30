@@ -78,6 +78,50 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-fission-reactor",
+      "Name": "Fission Reactor",
+      "TemplateId": "reactor",
+      "Properties": [
+        {
+          "Key": "Mass",
+          "Value": 1500
+        },
+        {
+          "Key": "Output vs Economy",
+          "Value": 1
+        },
+        {
+          "Key": "Lifetime",
+          "Value": 8760
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-fission-reactor-derated",
+      "Name": "De-rated Fission Reactor",
+      "TemplateId": "reactor",
+      "Properties": [
+        {
+          "Key": "Mass",
+          "Value": 1500
+        },
+        {
+          "Key": "Output vs Economy",
+          "Value": 0.5
+        },
+        {
+          "Key": "Lifetime",
+          "Value": 8760
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-battery-2t",
       "Name": "Battery 2t",
       "TemplateId": "battery-bank",

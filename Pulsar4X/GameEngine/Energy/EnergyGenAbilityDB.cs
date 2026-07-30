@@ -62,6 +62,15 @@ namespace Pulsar4X.Energy
         [JsonProperty]
         public double LocalFuel;
 
+        /// <summary>
+        /// True when this entity burns fuel and has run dry — a <b>computed read</b>, so it adds nothing to the save
+        /// file and needs no copy-ctor entry. <see cref="EnergyGenProcessor.EnableFuelExhaustion"/> is what makes it
+        /// bite; this is the readout (the client power panel and the AI can both ask "is this ship out of fuel?").
+        /// Solar-only entities have <c>maxUse == 0</c> and are never starved — nothing to run out of.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsFuelStarved => TotalFuelUseAtMax.maxUse > 0 && LocalFuel <= 0;
+
         private int _histogramSize = 60;
         public int HistogramSize
         {

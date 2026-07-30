@@ -18,7 +18,7 @@
         "stainless-steel": "[Mass] * 0.5",
         "plastic": "[Mass] * 0.4",
         "copper": "[Mass] * 0.1",
-        "fissile-fuels": "PropertyValue('Fuel Consumption') * 3600 * PropertyValue('Lifetime')"
+        "fissile-fuels": "PropertyValue('Fuel Consumption') * PropertyValue('Fuel Load Seconds')"
       },
       "ComponentType": "Facility",
       "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit, Station",
@@ -36,34 +36,51 @@
           "PropertyFormula": "1500"
         },
         {
+          "Name": "Output vs Economy",
+          "Units": "OvE",
+          "DescriptionFormula": "'How hard the core is driven. Turn it up for more power out of the same mass — but a hard-driven core burns more fuel FOR EVERY KILOWATT it makes, so the same endurance costs more fuel to load and more fissile fuel to build. Turn it down for a de-rated reactor that sips. Output goes up with the dial; fuel burned per kilowatt goes up with it too, so total burn rises as the SQUARE.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.0",
+          "MinFormula": "0.5",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
           "Name": "Power Output",
           "Units": "Kw",
           "DescriptionFormula": "'in Kw'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "50 * [Mass]"
+          "PropertyFormula": "50 * [Mass] * PropertyValue('Output vs Economy')"
         },
         {
           "Name": "Fuel Consumption",
           "Units": "kg/s",
           "DescriptionFormula": "'Fuel Consumption kg per second at Max Output'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Power Output') * 0.0000001"
+          "PropertyFormula": "PropertyValue('Power Output') * 0.00000000003125 * PropertyValue('Output vs Economy')"
         },
         {
           "Name": "Lifetime",
-          "Units": "s",
-          "DescriptionFormula": "'How long this reactor will be useful for'",
+          "Units": "h",
+          "DescriptionFormula": "'How many HOURS of fuel this reactor is built carrying, at full output. Run it at part load and it lasts proportionally longer. When it runs dry it produces nothing — it is not refuelable, so this is the reactor s whole service life.'",
           "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "87600",
+          "MaxFormula": "876000",
           "MinFormula": "1",
           "StepFormula": "1",
           "PropertyFormula": "8760"
         },
         {
+          "Name": "Fuel Load Seconds",
+          "Units": "s",
+          "DescriptionFormula": "'The fuel load in SECONDS, which is the unit EnergyGenerationAtb consumes it in.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "PropertyValue('Lifetime') * 3600"
+        },
+        {
           "Name": "DB",
           "DescriptionFormula": "''",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs('fissile-fuels', PropertyValue('Fuel Consumption'), 'electricity', PropertyValue('Power Output'), PropertyValue('Lifetime'))",
+          "PropertyFormula": "AtbConstrArgs('fissile-fuels', PropertyValue('Fuel Consumption'), 'electricity', PropertyValue('Power Output'), PropertyValue('Fuel Load Seconds'))",
           "AttributeType": "Pulsar4X.Energy.EnergyGenerationAtb"
         },
         {
@@ -183,6 +200,13 @@
           "PropertyFormula": "0.001 / PropertyValue('Operational Lifetime')"
         },
         {
+          "Name": "Lifetime Seconds",
+          "Units": "s",
+          "DescriptionFormula": "'The operational life in SECONDS, which is the unit EnergyGenerationAtb consumes it in. Authored in years above.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "PropertyValue('Operational Lifetime') * 31557600"
+        },
+        {
           "Name": "Operational Lifetime",
           "Units": "years",
           "DescriptionFormula": "'Output vs lifetime'",
@@ -238,7 +262,7 @@
           "Name": "DB",
           "DescriptionFormula": "''",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(UniqueID('fissile-fuels'), PropertyValue('Fuel Consumption'), UniqueID('electricity'), PropertyValue('Power Output'), PropertyValue('Operational Lifetime'))",
+          "PropertyFormula": "AtbConstrArgs(UniqueID('fissile-fuels'), PropertyValue('Fuel Consumption'), UniqueID('electricity'), PropertyValue('Power Output'), PropertyValue('Lifetime Seconds'))",
           "AttributeType": "Pulsar4X.Energy.EnergyGenerationAtb"
         },
         {

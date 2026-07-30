@@ -227,7 +227,7 @@
         "default-design-alcubierre-2k-endurance",
         "default-design-alcubierre-500",
         "default-design-auto-mine",
-        "default-design-battery-2t",
+        "default-design-fission-reactor", "default-design-fission-reactor-derated", "default-design-battery-2t",
         "default-design-beam-fire-control",
         "default-design-cloak-device",
         "default-design-pd-director",
