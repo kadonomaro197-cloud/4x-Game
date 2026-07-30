@@ -912,22 +912,47 @@ the inputs; the entity decides the outcome. A designer that pretended otherwise 
 | **Inertialess** | 🔴 **not propulsion at all.** It writes one thing — an **evasion floor**. It produces no thrust and moves nothing. It is a **defensive** component sitting in Propulsion because it is about dodging. |
 | **Teleport** | 🔴 **not propulsion either.** It breaks distance rather than crossing it — a transfer mechanic, belongs with logistics. |
 
-## 25. WHAT GOES OUT — the Propulsion output map (verified in source)
+## 25. WHAT GOES OUT — the Propulsion output map, EVERY ROW MARKED (verified in source)
 
-| What leaves the door | Goes to | Why it matters |
-|---|---|---|
-| **Thrust ÷ mass** | `CalculateEvasion` | 🔴 **the best defence in the game is bought HERE** |
-| **Thrust** | `FleetManeuver` | decides **who dictates the range** in a closing fight |
-| **Thrust** (again) → **sensor signature** | `SensorSignatureAtb(3500 K, magnitude = Thrust)` → **Detection** | 🔴 **the third leg of the trade (§23.2)** — the same dial that buys evasion sells your position. Detection decides who shoots first. |
-| **Δv** | `FleetCombat.DeltaVFloor` → `ManeuverBudget` | the **kiting clock** — run dry and the enemy closes |
-| **Warp max speed** | `WarpSpeedFloor` | strategic transit; the fleet moves at its slowest ship |
-| **Ground speed factor** | `Speed_kmh` → the closing march | how fast you cross a battle's real metres |
-| **Rough-ground handling** | march time **and** `LocomotionTerrainMult` | **one dial, two systems** |
-| ~~**`Amphibious`**~~ | 🔴 **NOTHING** | **read by no code** (§23.3b) — ocean is impassable to everyone; the dial still charges mass |
-| **Fuel burn** | **Logistics** — tankers, refuelling | a thirsty fleet is a supply problem |
-| **Warp bubble cost** | **Power** (stored electricity) | a flat battery is a ship that cannot leave |
-| **Drive mass** | **Chassis** budget — **and back into its own acceleration** | the only door whose output fights its own input |
-| **The drive destroyed** | Damage | shoot the engine off and evasion collapses |
+> 🔒 **Marked 2026-07-30 on the developer's instruction — *"mark all outputs because these really change how the game
+> can be played."*** Every row now carries **① a play state** (is this true in a game today?) and **② the sentence that
+> says what it changes about how the game is PLAYED.** An output map that only names the call site is a wiring diagram;
+> this is the blast radius in gameplay terms, which is what a reader actually needs before touching the door.
+>
+> **Play-state legend — three states, and the middle ones are the honest ones:**
+> `✅ LIVE` the game does this today · `🟢 NEW` this derivation wired it and it ships now ·
+> `🔵 HALF` the number exists, nothing reads it · `🔴 PROPOSED` designed and costed, **not built**.
+
+| # | What leaves the door | Goes to | Play state | **What it changes about how the game is PLAYED** |
+|---|---|---|---|---|
+| 1 | **Thrust ÷ mass** | `CalculateEvasion` → `ShipCombatValueDB.Evasion` | ✅ LIVE | 🔴 **The largest defensive purchase in the game is made at this door.** Evasion is an effective-health **multiplier** to ×20 (§1b) against armour's ×10 — an engine decision outweighs any plate decision, in a currency the Defense door never sees. Neither UI says so. |
+| 2 | **Thrust** | `FleetManeuver` | ✅ LIVE | **Who dictates the range in a closing fight.** The faster fleet chooses whether the battle happens at beam range or missile range — i.e. it chooses which corner of the weapon triangle it fights in. |
+| 3 | **Thrust, as signature** | `SensorSignatureAtb(3500 K, mag = Thrust)` → Detection | ✅ LIVE | **Pushing hard sells your position.** The same dial that buys evasion buys being seen from farther — and `FirstStrike_SeerWipesBlindEnemy_Unscathed` shows the seeing side wipes an equal *blind* fleet **taking zero losses**. Biggest cost in the game; the designer never mentions it. |
+| 4 | **Δv** | `FleetCombat.DeltaVFloor` → `ManeuverBudget` | ✅ LIVE | **The kiting clock.** Run dry mid-fight and the enemy closes at will — the manoeuvre advantage in row 2 has a fuel-shaped expiry date. |
+| 5 | **`FuelGrade` × drive size** | `NewtonionThrustAtb.FuelBurnRate` → thrust | 🟢 NEW | **Fuel choice became a decision instead of a ladder.** RP-1 buys push, hydrolox buys range, NTP is a reactor paid for in fissionables. Before this a better fuel won on *both* axes, so there was nothing to choose. Gauge: `FuelGradeTests`. |
+| 6 | **Warp max speed** | `WarpMath.MaxSpeedCalc` → `WarpSpeedFloor` | ✅ LIVE | **Strategic tempo, and it is a FLEET number** — the group moves at its slowest drive, so one frugal ship sets everyone's pace. Refitting one hull changes the whole fleet's reach. |
+| 7 | **Bubble creation cost** | `WarpMoveCommand` (departure gate) | ✅ LIVE | **A flat battery is a ship that cannot leave.** Power generation and FTL are one decision — and it is what makes the §26g lane finding bite: a lane drive has no creation lump, so **it can always set off.** |
+| 8 | **Bubble sustain cost** | `WarpMoveProcessor` → Power, per second | ✅ LIVE | **Transit is a running bill, not a one-off.** A long crossing can strand a ship that could afford to leave. |
+| 9 | **Bubble sustain, as signature** | `SensorSignatureAtb` on the warp drive | 🟢 NEW | **FTL stopped being silent.** A ship crossing a system at FTL used to be exactly as detectable as one parked — against a genre where warp trails are a staple. Now the endurance drive buys range *and* stealth on one slider. Gauge: `WarpBubbleTradeTests`. |
+| 10 | **`Startup vs Endurance`** | creation × sustain (invariant) | 🟢 NEW | **A real fleet-composition choice.** Short-hop couriers that leave on a part charge, or long-haul hulls that need a full one then cross quietly. Both ends buildable; `alcubierre-2k-endurance` ships. |
+| 11 | **Ground speed factor** | `Speed_kmh` → the closing march | ✅ LIVE | **How fast you cross a battle's real metres** — which decides whether your artillery gets its standoff or your line arrives first (`GroundRoleManeuver`). |
+| 12 | **Rough-ground handling** | march time **and** `LocomotionTerrainMult` | ✅ LIVE | **One dial, two systems** — how long you take to get there *and* how well you fight when you arrive. Road-geared armour is out-fought the moment it leaves the road. |
+| 13 | **`Amphibious`** | `HexPathfinder.IsImpassable` (per-unit) | 🟢 NEW | **Where you may go at all.** Ocean used to be impassable to everyone while the dial charged mass for nothing (§23.3b). It now buys **access, not speed** (water costs 4.0 a hex, worse than a mountain) and is **lost with the drive below half health** — the grave rung. Gauge: `GroundForcesTests.HexPath_Amphibious_CrossesWater_ButPaysForIt`. |
+| 14 | **Locomotion mode** (named picker) | the assembler UI | 🟢 NEW | **A choice the player can finally READ** — it was a raw integer showing *"Locomotion: 1"*. ⚠ Still 🔵 HALF downstream: `SpeedMultForUnit` lets a mounted drive's factor *override* the frame mode, so the four modes are dead weight on a properly-designed unit. **Open ruling #2.** |
+| 15 | **Fuel burn rate** | **Logistics** — tankers, refuelling | ✅ LIVE | **A thirsty fleet is a supply problem, not a stat.** Deep operations need tankers, which need escorts, which need fuel. |
+| 16 | **Drive mass** | **Chassis** budget — *and back into its own acceleration* | ✅ LIVE | **The only door whose output fights its own input.** A bigger engine is heavier, and the weight it adds eats the acceleration it bought. There is a genuine optimum and no readout shows it. |
+| 17 | **The drive destroyed** | Damage → `ReCalcAbilities` | ✅ LIVE | **Shoot the engine off and evasion collapses** — a crippled ship stops dodging, the fastest way to turn a stalemate into a rout. Cradle-to-grave, both ways. |
+| 18 | **Signature suppression** | `P_drive = P_total × (1 − suppression)` | 🔴 PROPOSED | **Would make stealth a purchase instead of a freebie.** Detection range grows as **√signature** today, so doubling thrust costs only 1.41× visibility — loud is nearly free. The tax pays twice (push *and* economy) plus shroud mass. §23.2a. |
+| 19 | **Drive heat** | *nothing* — weapons feed a fleet heat pool, propulsion feeds none | 🔵 HALF | **An asymmetry the player can feel but not see.** Firing heats you; running does not. The wire is small. **Open ruling #4.** |
+| 20 | **Route = fixed** (lane) | would gate `WarpMoveCommand` destinations via `JumpRouter` | 🔴 PROPOSED | **The cheapest new capability in the whole derivation** (§26e.4) — and it makes the map a chokepoint game: a rival holding a node holds you. `JumpRouter.FindRoute` already walks the discovered gate graph for the AI. |
+| 21 | **Transit = instant** (jump) | would need a jump order + a range limit + a cooldown | 🔴 PROPOSED | **Uninterceptable movement** — the strongest defensive property in the FTL list: you cannot be caught in transit at all. §26e. |
+| 22 | **Seen = hidden** (veiled) | would need `SensorScan` **and** the battle trigger to skip a ship in transit | 🔴 PROPOSED | **Untouchable crossings** — with the nuance the demo surfaced: hidden hides the *crossing*, never the *departure*. Largest blast radius of the four. §26g. |
+| 23 | **Navigator-gated** | would need a seated `CommandBerthAtb` | 🔴 PROPOSED | **An FTL you can lose to a sniper.** Cheapest reach in the game, dead without a living specialist aboard. The seat already exists. §26e.3. |
+| 24 | **No FTL drive at all** | blocked by `JumpOrder:63` · `MoveToNearestAction:102` · `MoveToSystemBodyOrder:70,81` | 🔵 HALF | 🔴 **You cannot currently build a ship with no FTL drive** — so the gate-only civilisation is impossible, and a ship whose warp drive is shot off *should* be stranded but the rules never let it get there. A cradle-to-grave hole. **Open ruling #3.** §26d.4. |
+
+**Reading the marks:** 12 rows are `✅ LIVE`, **6 are `🟢 NEW` from this derivation**, 3 are `🔵 HALF` (the number exists,
+nothing reads it — each one an open ruling), and 5 are `🔴 PROPOSED`. **Nine of the twenty-four are gameplay-changing
+and not yet true** — which is exactly the list to work from, and the reason the marks matter more than the wiring.
 
 ### 25.1 🔑 THE LOOP THIS CLOSES ACROSS THREE DERIVATIONS
 
@@ -1007,6 +1032,30 @@ of it in the same tank. That is a genuine choice the player can feel.
 industry points, identical output and credits, but Methalox has **higher** exhaust velocity **and** better density.
 There is no reason to ever refine RP-1. Either give it an edge (cheaper inputs, or an earlier tech unlock) or cut it.
 Same §1-law failure as a dead dial, one level up: **a dead RECIPE.**
+
+## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
+
+> *"Keep amphibious."*
+
+**Kept. And keeping it means it cannot stay as it is** (§23.3b: it charges mass and is read by nothing). The wire is
+small and well-bounded:
+
+| Change | File | Note |
+|---|---|---|
+| `IsImpassable(terrain)` → **`IsImpassable(terrain, unit)`** — ocean is impassable *unless the unit is amphibious* | `GroundCombat/HexPathfinder.cs:41` | today it hard-codes `terrain == Ocean` for everyone |
+| An amphibious unit crossing water pays a **rough** move cost, not a free one | `HexPathfinder.HexMoveMult` | water should be slow, not free — or amphibious becomes strictly better |
+| Read the flag off the unit's locomotion, health-scaled | `GroundMobility` (beside `RoughHandlingForUnit`) | the **grave rung** — a shot-off drive should strand you |
+
+**Blast radius (Prime Directive):** an impassable hex is **left out of the pathfinding graph entirely** (the comment
+at `HexPathfinder.cs:41` says so), so making passability unit-dependent means the graph is **per-unit**, not global —
+that is the one non-trivial part of this change and it must be checked before it is written. **Gauge:** an amphibious
+unit paths across a water hex; a non-amphibious one still routes around it; a destination on water is reachable only
+for the amphibious one.
+
+**Not built this pass** — it is an engine change to pathfinding, and the working agreement is one slice at a time
+with CI as the only compile gauge.
+
+---
 
 ## 26b. ✅ BUILT — the WARP dial, and the GROUND labels (2026-07-29)
 
@@ -1466,31 +1515,7 @@ at 4/3/4/4/3/2; and each box's invariant confirmed flat across split 0 / 50 / 10
 
 ---
 
-## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
-
-> *"Keep amphibious."*
-
-**Kept. And keeping it means it cannot stay as it is** (§23.3b: it charges mass and is read by nothing). The wire is
-small and well-bounded:
-
-| Change | File | Note |
-|---|---|---|
-| `IsImpassable(terrain)` → **`IsImpassable(terrain, unit)`** — ocean is impassable *unless the unit is amphibious* | `GroundCombat/HexPathfinder.cs:41` | today it hard-codes `terrain == Ocean` for everyone |
-| An amphibious unit crossing water pays a **rough** move cost, not a free one | `HexPathfinder.HexMoveMult` | water should be slow, not free — or amphibious becomes strictly better |
-| Read the flag off the unit's locomotion, health-scaled | `GroundMobility` (beside `RoughHandlingForUnit`) | the **grave rung** — a shot-off drive should strand you |
-
-**Blast radius (Prime Directive):** an impassable hex is **left out of the pathfinding graph entirely** (the comment
-at `HexPathfinder.cs:41` says so), so making passability unit-dependent means the graph is **per-unit**, not global —
-that is the one non-trivial part of this change and it must be checked before it is written. **Gauge:** an amphibious
-unit paths across a water hex; a non-amphibious one still routes around it; a destination on water is reachable only
-for the amphibious one.
-
-**Not built this pass** — it is an engine change to pathfinding, and the working agreement is one slice at a time
-with CI as the only compile gauge.
-
----
-
-## 26a. RE-CHECKING THE EARLIER DERIVATIONS AGAINST §1a
+## 26h. RE-CHECKING THE EARLIER DERIVATIONS AGAINST §1a
 
 | Category | Dials | Verdict |
 |---|---|---|
