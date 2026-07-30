@@ -1196,6 +1196,132 @@ the fate of `GroundLocomotionAtb`.)*
 
 ---
 
+## 26e. 🔒 DECIDED — ONE FTL TAB, three settings, and the boxes come out exactly saturated (developer, 2026-07-30)
+
+> *"There should just be one FTL tab with options and sliders that make sense to make these: [the six-row
+> route/transit/seen table]"*
+
+**Applied, and the derivation is stronger than the request.** §26d had FTL as a *list of methods* (warp | hyperspace |
+jump | gate) — four exclusive chips. The developer's call: **it is one part, and the methods are settings on it.**
+Run the standard method (§1) on the six rows and the settings fall straight out of the table's own columns.
+
+### 26e.1 The settings ARE the taxonomy — 2 choices and a CONDITIONAL third
+
+| # | Setting | Options | Present when | Writes |
+|---|---|---|---|---|
+| ① | **Route** | Free (anywhere) · Fixed (node to node) | always | whether the move order accepts an arbitrary destination or requires a discovered jump point |
+| ② | **Transit** | Continuous (you cross it) · Instant (you arrive) | always | whether there is a per-second sustain charge and an interceptable in-flight state at all |
+| ③ | **Can you be found in transit** | Trackable · Hidden | **only when transit is continuous** | whether `SensorScan` and the battle trigger see a ship mid-crossing |
+| ④ | **Navigator-gated** | flag | always | a Command Berth requirement (`CommandBerthAtb` — Role · Grade · Support · Survivability · Span) |
+
+🔑 **③ is conditional, and the developer's own table is the proof.** Three of the six rows read **n/a** in the *seen*
+column — because **an instant transit has no transit to be observed during.** That is a real dependency in the data,
+not a gap in the survey. So it is **two settings and a conditional third, not three independent ones.**
+
+### 26e.2 🔑 COUNT THE BOXES — 2 × (2 + 1) = 6, and the developer listed exactly 6
+
+| Box | Route | Transit | Seen | Who lives there | Build state (grepped, not guessed) |
+|---|---|---|---|---|---|
+| 1 | free | continuous | trackable | **Star Trek warp** | ✅ **ships today — this is Pulsar's Alcubierre drive, byte for byte** |
+| 2 | free | continuous | **hidden** | **Star Wars hyperspace** | 🔴 the sensor scan **and** the battle trigger must both skip a ship in transit |
+| 3 | free | **instant** | — | **BSG jump drive · Dune fold · Andromeda slipstream** | ⚠ a whole movement mode: a jump order, a per-jump range limit, a cooldown |
+| 4 | **fixed** | continuous | trackable | **Stellaris hyperlanes** | ✅✅ **the cheapest unbuilt box in the derivation** — see §26e.4 |
+| 5 | **fixed** | continuous | **hidden** | 🔓 **nobody** | 🔓 **an empty box the derivation predicts** |
+| 6 | **fixed** | **instant** | — | **B5 gates · Stargate · ME relays · Aurora jump points** | ⚠ the network ships (gates + discovery + router); **the drive does not** (§26d.4) |
+
+**Exactly saturated: six settings-combinations, six rows.** Which means two things fall out for free —
+
+### 26e.3 ① THE NAVIGATOR IS A REAL FOURTH AXIS — the developer's own table proves it
+
+**Box 3 holds three franchises, and BSG is not the same thing as Dune.** What separates them is not route, transit or
+visibility — it is that a Guild fold and a slipstream jump are **gated on a person.** Without that axis the taxonomy
+calls them identical. So *"gated on a navigator — a worker, not a drive"* is **not a footnote in the survey, it is the
+setting that distinguishes the box's occupants.**
+
+It is a flag on the tab, and the seat already exists: **`CommandBerthAtb`** (`GameEngine/Sites/`) with
+Role · Grade · Support · Survivability · Span. The trade: a navigator-gated drive gets **the cheapest reach in the
+game** (the person does work the machine would) and is **dead without a living specialist aboard** — the only FTL you
+can lose to a sniper. That is a genuine grave rung, and it lands on the Site Engine's existing posting-danger roll.
+
+### 26e.4 ② BOX 4 IS THE CHEAPEST NEW CAPABILITY IN THIS WHOLE DERIVATION — and I did not expect it
+
+**Stellaris-style lanes need almost no new code:**
+
+- **`JumpRouter.FindRoute`** (`GameEngine/Factions/JumpRouter.cs`) is a **live** breadth-first walk over the
+  **discovered** jump-point graph. Not a stub — the AI's `MilitaryReach` (`:113,131,143`) and `ConquerResolver`
+  (`:209`) call it every cycle to plan multi-gate strikes.
+- **Warp already does continuous transit**, with a real speed, a departure gate and a per-second charge.
+
+**So box 4 = forbid off-lane destinations and route the legs through the router that already exists.** That is a
+**rule**, not a system — and it is the only unbuilt box in the table with that property. Cheapest FTL flavour
+available, and it is a *strategically* different game (a rival holding the node holds you).
+
+### 26e.5 ③ BOX 5 IS EMPTY — which is the point of a saturated grid
+
+**Fixed lanes · a real crossing · untouchable while you make it.** No franchise on the developer's list claims it.
+Whether it earns building is a developer call — but **the derivation found it rather than someone having to imagine
+it.** That is what a complete taxonomy is *for*, and it is the second time the method has produced an unclaimed
+design (the first was Weapons reaching 1,073 named designs from 2 choices + 4 sliders).
+
+### 26e.6 THE SLIDERS SURVIVE THE SETTINGS — one set, re-named, never re-derived
+
+This is what makes it **one tab** rather than four templates. All four sliders are the shipped `alcubierre-warp-drive`
+dials or the already-proposed suppression tax; **none is invented.**
+
+| Slider | Continuous transit | Instant transit | Source |
+|---|---|---|---|
+| **Drive mass** | `Engine Power = EvP × Mass × 1000` | same | ✅ shipped dial |
+| **Reach vs power** | the `Efficency vs Power` dial, 0.4–2.0 | same | ✅ shipped dial |
+| **Startup ↔ endurance** → **Range ↔ tempo** | creation gates departure · sustain charged per second | creation is the **spool** (→ range per jump) · sustain is the **recharge draw** | ✅ shipped (§26b) |
+| **Quietness** | taxes the whole budget, shroud adds mass | same | 🔴 proposed (§23.2a) |
+
+🔒 **The two numbers never change, only their names:** *"energy to start"* and *"continuous draw"* are the same pair
+whether you are holding a bubble or charging a jump. And **the recharge time is derivable, not invented:**
+
+```
+recharge seconds = creation ÷ sustain = (power × 0.5 × SvE) ÷ (power × 0.001 ÷ SvE) ... no — the RATIO is
+                 = 500 × SvE     ← POWER CANCELS, so it is a pure dial read, independent of tech and engine size.
+```
+
+That is the same power-independence the byte-identity gauge already pins
+(`WarpBubbleTradeTests.TheDefault_IsByteIdentical_ForEveryExistingDrive` asserts creation:sustain is
+power-independent for two different-sized drives).
+
+**⚠ A CORRECTION I had to make to my own mapping, caught by simulating it.** I first wrote that *range ÷ recharge* is
+the invariant in instant mode. **It is not** — range ∝ creation and recharge ∝ creation ÷ sustain, so range ÷ recharge
+∝ sustain ∝ 1/SvE, which *moves* (188 → 30 AU/h across the slider). That would have made "short hops, often" strictly
+dominant — a ladder, not a trade, exactly the §26.3 failure. **The real invariant is `range per jump × tempo`:**
+
+```
+range × tempo ∝ creation × sustain = CONSTANT      verified across the slider: 4.2×188.6 = 15.2×52.0 = 26.2×30.2
+```
+
+So the honest trade in instant mode is **strategic reach vs operational tempo** — one long bound and you cross a gap
+nothing else can, but your overall AU-per-hour drops. Same shape as `T·v = 2P`. *(Gauge lesson: the mapping was wrong
+in a way that reads plausible in prose and fails in one line of arithmetic. Simulate the dial before writing the
+claim.)*
+
+### 26e.7 WHAT THIS COLLAPSES
+
+**Four separate FTL component templates → ONE.** Warp, hyperspace, jump and gate-tug would have been *four copies of
+the same four sliders with a rule changed.* This is the same collapse Weapons needed (5 doors + 41 dial groups → 2
+choices + 4 sliders) and it is worth stating as a general result of the method:
+
+> 🔒 **When two candidate "families" share their whole slider set and differ only by a RULE, they are one part with a
+> setting — not two parts.** The tell is that the sliders survive the switch.
+
+### 26e.8 Open for the developer — the FTL list, re-ranked by cost
+
+1. **Box 4 (Stellaris lanes)** — cheapest by a wide margin; `JumpRouter` + warp + one rule. **Recommended first.**
+2. **Box 3 (instant transit)** — a whole movement mode, but the *spool* is already emergent (a high-creation drive on
+   weak generation IS a long spool).
+3. **The navigator flag** — the seat exists; the question is whether the grave rung is worth the wiring.
+4. **Boxes 2 & 5 (hidden transit)** — the largest blast radius: the scan *and* the battle trigger must both skip a
+   ship in transit. **Note the nuance the demo surfaced: hidden hides the CROSSING, never the departure** — you still
+   spool up in normal space, so a hyperspace ship is loud at the gate and invisible en route.
+
+---
+
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 
 > *"Keep amphibious."*
