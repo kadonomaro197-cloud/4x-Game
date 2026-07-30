@@ -1375,5 +1375,29 @@
         { "Key": "Storage Volume", "Value": 500 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-docking-bay",
+      "Name": "Docking Bay",
+      "TemplateId": "docking-bay",
+      "Properties": [
+        { "Key": "Berth Tonnage", "Value": 60000 },
+        { "Key": "Berths", "Value": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-heavy-berth",
+      "Name": "Heavy Berth",
+      "TemplateId": "docking-bay",
+      "Properties": [
+        { "Key": "Berth Tonnage", "Value": 60000 },
+        { "Key": "Berths", "Value": 1 }
+      ]
+    }
   }
 ]

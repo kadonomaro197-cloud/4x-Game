@@ -15,6 +15,7 @@
         "TemplateFiles/industryTypes.json",
         "TemplateFiles/installations.json",
         "TemplateFiles/storage.json",
+        "TemplateFiles/docking.json",
         "TemplateFiles/materials.json",
         "TemplateFiles/minerals.json",
         "TemplateFiles/ordnance.json",

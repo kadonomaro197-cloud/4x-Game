@@ -1,0 +1,68 @@
+[
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "Name": "Docking Bay",
+      "UniqueID": "docking-bay",
+      "Formulas": {
+        "Description": "Berths for whole vessels. The one thing a cargo hold cannot carry: a ship arrives and leaves under its own power, so a dock answers HOW MANY and HOW BIG rather than how much fits. Split the same tonnage into fewer wide berths or many narrow ones - a tender is one big door, a carrier is several small ones, and each door costs structure.",
+        "Mass": "PropertyValue('Berth Tonnage') * 0.05 + PropertyValue('Berths') * 500",
+        "Volume": "PropertyValue('Berth Tonnage') * 0.002",
+        "HTK": "0.5",
+        "CrewReq": "Max(2, PropertyValue('Berths') * 2)",
+        "ResearchCost": "[Mass] * 0.5",
+        "CreditCost": "[Mass] * 0.25",
+        "BuildPointCost": "[Mass] * 5.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.45",
+        "titanium": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.05",
+        "electronics": "[Mass] * 0.02"
+      },
+      "ComponentType": "Docking Bay",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Berth Tonnage",
+          "Units": "kg",
+          "DescriptionFormula": "'Total docked hull mass the bay supports. This is the budget every berth is carved out of.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "5000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "60000"
+        },
+        {
+          "Name": "Berths",
+          "Units": "vessels",
+          "DescriptionFormula": "'How many vessels dock at once. The SAME total tonnage split more ways, so each door gets narrower - and every extra door costs structure and deck crew.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "20",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "4"
+        },
+        {
+          "Name": "Max Hull Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'The largest SINGLE vessel that fits through a door. Emergent: total tonnage divided by the number of berths. Two small bays never combine into one big one.'",
+          "GuiHint": "GuiTextDisplay",
+          "DataDict": {},
+          "PropertyFormula": "PropertyValue('Berth Tonnage') / PropertyValue('Berths')"
+        },
+        {
+          "Name": "DBargsDock",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Berth Tonnage'), PropertyValue('Max Hull Mass'))",
+          "AttributeType": "Pulsar4X.Docking.DockBayAtb"
+        }
+      ]
+    }
+  }
+]

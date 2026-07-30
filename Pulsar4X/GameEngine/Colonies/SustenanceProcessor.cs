@@ -20,7 +20,7 @@ namespace Pulsar4X.Colonies
     /// installed components, so it was grown and eaten in the same place and <b>could never be shipped</b> — a colony
     /// that could not farm could never be supplied by one that could, which removes the most classic reason a supply
     /// line exists. The <c>food</c> good now exists (<c>materials.json</c>, riding <c>perishable-storage</c>) and
-    /// <see cref="DrawImportedFood"/> consumes it. <b>The apology in this comment was the specification.</b></para>
+    /// <see cref="DrawStoredFood"/> consumes it, and <see cref="BankFoodSurplus"/> banks a surplus so it can be hauled. <b>The apology in this comment was the specification.</b></para>
     ///
     /// NEUTRAL-WHEN-ABSENT: the per-capita demand coefficients default to 0, so every shortage computes to 0 until
     /// the numbers are set on the local build — no colony is starved or browned-out on New Game. Keyed on its own
@@ -62,13 +62,18 @@ namespace Pulsar4X.Colonies
             // (agri-domes / hydroponics carrying FoodProductionAtbDB), health-scaled. Was hardcoded 0 — which made ANY
             // food demand an unwinnable 100% shortage. Now a colony that builds enough food output ends the shortage.
             double foodDemand = pop * sust.PerCapitaFoodDemand;
-            double foodSupply = province.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var comps)
+            double farmOutput = province.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var comps)
                 ? comps.GetTotalFoodOutput() : 0.0;
+            double foodSupply = farmOutput;
 
-            // …and SHIPPED food now counts, which is what this doc-comment used to apologise for ("food from the —
-            // not-yet-existing — food cargo good, so 0 for now"). The `food` good exists as of 2026-07-30, so a colony
-            // that cannot farm can be SUPPLIED by one that can — the reason a supply line exists at all.
-            foodSupply += DrawImportedFood(province, foodDemand, foodSupply);
+            // 🔑 THE FOOD LOOP, both directions — the half this doc-comment used to apologise for.
+            // A farm feeds its own people FRESH (no storage needed — that is physically how it works), and then:
+            //   • short  → draw STORED food, which is how a colony that cannot farm gets fed by one that can, and
+            //   • over   → BANK the surplus, which is the only way a surplus can ever be hauled anywhere.
+            // Exactly one branch runs, so nothing is double-counted.
+            double gapPerDay = foodDemand - farmOutput;
+            if (gapPerDay > 0) foodSupply += DrawStoredFood(province, gapPerDay);
+            else if (gapPerDay < 0) BankFoodSurplus(province, -gapPerDay);
 
             sust.FoodShortage = ColonySustenanceDB.Shortage(foodDemand, foodSupply);
         }
@@ -95,10 +100,9 @@ namespace Pulsar4X.Colonies
         /// demand coefficients are set. Also a clean no-op for a host with no cargo hold, no food good in the mod, or
         /// an empty larder. Never throws — a throwing hotloop kills the game clock (landmine L4).</para>
         /// </summary>
-        private static double DrawImportedFood(Entity province, double foodDemand, double localSupply)
+        private static double DrawStoredFood(Entity province, double shortfallPerDay)
         {
-            double shortfallPerDay = foodDemand - localSupply;
-            if (shortfallPerDay <= 0) return 0.0;                       // farms cover it — nothing to import
+            if (shortfallPerDay <= 0) return 0.0;                       // farms cover it — nothing to draw
             if (!province.TryGetDataBlob<Pulsar4X.Storage.CargoStorageDB>(out var hold)) return 0.0;
 
             try
@@ -128,6 +132,49 @@ namespace Pulsar4X.Colonies
             catch
             {
                 return 0.0;   // no import this month rather than a dead clock
+            }
+        }
+
+        /// <summary>
+        /// Bank a farm's SURPLUS into the host's cold store, so it can be hauled somewhere else. <b>Without this half a
+        /// surplus cannot exist</b> — the farms' output was a per-day rate that was consumed the instant it was computed,
+        /// so a colony growing ten times what it eats had nothing to export and food could only ever move if you
+        /// manufactured it at a refinery. That made "ship food to a hungry colony" possible in principle and
+        /// unreachable in practice.
+        ///
+        /// <para>🔑 <b>And the failure mode is the right one, not a silent loss.</b> Food rides
+        /// <c>perishable-storage</c>, which only a <c>refrigerated-hold</c> provides — so a farming colony with no cold
+        /// store banks nothing and <b>the surplus spoils</b>. That is what "perishable" means, and it is a real reason to
+        /// build cold storage at a breadbasket. <c>AddCargoByUnit</c> returns what actually fitted; whatever did not is
+        /// simply not stored.</para>
+        ///
+        /// <para>✅ <b>Byte-identical on a stock game twice over:</b> no start colony has a farm installed
+        /// (<c>GetTotalFoodOutput()</c> is 0, so there is no surplus), and none has a refrigerated hold either (so even
+        /// a surplus would bank nothing). Never throws — a throwing hotloop kills the clock (landmine L4).</para>
+        /// </summary>
+        private static void BankFoodSurplus(Entity province, double surplusPerDay)
+        {
+            if (surplusPerDay <= 0) return;
+            if (!province.TryGetDataBlob<Pulsar4X.Storage.CargoStorageDB>(out _)) return;
+
+            try
+            {
+                var owner = province.GetFactionOwner;   // unguarded dictionary index — see DrawStoredFood
+                if (owner == null || !owner.TryGetDataBlob<Pulsar4X.Factions.FactionInfoDB>(out var fi)) return;
+                var food = fi.Data?.CargoGoods?.GetAny(FoodGoodID);
+                if (food == null) return;
+
+                const double days = RunFrequencyDays;
+                double units = Math.Floor(surplusPerDay * days);
+                if (units < 1) return;
+                int add = units > int.MaxValue ? int.MaxValue : (int)units;
+
+                // Whatever does not fit is NOT stored — a perishable with nowhere cold to go spoils.
+                Pulsar4X.Storage.CargoTransferProcessor.AddCargoItems(province, food, add);
+            }
+            catch
+            {
+                // no banking this month rather than a dead clock
             }
         }
 

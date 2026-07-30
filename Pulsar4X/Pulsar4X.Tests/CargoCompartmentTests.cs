@@ -259,6 +259,17 @@ namespace Pulsar4X.Tests
                 "a hungry colony EATS the imported food — a supply that is read but never consumed is free food");
             Assert.That(sust.FoodShortage, Is.LessThan(1.0),
                 "…and the import measurably closes the shortage it would otherwise have starved on");
+
+            // 🔑 THE OTHER HALF: a SURPLUS banks, or a surplus cannot exist and food can never be EXPORTED.
+            // Farm output used to be a per-day rate consumed the instant it was computed, so a colony growing ten
+            // times what it eats had nothing to ship. Set demand back to 0 → everything the (absent) farms make is
+            // surplus; with no farms there is nothing to bank, which is exactly the stock byte-identical case.
+            sust.SetDemand(perCapitaPower: 0.0, perCapitaFood: 0.0);
+            long beforeBank = hold.GetUnitsStored(food, false);
+            SustenanceProcessor.Recalc(s.Colony);
+            Assert.That(hold.GetUnitsStored(food, false), Is.EqualTo(beforeBank),
+                "a colony with NO farm banks nothing — the surplus path is inert exactly where the stock game is");
+            Log($"surplus path with no farm installed: {beforeBank} units unchanged (byte-identical)");
         }
 
         /// <summary>

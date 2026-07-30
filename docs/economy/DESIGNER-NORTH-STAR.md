@@ -2981,6 +2981,68 @@ first: *can this host actually hold what it mines?* — which is a good test to 
 cargo?* Charged cells are a genuine science-fiction trade good — but wiring it through `CargoStorageAtb` would give the
 game a **second way to hold a charge**, and a fifth parallel store is not a fix.
 
+### 46d 🔒 THE DOCK — built as its OWN AREA, and food's loop closed (developer, 2026-07-30)
+
+*"Did you build berth for an actual dock that can be built? That should be its own area. Also you should build food."*
+
+#### The dock, and why it is not a ninth cargo class
+
+**Berth was listed in §46a as the one class the compartment taxonomy could not express, and the ruling is right: it
+should not be in that list at all.** Every other compartment measures its contents in **cubic metres poured in**. A dock
+holds a **discrete vessel that arrives and leaves under its own power**, so the question it answers is *how many, and how
+big* — not *how much fits*. Pouring a frigate into a warehouse by volume would let you carry half a frigate. That is
+exactly why `GroundBayAtb` had to invent its own capacity system for troops instead of using a cargo type.
+
+**So it is its own area: `GameEngine/Docking/`, with its own template file `TemplateFiles/docking.json`.**
+
+| Piece | What it is |
+|---|---|
+| **`DockBayAtb`** | The buildable component. **Two gates:** `BerthTonnage` (the budget) and `MaxHullMass` (the door — the largest SINGLE vessel that fits). The ctor clamps the door to the budget, so bad data cannot open a door wider than the bay. |
+| **`DockedShipsDB`** | The carrier's registry — **ids, not references**, and an id that no longer resolves is skipped rather than throwing (a docked ship destroyed by a hit costs capacity nothing). Carries `Clone()` + a copy-ctor, because **L12** means a blob without one silently becomes a bare `System.Object` when the carrier jumps systems — the one case a dock most needs to survive. |
+| **`DockTools`** | Capacity/door reads summed **on demand** and health-scaled (a shot-up bay holds less), `CanDock` with a **stated reason** per refusal, `TryDock`, `Undock`, and **`UndockAll` — the grave rung.** |
+
+🔑 **The dial is a SPLIT, and it is the honest shape (§34.7a).** `Berth Tonnage` is carved into `Berths`, so
+**`Max Hull Mass = tonnage ÷ berths`**: the **total capacity is invariant** and you choose *few wide doors* or *many
+narrow ones*. Neither strictly dominates — and every extra door costs **structure and deck crew**, so a **carrier is a
+real commitment beside a tender** rather than free flexibility. Two shipped designs make it visible in the data:
+`docking-bay` (60 t / 4 berths → 15 t doors) and `heavy-berth` (the same 60 t / 1 berth → a 60 t door).
+
+✅ **The consequence that makes it more than a spreadsheet row:** a docked ship is re-parented with
+`PositionDB.SetParent`, which preserves absolute position across the switch — **the same mechanism that makes a moon
+follow its planet** — so it travels with the carrier and stops being independently located. Undocking hands it back to
+whatever the carrier itself orbits.
+🔒 **And the grave rung is explicit: `UndockAll` releases everything ALIVE.** Losing a hangar must never silently delete
+the ships inside it.
+
+✅ **Stock behaviour is byte-identical by construction:** no base-mod ship mounts a bay, and **nothing in the engine calls
+`DockTools`** — a ship docks only when something asks. The **order** that lets a player or the AI ask is the next slice,
+and it will be **one verb both seats issue** (the developer's law) because it is one method here.
+
+⚠ **Found while building it — a landmine worth its own entry: there are TWO `PositionDB` classes.** The one in
+`Engine/Datablobs/PositionDB.cs` is **entirely commented out** (the file opens `using`s and then a `/*`), so
+`using Pulsar4X.Datablobs` for it compiles and **silently gets you nothing**; the live class is
+**`Pulsar4X.Movement.PositionDB`**, in `Movement/MoveState.cs`. A `^namespace` grep finds the dead one first.
+
+#### Food's loop closed — you could not bank a surplus, so you could not export food
+
+§46c added the `food` good and wired `SustenanceProcessor` to **consume** a stockpile. That was only half a loop: farm
+output was a **per-day rate consumed the instant it was computed**, so **a colony growing ten times what it eats had
+nothing to ship**, and food could only move if you manufactured it at a refinery.
+
+**`BankFoodSurplus` closes it.** Exactly one branch runs per month, so nothing is double-counted:
+
+| Farm output vs demand | What happens |
+|---|---|
+| **short** | draw STORED food and consume it → a colony that cannot farm is fed by one that can |
+| **over** | **BANK the surplus** → and only now can a surplus be hauled anywhere |
+
+🔑 **And the failure mode is the right one, not a silent loss.** Food rides `perishable-storage`, which only a
+`refrigerated-hold` provides — so **a farming colony with no cold store banks nothing and the surplus spoils.** That is
+what "perishable" *means*, and it is a real reason to build cold storage at a breadbasket.
+
+✅ **Byte-identical on a stock game twice over:** no start colony has a farm installed (no surplus to bank), and none has
+a refrigerated hold either (so even a surplus would bank nothing). Both halves are asserted.
+
 ### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
 
 **The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers
