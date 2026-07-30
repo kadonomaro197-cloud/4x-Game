@@ -1421,5 +1421,16 @@
         { "Key": "Storage Volume", "Value": 10000 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-antimatter-drive",
+      "Name": "Annihilation Drive",
+      "TemplateId": "antimatter-engine",
+      "Properties": [
+        { "Key": "Mass", "Value": 3000 }
+      ]
+    }
   }
 ]

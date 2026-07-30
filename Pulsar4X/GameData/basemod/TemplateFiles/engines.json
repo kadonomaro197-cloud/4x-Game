@@ -381,5 +381,89 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "antimatter-engine",
+      "Name": "Antimatter Drive",
+      "Formulas": {
+        "Description": "An annihilation drive. The highest exhaust velocity in the game - it goes further per kilogram of fuel than anything else - and the lowest fuel grade, so it pushes SOFTEST. It burns antimatter, which rides a CONTAINMENT hold, so a ship carrying this engine and no containment has a drive it cannot feed.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass] / 48",
+        "HTK": "0.5",
+        "CrewReq": "Max(2, [Mass] * 0.002)",
+        "ResearchCost": "[Mass] * 2.5",
+        "CreditCost": "[Mass] * 4",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.1",
+        "titanium": "[Mass] * 0.3",
+        "tungsten": "[Mass] * 0.3",
+        "rare-earth-elements": "[Mass] * 0.15",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Engine",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'The size of the engine in kg'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "TechData('tech-conventional-engine-max-size')",
+          "MinFormula": "TechData('tech-conventional-engine-min-size') + 1400",
+          "StepFormula": "1",
+          "PropertyFormula": "3000"
+        },
+        {
+          "Name": "Fuel Type",
+          "DescriptionFormula": "'The type of fuel the engine burns. Antimatter rides a CONTAINMENT hold, not a fuel tank.'",
+          "GuiHint": "GuiFuelTypeSelection",
+          "DataDict": {
+            "contained-storage": "'antimatter'"
+          },
+          "PropertyFormula": "UniqueID('antimatter')"
+        },
+        {
+          "Name": "Exhaust Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'Specific Impulse in m/s - the highest of any drive, which is what buys the range'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "ExhaustVelocityLookup(PropertyValue('Fuel Type'))"
+        },
+        {
+          "Name": "Fuel Consumption",
+          "Units": "kg/s",
+          "DescriptionFormula": "'Fuel Consumption per second. The fuel GRADE is low, so the mass flow is small - which is why thrust is modest despite the exhaust velocity.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "[Mass] * 0.017 * FuelGradeLookup(PropertyValue('Fuel Type'))"
+        },
+        {
+          "Name": "Thrust",
+          "Units": "N",
+          "DescriptionFormula": "'The maximum thrust output of this engine'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "PropertyValue('Exhaust Velocity') * PropertyValue('Fuel Consumption')"
+        },
+        {
+          "Name": "DataBlob",
+          "DescriptionFormula": "''",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Exhaust Velocity'), PropertyValue('Fuel Type'), PropertyValue('Fuel Consumption'))",
+          "AttributeType": "Pulsar4X.Movement.NewtonionThrustAtb"
+        },
+        {
+          "Name": "Sensor Signature",
+          "DescriptionFormula": "''",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(3500, PropertyValue('Thrust'))",
+          "AttributeType": "Pulsar4X.Sensors.SensorSignatureAtb"
+        }
+      ]
+    }
   }
 ]

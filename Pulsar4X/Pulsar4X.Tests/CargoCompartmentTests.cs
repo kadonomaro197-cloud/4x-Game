@@ -368,6 +368,108 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>
+        /// 🔑 ANTIMATTER — the first item from the taxonomy that did not exist, worked in cradle-to-grave (§46g).
+        ///
+        /// <para><b>This is what "justified in game" has to mean.</b> Not a label on a list: a good with a
+        /// <b>producer</b> (refined from fissionables at ruinous industry cost), a <b>consumer</b> (an engine that
+        /// burns it), a <b>place in an existing trade</b> (it continues the shipped fuel ladder rather than sitting
+        /// beside it), and a <b>reason the compartment matters</b>.</para>
+        ///
+        /// <para><b>The ladder it joins</b> — exhaust velocity UP, fuel grade DOWN, so a better fuel goes further per
+        /// kilogram and pushes <em>softer</em>. That trade is the §26.3 ruling that stopped fuel being a pure
+        /// dominance ladder, and antimatter had to obey it or it would be a strictly-better fuel:</para>
+        /// <code>rp-1 3510/1.15 → hydrolox 4462/0.85 → ntp 7000/0.75 → antimatter 60000/0.05</code>
+        ///
+        /// <para>⚠ <b>The grade started at 0.35 and that was WRONG — and the first version of this test PASSED it.</b>
+        /// The old assertion was <c>Grade(antimatter) &lt; Grade(ntp)</c>, which is worthless: <b>thrust = exhaust
+        /// velocity × mass flow, and mass flow scales with grade</b>, so an 8.6× rise in exhaust velocity swamps a
+        /// 2.1× fall in grade. At 0.35 antimatter had <b>4× the nuclear drive's thrust AND 8.6× its range</b> —
+        /// strictly better on every axis but price, which is exactly the dominance §26.3 exists to remove.
+        /// <b>Assert the PRODUCT the sim computes, not the input dial</b>: both templates share the same
+        /// <c>[Mass] * 0.017 * grade</c> consumption coefficient, so <c>EV × grade</c> IS thrust per kg of engine.
+        /// At grade 0.05 that reads 51.0 N/kg against the nuclear drive's 89.2 — it genuinely pushes softer.</para>
+        ///
+        /// <para>🔒 <b>And the payoff that makes CONTAINMENT load-bearing instead of decorative:</b> the engine's
+        /// <c>Fuel Type</c> dial is filtered by <b>cargo type</b> (<c>DataDict</c> keyed on the compartment class), and
+        /// antimatter rides <c>contained-storage</c>. <b>So a ship with an antimatter drive and no containment hold has
+        /// a drive it cannot feed.</b> That is two systems constraining each other, which is the whole point of the
+        /// Connect rule.</para>
+        /// </summary>
+        [Test]
+        [Description("Antimatter exists cradle-to-grave: refined from fissionables at ruinous cost, riding a containment hold, burned by an antimatter drive that binds from JSON. It continues the shipped fuel ladder honestly — the highest exhaust velocity, and the LOWEST thrust per kilogram of engine, so it goes furthest per kilogram of fuel and pushes softest rather than being strictly better. That last check is asserted on EV × grade (thrust per engine-kg, what the sim actually computes) rather than on the grade dial alone, because a weaker version of this test passed a calibration that gave antimatter 4× the nuclear drive's thrust. And because the engine's fuel dial filters by compartment class, a ship with this drive and no containment hold has a drive it cannot feed.")]
+        public void Antimatter_ExistsCradleToGrave_AndMakesContainmentLoadBearing()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+
+            // ① THE GOOD — produced (a real recipe) and stored where it belongs.
+            var am = data.CargoGoods.GetAny("antimatter") as Pulsar4X.Industry.ProcessedMaterial;
+            Assert.That(am, Is.Not.Null, "antimatter is a base-mod refined material");
+            Assert.That(am.CargoTypeID, Is.EqualTo("contained-storage"),
+                "it annihilates on contact — it rides containment, never a fuel tank");
+            Assert.That(am.ResourceCosts, Is.Not.Empty, "and it is REFINED from something, not conjured");
+            Assert.That(s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns.ContainsKey("antimatter"), Is.True,
+                "…and it is refinable at the start colony (in StartingItems, so it becomes an IndustryDesign)");
+            Log($"antimatter: {am.CargoTypeID}, costs {string.Join(" + ", am.ResourceCosts.Select(kv => $"{kv.Value} {kv.Key}"))}"
+                + $" → {am.OutputAmount}, {am.IndustryPointCosts} industry points");
+
+            // ② IT IS EXPENSIVE — the gate is ENERGY, not knowledge. Compared against the dearest existing fuel.
+            var ntp = data.CargoGoods.GetAny("ntp") as Pulsar4X.Industry.ProcessedMaterial;
+            Assert.That(am.IndustryPointCosts, Is.GreaterThan(ntp.IndustryPointCosts),
+                "antimatter must cost far more industry than the next-dearest fuel, or it is free power");
+            Assert.That(am.CreditValue, Is.GreaterThan(ntp.CreditValue), "and be worth far more");
+
+            // ③ THE LADDER — it must EXTEND the trade, not break it. Exhaust velocity up, grade DOWN.
+            double Ev(string id) => double.Parse(
+                ((Pulsar4X.Industry.ProcessedMaterial)data.CargoGoods.GetAny(id)).Formulas["ExhaustVelocity"]);
+            double Grade(string id) => double.Parse(
+                ((Pulsar4X.Industry.ProcessedMaterial)data.CargoGoods.GetAny(id)).Formulas["FuelGrade"]);
+
+            foreach (var id in new[] { "rp-1", "hydrolox", "ntp", "antimatter" })
+                Log($"  {id,-12} exhaust {Ev(id),8:N0} m/s · grade {Grade(id):0.00}");
+
+            Assert.That(Ev("antimatter"), Is.GreaterThan(Ev("ntp")),
+                "the highest exhaust velocity in the game — that is what it buys");
+            Assert.That(Grade("antimatter"), Is.LessThan(Grade("ntp")), "…and the LOWEST grade");
+
+            // 🔒 THE REAL DOMINANCE GAUGE — and the one that caught a bad calibration.
+            // "grade is lower" is NOT enough, because thrust = ExhaustVelocity × massflow and massflow scales with
+            // grade, so a big EV rise can swamp a small grade fall and the fuel wins BOTH axes. First authored at
+            // grade 0.35 antimatter had 4× the NTR's thrust per kg of engine AND 8.6× its range — strictly better,
+            // gated only by price, which is exactly the dominance §26.3 exists to remove. The gauge has to read the
+            // product the sim actually computes. Both templates share the same `[Mass] * 0.017 * grade` consumption
+            // coefficient, so `EV × grade` IS thrust per kg of engine, directly comparable between the two.
+            double ThrustPerEngineKg(string fuel) => Ev(fuel) * Grade(fuel) * 0.017;
+            Log($"  thrust per kg of engine — ntp {ThrustPerEngineKg("ntp"):N1} N/kg"
+                + $" vs antimatter {ThrustPerEngineKg("antimatter"):N1} N/kg");
+            Assert.That(ThrustPerEngineKg("antimatter"), Is.LessThan(ThrustPerEngineKg("ntp")),
+                "🔒 antimatter must push SOFTER per kg of engine than the nuclear drive. It goes much further per kg "
+                + "of FUEL (8.6× the exhaust velocity) and that is what you pay for — but it is not also the "
+                + "punchiest drive, or nothing else on the ladder would ever be built");
+
+            // ④ THE CONSUMER — an engine that burns it, bound from JSON.
+            var drive = data.ComponentTemplates["antimatter-engine"];
+            Assert.That(drive, Is.Not.Null, "the antimatter drive template is unlocked");
+            var fuelProp = drive.Properties.Single(pr => pr.Name == "Fuel Type");
+            Assert.That(fuelProp.PropertyFormula, Does.Contain("antimatter"), "the drive burns antimatter");
+
+            // ⑤ 🔒 THE JOINT — the fuel dial is filtered by COMPARTMENT CLASS, so the drive is unfeedable without
+            //    a containment hold. This is the assertion that makes containment matter.
+            Assert.That(fuelProp.DataDict, Is.Not.Null, "the fuel dial filters by compartment");
+            Assert.That(fuelProp.DataDict.Keys, Does.Contain("contained-storage"),
+                "🔒 the drive's fuel selector is keyed on CONTAINED storage — so a ship with this engine and no "
+                + "containment hold has a drive it cannot feed, and the two systems constrain each other");
+
+            var built = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns["default-design-antimatter-drive"];
+            Assert.That(built.HasAttribute<Pulsar4X.Movement.NewtonionThrustAtb>(), Is.True,
+                "and the shipped drive design binds a real thrust attribute (the gotcha-#10 JSON→atb sensor)");
+            var thrust = built.GetAttribute<Pulsar4X.Movement.NewtonionThrustAtb>();
+            Log($"{built.Name}: {built.MassPerUnit:N0} kg, exhaust {thrust.ExhaustVelocity:N0} m/s, crew {built.CrewReq}");
+            Assert.That(thrust.ExhaustVelocity, Is.EqualTo(Ev("antimatter")).Within(1),
+                "the drive's exhaust velocity comes from the FUEL, through ExhaustVelocityLookup");
+        }
+
+        /// <summary>
         /// The three goods that were filed as dry bulk and are physically something else. Moving them is what the
         /// gauge above exists to make safe.
         /// </summary>

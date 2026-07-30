@@ -3171,6 +3171,89 @@ fuel formula, a **named** code consumer, or sit on the waiting list **with a sta
 it"* is not a purpose. It also asserts the grade ladder is a real ladder and not three reskins: each tier must differ
 in **credit value** and the premium tier must differ in **what it is made of**.
 
+### 46g 🔒 WORKING THE MISSING ITEMS IN — ANTIMATTER, and the dominance the first calibration hid (developer, 2026-07-30)
+
+*"I just wanted what wasn't on the list you made initially justified in game. They're good ideas we just gotta work
+them in."*
+
+**The scope correction.** §46f audited the **38 goods that already exist**. That was not the ask. The ask is the
+opposite direction: the sci-fi taxonomy named a set of things the game **does not have** — antimatter, colonists,
+xeno specimens, biomass, medical stock, seed banks — and each one earns its place by being **built cradle-to-grave**,
+not by being listed. **A taxonomy entry with no producer, no consumer, and no decision attached to it is a spreadsheet
+row.** So each gets worked in one at a time, and each must pass the §46f three tests plus §39.8's *win an axis, lose
+an axis*.
+
+#### ✅ ANTIMATTER — the first one in, and it needed no engine code at all
+
+**Why it was cheap: the fuel system is already fully data-driven.** `ExhaustVelocityLookup` and `FuelGradeLookup`
+(`ChainedExpression.cs:537-560`) read `Formulas["ExhaustVelocity"]` and `Formulas["FuelGrade"]` **off the material
+blueprint**. So a new fuel is a **material row plus an engine template** — zero C#.
+
+**The cradle-to-grave chain, every rung named:**
+
+| Rung | What |
+|---|---|
+| mineral | `fissionables` (mined), + `rare-earth-elements`, `tungsten` |
+| material | **`antimatter`** — 500 fissionables + 50 REE + 20 tungsten → **1** unit, 5,000 industry points |
+| component | **`antimatter-engine`** template → `default-design-antimatter-drive` ("Annihilation Drive") |
+| research | gated by industry, not tech — **the cost is ENERGY, not knowledge** (the deliberate design position) |
+| unit | mounted on a ship, and **fed only from a `containment-hold`** |
+| decision | *is this run worth 8.6× the range at 580× the cost per unit of Δv?* |
+| loss | containment destroyed ⇒ the drive is unfeedable — it does not degrade, it **stops** |
+
+#### 🔒 THE JOINT — this is what makes containment load-bearing instead of decorative
+
+`GuiFuelTypeSelection` is not a free-text field. `GetFuelTypes` (`ComponentDesignDisplay.cs:939`) walks the dial's
+`DataDict` **keys as CARGO CLASSES** and offers only materials in that class whose `Formulas["FuelType"]` matches the
+dial's value. Antimatter rides `contained-storage`, so the drive's dial reads
+`{"contained-storage": "'antimatter'"}` — and **a ship with this engine and no containment hold has a drive it cannot
+feed.** Two systems that were each independently fine now constrain each other, which is the whole point of Connect.
+
+#### ⚠ THE CORRECTION — my grade number was wrong, and my own gauge was too weak to catch it
+
+Authored at `FuelGrade 0.35`, checked against `Grade(antimatter) < Grade(ntp)` — **which passed**. The assertion was
+worthless, because **thrust = ExhaustVelocity × massflow and massflow scales with grade**, so a large EV rise swamps a
+small grade fall:
+
+| Fuel | EV | Grade | **Thrust per kg of engine** | Δv per kg of fuel |
+|---|---|---|---|---|
+| `ntp` (nuclear) | 7,000 | 0.75 | **89.2 N/kg** | 7,000 |
+| `antimatter` **as first authored** | 60,000 | 0.35 | **357.0 N/kg** ⛔ | 60,000 |
+| `antimatter` **corrected** | 60,000 | **0.05** | **51.0 N/kg** ✅ | 60,000 |
+
+At 0.35 antimatter had **4× the nuclear drive's thrust AND 8.6× its range** — strictly better on every axis but price.
+That is precisely the dominance §26.3 exists to remove, shipped behind a green test.
+
+🔒 **THE LESSON, and it is the general one: assert the PRODUCT the sim computes, not the input dial.** Both templates
+share the same `[Mass] * 0.017 * grade` consumption coefficient, so `EV × grade` **is** thrust per kg of engine and is
+directly comparable. The gauge now reads that. *(This is the second time this campaign a green test hid a real
+defect — the first was the 100× solar-unit error in `PowerJustificationTests`. Both had the same shape: the gauge
+re-derived a number instead of computing what the engine computes.)*
+
+**The resulting design position, which is a real one:** antimatter is **not** a fleet fuel. It goes 8.6× further per
+kilogram and pushes softer than the nuclear drive, and one unit eats 500 fissionables — **50,000× the fissionables per
+unit that nuclear propellant needs**. It is the fuel for the **deep-range probe and the one-way strike that cannot
+afford to carry propellant mass**. That sentence is in the material's own description, because a good the player
+cannot see the purpose of has not been justified.
+
+**Gauge `Antimatter_ExistsCradleToGrave_AndMakesContainmentLoadBearing`** — the good exists and is refinable at the
+start colony; it costs more industry and credits than the dearest existing fuel; the ladder **extends** (highest EV,
+lowest thrust-per-engine-kg); the drive template binds a real `NewtonionThrustAtb`; and the fuel dial's `DataDict` is
+keyed on `contained-storage`.
+
+#### The remaining taxonomy items, and what each still needs
+
+| Item | Rides | What is still missing |
+|---|---|---|
+| **colonists** | `passenger-storage` / `cryogenic-storage` | population must become *carryable* — a load/unload order moving `ColonyInfoDB.Population` into a hold |
+| **xeno specimens** | `contained-storage` / `cryogenic-storage` | a **research** consumer — a specimen must buy something at a lab |
+| **biomass** | `perishable-storage` | a producer (a harvest) and a consumer (a refinery input into `food`) |
+| **medical stock** | `perishable-storage` | a consumer — nothing in the engine models casualties-treated-by-supply yet |
+| **seed / gene banks** | `cryogenic-storage` | a consumer — colony founding does not read stores |
+
+⚠ **None of these ships until its consumer does.** A good whose only justification is that it appears in a taxonomy
+fails test 2, and this section exists to say so out loud.
+
 ### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
 
 **The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers
