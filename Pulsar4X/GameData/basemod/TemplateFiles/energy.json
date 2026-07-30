@@ -5,11 +5,11 @@
       "UniqueID": "reactor",
       "Name": "Reactor",
       "Formulas": {
-        "Description": "A non refuelable reactor, Generates power for a ship",
+        "Description": "A non refuelable reactor. The highest power per kilogram in the game — the warship core. Pays for it in crew, in fissile fuel, and in being the LOUDEST thing on a ship.",
         "Mass": "PropertyValue('Mass')",
         "Volume": "PropertyValue('Mass')",
         "HTK": "0.5",
-        "CrewReq": "[Mass]",
+        "CrewReq": "Max(2, [Mass] / 500)",
         "ResearchCost": "[Mass] * 0.5",
         "CreditCost": "[Mass]",
         "BuildPointCost": "[Mass]"
@@ -155,11 +155,11 @@
       "UniqueID": "rtg",
       "Name": "RTG",
       "Formulas": {
-        "Description": "A non refuelable reactor, Generates power for a ship",
+        "Description": "An isotope block with no moving parts. Tiny output, but it needs NO crew and no attention for decades — the probe, the deep-space beacon, the unmanned outpost. Its justification is unattended endurance, not power.",
         "Mass": "PropertyValue('Mass')",
         "Volume": "PropertyValue('Mass')",
         "HTK": "0.5",
-        "CrewReq": "1",
+        "CrewReq": "0",
         "ResearchCost": "[Mass] * 0.5",
         "CreditCost": "[Mass]",
         "BuildPointCost": "[Mass]"
@@ -282,7 +282,7 @@
       "UniqueID": "steam-turbine-reactor",
       "Name": "Steam Turbine Reactor",
       "Formulas": {
-        "Description": "A more powerful reactor that heats water to steam and passes it through a turbine",
+        "Description": "A big fuelled plant that heats water to steam and drives a turbine. Its edge is VOLUME — a thousand times more power per cubic metre than a reactor of the same mass, on three crew. The station and colony plant.",
         "Mass": "PropertyValue('Mass')",
         "Volume": "PropertyValue('Mass') / 1000",
         "HTK": "0.5",
@@ -318,9 +318,9 @@
           "PropertyFormula": "2000"
         },
         {
-          "Name": "Output vs Efficency",
+          "Name": "Core vs Generator",
           "Units": "percent",
-          "DescriptionFormula": "'Percent of mass taken up by the generator vs the core, larger generator is more efficent but less output'",
+          "DescriptionFormula": "'How the plant s mass is split between the reactor CORE and the GENERATOR set. A bigger core makes more power and eats fissile fuel, graphite and titanium; a bigger generator makes less power and eats tungsten and nickel instead. It is a MATERIALS trade, not an efficiency one — fuel duration is fixed at ~12.7 years by design, whatever you set.'",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "70",
           "MinFormula": "30",
@@ -332,7 +332,7 @@
           "Units": "kg",
           "DescriptionFormula": "'Mass of the Core including fuel and shielding'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "[Mass] * PropertyValue('Output vs Efficency') * 0.01"
+          "PropertyFormula": "[Mass] * PropertyValue('Core vs Generator') * 0.01"
         },
         {
           "Name": "GennyMass",
@@ -430,7 +430,7 @@
         "rare-earth-elements": "[Mass] * 0.05"
       },
       "ComponentType": "Energy Generation",
-      "MountType": 1,
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Station",
       "IndustryTypeID": "component-construction",
       "CargoTypeID": "general-storage",
       "Properties": [

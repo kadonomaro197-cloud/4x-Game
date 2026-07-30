@@ -2012,34 +2012,43 @@ side of the dial is the side that matters for ship design. The RTG gets this rig
 > question is not "is it in the mass formula" but "which of the seven does it appear in, and is that the channel the
 > player is actually constrained by?"** Here the answer is *"minerals yes, mass no"* — and for a ship, mass binds.
 
-### 39.3 🔴 The turbine's `Output vs Efficency` is a dial NAMED AFTER A TRADE THAT DOES NOT EXIST
+### 39.3 ⚠️ CORRECTED + 🔒 RULED — the turbine's dial was MIS-NAMED, not empty. And 12.7 years is now DELIBERATE.
 
-Follow the chain in `energy.json`:
+**Two developer rulings landed on this one (2026-07-30):** *"stm turbine should be stuck at 12 yrs"* and *"you took
+some slider options away … find a balance."* Both narrow what I had wrong.
 
-```
-CoreMass       = Mass × OvE × 0.01
-FuelMass       = CoreMass × 0.6
-CoreOutput     = FuelMass × 100 × 1.0
-Fuel Burn Rate = CoreOutput ÷ 40e9
-FuelDuration   = FuelMass ÷ Fuel Burn Rate
-               = FuelMass × 40e9 ÷ (FuelMass × 100)
-               = 4 × 10⁸ seconds        ← CONSTANT. independent of the dial AND of mass.
-```
+**What I claimed:** `Output vs Efficency` is *"a dial named after a trade that does not exist"*, because
+`FuelDuration = FuelMass × 40e9 ÷ (FuelMass × 100) = 4×10⁸ s` — **constant, independent of the dial and of mass** —
+while `GeneratorOutput` rises straight with it. So the dial only ever added output.
 
-**Every steam turbine in the game has exactly the same fuel duration (~12.7 years), whatever you set.** Meanwhile
-`GeneratorOutput = CoreOutput × 0.8` rises straight with the dial. So the dial only ever adds output, at no cost in
-efficiency or endurance: **crank it to 70.**
+**🔒 The constant duration is now RULED INTENDED.** ~12.7 years is the steam turbine's *identity*: a big fuelled plant
+you install and forget for a decade. It is not a bug to be fixed; it is the thing that distinguishes it from a reactor
+whose `Lifetime` you dial. **So the dial must NOT be re-purposed into output↔endurance** — that would delete the
+turbine's character to satisfy a pattern.
 
-**⚠️ And a correction on `GennyMass`:** I said it was computed and never used. It *is* used — in the **`ResourceCost`
-block**, heavily (`stainless-steel`, `copper`, `aluminium`, `nickel` and **`tungsten`** all scale with it). So the
-core-vs-generator split does decide **what the turbine costs to build**: a generator-heavy design eats tungsten and
-nickel, a core-heavy one eats graphite. That is a real consequence, and it means the dial half-passes test ①.
+**⚠️ And the dial was never empty — I read the output formula and stopped.** Traced through the `ResourceCost` block
+(the same mistake as §39.2), it is a **materials trade**, and a well-formed one:
 
-**What remains wrong is the NAME.** Generator efficiency is a hard-coded `0.8`, never derived from `GennyMass`, and fuel
-duration is that same 4×10⁸ s constant. So the dial changes your **bill of materials** and your **output**, and never
-your **efficiency** or your **endurance** — the two things it is named after. **The clearest "the name promises a
-decision the numbers do not deliver" case found so far**, and a standing warning against reading dial names as
-evidence.
+| Setting | Core / Generator | Output | Core-side materials | Generator-side materials | Duration |
+|---|---|---|---|---|---|
+| **30%** | 600 / 1400 | 28,800 kW | fissile 360 · graphite 90 · titanium 3 | **tungsten 70 · nickel 143** | 12.7 yr |
+| **50%** | 1000 / 1000 | 48,000 kW | fissile 600 · graphite 150 · titanium 5 | tungsten 50 · nickel 105 | 12.7 yr |
+| **70%** | 1400 / 600 | **67,200 kW** | **fissile 840 · graphite 210 · titanium 7** | tungsten 30 · nickel 67 | 12.7 yr |
+
+**A bigger core makes more power and eats fissile fuel, graphite and titanium; a bigger generator makes less power and
+eats tungsten and nickel instead.** Output rises *and the fissile bill rises proportionally* — so by §34.7a it is an
+honest **scale** dial (a purchase, not a ladder), and it additionally decides **which minerals you spend**, which is a
+genuine strategic axis in a game whose economy is mineral-constrained.
+
+**So the only real defect was the NAME.** It promised *efficiency* and delivered *output plus a materials mix*.
+**Renamed to `Core vs Generator`**, with a description that states the trade and states plainly that fuel duration is
+fixed at ~12.7 years by design. **No dial removed, no dial re-purposed** — which is the developer's *"find a balance"*
+applied: the fix was a truthful label, not a re-engineering.
+
+🔒 **The rule this earned, and it has now bitten three times (§39.2 · §39.3 · the fire-control pair):** *before calling
+a dial empty, read **every** cost block — `Mass` · `Volume` · `CrewReq` · `ResearchCost` · `CreditCost` ·
+`BuildPointCost` · **`ResourceCost`**. A dial that writes no performance number may still be writing your bill of
+materials, and that is a real consequence.*
 
 ### 39.4 🔴 A reactor is silently also a BATTERY, and the units do not match
 
@@ -2187,13 +2196,112 @@ departure gate refuses (`WarpMoveCommand:258`), the ground supply gate refuses (
 would strand the entire starting fleet. So the gate needs either a much longer default lifetime, a refuelling order, or
 both — that is the decision, and it is the developer's, not the derivation's.)*
 
+### 39.8 🔒 EVERY OPTION MUST HAVE A JUSTIFICATION OVER THE OTHERS (developer, 2026-07-30)
+
+> *"Each of the types of power options should have a justification over the other."*
+
+**The right rule, and the door was failing it on three of five.** An option a player would never choose is not an
+option, it is clutter — so **no power source may be beaten on every axis the simulation reads.** Each must win at
+least one outright, and *that win is its reason to exist.*
+
+Measured, on every axis the sim actually consumes:
+
+| Option | kW / kg | kW / m³ | Crew | Signature | Fuel | Mounts |
+|---|---|---|---|---|---|---|
+| **reactor** | **50.00** ← wins | 50 | 🔴 **`[Mass]` = 1500** | loudest in the game | fissile | Ship · Fighter · Ground · **Station** |
+| **steam turbine** | 24.00 | **24,000** ← wins | 3 | 1700 K | fissile | Ship · Fighter · Ground |
+| **rtg** | 🔴 **0.0011** | 0.0011 | 1 | 1700 K | fissile | Ship · Fighter · Ground |
+| **solarArray** | 0.135 | 270 | **0** ← wins | **none** ← wins | **none** | 🔴 **`1`** — ship only |
+| battery-bank | *(stores)* | — | 0 | none | none | Ship · Fighter |
+
+**Three failures, and one thing that was already perfect:**
+
+**① 🔴 The reactor's crew bill was CREW = KILOGRAMS.** `CrewReq: "[Mass]"` — a 1500 kg reactor demanded **1500 crew**.
+Component crew sums into a ship's `CrewReq` (gated by `ManpowerTools.ResolveBuild`) and into
+`InfrastructureProcessor`'s capacity demand, so **the highest-power-density generator in the game was unusable in
+practice.** Its justification existed and was cancelled by a unit error — the same class of mistake as §39.7a's
+hours-as-seconds. **Fixed: `Max(2, [Mass] / 500)`** — three operators at the stock 1500 kg, fifty at 25 tonnes.
+*(The divisor is a judgement, anchored on the turbine's three crew for a comparable plant.)*
+
+**② 🔴 The RTG won nothing at all.** ~22,000× worse per kilogram than a turbine **to save two crew.** A strictly
+dominated recipe — precisely the shape RP-1 had before the fuel-grade fix (§26.3). It needed an axis it owns:
+**crew 1 → 0**, making it the only **fuelled** generator that needs *nobody aboard*. That is a real and distinct
+justification (probe · deep-space beacon · unmanned outpost) and it is physically honest — an isotope block has no
+moving parts and no operators. ⚠ **Its four-order density gap is flagged, not silently tuned:** closing it means
+picking a number, and the shape (output should rise, endurance is already its trade) is a developer call.
+
+**③ 🔴 Solar could not be built anywhere but a ship.** `MountType: 1` — a raw integer that happened to equal
+`ComponentMountType.ShipComponent`. So the one generator needing no fuel and no crew, the obvious choice for a colony
+or a station, could go on neither. **Fixed: `ShipComponent, ShipCargo, PlanetInstallation, Station`** — which also
+closes §39.6 (a colony can now build a power plant, and `SustenanceProcessor`'s waiting consumer has a producer).
+
+**④ 🔑 And solar's real justification needed no fix — it was already there and nothing said it.** The three fuelled
+generators each carry a `SensorSignatureAtb` at 1700 K, the reactor being **the loudest thing on a ship**; a solar
+array emits **nothing**. **Solar is the only silent power source in the game.** Detection decides who shoots first
+(§37 row 3 — an equal blind fleet is wiped taking zero losses), so silence is a first-class reason to choose it. Its
+costs are honest and already wired: 370× worse per kilogram, and it attenuates with distance from the star.
+
+### 39.8a The justification table, as it now reads
+
+| Option | **Its one justification** | Its cost |
+|---|---|---|
+| **Reactor** | **most power per kilogram** — the warship core | loudest signature · most crew · most fissile fuel |
+| **Steam turbine** | **most power per cubic metre** (1000×) on three crew — the station and colony plant | needs real mass; a fixed 12.7-year fuel duration |
+| **RTG** | **needs nobody aboard, for decades** — probe · beacon · unmanned outpost | tiny output *(gap flagged)* |
+| **Solar array** | **silent and fuel-free** — the stealth and logistics-free choice | low density; dies far from a star |
+| **Battery bank** | **a different job**: buffers the burst a warp departure demands all at once | generates nothing |
+
+🔒 **THE GENERAL RULE, for the remaining six doors.** *Every option behind a door must win at least one axis the sim
+reads, outright. State which axis, in the template description.* And the corollary that caught two of these three:
+**an option can have a perfectly good justification that a unit bug cancels** — the reactor's density was real and
+unreachable behind 1500 crew; solar's silence was real and unreachable behind a mount flag. **Check that the
+justification is actually reachable, not merely present.**
+
+**Gauge: `PowerJustificationTests`** — the reactor wins per-kg (and its crew is no longer a kilogram count), the
+turbine wins per-m³, solar is asserted to be the *only* silent one, the RTG's zero-crew axis is asserted on the
+template, the battery is asserted to be a different job — and **`NoPowerType_IsDominatedOnEveryAxis` is the rule
+itself**, so the next dead recipe fails CI instead of shipping.
+
+### 39.8b 🔒 THE BALANCE RULE — a trade is added by SPLITTING a dial, never by DELETING one (developer, 2026-07-30)
+
+> *"I find that you took some slider options away when you made the fuel vs output efficiency/time. Find a balance.
+> Also stm turbine should be stuck at 12 yrs."*
+
+**Both halves are corrections, and the second one saved a mechanic.** Taken together they are the sharpest statement
+yet of what "fixing a dial" is allowed to cost.
+
+**The failure being called out.** Adding `Output vs Economy` (§39.7a) gave the reactor a real fuel-per-kilowatt trade —
+but in the driveable reference I let the reactor's proposed output↔endurance fix *consume* the `Lifetime` slider,
+so turning the fix on **left one fewer thing to set than before.** That is a net loss of agency dressed up as a
+fix: the player traded a dial for a trade. **Wrong direction.**
+
+🔒 **THE RULE.** *A trade is added by SPLITTING a dial's meaning, never by deleting a dial.* If a proposed fix reduces
+the count of things a player can set, it is not a fix — **it is a feature removal with a good excuse.** Check the
+count before and after; it may rise, it must not fall.
+
+**Applied:** the reactor now carries **three live dials, all of them shipping** — `Mass` (→ output) · `Lifetime`
+(→ the fuel load it is charged for, now in real seconds) · `Output vs Economy` (→ the burn rate). The proposed P1 law
+sits *on top* of those three, and takes none of them away.
+
+**And the second half — the turbine is STUCK at 12 years, by design.** Ruled in §39.3. The point worth carrying to
+every other door: **a wrong name is not evidence of a wrong mechanic.** The honest move was to rename the dial
+(`Output vs Efficency` → `Core vs Generator`) and leave what it does alone. Re-purposing it into an output↔endurance
+split — the "consistent" fix — would have deleted the turbine's whole character (a plant you fuel once a decade)
+**to satisfy a naming complaint**, and it would have collided head-on with the rule above. 🔒 **Rename before you
+re-purpose.**
+
 ## 40. STEP 2 — THE DOOR: three answers, and they are exclusive per part
 
 | Answer | Job | Its sliders | State |
 |---|---|---|---|
-| **Generate** | burn something | size · **output ↔ endurance** | 🔴 the trade exists on the RTG only (§39.1) |
+| **Generate** — reactor | burn fissile | size · **fuel load** · **output ↔ economy** | ⚠ three live dials; output still linear in mass (§39.1, slice P1) |
+| **Generate** — RTG | decay isotopes | size · **output ↔ endurance** | ✅ **the reference law**, already built (§39.1) |
+| **Generate** — turbine | burn fissile, big | size · **core ↔ generator** | ✅ honest — a materials trade, fixed 12.7-yr run by design (§39.3) |
 | **Collect** | absorb starlight | area · band centre · bandwidth | ✅ honest — and it is the sensor's trade (§39.5) |
 | **Store** | hold it | size | ⚠ linear, and reactors already add storage by accident (§39.4) |
+
+🔑 **The slider SET changes with the generator, and that is the point** — the three plants are not three flavours of
+one plant (§39.8). Each keeps the dials its own physics gives it, which is also what §39.8b's balance rule requires.
 
 **Exclusive per part** (§1a: a part burns, collects or holds — never two), and the whole door is **one question: where
 does the energy come from, and how long do you want it to last?**
@@ -2202,13 +2310,14 @@ does the energy come from, and how long do you want it to last?**
 
 | Component today | Answer | Under the derived door |
 |---|---|---|
-| Reactor | Generate | size + **output ↔ endurance** *(gains the trade; Lifetime stops being free)* |
-| RTG | Generate | **already exactly this** — the reference implementation |
-| Steam Turbine | Generate | size + **output ↔ endurance** *(replaces a dial that promised a trade it never had)* |
+| Reactor | Generate | size + **fuel load** + **output ↔ economy** *(three live dials; still wants the RTG's law on mass)* |
+| RTG | Generate | **already exactly this** — the reference implementation, and now zero-crew |
+| Steam Turbine | Generate | size + **core ↔ generator** — *unchanged, RENAMED* *(the fixed 12.7-yr run is the design)* |
 | Battery Bank | Store | size — unchanged |
 | Solar Array | Collect | area + band centre + bandwidth — unchanged, and honest |
 
-**Nothing needs inventing and nothing needs deleting.** Two of the three generators adopt a law the third already runs.
+**Nothing needs inventing and — per §39.8b — nothing gets deleted.** One of the three generators still wants a law the
+second already runs, and the third was ruled correct as built.
 
 ## 42. STEP 6 — WHAT GOES OUT, EVERY ROW MARKED
 
@@ -2252,9 +2361,9 @@ newest thing in the door (the solar/sensor band sharing) is the only part that i
 | ~~**P0**~~ | ✅ **BUILT 2026-07-30 (§39.7a)** — the gate, the unit fix, and the burn-rate dial as one slice. `EnableFuelExhaustion` (default off) · `Lifetime` reaches the atb in **seconds** at last (the reactor's real endurance was **2.43 hours**, the RTG's **5 seconds** — only the turbine was correct, and it is the only one with a shipped design) · **`Output vs Economy`** makes the burn rate settable, costing fuel-per-kilowatt so 2× power = 4× fuel · two buildable reactor designs · fuel rate anchored on the turbine's measured 3.125e-11 kg/s per kW (the old `1e-7` made a year of fuel weigh 236 t). Gauge `PowerFuelGateTests`. | ✅ **Endurance means something now**, and the burn rate is a real decision. |
 | **P1** | **Give the reactor and the turbine the RTG's law** — `output × lifetime = const × size` | the formula already exists on a shipped template; it is a copy, not a design | 🔴 **The door gets its decision** — warship-hot vs outpost-frugal. **Order: after or with P0.** |
 | **P1b** | **Make carried fuel weigh something** (§39.2) — the RTG already does it (`Fuel = Mass × 0.5`) | one formula per template | **Closes the one channel where `Lifetime` really is free.** Mass is what Chassis gates on, so this is the half that matters for ship design. |
-| **P2** | **Replace the turbine's `Output vs Efficency`** with that same trade (§39.3) | one template; the dial's slot already exists | Removes a dial that promises a decision it never delivers, and connects `GennyMass`. |
-| **P3** | **Add `PlanetInstallation` to a generator** — the solar array is the obvious one (§39.6) | one mount flag | 🔴 **A colony can answer a power shortage.** Closes a cradle-to-grave hole whose consumer already exists. |
-| **P4** | **Fix `solarArray`'s `MountType: 1`** to named flags | data hygiene | None directly — but it is a landmine (it works by numeric coincidence). |
+| ~~**P2**~~ | ✅ **DONE 2026-07-30 — RENAMED, not replaced (§39.3).** The developer ruled the turbine's ~12.7-year fuel duration **intended**, and reading the `ResourceCost` block showed the dial was never empty: it is a **materials trade** (core-heavy → fissile + graphite + titanium; generator-heavy → tungsten + nickel), with output rising proportionally to the fissile bill. Only the *name* was wrong. Now **`Core vs Generator`**, with the fixed duration stated in its description. | ✅ **The dial finally says what it does** — and no slider was removed or re-purposed. |
+| ~~**P3**~~ | ✅ **DONE 2026-07-30 (§39.8③)** — the solar array now mounts `ShipComponent, ShipCargo, PlanetInstallation, Station`. | ✅ **A colony and a station can build a power plant**, and `SustenanceProcessor`'s waiting consumer finally has a producer. |
+| ~~**P4**~~ | ✅ **DONE 2026-07-30** — `MountType: 1` replaced with named flags in the same change (it worked only by numeric coincidence with `ShipComponent`). | Landmine removed. |
 | **P5** | **Decide the reactor-as-battery term** (§39.4) — deliberate buffer, or remove | one line | Makes storage balanceable instead of secretly pre-loaded. |
 | **P6** | **Publish output ↔ signature** as a readout (row 5 of §42) | Failure-A: the number exists, unwired | 🔴 **Tells the player their generator is their stealth.** The single biggest unstated coupling in the game. |
 
