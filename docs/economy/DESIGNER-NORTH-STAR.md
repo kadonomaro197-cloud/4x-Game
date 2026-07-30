@@ -3111,6 +3111,66 @@ have a compartment with room, and every good in the starting stockpile must real
 dropped at load. Plus `TheThreeMisfiledGoods_NowRideThePhysicallyCorrectCompartment`, which also asserts that
 ore/metal/parts **stay** in bulk: the point was three moves, not a sweep.
 
+### 46f 🔒 EVERY RESOURCE MUST JUSTIFY ITS EXISTENCE (developer, 2026-07-30)
+
+*"But if we're going to add all these resources we need to justify their existence."*
+
+**Correct, and it cuts both ways — it applies to the 38 already shipped, not just future ones.** This is §39.8 pointed
+at goods instead of component options.
+
+#### 🔒 THE RULE — three tests for a GOOD
+
+1. **A PRODUCER** — something makes it: mined from a deposit, or refined by a recipe. *(True of all 38 by construction,
+   so this one never fails.)*
+2. **A CONSUMER** — something wants it: an input to another recipe · a build cost on a component · an armour's
+   `ResourceID` · a fuel an engine names · or **read by engine CODE**. **A good nothing wants is a refining job you can
+   queue forever for no reason.**
+3. **DISTINGUISHABLE** — it does something no neighbour does. Otherwise it is a reskin with a different name.
+
+#### ⚠ The audit, and the correction it forced on itself
+
+**First pass: 14 dead goods.** Wrong. It scanned only `ResourceCost`, and **six of the "dead" were armour materials
+referenced through `ArmorBlueprint.ResourceID`** — a field the scan never looked at. Adding armour and formula
+references dropped it to **five**.
+
+🔒 **The lesson, and it is the general one: an audit is only as good as the reference forms it knows about.** A
+data-only scan also cannot see a consumer written in C# — which is why `food` reads as unreferenced despite being eaten
+by `SustenanceProcessor`. **So the gauge enumerates the reference forms it understands and the allow-list must NAME the
+code consumer**, not merely excuse the good.
+
+#### The five, and what they actually turned out to be
+
+**None of them is clutter.** Four are one unbuilt mechanic and one was a missing line:
+
+| Good | Credit | What it is |
+|---|---|---|
+| `stainless-steel-d` | 12 | *"Simple iron-nickel alloy, no chromium"* — the **cheap** rung |
+| `stainless-steel` | 25 | the standard |
+| `stainless-steel-a` | 80 | *"Premium structural steel alloyed with titanium"* — the **premium** rung |
+| `electronics-d` | 80 | basic — no aluminium |
+| `electronics` | 250 | the standard |
+| `electronics-a` | 1000 | high-performance — incorporates `ree-magnetics` |
+
+🔑 **That is a MATERIAL GRADE LADDER — cheap / standard / premium — and it is the structural twin of the FUEL-GRADE
+system that IS already wired** (`FuelGradeLookup` / `ExhaustVelocityLookup`). Distinct inputs, distinct costs, a clean
+3-tier credit spread. **What is missing is the reader:** nothing lets you say *"build this component out of premium
+steel and get a better component."* A component's `ResourceCost` names one material and that is that.
+
+**So the justification is real and the mechanic is not built.** They go on a **stated waiting list** in the gauge —
+each entry naming what it is for — rather than being deleted or silently tolerated. ⚠ **DEVELOPER RULING OWED:** build
+the grade reader, or delete the four.
+
+✅ **`lithium-battery` needed no mechanic at all — just a line.** *"High-density energy storage cell"*, refined from
+lithium + copper + electronics, and **the battery bank was built from RAW LITHIUM while the cell sat unreferenced.**
+Now wired: `battery-bank` costs `lithium-battery`, making the chain three deep — **lithium (mined) → lithium-battery
+(refined) → battery-bank (built)** — which is what a resource economy is *for*, and the cell is unlocked at Earth so it
+is refinable from turn one.
+
+**Gauge `EveryResource_IsConsumedBySomething`** — every good must be consumed by a recipe, a build cost, an armour, a
+fuel formula, a **named** code consumer, or sit on the waiting list **with a stated purpose**. *"Nobody got round to
+it"* is not a purpose. It also asserts the grade ladder is a real ladder and not three reskins: each tier must differ
+in **credit value** and the premium tier must differ in **what it is made of**.
+
 ### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
 
 **The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers

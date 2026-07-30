@@ -112,7 +112,7 @@
       "ResourceCost": {
         "plastic": "[Mass] * 0.2",
         "copper": "[Mass] * 0.2",
-        "lithium": "[Mass] * 0.4",
+        "lithium-battery": "[Mass] * 0.4",
         "graphite": "[Mass] * 0.1",
         "aluminium": "[Mass] * 0.05",
         "rare-earth-elements": "[Mass] * 0.05"

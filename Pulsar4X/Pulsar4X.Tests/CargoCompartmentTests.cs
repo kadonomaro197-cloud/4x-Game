@@ -257,6 +257,117 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>
+        /// 🔒 EVERY RESOURCE MUST JUSTIFY ITS EXISTENCE — the developer's rule, 2026-07-30, and the goods-side twin of
+        /// §39.8 (*every option behind a door must win an axis outright, or it is clutter*).
+        ///
+        /// <para><b>For a GOOD the three tests are:</b> something <b>produces</b> it (mined from a deposit, or refined
+        /// by a recipe — true of all 38 by construction), something <b>consumes</b> it, and it is
+        /// <b>distinguishable</b> from its neighbours. This test enforces the middle one, which is the one that fails:
+        /// a good nothing wants is a refining job you can queue forever for no reason.</para>
+        ///
+        /// <para><b>A good is CONSUMED if it is</b> an input to another material's recipe · a build cost on a component
+        /// template · the <c>ResourceID</c> of an armour · a fuel an engine names in a formula · or read by ENGINE CODE,
+        /// which a data scan cannot see and which the allow-list must therefore name explicitly.</para>
+        ///
+        /// <para>⚠ <b>That last clause is not hypothetical — it is the correction this test was born from.</b> A first
+        /// pass that scanned only <c>ResourceCost</c> reported <b>14 dead goods</b>. Adding armour's <c>ResourceID</c>
+        /// and formula references dropped it to <b>5</b>, because six of the "dead" were armour materials referenced by
+        /// a field the scan never looked at. <b>An audit is only as good as the reference forms it knows about</b>, so
+        /// this one enumerates them and the allow-list carries the rest with a stated reason.</para>
+        /// </summary>
+        [Test]
+        [Description("Every refined material and mineral is consumed by something — another recipe, a component's build cost, an armour, an engine's fuel, or a named consumer in engine code. A good nothing wants is a refining job you can queue forever for no reason. The allow-list must name a real consumer, because a data-only scan cannot see one written in C#.")]
+        public void EveryResource_IsConsumedBySomething()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+
+            var consumers = new Dictionary<string, List<string>>();
+            void Consume(string good, string by)
+            {
+                if (string.IsNullOrEmpty(good)) return;
+                if (!consumers.TryGetValue(good, out var l)) consumers[good] = l = new List<string>();
+                l.Add(by);
+            }
+
+            // ① another material's recipe, and ② a component template's build cost + any fuel it names in a formula
+            foreach (var m in data.CargoGoods.GetAll().Values)
+                if (m is Pulsar4X.Industry.ProcessedMaterial pm && pm.ResourceCosts != null)
+                    foreach (var inp in pm.ResourceCosts.Keys) Consume(inp, "recipe:" + pm.UniqueID);
+
+            foreach (var kv in AllTemplates(s))
+            {
+                foreach (var inp in kv.Value.ResourceCost?.Keys ?? Enumerable.Empty<string>())
+                    Consume(inp, "build:" + kv.Key);
+                foreach (var prop in kv.Value.Properties ?? new List<ComponentTemplatePropertyBlueprint>())
+                    foreach (Match m in Regex.Matches(prop.PropertyFormula ?? "", @"UniqueID\('([\w-]+)'\)"))
+                        Consume(m.Groups[1].Value, "fuel/formula:" + kv.Key);
+            }
+
+            // ③ armour — the reference form the first pass MISSED, which is why six goods looked dead
+            foreach (var a in data.Armor.Values) Consume(a.ResourceID, "armour:" + a.UniqueID);
+            foreach (var a in data.LockedArmor.Values) Consume(a.ResourceID, "armour:" + a.UniqueID);
+
+            // ④ consumers written in C#, which no data scan can see. Each entry names the consumer.
+            var codeConsumers = new Dictionary<string, string>
+            {
+                ["food"] = "SustenanceProcessor.DrawStoredFood — the population eats it",
+                ["electricity"] = "EnergyGenAbilityDB.EnergyType / EnergyStoreAtb — the charge itself",
+            };
+            foreach (var kv in codeConsumers) Consume(kv.Key, "code:" + kv.Value);
+
+            // ⑤ authored but not yet wired. Each MUST say what it is for — "nobody got round to it" is not a reason,
+            //    and an entry here is a standing invitation to either wire it or delete it.
+            var awaitingAMechanic = new Dictionary<string, string>
+            {
+                ["stainless-steel-d"] = "MATERIAL GRADE ladder (cheap): iron+nickel, no chromium, credit 12 vs the standard 25 — needs a build-with-grade mechanic, the structural twin of the WIRED fuel-grade system",
+                ["stainless-steel-a"] = "MATERIAL GRADE ladder (premium): alloyed with titanium, credit 80 — same missing mechanic",
+                ["electronics-d"]     = "MATERIAL GRADE ladder (cheap): no aluminium, credit 80 vs the standard 250 — same missing mechanic",
+                ["electronics-a"]     = "MATERIAL GRADE ladder (premium): incorporates ree-magnetics, credit 1000 — same missing mechanic",
+            };
+
+            var goods = data.CargoGoods.GetAll().Values
+                .Where(g => data.CargoGoods.IsMineral(g.ID) || data.CargoGoods.IsMaterial(g.ID))
+                .OrderBy(g => g.UniqueID).ToList();
+
+            var unjustified = new List<string>();
+            Log($"{goods.Count} goods — who wants each one:");
+            foreach (var g in goods)
+            {
+                var c = consumers.TryGetValue(g.UniqueID, out var l) ? l : new List<string>();
+                string note = awaitingAMechanic.TryGetValue(g.UniqueID, out var why) ? "⚠ " + why : "";
+                Log($"  {g.UniqueID,-26} {c.Count,3} consumer(s) {(c.Count > 0 ? string.Join(", ", c.Distinct().Take(3)) : note)}");
+                if (c.Count == 0 && !awaitingAMechanic.ContainsKey(g.UniqueID)) unjustified.Add(g.UniqueID);
+            }
+
+            Assert.That(unjustified, Is.Empty,
+                "nothing in the game wants these, so refining them is a job you can queue forever for no reason — "
+                + "wire a consumer, add them to the awaiting-a-mechanic list with a STATED purpose, or delete them: "
+                + string.Join(", ", unjustified));
+
+            // The four on the waiting list are a real ladder, not four reskins: each tier must differ in what it
+            // costs to make, or "premium steel" is just steel with a different name.
+            foreach (var (cheap, std, prem) in new[]
+                     {
+                         ("stainless-steel-d", "stainless-steel", "stainless-steel-a"),
+                         ("electronics-d",     "electronics",     "electronics-a"),
+                     })
+            {
+                var c = data.CargoGoods.GetAny(cheap) as Pulsar4X.Industry.ProcessedMaterial;
+                var m = data.CargoGoods.GetAny(std) as Pulsar4X.Industry.ProcessedMaterial;
+                var p = data.CargoGoods.GetAny(prem) as Pulsar4X.Industry.ProcessedMaterial;
+                Assert.That(c, Is.Not.Null); Assert.That(m, Is.Not.Null); Assert.That(p, Is.Not.Null);
+                Log($"  grade ladder {cheap} {c.CreditValue} < {std} {m.CreditValue} < {prem} {p.CreditValue}");
+                Assert.That(c.CreditValue, Is.LessThan(m.CreditValue),
+                    $"{cheap} must be cheaper than {std}, or the ladder has no bottom rung");
+                Assert.That(p.CreditValue, Is.GreaterThan(m.CreditValue),
+                    $"{prem} must be dearer than {std}, or the ladder has no top rung");
+                Assert.That(p.ResourceCosts, Is.Not.EqualTo(m.ResourceCosts),
+                    $"{prem} must be made of something different from {std}, or it is a reskin");
+            }
+        }
+
+        /// <summary>
         /// The three goods that were filed as dry bulk and are physically something else. Moving them is what the
         /// gauge above exists to make safe.
         /// </summary>
