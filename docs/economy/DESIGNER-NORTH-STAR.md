@@ -1567,7 +1567,7 @@ dial charges mass and buys nothing** (how `Amphibious` and `Fluid` were caught).
 
 | # | Door | Input surface (where to grep) | Size | Why here |
 |---|---|---|---|---|
-| ~~**1**~~ | ✅ **Sensors — DERIVED 2026-07-30 (PART FIVE §32–36).** Four dials fail the write-something test (`Resolution` dead AND free · `Scan Time` a free ladder · the jammer's self-signature opt-out · two fire-control size dials that cost mass and write nothing, a free 16× saving). One trap (the wavelength dial can blind a sensor silently), one honest-but-unpublished trade (bandwidth = coverage ↔ reach), one cost-law conflict (ground linear vs space quadratic). Six cheap slices named in §35, none built yet. | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
+| ~~**1**~~ | ✅ **Sensors — DERIVED 2026-07-30 (PART FIVE §32–36).** **Five** dials fail the write-something test (`Resolution` dead AND free · `Scan Time` free · **antenna size free across its whole usable range** · the jammer's self-signature opt-out · two fire-control size dials that cost mass and write nothing, a free 16× saving). And the headline: **the band-matching gate never checks the receiver's upper edge**, so the only receiver in the game (tuned to 600 nm — visible light) detects a reactor at 1705 nm, the wavelength dial has a dominant setting, and the one honest trade (coverage × range² = 39.34) is cancelled — **and the game depends on the bug**, because fixing it alone makes a parked ship undetectable. Seven slices named in §35, **none built**; S0 is blocked on one ruling that also closes the deferred FTL-band question. | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
 | **2** | **Power** | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
 | **3** | **Chassis** | `Ships/ShipHullAtb` · `GroundCombat/GroundChassisAtb` · `Stations/StationChassisAtb` · `Colonies/BuildingChassisAtb` (all four already share `IChassisAtb`) | 4 | **The door every other door mounts on.** Its budget is what every *"and it costs mass"* claim spends against — so deriving it here means the remaining four derive against a **real** budget. Mostly derivation-not-build: the interface, the mass-budget computation and an enforcement flag all exist. |
 | **4** | **Logistical** | `Storage/` CargoStorageAtb · CargoTransferAtb; `Combat/ShipMagazineAtb`; `GroundCombat/` GroundMagazineAtb · GroundBayAtb; `Logistics/LogiBaseAtb` | ~6 | **It is owed two debts.** Propulsion's intrinsic test **cut fuel load and sent it here** (§23.1); Weapons and Propulsion both sent **magazines** here. Also holds the **one confirmed dead attribute found so far — `LogiBaseAtb` has ZERO readers anywhere outside its own file.** |
@@ -1677,10 +1677,12 @@ whose question it answers.**
 
 *(`GravSurveyAtb` arrives here from Propulsion in the same pass — §26d.3. Net: Sensors takes one, gives one.)*
 
-## 34. STEP 3–4 — BOTH TESTS APPLIED, AND FOUR DIALS FAIL
+## 34. STEP 3–4 — BOTH TESTS APPLIED, AND **FIVE** DIALS FAIL
 
 The §1 tests are ① *which sim variable does it write? (none + costs nothing ⇒ a bug)* and ② §1a *can it be set knowing
-only this part?* **Four dials fail test ①, and two of those four are exploitable.** Every one is verified in source.
+only this part?* **Five dials fail test ①, and two of the five are exploitable.** Every one is verified in source.
+*(It was four on the first pass. Antenna size joined the list when §34.7's arithmetic was run over the dial's whole
+range instead of at a point.)*
 
 ### 34.1 🔴 `Resolution` — DEAD **and** FREE. The worst dial found in any door so far.
 
@@ -1844,6 +1846,7 @@ Each is a §31-style gauged slice, one per push, CI green between. **Nothing bel
 | **S4** | **Wire `Resolution`** into `SignalQuality` — resolution is what turns *"something"* into *"three destroyers"* | `SensorReturnValues.SignalQuality` already exists and survey reveal already gates on it | **Contact fidelity becomes a purchase.** A cheap sensor sees a blob; a good one counts hulls — which is what makes a scout worth building. |
 | **S5** | **Publish the bandwidth trade** as a readout (coverage ↔ reach) | Failure-A: the number exists, it is unwired | The one honest dial in the door starts reading as a decision. |
 | **S6** | **Move `IntelDirectorateAtb` to Command** (§33.1) | a doc/ownership move, no code | Keeps the door's question clean; Command inherits it with the other seats. |
+| **S7** | **Re-scale the antenna mass term** so the quadratic bites inside the dial's real range (§34.7) | one constant in one formula | **A big dish becomes a real commitment** instead of +9 kg for 24× the reach. Pairs with S2 — both leak the mass budget Chassis is about to build on. |
 
 **Blocked on a developer ruling, not on work:** **S0** (§34.5 — correct the overlap test *and* add an infrared receiver
 in the SAME change, or else compute the band and remove the dial; either way it also closes the deferred FTL-band
@@ -1868,3 +1871,42 @@ Recent components were written with the conventions in hand; the long-standing o
 reason to re-read them. **For the remaining seven doors, look hardest at the oldest attribute, not the newest.**
 
 ---
+
+## 37. STEP 6 — WHAT GOES OUT, EVERY ROW MARKED (verified in source)
+
+Same two columns the Propulsion map carries (§25): **a play state** and **the sentence that says what it changes about
+how the game is PLAYED.** `✅ LIVE` · `🟢 NEW` · `🔵 HALF` (the number exists, nothing reads it) · `🔴 PROPOSED`.
+
+| # | What leaves the door | Goes to | Play state | **What it changes about how the game is PLAYED** |
+|---|---|---|---|---|
+| 1 | **Detected / not detected** | `FactionInfoDB.SensorContacts` → the track table | ✅ LIVE | **The entire fog of war.** Everything below is downstream of this one boolean. |
+| 2 | **Detection, as the battle gate** | `CombatEngagement.cs:226,337` — `RequireDetectionToEngage` | ✅ LIVE *(flag, client-on)* | 🔴 **Whether a fight happens at all.** Two hostile fleets in weapon range do **not** engage until someone sees someone. Sensors decide *if* there is a battle, not just how it goes. |
+| 3 | **Detection, as the FIRING gate** | `CombatEngagement.CanFireAt` (`:1974`) | ✅ LIVE | 🔴 **The largest asymmetry in the game.** `FirstStrike_SeerWipesBlindEnemy_Unscathed`: two **equal** fleets, one blind — the seeing side **wipes it taking zero losses.** Detection is worth more than any weapon or plate. |
+| 4 | **Contact loudness** | `ThreatAssessment` → the NPC threat picture | ✅ LIVE | **What the AI thinks it is facing.** It sums the loudness of its live contacts, so *your* EMCON decisions steer *its* aggression. Note it reads signal **strength** — the `SignalQuality` path was design-cut. |
+| 5 | **`SignalQuality`** | `SystemBodyInfoDB:154` / `StarInfoDB:130` — reveal at **0.20 / 0.80** | ✅ LIVE | **How much a survey tells you.** Below 0.20 you learn nothing; above 0.80 you get the full picture. The only live consumer of contact *quality* rather than *presence*. |
+| 6 | **Geo-survey completion** | `GeoSurveyableDB` → mineral reveal; `ExpandResolver:68` | ✅ LIVE | **You cannot mine what you have not surveyed, and the AI will not colonise it either.** The economy's first gate. |
+| 7 | **Jump-point discovery** | `JumpPointDB.IsDiscovered` → `JumpRouter:122` · `MilitaryReach` | ✅ LIVE | 🔑 **The map itself is per-faction.** An unsurveyed gate does not exist to you *or* to the AI's invasion planner — so surveying is how the strategic map grows. The layer most 4X games skip. |
+| 8 | **Field-site discovery** | `SiteVisibility.IsDiscoveredBy` | ✅ LIVE | **Whether an exploration episode is even on your map.** The Site Engine's front door. |
+| 9 | **Ground radar reach** | `GroundSensorAtb.Range_km` → hex reveal → the ground tactical brain | ✅ LIVE | **A ground battle has fog too**, and the brain is honest about it (an undetected enemy counts as zero). Radar is what lets a defender react instead of being flanked. |
+| 10 | **Fire-control range** | `WeaponUtils.GetMaxBeamRange_m` → the weapon-range battle trigger | ✅ LIVE | **How big the battle is.** The longest reach present sets the engagement envelope, so a director out-ranging the guns is wasted and one under-ranging them throws the guns away. |
+| 11 | **Fire-control tracking speed** | `BeamFireControlAtbDB.TrackingSpeed` | ✅ LIVE | **Whether you can hold a lock on something nimble** — the counter to the evasion Propulsion sells. |
+| 12 | **Cloak factor** | `EmconActivityProcessor` → `SensorProfileDB.ActivityMultiplier` | ✅ LIVE | **Ambush becomes buildable.** ×0.2 signature = seen at 45% the range, so you choose where the fight starts. Health-scaled, so a shot-off cloak lights you up. |
+| 13 | **Jamming divisor** | `SensorTools.GetDetectedEntites` | ✅ LIVE *(flag)* | **You can manufacture the row-3 blindness on purpose** — the strongest offensive act in the game, once it costs something (§34.3). |
+| 14 | **Self-detection range** | `SelfDetectionRange_m` → the EMCON readout | ✅ LIVE | **The player can finally see how loud they are** — which is what makes the Active/Dark posture a decision instead of a guess. |
+| 15 | **Intel op capacity** | `IntelDirectorateDB` → espionage ops | ✅ LIVE | **How many covert operations you can run at once, and how well you resist theirs.** ➡ **Leaves for Command** (§33.1) — it is a seat, not a sensor. |
+| 16 | **Band match** | `DetectonQuality` — the overlap test | 🔵 **HALF, and BROKEN** | 🔴 **The receiver's upper edge is never checked (§34.5).** So band-matching gates nothing: the loudest emitter aboard a ship is detected by a sensor a thousand nanometres off its wavelength, the wavelength dial has a dominant setting, and the coverage ↔ reach trade is cancelled. **The game depends on the bug** — fix it alone and a parked ship becomes undetectable. |
+| 17 | **`Resolution`** | *nothing* — one dead local, `SensorTools.cs:125` | 🔵 **HALF** | **Contact fidelity is not a purchase.** Every sensor tells you the same amount about what it found, so there is no reason to build a good scout over a cheap one. Wiring it (§35 S4) is what makes *"it is three destroyers"* different from *"something is out there."* |
+| 18 | **`Scan Time`** | `SensorScan` reschedule interval | ✅ LIVE **but free** | **Nothing** — because it costs nothing, everyone pins it at 1 s. Priced (§35 S3) it becomes *sweep often and run hot* vs *sweep rarely and stay cold*, which composes with rows 3, 12 and 14. |
+| 19 | **`Size vs Range` · `Size vs Tracking`** | *nothing* — mass formula only | 🔵 **HALF** | 🔴 **A free 16× mass saving.** Mass is the currency **Chassis** (door 3) is about to build its whole budget on. Fix before then. |
+| 20 | **Jammer `Self Signature Boost`** | `SelfSignatureFactor` — but it is a free dial | 🔵 **HALF** | 🔴 **The jammer's downside is opt-out**, so blinding the enemy is currently free. 🔒 *A penalty you can dial away is decoration.* |
+| 21 | **An infrared receiver band** | would let the overlap test be correct | 🔴 PROPOSED | **Makes tuning a counter-intelligence decision** — a sensor set for thruster plumes is blind to a cold hull. Same ruling as the deferred FTL band, so **one decision closes both.** |
+| 22 | **The sensor destroyed** | Damage → `ReCalcAbilities` | ✅ LIVE | 🔑 **Shoot the eyes out and row 3 reverses.** The grave rung that makes detection a *target*, not a stat — and it is how the first-strike gauge blinds its victim. |
+
+**Reading the marks:** 15 rows `✅ LIVE`, **5 `🔵 HALF`** (four of those five are the failing dials — the marks and §34
+line up one-to-one), 1 `🔴 PROPOSED`, and **0 `🟢 NEW`: nothing has been built in this door yet.**
+
+🔑 **The shape of the map is itself the finding.** Propulsion's outputs mostly changed *how well* you fight. **Sensors'
+outputs decide _whether_ you fight (row 2), _whether you can shoot back_ (row 3), _how big the map is_ (row 7), and
+_whether the economy can start at all_ (row 6).** It is the most load-bearing door derived so far — and it is the one
+with five dials that write nothing and a broken gate underneath. **The gap between what this door decides and how
+carefully it is built is the widest found in the project.**
