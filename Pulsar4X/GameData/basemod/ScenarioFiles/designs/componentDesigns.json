@@ -1399,5 +1399,27 @@
         { "Key": "Berths", "Value": 1 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-containment-vault",
+      "Name": "Containment Vault",
+      "TemplateId": "containment-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 10000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-cold-store",
+      "Name": "Cold Store",
+      "TemplateId": "refrigerated-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 10000 }
+      ]
+    }
   }
 ]

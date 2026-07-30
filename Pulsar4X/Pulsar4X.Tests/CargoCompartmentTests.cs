@@ -200,6 +200,96 @@ namespace Pulsar4X.Tests
         }
 
         /// <summary>
+        /// 🔒 CAN THIS HOST HOLD WHAT IT MINES? — the gauge that had to exist before any good could be moved
+        /// between compartments, and the reason the reclassification waited a slice.
+        ///
+        /// <para><b>The failure it guards is silent, and the repo has been bitten by this exact shape before.</b>
+        /// <c>MineResourcesProcessor</c> does <c>stockpile.AddCargoByUnit(mineral, minable)</c> and then subtracts
+        /// <b>only what actually fitted</b> from the deposit. So a colony with nowhere to put a mineral does not lose
+        /// ore — <b>it silently stops mining it</b>, with no error and no log, which reads exactly like "the mine does
+        /// nothing" (the same signature as the Stasis bug). Moving a mined good to a compartment the colony does not
+        /// have would have caused precisely that.</para>
+        ///
+        /// <para>So: <b>every mineral this world actually has must have a compartment with room on the colony</b>, and
+        /// every good the colony starts with must really be in store rather than quietly dropped at load.</para>
+        /// </summary>
+        [Test]
+        [Description("Every mineral the starting world holds has a compartment with free room on the colony, and every good in the starting stockpile is genuinely stored. Without this, moving a mined good to a compartment the colony lacks makes it silently stop mining that mineral — no error, no log, just a mine that appears to do nothing.")]
+        public void EveryMineralThisWorldHas_HasSomewhereToGoOnTheColony()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            var hold = s.Colony.GetDataBlob<CargoStorageDB>();
+            Assert.That(hold, Is.Not.Null, "the start colony has cargo storage");
+
+            Log("compartments on the start colony: " + string.Join(", ",
+                hold.TypeStores.Select(kv => $"{kv.Key} {kv.Value.MaxVolume:N0} m³")));
+
+            var body = s.Colony.GetDataBlob<Pulsar4X.Colonies.ColonyInfoDB>().PlanetEntity;
+            Assert.That(body.TryGetDataBlob<Pulsar4X.Industry.MineralsDB>(out var deposits), Is.True,
+                "the starting world has mineral deposits");
+
+            var homeless = new List<string>();
+            foreach (var kv in deposits.Minerals)
+            {
+                var good = data.CargoGoods.GetAny(kv.Key);
+                if (good == null) continue;                       // a deposit of something this faction cannot see
+                double free = hold.GetFreeVolume(good);
+                Log($"  {good.UniqueID,-24} {good.CargoTypeID,-20} free {free,12:N0} m³");
+                if (free <= 0) homeless.Add($"{good.UniqueID} needs {good.CargoTypeID}");
+            }
+
+            Assert.That(homeless, Is.Empty,
+                "these minerals are in the ground under the colony and it has nowhere to put them, so mining them "
+                + "silently does nothing: " + string.Join(", ", homeless));
+
+            // …and nothing in the starting stockpile was quietly dropped on load for the same reason.
+            foreach (var id in new[] { "water", "hydrocarbons", "fissionables", "iron", "rp-1" })
+            {
+                var good = data.CargoGoods.GetAny(id);
+                Assert.That(good, Is.Not.Null, $"{id} is a base-mod good");
+                long stored = hold.GetUnitsStored(good, false);
+                Log($"  stockpile {good.UniqueID,-18} {good.CargoTypeID,-20} {stored,12:N0} units");
+                Assert.That(stored, Is.GreaterThan(0),
+                    $"{id} is in the colony's starting Cargo list, so it must actually be in store — a 0 here means it "
+                    + "was silently dropped because no compartment accepts it");
+            }
+        }
+
+        /// <summary>
+        /// The three goods that were filed as dry bulk and are physically something else. Moving them is what the
+        /// gauge above exists to make safe.
+        /// </summary>
+        [Test]
+        [Description("Water and hydrocarbons are liquids and now ride the sealed fluid compartment rather than dry bulk, and raw fissionables is radioactive and now rides containment — the three goods in the shipped inventory that were filed in the wrong box. The other 28 in general storage are ore, refined metal and machine parts, which genuinely belong there.")]
+        public void TheThreeMisfiledGoods_NowRideThePhysicallyCorrectCompartment()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+
+            foreach (var (id, cls, why) in new[]
+                     {
+                         ("water",        "fuel-storage",      "a liquid — it has no shape of its own"),
+                         ("hydrocarbons", "fuel-storage",      "a liquid"),
+                         ("fissionables", "contained-storage", "raw radioactive ore — dangerous to its own carrier"),
+                     })
+            {
+                var good = data.CargoGoods.GetAny(id);
+                Assert.That(good, Is.Not.Null, $"{id} is a base-mod good");
+                Log($"  {id,-14} → {good.CargoTypeID,-20} ({why})");
+                Assert.That(good.CargoTypeID, Is.EqualTo(cls), $"{id}: {why}");
+            }
+
+            // And the ones that are correctly bulk stay bulk — the point is three moves, not a sweep.
+            foreach (var id in new[] { "iron", "stainless-steel", "plastic", "electronics", "space-crete" })
+            {
+                var good = data.CargoGoods.GetAny(id);
+                Assert.That(good.CargoTypeID, Is.EqualTo("general-storage"),
+                    $"{id} is ore/metal/parts — it belongs in dry bulk and must NOT be swept up in the move");
+            }
+        }
+
+        /// <summary>
         /// 🔑 FOOD IS A SHIPPABLE GOOD AT LAST — and it is the first good the new taxonomy exists FOR.
         ///
         /// <para><c>SustenanceProcessor</c>'s own doc-comment described the gap for however long it stood there:

@@ -3043,6 +3043,74 @@ what "perishable" *means*, and it is a real reason to build cold storage at a br
 ✅ **Byte-identical on a stock game twice over:** no start colony has a farm installed (no surplus to bank), and none has
 a refrigerated hold either (so even a surplus would bank nothing). Both halves are asserted.
 
+### 46e 🔒 "GET THE LAST 12%" — three goods moved, and the honest floor is 74% (developer, 2026-07-30)
+
+**The measurement that prompted it:** 38 shippable goods, **31 (82%) in `general-storage`**. The ruling: add the
+features and close the gap.
+
+#### What moved, and what deliberately did not
+
+**Three goods were filed as dry bulk and are physically something else.** Everything else in that 82% is ore, refined
+metal, plating, plastic, electronics and concrete — **which genuinely IS bulk cargo**, and moving it would be wrong.
+
+| Good | Was | Now | Why |
+|---|---|---|---|
+| **`water`** | general | **`fuel-storage`** | a liquid — no shape of its own, needs a sealed vessel |
+| **`hydrocarbons`** | general | **`fuel-storage`** | a liquid |
+| **`fissionables`** | general | **`contained-storage`** | raw radioactive ore — dangerous to its own carrier, and it already has a real consumer (it is the input to `fissile-fuels`) |
+
+| Class | Before | After |
+|---|---|---|
+| `general-storage` | 31 (82%) | **28 (74%)** |
+| `fuel-storage` | 5 (13%) | **7 (18%)** |
+| `contained-storage` | 0 | **1** |
+| `perishable-storage` | 1 | 1 |
+| `battery-storage` | 1 | 1 |
+
+🔒 **74% is the HONEST FLOOR for reclassification, and chasing lower would be dishonest.** The remaining 28 are bulk
+because they *are* bulk. **The share only falls further when the empty classes get GOODS** — and every addition still
+has to earn a consumer (§39.8). Named, not smuggled: **antimatter** in containment would need
+`ExhaustVelocityLookup` and `FuelGradeLookup` extended before an engine could burn it; **colonists** in
+passenger/cryo need population made carryable; **biomass** and **medical stock** in refrigerated need a consumer that
+does not exist yet.
+
+#### 🔑 The gauge that had to exist FIRST, and what reading the source changed
+
+The reclassification waited a slice because moving a **mined** good is the dangerous part. Reading
+`MineResourcesProcessor` corrected the severity — and it is worth recording, because I had it worse than it is:
+
+> `stockpile.AddCargoByUnit(mineral, minable)` returns **what actually fitted**, and only that amount is subtracted
+> from the deposit.
+
+**So you do not lose ore.** What happens is that a colony with nowhere to put a mineral **silently stops mining it** —
+no error, no log, a mine that appears to do nothing. That is the same signature as the Stasis bug, and it is still
+exactly the failure class this campaign exists to remove.
+
+**Measured before moving anything:**
+
+| Compartment | Earth's capacity | Day-one need after the move |
+|---|---|---|
+| `general-storage` | 100,000 m³ (10 warehouses, each **clamped** from an authored 1,000,000 to the template's 10,000 — the L7 clamp) | 60,155 m³ (60%) |
+| `fuel-storage` | **1,000,000 m³** (the fuel farm, clamped from 5,000,000) | 49,382 m³ (**5%**) |
+| `contained-storage` | 🔴 **ZERO** | 53 m³ |
+| `perishable-storage` | 🔴 **ZERO** | 0 m³, but food is refined here |
+
+⚠ **My earlier caution was the right shape and the wrong size.** I had assumed fuel storage was "a few thousand m³";
+it is a million, at 5% use — the fluid move was never close to tight. **Containment was the real gap, and so was
+refrigerated**, because Earth refines food and had nowhere cold to put it.
+
+✅ **Fixed by giving them somewhere to go:** `containment-vault` and `cold-store` (both 10,000 m³, the template
+ceiling — ~190× the fissionables Earth starts with) are now **registered AND installed** on Earth.
+
+✅ **Blast radius verified, not assumed: Earth is the ONLY colony blueprint in the base mod.** Every scenario file was
+swept for a `StartingItems` colony node; `umf`/`kithrin`/`uef-devtest` have none, so no other authored colony can be
+stranded by the move.
+
+**Gauges:** `EveryMineralThisWorldHas_HasSomewhereToGoOnTheColony` — every mineral in the ground under the colony must
+have a compartment with room, and every good in the starting stockpile must really be in store rather than quietly
+dropped at load. Plus `TheThreeMisfiledGoods_NowRideThePhysicallyCorrectCompartment`, which also asserts that
+ore/metal/parts **stay** in bulk: the point was three moves, not a sweep.
+
 ### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
 
 **The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers
