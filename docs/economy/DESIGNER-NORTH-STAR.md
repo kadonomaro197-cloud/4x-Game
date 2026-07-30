@@ -2494,6 +2494,50 @@ cost, and the two missing environments. 🔑 **And one payoff worth naming: the 
 orbital, so a chassis spanning near-space→low-orbit IS a spaceplane** — single-stage-to-orbit becomes a wide band
 rather than a new mechanic.
 
+### 45.1b′ ⚠ CORRECTION — the ORBITAL bands were the wrong axis (developer's question, 2026-07-30)
+
+**The question:** *"for the low or high orbits and deep space gameplay wise when will that come into picture?"*
+
+**The answer is that they don't, and it was my own bug.** I wrote the orbital stack as *Low → High → Deep space*
+without checking whether anything reads it. **Nothing about a hull changes between low orbit and high orbit** — there is
+no gravity-well rule for going to warp, no altitude-dependent hazard, no structural difference. By the rule this
+campaign has applied to seven other doors, that made it **a dial writing nothing**: the exact bug being flagged
+everywhere else, in the derivation itself.
+
+**And altitude is not merely unread — it is already priced, on the other side of the ledger.** `OrbitMath.LowOrbitRadius`
+is *one fixed altitude* (planet radius × 1.1) that ships park at — a destination, not a design band — and
+**`OrbitMath.FuelCostToOrbit` already charges real Tsiolkovsky fuel to reach a higher one.** So altitude costs **fuel on
+the launch**: the **Logistical** door's bill, not the Chassis door's. Charging for it here too would have double-counted
+a cost the engine already collects.
+
+🔑 **The axis that DOES belong to the chassis is distance from the STAR**, because that is what decides what a hull must
+survive and whether its power source works at all — and it has **three consumers already running**:
+
+| What already reads distance-from-star | Where | What it means for a chassis |
+|---|---|---|
+| Every star gets a **permanent corona** — heat damage following radiative flux (∝ 1/dist²) from the star's surface outward, countered by a **`HazardResistanceAtb` component** | `StarSystemFactory.cs:62` → `SpaceHazardFactory.CreateStarCorona` | ✅ **A real requirement close in** — an inner-system hull carries heat resistance or it cooks. Cradle-to-grave already: research → build → install → lose it. |
+| **Solar output attenuates with distance** (`AttenuatedForDistanceList`) | `EnergySolarGenProcessor.cs:60` | ✅ **Where you operate forces your power choice** — panels past the habitable band make nothing, so you carry a reactor and its fuel. |
+| **A body's base temperature** from its star and orbit | `SystemBodyFactory.cs:145` | The same axis the surface environment already reads. |
+
+**New bands: `Inner (hot)` → `Habitable` → `Outer (cold)` → `Deep space`**, defaulting to Habitable (where every shipped
+hull lives, so nothing shipped pays anything).
+
+🔒 **And orbital turns out to be the ASYMMETRIC one, which is the finding worth keeping.** Only the **hot** end taxes the
+**frame** — `BANDCOST.orbital = [1.45, 1.0, 1.0, 1.0]`. Cold and dark are **structurally free** (vacuum insulates), so
+their cost lands on **power and endurance** instead. **Same axis, two different doors.** Inventing a frame multiplier for
+the cold bands to make the table look symmetrical would have been the dial-writing-nothing bug a second time. **A band
+whose cost lands in another door is recorded as free here, and the readout says where the bill actually goes.**
+
+⚠ **The general lesson, because it will recur in the five remaining doors:** *an axis can be real, already modelled, and
+still belong to a different door.* "Is it read?" is not the whole test — **"is it read *by the thing this door
+prices*?"** is. Altitude passes the first and fails the second.
+
+**Also fixed in the same pass** (found while re-verifying the page): the size slider spans sixteen orders of magnitude in
+100 integer steps, so it moves ~1.45× per step and **the 500 kg light hull landed at 437 kg** — a size nothing in the
+game actually is. It now snaps to **every real shipped chassis** (light/medium/heavy hull · station · swarm/human/walker/
+vehicle frame · building) at that preset's own step, so each shipped design reads as itself. Verified: 9,216 configurations,
+0 errors, all six shipped chassis exact, and every environment's default band charges nothing.
+
 ### 45.1c 🔒 SUBSTRATE, expansive — eight values, each winning an axis outright
 
 Constraint carried from the Power door, because it is what stops "expansive" becoming "cluttered": **every option
