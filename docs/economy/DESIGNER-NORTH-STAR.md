@@ -1399,6 +1399,73 @@ dial/setting combinations with no throw, no `undefined` and no `NaN`.)*
 
 ---
 
+## 26g. 🔒 DECIDED — THE SETTINGS CHANGE WHICH SLIDERS EXIST (developer, 2026-07-30)
+
+> *"The sliders should change depending on what FTL system you use. Obviously make the sliders make sense and
+> actually mean something."*
+
+**The right correction, and it exposes something §26e only half-did.** §26e made the settings *re-label* the sliders
+(startup↔endurance became range↔tempo). A setting that only renames a slider is **decoration**. The developer's call:
+the settings must change the slider **set** — and the reason they must is the first test in the method itself
+(§1: *which sim variable does this dial write? none and it costs nothing ⇒ a bug in the design*). **Under some
+settings, some of these dials write nothing.** Leaving them on screen ships the exact bug the test exists to catch.
+
+### 26g.1 The per-box slider set — derived, with a physical reason for every removal
+
+| Box | Drive mass | The split — and what it splits | Reach vs power | Quietness | Sliders |
+|---|---|---|---|---|---|
+| **1** Warp · free·cont·seen | ✅ | **startup ↔ endurance** — make a bubble, hold a bubble | ✅ | ✅ | **4** |
+| **2** Veiled warp · free·cont·hidden | ✅ | **spool ↔ endurance** — how long you sit exposed before you vanish | ✅ | 🔴 **DEAD** | **3** |
+| **3** Jump · free·inst | ✅ | **range ↔ tempo** — one long bound, or many quick ones | ✅ | ✅ | **4** |
+| **4** Lane · fixed·cont·seen | ✅ | **speed ↔ economy** — the rocket trade, on a rail | ✅ | ✅ | **4** |
+| **5** Veiled lane · fixed·cont·hidden | ✅ | **speed ↔ economy** | ✅ | 🔴 **DEAD** | **3** |
+| **6** Threshold · fixed·inst | ✅ | **cycle ↔ tonnage** — how much, how often | 🔴 **DEAD** | 🔴 **DEAD** | **2** |
+
+**The three removals, each with its reason:**
+
+1. **Quietness dies under hidden transit.** You are *not in normal space* during the crossing, so there is no
+   signature to suppress. The only exposure left is the spool — and the split slider already decides how long that
+   lasts. A quietness dial here would write nothing.
+2. **🔑 The bubble split dies on a lane — and this is a real gameplay finding, not a UI tidy-up.** A lane *already
+   exists*: nothing to spin up, nothing to hold. So the creation lump `WarpMoveCommand` uses to **gate departure**
+   does not apply, and the panel loses its "energy to start" tile entirely. Which means: **a warp ship with a flat
+   battery cannot leave; a lane ship can — it just crawls.** The budget splits the *rocket* way instead (push hard
+   and burn a lot per AU, or sip and take longer).
+3. **Three of four die on the gate coupler.** *Reach vs power* — there is no distance to cover, so power-per-kg buys
+   nothing. *Quietness* — the transit is instant, and the loud thing is the gate, not you. *The bubble split* — no
+   path to make, no duration to hold. What remains is the one trade a coupler **has**: tonnage per transit against
+   cycle time, with throughput fixed by drive mass. **Two sliders is the honest size of a part whose only job is to
+   couple** — which is the same conclusion §26d.4 reached from the code, arrived at independently from the physics.
+
+### 26g.2 🔒 FOUR TRADES, ONE LAW — every box keeps its own zero-sum
+
+Each split is a different pair, and in all six the product holds flat across the slider (verified in the demo):
+
+| Box | The invariant |
+|---|---|
+| 1 · 2 | `start × draw` = const |
+| 3 | `range per jump × tempo` = const |
+| 4 · 5 | `speed ÷ energy-per-AU` = const |
+| 6 | `tonnage × cycles-per-hour` = const |
+
+**All four are the `T·v = 2P` shape** the reaction engine (thrust ↔ exhaust velocity) and the ground gearbox
+(speed ↔ tractive effort) already run on. That is now **five** places one law does the work — worth stating as a
+general expectation for the remaining doors: *when a door's budget is fixed, the split slider is that law wearing
+local units.*
+
+### 26g.3 🔒 THE GENERAL RULE for the remaining eight doors
+
+> **A door's choices must change the slider SET, not just the slider LABELS.** If flipping a setting leaves the same
+> dials with new names, either the setting is cosmetic or one of those dials is now writing nothing. Both are bugs.
+> **And when a slider is hidden, its value must not keep acting on the numbers behind the player's back** — the demo
+> forces `quietness = 0` and `reach = 1` in the boxes where those dials are gone, so a stale slider position can never
+> silently change a result the player cannot see.
+
+*(Verified: 2,268 dial/setting combinations re-rendered with no throw, no `undefined`, no `NaN`; slider counts measured
+at 4/3/4/4/3/2; and each box's invariant confirmed flat across split 0 / 50 / 100.)*
+
+---
+
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 
 > *"Keep amphibious."*
@@ -1513,3 +1580,6 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
    vocabulary, **no franchise IP**, with the three guards — and the reachable name count **enumerated, not estimated.**
 6. **No greyed "not a dial" dials** (§26f.1). Every slider in the door is settable; every emergent number is quoted
    against a **stated reference** instead. And no name guard may merge two distinct designs (§26f.3).
+7. **The door's choices change the slider SET, not just the labels** (§26g.3) — if a setting leaves the same dials
+   with new names, either the setting is cosmetic or a dial is now writing nothing. **And a hidden slider's value must
+   not keep acting on the numbers**, or a stale position silently changes a result the player cannot see.
