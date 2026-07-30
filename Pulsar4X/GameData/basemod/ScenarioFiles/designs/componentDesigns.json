@@ -1331,5 +1331,49 @@
         { "Key": "Soak vs Exotic", "Value": 0.0 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-passenger-cabin",
+      "Name": "Passenger Cabin",
+      "TemplateId": "passenger-cabin",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-cryo-bay",
+      "Name": "Cryogenic Bay",
+      "TemplateId": "cryo-bay",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-refrigerated-hold",
+      "Name": "Refrigerated Hold",
+      "TemplateId": "refrigerated-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-containment-hold",
+      "Name": "Containment Hold",
+      "TemplateId": "containment-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
   }
 ]

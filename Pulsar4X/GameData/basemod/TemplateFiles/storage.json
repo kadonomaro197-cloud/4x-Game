@@ -348,5 +348,217 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "passenger-cabin",
+      "Name": "Passenger Cabin",
+      "Formulas": {
+        "Description": "Berths for LIVING people — the only compartment whose occupants can walk out and go to work. Pressure hull, air, water and fittings, so it masses four times a bare hold of the same size and needs stewards aboard. Carries passengers, colonists, a drafted workforce, a research team, prisoners, refugees.",
+        "Mass": "PropertyValue('Size Efficiency') * 4.0",
+        "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 2",
+        "HTK": "0.5",
+        "CrewReq": "Max(2, PropertyValue('Size Efficiency') * 0.4)",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.3",
+        "BuildPointCost": "[Mass] * 6.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.3",
+        "titanium": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.3",
+        "copper": "[Mass] * 0.05"
+      },
+      "ComponentType": "Cargo Hold",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Storage Volume",
+          "DescriptionFormula": "'Berth volume. A person plus their share of air, water, corridor and life support is about 10 m3, so 500 m3 berths roughly fifty.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "10000",
+          "MinFormula": "10",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Size Efficiency",
+          "DescriptionFormula": "'Cabins, galley, sick bay and the life-support plant that keeps them alive.'",
+          "GuiHint": "GuiTextDisplay",
+          "DataDict": {},
+          "PropertyFormula": "Max(1, PropertyValue('Storage Volume') * 0.01)"
+        },
+        {
+          "Name": "DBargsStor",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs('passenger-storage', PropertyValue('Storage Volume'))",
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "cryo-bay",
+      "Name": "Cryogenic Bay",
+      "Formulas": {
+        "Description": "Frozen people, stacked. The CHEAPEST way to move a population — pods need no air, no food and almost nobody to tend them — paid for with the two things a cabin gives you: the occupants cannot act, and they are wholly dependent on the refrigeration plant. Also the only compartment that will hold seed stock, gene banks and casualties in stasis.",
+        "Mass": "PropertyValue('Size Efficiency') * 3.0",
+        "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 2",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.05)",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.35",
+        "BuildPointCost": "[Mass] * 6.5"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.4",
+        "aluminium": "[Mass] * 0.2",
+        "titanium": "[Mass] * 0.2",
+        "plastic": "[Mass] * 0.15",
+        "copper": "[Mass] * 0.1"
+      },
+      "ComponentType": "Cargo Hold",
+      "MountType": "ShipComponent, ShipCargo, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Storage Volume",
+          "DescriptionFormula": "'Pod volume. A pod plus its share of the refrigeration plant is about 2 m3, so a cryo bay carries roughly five times the people of a cabin the same size.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "10000",
+          "MinFormula": "10",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Size Efficiency",
+          "DescriptionFormula": "'Pod racking and the refrigeration plant.'",
+          "GuiHint": "GuiTextDisplay",
+          "DataDict": {},
+          "PropertyFormula": "Max(1, PropertyValue('Storage Volume') * 0.01)"
+        },
+        {
+          "Name": "DBargsStor",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs('cryogenic-storage', PropertyValue('Storage Volume'))",
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "refrigerated-hold",
+      "Name": "Refrigerated Hold",
+      "Formulas": {
+        "Description": "A cooled, controlled hold — the only compartment whose contents are still worth having when they arrive. Food, biomass, medical stock and anything alive spoil in a bare hold; here they do not. Costs twice a general hold of the same size for the cooling plant and insulation.",
+        "Mass": "PropertyValue('Size Efficiency') * 2.0",
+        "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 1.5",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, PropertyValue('Size Efficiency') * 0.1)",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.2",
+        "BuildPointCost": "[Mass] * 5.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "titanium": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.25",
+        "copper": "[Mass] * 0.05"
+      },
+      "ComponentType": "Cargo Hold",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Storage Volume",
+          "DescriptionFormula": "'Cooled volume. Larger holds move more perishable goods per trip.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "10000",
+          "MinFormula": "10",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Size Efficiency",
+          "DescriptionFormula": "'Insulation, racking and the cooling plant.'",
+          "GuiHint": "GuiTextDisplay",
+          "DataDict": {},
+          "PropertyFormula": "Max(1, PropertyValue('Storage Volume') * 0.01)"
+        },
+        {
+          "Name": "DBargsStor",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs('perishable-storage', PropertyValue('Storage Volume'))",
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "containment-hold",
+      "Name": "Containment Hold",
+      "Formulas": {
+        "Description": "A shielded, isolated hold for cargo that is dangerous to the ship carrying it — volatiles, radioactives, antimatter, biohazard, a live xeno specimen. The only compartment rated for cargo whose escape damages the carrier, and it is the heaviest per cubic metre by a wide margin because the shielding is the point.",
+        "Mass": "PropertyValue('Size Efficiency') * 6.0",
+        "Volume": "PropertyValue('Storage Volume') + PropertyValue('Size Efficiency') * 3",
+        "HTK": "0.5",
+        "CrewReq": "Max(2, PropertyValue('Size Efficiency') * 0.2)",
+        "ResearchCost": "0",
+        "CreditCost": "[Mass] * 0.45",
+        "BuildPointCost": "[Mass] * 7.0"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.35",
+        "titanium": "[Mass] * 0.3",
+        "tungsten": "[Mass] * 0.2",
+        "aluminium": "[Mass] * 0.1",
+        "copper": "[Mass] * 0.05"
+      },
+      "ComponentType": "Cargo Hold",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, Station",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Storage Volume",
+          "DescriptionFormula": "'Contained volume. Every cubic metre must be shielded, so this is the most expensive capacity in the game.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "DataDict": {},
+          "MaxFormula": "10000",
+          "MinFormula": "10",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
+          "Name": "Size Efficiency",
+          "DescriptionFormula": "'Shielding, blowout panels and the handling gear.'",
+          "GuiHint": "GuiTextDisplay",
+          "DataDict": {},
+          "PropertyFormula": "Max(1, PropertyValue('Storage Volume') * 0.01)"
+        },
+        {
+          "Name": "DBargsStor",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs('contained-storage', PropertyValue('Storage Volume'))",
+          "AttributeType": "Pulsar4X.Storage.CargoStorageAtb"
+        }
+      ]
+    }
   }
 ]

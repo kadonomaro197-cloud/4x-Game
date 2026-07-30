@@ -63,15 +63,25 @@ namespace Pulsar4X.Technology
         {
             get { return LeaderName; }
         }
-        public string CargoTypeID { get; set; } = "passenger-storage";
+        public string CargoTypeID { get; set; } = PassengerPacking.PassengerStorage;
         public long MassPerUnit
         {
-            get { return Convert.ToInt64(_teamSize * (long)100); }
+            get { return Convert.ToInt64(_teamSize * (long)PassengerPacking.MassPerPerson_kg); }
         }
 
+        /// <summary>
+        /// Room this team needs, which depends on HOW you are carrying them — a berth in a passenger cabin, or a
+        /// cryogenic pod (a fifth of the room, and they arrive asleep). See <see cref="PassengerPacking"/>.
+        ///
+        /// <para>⚠ This used to read <c>0.065 × teamSize</c> — <b>65 litres a head, the volume of a human body</b>,
+        /// which would berth seven thousand people in a 500 m³ cabin. It had never been wrong in play because it had
+        /// never been READ: no component in the game provided <c>passenger-storage</c>, so
+        /// <c>CargoMath.GetFreeVolume</c> returned a silent 0 for every team and no team could be loaded onto
+        /// anything. Fixing it is byte-identical for exactly that reason.</para>
+        /// </summary>
         public double VolumePerUnit
         {
-            get { return 0.065 * _teamSize; }
+            get { return PassengerPacking.VolumePerPerson(CargoTypeID) * _teamSize; }
         }
 
         public double Density

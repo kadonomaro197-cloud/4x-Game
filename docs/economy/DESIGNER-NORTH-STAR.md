@@ -2786,6 +2786,152 @@ the shipped 5 t magazine) is steep and worth a calibration look.
 Propulsion — cleanly, with a real hard gate in `GroundUnitAssembly`). 🔒 **The intrinsic test put both on the
 container rather than the consumer, and it held.**
 
+### 46a 🔒 THE DOOR ITSELF — "what is it carrying?" (developer, 2026-07-30)
+
+*"For cargo, you should also include things like food, people (some general term), resources both refined and
+unrefined, and also ships/other entities, anything else that would be shipped, stored, or needs to be moved."*
+
+**The mechanism, first, because it decides everything else.** Anything carryable implements `ICargoable`, whose six
+fields include **`CargoTypeID`** — the KIND of compartment it needs. A hold declares the same string through
+`CargoStorageAtb(storeTypeID, maxVolume)`. `CargoMath.GetFreeVolume` then looks the item's string up in the hold's
+`TypeStores` dictionary — **and on a miss returns `0`. No exception, no log.** So "this ship cannot carry that" and
+"this ship has no room right now" are the same reading, which is why the gaps below survived: they never announced
+themselves.
+
+#### What is ALREADY cargo — eight implementors, and two surprises
+
+| `ICargoable` | What it is | Its class | Carryable today? |
+|---|---|---|---|
+| `Mineral` | **unrefined resource** | `general-storage` | ✅ |
+| `ProcessedMaterial` | **refined resource** | `general` / `fuel` | ✅ |
+| `ComponentDesign` · `ComponentInstance` | a part, boxed | `general-storage` | ✅ |
+| `OrdnanceDesign` | a missile | `ordnance-storage` | ✅ |
+| `CargoAbleTypeDB` | the generic blob-based one | authored | ✅ |
+| **`ShipDesign`** | 🔑 **a whole ship** | — | 🔴 **nothing provides a berth for one** |
+| **`TeamObject`** (every `Scientist`) | 🔑 **a team of PEOPLE** | `passenger-storage` | 🔴 **nothing provided it — a silent 0** |
+
+🔑 **So "refined and unrefined resources" was already done, and "people" and "ships" were already declared** — the
+engine had been reaching for both. `ShipFactory.cs:246` even carries the note
+`// TODO: check for additional people on board (passengers, officers, scientists etc)`.
+
+🔴 **Six classes were declared in `cargoTypes.json`; three had no provider at all.** Both cargo-hold templates
+hard-code `AtbConstrArgs('general-storage', …)`, so **the compartment's class is not a dial** — the designer could not
+build a passenger liner, a cryo ark, or a reefer, and `passenger-storage` / `cryogenic-storage` sat declared and
+unbuildable while `TeamObject` asked for one of them every time it was created.
+
+🔴 **And FOOD does not exist as a thing at all.** `SustenanceProcessor.cs:14` says so in its own words: *"food from
+the — **not-yet-existing** — food cargo good, so 0 for now."* Food is an installation OUTPUT read off installed
+components, so **it is produced and eaten in the same place and can never be shipped** — a colony that cannot grow
+food can never be supplied by one that can. That removes the single most classic reason a supply line exists.
+
+#### The rule that keeps the taxonomy honest
+
+**A cargo class exists only if it needs a physically DIFFERENT compartment.** If two things can ride in the same box,
+they are the same class. That is what stops this becoming thirty flavours of crate — and it is §39.8 again: each class
+must win an axis outright. The axes are the requirements a compartment must meet: **pressure · temperature ·
+continuous power · containment · acceleration limit · what failure costs · and whether the contents pour or take a
+berth.**
+
+| Class | The requirement that makes it its own compartment | Carries | Wins outright |
+|---|---|---|---|
+| **General** `general-storage` | none — the baseline | ore, materials, machinery, parts | **cheapest per m³, no power** |
+| **Fuel/fluid** `fuel-storage` | sealed pressure vessel, no free surface | fuels, reaction mass, **water**, atmospheric gases | **the only one that holds a liquid or gas** |
+| **Ordnance** `ordnance-storage` | blast isolation + handling gear | missiles, shells, ground ammunition | **the only one rated for cargo that detonates** |
+| **Passengers** `passenger-storage` | pressure · air · water · **an acceleration limit** · draws power | passengers, **colonists**, a drafted workforce, research teams, prisoners, refugees | **the only one whose contents walk out and go to work** |
+| **Cryogenic** `cryogenic-storage` | continuous refrigeration; needs no air or food | colonists at scale, casualties in stasis, seed stock, gene banks, live specimens | **cheapest per PERSON (5× a berth) and needs nobody to tend it** |
+| **Refrigerated** `perishable-storage` 🆕 | powered cooling; **contents degrade with TIME** | **food**, biomass, medical stock, anything alive | **the only one whose contents are still worth having on arrival** |
+| **Containment** `contained-storage` 🆕 | shielding or a field; **failure damages the CARRIER** | volatiles, radioactives, antimatter, biohazard, xeno specimens | **the only one rated for cargo dangerous to its own ship** |
+| **Energy** `battery-storage` | a charge, not a mass — kJ, not m³ | electricity, charged cells | **measured in a different unit entirely** |
+| **Berth** 🆕 *(not built)* | a **unit slot**, not a volume — a discrete thing that leaves under its own power | ground units, vehicles, small craft, a docked ship, drones | **the only one whose cargo departs by itself** |
+
+#### The science-fiction cross-check — what the franchises forced
+
+Run against the universes the north star names, as a completeness test on the nine (this is the "what's missing"
+critic, not decoration):
+
+| Trade good | Where | Lands in | Verdict |
+|---|---|---|---|
+| Water / ice hauling | Expanse (Ceres), BSG, Trek | **Fuel/fluid** — and `water` is *already* a `Mineral` | ✅ covered twice over |
+| Tylium ore, naquadah, dilithium, eezo | BSG, Stargate, Trek, Mass Effect | **General**, or **Containment** if it is dangerous raw | ✅ and it is why Containment earns its place |
+| A refugee civilian fleet | BSG — the entire premise | **Passengers** | ✅ and it is the class that was unbuildable |
+| Ark ships / colonist sleepers | Andromeda, Expanse, Stellaris colony ships | **Cryogenic** | ✅ and it is why cryo is priced per person, not per m³ |
+| Grain shipment, bacta, medical relief | Trek, Star Wars | **Refrigerated** | 🆕 **forced the class** |
+| Antimatter, a live specimen, a containment breach | Trek, Alien, B5 | **Containment** | 🆕 **forced the class** |
+| A freighter carrying starfighters; the Normandy's shuttle and Mako | Star Wars, Mass Effect, Halo drop pods | **Berth** | 🔴 **forced the class the engine cannot express** |
+| Smuggling / concealed holds | Star Wars, B5 black market | *would be a compartment PROPERTY (hidden from inspection)* | ⚠ **HELD BACK — needs a customs/inspection system that does not exist** |
+| Courier data, diplomatic dispatches | Trek, B5 | *massless — needs no different box* | ⚠ **HELD BACK — fails the compartment test; it is an intel transfer** (the Information Ledger's job) |
+| A drop pod that deploys under fire | Halo ODST, Warhammer | *a delivery METHOD, not a container* | ⚠ **HELD BACK — Propulsion's axis, named so it is not lost** |
+
+🔒 **Three held back, each with a stated reason.** That is the discipline: *"it needs no different box"* is a valid
+reason to refuse a class; *"it sounds cool"* is not.
+
+#### 🔑 The finding: the taxonomy is one dial away, and the dial is the CLASS
+
+The store attribute already takes the class as its first argument. Every template hard-codes it. **So the whole
+taxonomy above is reachable by authoring templates — no engine change, no new attribute, no save risk.** The one
+genuinely new mechanism is **Berth**, because a berth counts *units*, not cubic metres — and the engine already has
+that code, in the wrong place: **`GroundBayAtb` is a second, parallel storage system** with its own capacity, its own
+class enum (`Personnel`/`Vehicle`), its own "a bay only accepts its own class" rule and its own summing helper in
+`GroundTransport`. It reinvents `CargoTypeID` for one cargo. **Unifying it is what makes a ship, a shuttle, a tank and
+a rifleman all just cargo with a class** — and it is the same shape as `CONVENTIONS §6` (*abilities are components — do
+not invent parallel systems*) and the Chassis door's finding (checks that are domain-neutral in signature and
+hard-coded in body). There are **four** parallel stores today: `CargoStorageDB`, `GroundBayAtb`, `EnergyStoreAtb`,
+`GroundMagazineAtb`.
+
+#### ✅ SHIPPED — slice L1 (data + one line), 2026-07-30
+
+**Four compartment templates**, each on the existing 2-arg `CargoStorageAtb` (so no ctor overload, no L13 save risk):
+`passenger-cabin` · `cryo-bay` · `refrigerated-hold` · `containment-hold`, plus the two new classes
+`perishable-storage` and `contained-storage`, and every class's description now **states the axis it wins** (§39.8).
+Relative pricing is the justification: general **0.01 kg/m³** < refrigerated 0.02 < passenger 0.04 < containment
+**0.06** — the shielding IS the capability — while cryo carries **5× the people** of a cabin on **half the crew**.
+
+**One line of code:** `TeamObject.VolumePerUnit` reported **`0.065 × teamSize` — 65 litres a head, the volume of a
+human body**, which would berth seven thousand people in a 500 m³ cabin. It is now `PassengerPacking.VolumePerPerson`
+— **10 m³ a berth, 2 m³ a cryo pod** — and because `CargoTypeID` is settable, freezing the same team really does
+shrink what it needs. **Provably byte-identical:** nothing provided `passenger-storage`, so `GetFreeVolume` returned 0
+for every team and the number was never read.
+
+**Gauge `CargoCompartmentTests`** — and the first test is the structural rule that cannot rot: **every declared cargo
+class must be providable by something**, with an allow-list where each entry states *why* (`battery-storage`: energy
+lives in `EnergyStoreAtb`). Plus the bug red-before/green-after (a team reads 0 room, then real room), each class
+winning an axis, the person-volume pinned, and the two shipped holds asserted unchanged.
+
+🔑 **A registration rung the L6 chain never recorded:** a **cargo type id is itself unlocked** through
+`StartingItems` — which is why `general-storage`, `fuel-storage` and `battery-storage` are already in Earth's list. So
+a new compartment is a **three-part** registration: the **class id**, the **template id**, and the **design id**.
+(`ordnance-storage` was missing from Earth's list and is now added.)
+
+#### ⏭ Next, in order
+
+1. **Food as a good** (L2, the code half) — define the material, have `food-production` produce it, and let
+   `SustenanceProcessor` consume a stockpile with the installed-output as fallback. Its own TODO, and the thing that
+   makes a supply line matter. *Deliberately not bundled here: a food good with no consumer wired is the exact bug
+   this campaign exists to remove.*
+2. **Berth** — unify `GroundBayAtb` into `CargoTypeID`, which also gives ships-carrying-ships (`ShipDesign` is already
+   `ICargoable`; the only other trace is an unused `ParasiteLauncherReady` event enum).
+3. **A generic component POWER DRAW** — the four powered compartments have no way to say they need power, because
+   `WeaponSupply.PowerDraw_W` switches on **weapon** attribute types. Until that exists, "the cryo pods die if the
+   reactor does" cannot be wired, and neither can the refrigerated hold's spoilage. Same finding as Chassis: the gate
+   is domain-neutral in its signature and hard-coded in its body.
+4. **The ×1000 hold-mass unit bug** (F7, now measured): `Mass = Size Efficiency × 1.0` where the property's own
+   description calls itself *"the amount of **tonnage** taken up by racking, office space etc."* — **the author was
+   thinking tonnes and the field is kilograms.** The four new templates are costed on the same law deliberately, so the
+   door stays internally consistent and the correction is one coefficient per template. **Needs a ruling:** it
+   multiplies every cargo hold's mass by 1000 against an armed mass-budget gate.
+
+#### ⚠ Two pre-existing data bugs found while validating this slice (reported, NOT fixed here)
+
+1. 🔴 **Two ordnance designs point at templates that do not exist** — `default-design-missle-sensors` →
+   `missle-electronics-suite` and `default-design-prox-frag-5kg` → `missle-payload`. The templates are spelled
+   **`missile-`** (two s). Latent because neither design is in any colony's `ComponentDesigns` — but
+   **`ordnanceDesigns/missile-250.json` references `default-design-prox-frag-5kg`**, so the moment a faction unlocks
+   that missile, `ComponentDesignFromJson` throws. Same shape as the `gallicite` bug in gotcha #10.
+2. ⚠ `default-design-fuel-farm-5000k` spells its design properties **lowercase** (`"key"`/`"value"`); it binds only
+   because Newtonsoft is case-insensitive.
+
+🔒 **Both are exactly what §51's one data-only test would catch, and neither is visible to `dotnet test` today.**
+
 ## 47. Door 5 — COMMAND: one component built twice, thirteen months apart
 
 **The door:** one seat — *what does it command · how well · does the occupant survive.* `CommandBerthAtb` has all
