@@ -1991,15 +1991,26 @@ TURBINE   Generator Output ∝ Output-vs-Efficency        ← and nothing pays f
 And it is a genuinely good decision because the two ends serve different fleets: a warship wants peak output for the
 warp bubble and the beam batteries; a picket or an outpost wants to sit still for a decade without a tanker.
 
-### 39.2 🔴 `Lifetime` is a FREE dial — and it is physically wrong as well
+### 39.2 ⚠️ CORRECTED — `Lifetime` is NOT free. It costs FUEL; it just costs no MASS.
 
-`EnergyGenerationAtb.cs:60` — `genDB.LocalFuel = maxUse * Lifetime`. So Lifetime multiplies the fuel you carry
-aboard. And the reactor's mass formula is `PropertyValue('Mass')` — **`Lifetime` is not in it.** Its range is
-**1 to 87,600 hours**, so a player sets it to the maximum and carries **ten times the fuel for nothing.**
+**I checked the `Mass` formula and stopped there. A template has more cost blocks than that**, and the reactor's
+`ResourceCost` charges the dial directly:
 
-**Fuel has mass.** This is not merely a free win, it is a free win that breaks conservation — and it is the same class
-of error as Sensors' scan time (§34.2). Fixing it *is* §39.1: once output × lifetime is the trade, a long life costs
-output, and the fuel it carries costs mass.
+```
+ResourceCost.fissile-fuels = Fuel Consumption × 3600 × Lifetime        ← linear in the dial
+```
+
+So a ten-year reactor costs **ten times the fissile fuel** to build. The dial is paid for. **What is still wrong is
+narrower and still real:** it adds **no mass**. A reactor carrying ten years of fuel weighs exactly what a
+one-hour reactor weighs — **fuel with no weight** — and mass is the currency the Chassis door gates on, so the free
+side of the dial is the side that matters for ship design. The RTG gets this right by construction
+(`Fuel = Mass × 0.5`, so its fuel *is* part of its mass); the reactor and the turbine do not.
+
+> 🔒 **THE RULE THIS EARNED — check EVERY cost block before calling a dial free.** A component template prices a dial
+> through **seven** independent channels: `Mass` · `Volume` · `CrewReq` · `ResearchCost` · `CreditCost` ·
+> `BuildPointCost` · **`ResourceCost`**. Reading one and concluding "free" is how I got this wrong. **The correct
+> question is not "is it in the mass formula" but "which of the seven does it appear in, and is that the channel the
+> player is actually constrained by?"** Here the answer is *"minerals yes, mass no"* — and for a ship, mass binds.
 
 ### 39.3 🔴 The turbine's `Output vs Efficency` is a dial NAMED AFTER A TRADE THAT DOES NOT EXIST
 
@@ -2019,10 +2030,16 @@ FuelDuration   = FuelMass ÷ Fuel Burn Rate
 `GeneratorOutput = CoreOutput × 0.8` rises straight with the dial. So the dial only ever adds output, at no cost in
 efficiency or endurance: **crank it to 70.**
 
-And `GennyMass` (`= Mass − CoreMass`) is **computed and never used** — the generator efficiency is a hard-coded `0.8`,
-not derived from the generator's mass. The design clearly intended *core vs generator* to be the trade. The arithmetic
-forgot to connect it. **This is the clearest "the name promises a decision the numbers do not deliver" case found so
-far** — and it is a warning about reading a template's dial names as evidence.
+**⚠️ And a correction on `GennyMass`:** I said it was computed and never used. It *is* used — in the **`ResourceCost`
+block**, heavily (`stainless-steel`, `copper`, `aluminium`, `nickel` and **`tungsten`** all scale with it). So the
+core-vs-generator split does decide **what the turbine costs to build**: a generator-heavy design eats tungsten and
+nickel, a core-heavy one eats graphite. That is a real consequence, and it means the dial half-passes test ①.
+
+**What remains wrong is the NAME.** Generator efficiency is a hard-coded `0.8`, never derived from `GennyMass`, and fuel
+duration is that same 4×10⁸ s constant. So the dial changes your **bill of materials** and your **output**, and never
+your **efficiency** or your **endurance** — the two things it is named after. **The clearest "the name promises a
+decision the numbers do not deliver" case found so far**, and a standing warning against reading dial names as
+evidence.
 
 ### 39.4 🔴 A reactor is silently also a BATTERY, and the units do not match
 
@@ -2070,6 +2087,50 @@ build to answer it.** That is a cradle-to-grave hole with a live consumer alread
 
 *(And `solarArray`'s `MountType: 1` works only by numeric coincidence. Every other template names its mounts. It also
 means the one generator that needs no fuel cannot be put on a colony — the most obvious thing a player would try.)*
+
+### 39.7 🔑 THE DEVELOPER'S QUESTION — *"what about a type of power source that needs fuel?"* — and it re-orders the door
+
+**All three burn-generators need fuel. None of them needs it to RUN.** Traced end to end:
+
+| Rung | State |
+|---|---|
+| The fuel exists as a real material | ✅ `fissile-fuels` — refined from **fissionables + hydrocarbons**, `IndustryTypeID: refining`, 50,000 credits a unit |
+| It is charged at BUILD time | ✅ all three: reactor `Fuel Consumption × 3600 × Lifetime` · RTG `Mass × 0.5` · turbine `FuelMass` |
+| A running generator carries a fuel load | ✅ `EnergyGenerationAtb.cs:60` — `LocalFuel = maxUse × Lifetime` |
+| A running generator BURNS it | ✅ `EnergyGenProcessor.cs:52` — `LocalFuel -= fueluse × t.TotalSeconds` |
+| **Running out has a consequence** | 🔴 **NO. `LocalFuel` is never read as a gate — anywhere.** |
+
+Grepped the whole repository for `LocalFuel`. **Five hits, and not one is a condition:** the setter, the decrement, the
+field declaration, a `SensorScan` line that *overwrites* it for solar arrays, and **a text label in `DebugWindow`.**
+
+> 🔴 **So `LocalFuel` runs negative and output never stops. Every reactor in the game runs forever on nothing.**
+> And the reactor's own description says **"A non refuelable reactor"** — the design *intended* it to run out. The
+> counter is there, the drain is there, and the consequence was never wired.
+
+**Which means fuel is a construction material, not a logistics burden** — and three things follow:
+
+1. **🔑 THE RTG'S LAW BUYS NOTHING TODAY.** §39.1 said copy `power × lifetime = const × mass` onto the reactor and the
+   turbine. But endurance only *means* something if running dry costs you something, and it does not. **So the slice
+   order flips: wire the fuel-exhaustion consequence FIRST (or in the same change), or you are giving the reactor a
+   trade against a cost that does not exist.** That is a real re-ordering, and it came from the question rather than
+   from the derivation.
+2. **Solar's "no fuel ever" advantage is smaller than it looks** — a fuelled generator needs no resupply either. What
+   solar actually saves is the **fissile-fuels build cost** (and it genuinely attenuates with distance from the star:
+   `EnergySolarGenProcessor` runs `AttenuatedForDistanceList(starProfile, distance, 0.1)`, so an outer-system panel is
+   honestly worse). **Solar is the cheap option, not the convenient one** — and nothing says so.
+3. **It is a cradle-to-grave hole with the grave rung missing.** Mineral → material → component → installed → *and then
+   nothing*. A reactor should be a **consumable with a clock**: it runs for its designed life and then the ship is
+   adrift, which is exactly what "non refuelable" promises. Wiring that one gate turns `Lifetime` from a build-cost
+   multiplier into **the most consequential dial in the door.**
+
+**The cheapest honest version of the gate:** when `LocalFuel <= 0`, clamp `TotalOutputMax` to 0 (a dead reactor
+generates nothing) and publish an event. Everything downstream already handles zero power correctly — the warp
+departure gate refuses (`WarpMoveCommand:258`), the ground supply gate refuses (`WeaponSupply`), the AI stops planning
+(`MilitaryReach:156`). **The consequence system is already built; only the trigger is missing.**
+
+*(⚠ Balance note before building it: at the shipped 8760-hour lifetime a reactor dies after **one game year**, which
+would strand the entire starting fleet. So the gate needs either a much longer default lifetime, a refuelling order, or
+both — that is the decision, and it is the developer's, not the derivation's.)*
 
 ## 40. STEP 2 — THE DOOR: three answers, and they are exclusive per part
 
@@ -2133,13 +2194,17 @@ newest thing in the door (the solar/sensor band sharing) is the only part that i
 
 | # | Slice | Why it is cheap | What it changes about PLAY |
 |---|---|---|---|
-| **P1** | **Give the reactor and the turbine the RTG's law** — `output × lifetime = const × size` | the formula already exists on a shipped template; it is a copy, not a design | 🔴 **The door gets its decision.** Warship-hot vs outpost-frugal, and it prices `Lifetime` at the same time. |
+| **P0** | 🔑 **WIRE THE FUEL GATE FIRST** (§39.7) — `LocalFuel <= 0` ⇒ output 0 | one condition; **every consumer already handles zero power** (warp departure, ground supply gate, AI reach) | 🔴 **Makes endurance mean something at all.** Without this, P1 gives the reactor a trade against a cost that does not exist. ⚠ Needs a lifetime/refuelling ruling first — at the shipped 8760 h the starting fleet would go dark in a game year. |
+| **P1** | **Give the reactor and the turbine the RTG's law** — `output × lifetime = const × size` | the formula already exists on a shipped template; it is a copy, not a design | 🔴 **The door gets its decision** — warship-hot vs outpost-frugal. **Order: after or with P0.** |
+| **P1b** | **Make carried fuel weigh something** (§39.2) — the RTG already does it (`Fuel = Mass × 0.5`) | one formula per template | **Closes the one channel where `Lifetime` really is free.** Mass is what Chassis gates on, so this is the half that matters for ship design. |
 | **P2** | **Replace the turbine's `Output vs Efficency`** with that same trade (§39.3) | one template; the dial's slot already exists | Removes a dial that promises a decision it never delivers, and connects `GennyMass`. |
 | **P3** | **Add `PlanetInstallation` to a generator** — the solar array is the obvious one (§39.6) | one mount flag | 🔴 **A colony can answer a power shortage.** Closes a cradle-to-grave hole whose consumer already exists. |
 | **P4** | **Fix `solarArray`'s `MountType: 1`** to named flags | data hygiene | None directly — but it is a landmine (it works by numeric coincidence). |
 | **P5** | **Decide the reactor-as-battery term** (§39.4) — deliberate buffer, or remove | one line | Makes storage balanceable instead of secretly pre-loaded. |
 | **P6** | **Publish output ↔ signature** as a readout (row 5 of §42) | Failure-A: the number exists, unwired | 🔴 **Tells the player their generator is their stealth.** The single biggest unstated coupling in the game. |
 
-**No ruling is blocked here** — every slice above is decidable from the derivation. ⚠ But **S0 (Sensors) now touches
+**One ruling is now needed** (it was none before the developer's question): **P0 needs a call on reactor lifetime and
+refuelling** — wiring the gate at the shipped 8760 hours would strand the starting fleet inside a game year. Every
+other slice above is decidable from the derivation. ⚠ But **S0 (Sensors) now touches
 this door** (§39.5), so the band ruling should be made before P6 is calibrated.
 
