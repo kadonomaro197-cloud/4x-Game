@@ -447,7 +447,7 @@
       "UniqueID": "lithium-battery",
       "Name": "Lithium Battery Pack",
       "Description": "High-density energy storage cell. Lithium-ion chemistry with copper current collectors.",
-      "CargoTypeID": "battery-storage",
+      "CargoTypeID": "general-storage",
       "CreditValue": 500,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.001,
@@ -480,6 +480,27 @@
       "IndustryTypeID": "refining",
       "WealthCost": 5,
       "OutputAmount": 10
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "food",
+      "Name": "Food",
+      "Description": "Rations, protein and produce. The good SustenanceProcessor was written to consume and that never existed, so a colony that could not farm could never be supplied by one that could. Rides a refrigerated hold: in a bare hold it spoils.",
+      "CargoTypeID": "perishable-storage",
+      "CreditValue": 20,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0011,
+      "ResourceCosts": {
+        "hydrocarbons": 40,
+        "water": 55,
+        "regolith": 5
+      },
+      "IndustryPointCosts": 8,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
     }
   }
 ]

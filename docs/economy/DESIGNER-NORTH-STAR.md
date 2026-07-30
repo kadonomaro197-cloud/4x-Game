@@ -2916,6 +2916,71 @@ a new compartment is a **three-part** registration: the **class id**, the **temp
    is domain-neutral in its signature and hard-coded in its body.
 4. ~~The hold-mass unit bug (F7)~~ ✅ **RULED AND FIXED 2026-07-30 — see §46b.**
 
+### 46c ⚠ "WHERE ARE THE FIXES FOR THE VAST VARIATIONS IN CARGO TYPE?" — the boxes shipped, the GOODS did not
+
+**The developer's challenge, and it lands.** §46a derived nine classes and shipped four *compartments* — and then
+**classified not one existing good into any of them.** The variety was in the design and not in the game.
+
+#### The measurement that names the gap
+
+| | Count | Share |
+|---|---|---|
+| **`general-storage`** | 30 | **81%** |
+| `fuel-storage` | 5 | 14% |
+| `battery-storage` | 2 | 5% |
+
+**37 shippable goods and 30 of them in one box.** Eight compartments existed and 81% of all cargo still rode in the
+generic one. *That* is what "vast variations" was asking for, and it had not been delivered.
+
+#### 🔴 And the mirror test I failed to write found two goods NOTHING could hold
+
+The structural test shipped in §46a walks **classes → providers**. That is only half the joint. Walking
+**goods → providers** finds that `electricity` and `lithium-battery` both declare **`battery-storage`, which nothing
+provides** — so neither can be stored or shipped by anything, reported as the usual silent `0`.
+
+🔒 **And my own allow-list had excused it.** I allow-listed `battery-storage` on the grounds that *"energy is stored by
+`EnergyStoreAtb`"*. That is true of `electricity` (a charge) and **plainly wrong for `lithium-battery`**, which is a
+**manufactured object**: you can build one and then have nowhere to put it. **An allow-list entry that reasons about the
+CLASS can hide a bug about a GOOD.** The lesson generalises past cargo: *a two-sided joint needs testing from both
+sides, and an exemption must name the thing it exempts, not the category.*
+
+#### ✅ Fixed
+
+| Fix | What it was | What it is |
+|---|---|---|
+| **`lithium-battery`** | `battery-storage` — a manufactured item **storable nowhere** | `general-storage`. Strictly additive: from zero capacity to real capacity. |
+| **`food` exists** 🆕 | **did not exist.** `SustenanceProcessor.cs:14` said so: *"food from the — not-yet-existing — food cargo good, so 0 for now"* | a `ProcessedMaterial` riding **`perishable-storage`**, refined from hydrocarbons + water + regolith, unlocked at Earth. **The first good the new taxonomy exists FOR** — a bare hold refuses it. |
+| **the consumer is WIRED** | food supply was installed-component output only, so food was grown and eaten in the same place | `SustenanceProcessor.DrawImportedFood` counts a stockpile **and consumes it**. **A colony that cannot farm can now be supplied by one that can.** |
+| **the mirror gauge** | classes → providers only | `EveryGood_NamesACompartmentSomethingProvides` — goods → providers, with the allow-list naming the *good*, not the class. |
+
+**The food wiring is dimensionally careful, because this campaign has already been bitten by exactly this** (the reactor
+`Lifetime` unit bug): demand and farm output are **per-day rates**, a stockpile is a **quantity**, and the processor runs
+**monthly** — so a call may draw up to 30 days of shortfall and the amount drawn is converted **back to a daily rate**
+before it is added. Adding a raw stockpile to a rate would have made one crate of rations look like an infinite farm.
+And **it depletes**: a supply that is read but never consumed is free food, which is the "pretty" failure this campaign
+exists to remove.
+
+✅ **Byte-identical on a stock game, for a structural reason:** `PerCapitaFoodDemand` defaults to `0`, so the shortfall
+is 0 and nothing is ever drawn. The test sets the coefficient itself, the way a calibrated build would, and asserts
+**both** halves — nothing drawn at the stock 0, food eaten once demand is real.
+
+#### ⏭ Still generic, and why it is NOT being bulk-reclassified in this slice
+
+**82% of goods remain `general-storage`.** The obvious next move is to reclassify the ones that are physically something
+else — `water` and `hydrocarbons` are **liquids** and belong in the fluid class; raw `fissionables` are **radioactive**
+and belong in containment. **Held back deliberately, with the reason:**
+
+🔴 **Both are MINED goods, and mining writes into cargo.** `MineResourcesProcessor` adds to the colony's hold, and if the
+destination compartment has no room the loss is a **silent zero** — the exact failure this whole slice is about.
+`general-storage` at the start colony is a 10,000 m³ warehouse; `fuel-storage` is a few thousand m³ of tanks, and the
+start stockpiles were already tuned against the warehouse cap (see `Industry/CLAUDE.md` → ALPHA stockpiles). **Moving a
+mined good to a smaller box would silently throw away production.** So it needs its own slice with a capacity gauge
+first: *can this host actually hold what it mines?* — which is a good test to own regardless.
+
+⚠ **`electricity` is the one remaining orphan and it is a real ruling, not an oversight:** *should power be shippable
+cargo?* Charged cells are a genuine science-fiction trade good — but wiring it through `CargoStorageAtb` would give the
+game a **second way to hold a charge**, and a fifth parallel store is not a fix.
+
 ### 46b 🔒 "MAKE THE FIELD KGS NO TONNES" — the ruling, and the design names pinned the factor at 100
 
 **The developer's ruling, verbatim: *"make the field kgs no tonnes."*** So the field stays **kilograms** and the numbers

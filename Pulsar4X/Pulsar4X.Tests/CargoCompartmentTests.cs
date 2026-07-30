@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Pulsar4X.Blueprints;
+using Pulsar4X.Colonies;
 using Pulsar4X.Components;
 using Pulsar4X.Factions;
 using Pulsar4X.Storage;
@@ -128,6 +129,136 @@ namespace Pulsar4X.Tests
                 Assert.That(providers.ContainsKey(cls), Is.True, $"{cls} must have a provider");
                 Assert.That(providers[cls], Does.Contain(tpl), $"{cls} is provided by {tpl}");
             }
+        }
+
+        /// <summary>
+        /// ⚠ THE MIRROR OF THE TEST ABOVE, AND THE ONE I FAILED TO WRITE FIRST.
+        ///
+        /// <para><c>EveryDeclaredCargoClass_IsProvidedBySomething</c> walks <b>classes → providers</b>. That is only half
+        /// the joint. This walks <b>GOODS → providers</b>: every <c>Mineral</c> and <c>ProcessedMaterial</c> declares a
+        /// <c>CargoTypeID</c>, and if nothing provides that compartment then <b>the good cannot be stored or shipped by
+        /// anything in the game</b> — reported, as always, as a silent 0 out of <c>CargoMath</c>.</para>
+        ///
+        /// <para><b>The first run found two, and my own allow-list had excused them.</b> <c>electricity</c> and
+        /// <c>lithium-battery</c> both declared <c>battery-storage</c>, which nothing provides — and I had allow-listed
+        /// that class on the grounds that "energy lives in <c>EnergyStoreAtb</c>". That excuse holds for
+        /// <c>electricity</c> (a charge) and is <b>plainly wrong for <c>lithium-battery</c></b>, which is a
+        /// <b>manufactured object</b>: you can build one and then have nowhere to put it. <b>An allow-list entry that
+        /// reasons about the CLASS can hide a bug about a GOOD</b>, which is exactly why both directions need walking.</para>
+        ///
+        /// <para><c>lithium-battery</c> is now <c>general-storage</c>. <c>electricity</c> stays allow-listed as the one
+        /// genuine open ruling: <i>should power be shippable cargo?</i> Wiring it through
+        /// <c>CargoStorageAtb</c> would give the game a second way to hold a charge, and a fifth parallel store is not a
+        /// fix (§46a).</para>
+        /// </summary>
+        [Test]
+        [Description("Every shippable good — mineral or refined material — names a compartment that some component actually provides. This found two goods no compartment could hold: electricity and lithium-battery, the latter a manufactured object you could build and then not store anywhere. It is the mirror of the class-side test, and the class-side allow-list had hidden it.")]
+        public void EveryGood_NamesACompartmentSomethingProvides()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+            var providers = ProviderMap(s);
+
+            // Allow-list, one reason per entry — the §51 discipline.
+            var allowed = new Dictionary<string, string>
+            {
+                // A charge, not a mass. Held by EnergyStoreAtb / EnergyGenAbilityDB.EnergyStored. Making it a cargo
+                // compartment too would be a FIFTH parallel store, so this waits on a developer ruling.
+                ["battery-storage"] = "electricity is a charge held by EnergyStoreAtb (open ruling: should power be shippable?)",
+            };
+
+            var offenders = new List<string>();
+            var byClass = new SortedDictionary<string, List<string>>();
+            // CargoGoods has no combined getter, so filter GetAll() to the two kinds that are SHIPPED
+            // (the "other cargo" bucket holds things that are not trade goods).
+            foreach (var good in data.CargoGoods.GetAll().Values
+                         .Where(g => data.CargoGoods.IsMineral(g.ID) || data.CargoGoods.IsMaterial(g.ID))
+                         .OrderBy(g => g.UniqueID))
+            {
+                string cls = good.CargoTypeID ?? "(null)";
+                if (!byClass.TryGetValue(cls, out var l)) byClass[cls] = l = new List<string>();
+                l.Add(good.UniqueID);
+                if (!providers.ContainsKey(cls) && !allowed.ContainsKey(cls))
+                    offenders.Add($"{good.UniqueID} → {cls}");
+            }
+
+            int total = byClass.Sum(kv => kv.Value.Count);
+            Log($"{total} shippable goods, by compartment:");
+            foreach (var kv in byClass)
+                Log($"  {kv.Key,-20} {kv.Value.Count,3} goods ({100.0 * kv.Value.Count / total:0}%)"
+                    + $" {(providers.ContainsKey(kv.Key) ? "" : allowed.ContainsKey(kv.Key) ? "⚠ allow-listed" : "🔴 NO PROVIDER")}");
+
+            Assert.That(offenders, Is.Empty,
+                "these goods name a compartment nothing provides, so they cannot be stored or shipped at all — and it "
+                + "fails as a silent 0 from CargoMath rather than an error: " + string.Join(", ", offenders));
+
+            // lithium-battery specifically: a manufactured OBJECT, so it belongs in a box that exists.
+            var battery = data.CargoGoods.GetAny("lithium-battery");
+            Assert.That(battery, Is.Not.Null, "the base mod defines lithium-battery");
+            Assert.That(battery.CargoTypeID, Is.EqualTo("general-storage"),
+                "a manufactured battery unit is crated like any other product — it was in battery-storage, which nothing provides");
+        }
+
+        /// <summary>
+        /// 🔑 FOOD IS A SHIPPABLE GOOD AT LAST — and it is the first good the new taxonomy exists FOR.
+        ///
+        /// <para><c>SustenanceProcessor</c>'s own doc-comment described the gap for however long it stood there:
+        /// <i>"food from the — not-yet-existing — food cargo good, so 0 for now."</i> Food was an installation OUTPUT
+        /// read off installed components, so it was <b>grown and eaten in the same place and could never be shipped</b>.
+        /// A colony that could not farm could never be supplied by one that could.</para>
+        ///
+        /// <para>This asserts the whole chain: the good exists, it is refinable at the start colony, it rides
+        /// <c>perishable-storage</c> (so a bare hold will not take it — the taxonomy doing real work), and the
+        /// processor <b>draws it down</b> to cover a shortfall its farms cannot.</para>
+        /// </summary>
+        [Test]
+        [Description("Food is a real shippable good: refinable at the start colony, riding a refrigerated hold rather than general storage, and actually consumed by SustenanceProcessor to cover a shortfall the local farms cannot — so a colony that cannot farm can now be supplied by one that can.")]
+        public void Food_IsAShippableGood_AndAnImportedStockpileFeedsAColony()
+        {
+            var s = TestScenario.CreateWithColony();
+            var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
+
+            var food = data.CargoGoods.GetAny(SustenanceProcessor.FoodGoodID);
+            Assert.That(food, Is.Not.Null, "the food good exists (materials.json)");
+            Assert.That(food.CargoTypeID, Is.EqualTo("perishable-storage"),
+                "food rides a REFRIGERATED hold — the first good the new taxonomy exists for");
+            Assert.That(s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns.ContainsKey(SustenanceProcessor.FoodGoodID),
+                Is.True, "and it is refinable at the start colony (in StartingItems, so it becomes an IndustryDesign)");
+            Log($"{food.Name}: {food.CargoTypeID}, {food.MassPerUnit} kg and {food.VolumePerUnit:0.####} m³ per unit");
+
+            // A bare general hold must REFUSE it — this is the taxonomy biting, not decoration.
+            var hold = s.Colony.GetDataBlob<CargoStorageDB>();
+            Assert.That(hold.GetFreeVolume(food), Is.EqualTo(0),
+                "a colony with only general storage cannot hold food at all — that is the point of the class");
+
+            // Give it a refrigerated hold and stock it.
+            var reefer = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns["default-design-refrigerated-hold"];
+            reefer.GetAttribute<CargoStorageAtb>().OnComponentInstallation(s.Colony, new ComponentInstance(reefer));
+            Assert.That(hold.GetFreeVolume(food), Is.GreaterThan(0), "the reefer gives food somewhere to go");
+
+            long stocked = hold.AddCargoByUnit(food, 10_000);
+            Log($"stocked {stocked} units of food");
+            Assert.That(stocked, Is.GreaterThan(0), "and it loads");
+
+            // Now make the colony hungry and run the real recompute. Demand defaults to 0 — which is exactly why this
+            // whole feature is byte-identical on a stock game — so the test sets it, the way a calibrated build would.
+            var sust = s.Colony.GetDataBlob<ColonySustenanceDB>();
+            Assert.That(sust, Is.Not.Null, "the start colony carries a sustenance blob");
+            long before = hold.GetUnitsStored(food, false);
+
+            SustenanceProcessor.Recalc(s.Colony);
+            Assert.That(hold.GetUnitsStored(food, false), Is.EqualTo(before),
+                "with the stock per-capita demand of 0 nothing is drawn — the byte-identity guarantee");
+
+            sust.SetDemand(perCapitaPower: 0.0, perCapitaFood: 0.001);
+            SustenanceProcessor.Recalc(s.Colony);
+            long after = hold.GetUnitsStored(food, false);
+            Log($"food drawn this month: {before - after} units · shortage now {sust.FoodShortage:0.###}");
+
+            Assert.That(after, Is.LessThan(before),
+                "a hungry colony EATS the imported food — a supply that is read but never consumed is free food");
+            Assert.That(sust.FoodShortage, Is.LessThan(1.0),
+                "…and the import measurably closes the shortage it would otherwise have starved on");
         }
 
         /// <summary>
