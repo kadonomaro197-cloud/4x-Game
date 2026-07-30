@@ -2392,15 +2392,118 @@ see §51 first: the whole part is replaceable by one test.
 **The ruling reorganises the door.** A chassis is not a budget plate — it is the **declaration the assembler reads
 first**: *what kind of thing is this, what is it made of, and therefore what does it need to be legal?*
 
-### 45.1 The rederived door — 3 choices + 2 sliders
+### 45.1 🔒 REDERIVED AGAIN, same day, on three further rulings
 
-| # | Choice | What it sets | Where it lives today |
+> *"The domains should be the ENVIRONMENT the entity is going to function in, then gets more specific picking
+> UNIT or INFRASTRUCTURE, then substrate. This is a sci-fi game that should cover anything and everything so
+> substrate should be EXPANSIVE and allow for distinct options. And hulls can be ANY SIZE — a Death Star might be
+> an average station to one faction but an outpost to another."*
+> *"Also aircraft can be a thing, and submarines, and both of which can function at different LEVELS and different
+> complexities."*
+
+**🔑 The first ruling is a SIMPLIFICATION, not an addition — and it explains a loose end the previous pass could not.**
+The old four-valued "domain" was **two questions fused into one**. Separate them and the four shipped chassis are the
+cells of a grid:
+
+| Environment ↓ / is it a… | **UNIT** (mobile) | **INFRASTRUCTURE** (a place) |
+|---|---|---|
+| **Orbital / vacuum** | ✅ `ship-hull` | ✅ `station-chassis` |
+| **Planetary surface** | ✅ the four frames | ✅ `building-foundation` |
+| **Open water** | 🔴 empty — **and the map already has ocean regions** | 🔴 empty |
+| **Atmospheric** | 🔴 empty (though `Hover` exists) | 🔴 empty |
+| **Subterranean** | 🔴 empty | 🔴 empty |
+
+**And it dissolves the "four currencies or one?" question.** The previous pass found *structure* and *footprint* are
+the same currency under two names (both assemblers sum `VolumePerUnit`) and could not say why. **Now it is obvious:
+they are both INFRASTRUCTURE, and infrastructure budgets in volume.** Currency is a function of **kind**, not of
+environment: unit → mass or carry-strength (what it can lift); infrastructure → volume (what will fit inside).
+
+🔑 **The kind split also hands the Civic door its missing producer.** A unit has **crew that travel with it**; a place
+has **JOBS the local workforce fills**. Civic found the morale model's employment term — its widest factor, ±40 points
+— **permanently zero because nothing declares a job**. *"Declares jobs" is what INFRASTRUCTURE means.* One change,
+two doors.
+
+### 45.1a The door — 4 choices + 3 sliders
+
+| # | Choice | What it sets | Today |
 |---|---|---|---|
-| ① | **DOMAIN** — Ship · **Planetary unit** · Station · Building | budget **currency** · **part mount** · which assembler runs. 🔒 **NO size limit** | ✅ `ChassisBudgetKind` + `ComponentMountType`, both exist ("structure" and "footprint" **merge** into one *volume* currency — both assemblers already sum `VolumePerUnit`) |
-| ② | **CLASS** — Infantry · Vehicle · Walker · Swarm | a **LABEL**. Sets `Locomotion` + `CarryClass` defaults. **Caps nothing.** | ✅ both already dials on `GroundChassisAtb` |
-| ③ | **SUBSTRATE** — Mechanical · Organic · Synthetic | 🔑 **generates the requirement set** | 🔴 **NEW** — grepped for `organic`/`biomass`/substrate-as-material-state: **zero hits** |
-| slider | **Frame size** | the budget, via `efficiency × √size` | 🔴 **NEW** — mass is a **constant per template** today |
-| slider | **Structural efficiency** | the `1128`, moved by **research** | 🔴 new (and research is `"0"` on every chassis) |
+| ① | **ENVIRONMENT** — orbital · surface · **open water** · **atmospheric** · **subterranean** | what will **kill** it — and it owns the tolerance/resistance machinery | ✅ 2 exist · ⚠ water is HALF (ocean terrain + the `Amphibious` gate exist, no chassis) · 🔴 air is THIN (`Hover` only) · 🔴 subterranean nothing |
+| ② | **LEVEL / BAND** — e.g. water: Surface→Shallow→Deep→Abyssal; air: Terrain-following→…→Near-space | which **band** of that environment, and therefore how harsh | 🔴 only `infrastructure` has band dials at all |
+| ③ | **UNIT \| INFRASTRUCTURE** | budget **currency** · **mount** · crew-vs-jobs · capturable · grave rung | ✅ implied by the four cells |
+| ④ | **SUBSTRATE** — 8 values (below) | 🔑 **generates the requirement set** | 🔴 **NEW** — grepped `organic`/`biomass`/substrate: **zero hits** |
+| slider | **Frame size** | the budget, via `efficiency × √size`. **Enormous range — no classes.** | 🔴 mass is a **constant per template** |
+| slider | **Structural efficiency** | the `1128`, on the **research** tree | 🔴 new (research is `"0"` on every chassis) |
+| slider | **Operating envelope** | how many **bands** it spans — narrow+cheap or broad+expensive | ⚠ **the dial shape EXISTS** (below) |
+
+### 45.1b 🔑 "Different levels" — the envelope dial is ALREADY BUILT, in exactly the right shape
+
+`ComponentTemplatePropertyBlueprint` supports `GuiHint.GuiSelectionMinMaxRange` with **two companion fields**:
+* **`PairedPropertyName`** — *"the Name of the partner property (the upper bound when this property is the lower bound)"*
+* **`MaxRangeFormula`** — *"maximum allowed gap between this property's value and its partner's value
+  (e.g. `TechData('tech-infra-gravity-range') * 2 * 9.81`)"*
+
+**A band with a floor, a ceiling, and a TECH-DRIVEN CAP on how wide it may be** — including the part that stops
+"works everywhere" being free. 🔴 **Used on exactly ONE template:** `infrastructure`'s **gravity band** (8.8→10.8 m/s²)
+and **pressure band** (0.9→1.1 atm), widened by **six real technologies** (`tech-infra-{gravity,pressure}-{range,
+min-extension,max-extension}`). And `infrastructure`'s `Mass` is the constant `1000`, **so widening the envelope costs
+nothing** — the Industrial door's finding arriving from a different direction.
+
+🔑 **So "different levels and different complexities" needs almost nothing built.** *Levels* = the band, on a dial that
+exists. *Complexity* = the size slider plus what you mount — which is why **a crop-duster and a strike fighter are the
+same chassis at different settings**. What must be ADDED: bands for the four environments without them, an envelope
+cost, and the two missing environments. 🔑 **And one payoff worth naming: the top of the atmospheric stack borders
+orbital, so a chassis spanning near-space→low-orbit IS a spaceplane** — single-stage-to-orbit becomes a wide band
+rather than a new mechanic.
+
+### 45.1c 🔒 SUBSTRATE, expansive — eight values, each winning an axis outright
+
+Constraint carried from the Power door, because it is what stops "expansive" becoming "cluttered": **every option
+behind a door must win at least one axis outright.**
+
+| Substrate | Power | Feeding | Who runs it | Wins OUTRIGHT | Hooks |
+|---|---|---|---|---|---|
+| **Mechanical** | reactor | — | crew | *the baseline* | `ManpowerTools` ✅ |
+| **Organic** | — metabolises | **biomass** | itself | **the only one that EATS** — and the only one **grown** | `SustenanceProcessor` ✅ |
+| **Synthetic** | reactor | — | nobody | **a machine with no occupants** — needs no air ever | `WeaponSupply` ✅ |
+| **Cybernetic** | reactor | partial | reduced crew | **the only one needing power AND food** | both ✅ |
+| **Crystalline** | — stores charge | — | nobody | **needs NOTHING to sit there** — the derelict, the monolith | — |
+| **Nanite** | continuous | — | nobody | **heals without a yard**; reconfigurable after build | `GroundConstructorAtb` ✅ |
+| **Energy-bound** | 🔴 **or it CEASES** | — | nobody | **indestructible while powered, gone when not** | the fuel gate wired this week ✅ |
+| **Psionic** | — | — | **a seated leader** | **the only one needing a PERSON, not a crew** | `CommandBerthAtb` ✅ |
+
+✅ **Seven of the eight distinguishing requirements hook a system that is already live.** 🔴 **Genuinely new: a biomass
+upkeep, and "grown" as an industry type beside "manufactured".**
+⚠ **Two candidates HELD BACK, and this is the rule working:** *exotic/other-dimensional* — every profile I could write
+duplicates Crystalline or Energy-bound, so it has **no distinct requirement**; *ancient/precursor* — a **provenance**,
+not a substrate, and it belongs to the Site Engine as something you *find*. 🔒 **Expansive means "as many as win an
+axis", not "as many as we can name."**
+
+### 45.1d 🔒 "Any size" — no classes, relative naming, and the exponent ruling
+
+**Consequence 1 — absolute size classes are gone.** No "Light hull" as a *thing*: a continuous size slider, and a name
+whose scale word is computed **relative to what your faction typically builds**. The three shipped hulls become
+**presets, not tiers**.
+
+**Consequence 2 — the budget EXPONENT becomes a real ruling.** The shipped hulls follow `budget = 1128 × size^0.5`
+(light + heavy to 0.9%) — **fitted across a 50× range**, now asked to hold across fifteen orders of magnitude:
+
+| Exponent | Payload fraction at 10¹² kg | Ladder test | Fits the shipped hulls? |
+|---|---|---|---|
+| 1.0 linear | **900%** — nonsense at scale | ✅ flat | 🔴 no (would make all three ×9) |
+| 2/3 (true square-cube) | 1.9% | ✅ falls | partly |
+| **0.5 (√ — what ships)** | 0.09% | ✅ falls | ✅ **light + heavy to 0.9%** |
+
+✅ **THE ANSWER: keep √, and make structural efficiency a research axis with an enormous range.** Then a faction's
+**ceiling ≈ 10⁴ × efficiency²**, and **what it typically builds scales as efficiency² too** — so capability and
+practice move together. At the shipped 1,128 the ceiling is ~1.3 × 10¹⁰ kg (a large asteroid station); a genuine
+planet-killer needs roughly **10⁹** — about a **million times** the shipped figure, which is a tech tree, not a slider
+nudge. 🔑 **So "an average station to one faction, an outpost to another" is not a special case to code — it IS the
+materials-science gap between them.** Verified in the driveable page: the *same* 10 Mt orbital frame reads
+**"Colossal, past your ceiling"** at shipped tech, **"the ordinary size"** at ~250× efficiency, and **"Trivial"** at
+~60,000×, without one thing about the frame changing.
+⚠ **Flagged:** this extrapolates a law measured over 50× across fifteen orders of magnitude. It **fails in the safe
+direction** (megastructures too hard, never free) and the research dial buys them back at a pace the developer sets —
+**an exponent failing the other way would need a cap, and a cap is what the ruling forbids.**
 
 **The kaiju, worked:** *planetary* (currency = carry-strength, mount = `GroundUnit`) + *infantry* (`Locomotion = Foot`,
 `CarryClass = Personnel`) + *organic* (biomass not reactor, no crew) + *size 80,000 kg* (budget ≈ 319,000 via the law).
@@ -2513,7 +2616,9 @@ new designs. **Which hull do you consider correctly tuned?**
 | **C1** | **The chassis declares its requirements.** Add the requirement set to `IChassisAtb`; all four assemblers read it instead of hard-coding. | ✅ **yes**, if each chassis declares exactly what its assembler already checks — and **the ship immediately inherits the power + ammo gates** |
 | **C2** | **Substrate.** One enum + one requirement table. Default every template to `Mechanical`. | ✅ **yes**. Then flip `swarm-frame` to `Organic`, which its own description implies |
 | **C3 + C4** | **The size dial AND the transport wire, TOGETHER.** A frame-size slider with the √-law budget, *and* `CarrySizeOf` reading the frame's `Size` instead of the hard-coded type table. | ⚠ C3 alone is **unsafe** |
-| **C5** | Price the budget (the √ law) + give the door a research rung. | ⚠ needs ruling ① |
+| **C5** | Price the budget (the √ law) + put **structural efficiency** on the research tree. | ⚠ see the medium-hull note |
+| **C6** | **Bands + the operating envelope.** The dial shape already exists (`GuiSelectionMinMaxRange` + `PairedPropertyName` + `MaxRangeFormula`); give the other environments bands and make envelope WIDTH cost frame. | ✅ yes with width 1 |
+| **C7** | **The open-water cell** — the cheapest new environment, because its terrain (`RegionFeatureType` ocean) and its gate (`HexPathfinder` + `Amphibious`) already exist and **no chassis claims it**. | ✅ additive |
 
 ⚠ **The pairing is the one sequencing constraint in this door.** `GroundTransport.CarrySizeOf` reads a hard-coded
 three-value table off the unit's **type enum** (Infantry 1 / Artillery 2 / Armor 3) and ignores the frame entirely —
@@ -2521,13 +2626,18 @@ so **shipping C3 without C4 means one troop bay hauls six kaiju.** "No restricti
 🔑 And the dial that fixes it is the **dead `Size` dial** from this door: *documented as "feeds transport carry-size",
 zero readers.* **Both halves were built; nobody connected them.**
 
-### 45.6 Rulings owed on this door
+### 45.6 Rulings — CLOSED
 
-1. **Which shipped hull is correctly tuned?** Forcing the √-law moves the **medium** hull 90,000 → 112,800 (+25%) — a
-   live change to every medium-hulled ship. Anchor on light+heavy (medium gains headroom) · anchor on medium (light and
-   heavy tighten ~20%) · or keep all three as authored and apply the law only to new designs. **All three are
-   byte-identical for something; they differ in what.**
-2. **Three substrates or four?** (recommendation: three — the fourth has no consumer.)
+Both questions the first rederivation left open were answered by the developer's rulings above (**expansive substrate**
+⇒ eight, each winning an axis; **any size** ⇒ no classes, √ law + efficiency research). **One judgement remains inside
+the door:** forcing the √-law moves the **medium** hull's budget 90,000 → 112,800 (+25%).
+**Recommendation, given "any size":** treat the three shipped hulls as **presets** and let the law govern, accepting
+the medium's +25% as a one-time calibration — **because under the ruling they stop being tiers anyway, and keeping a
+bespoke exception for one preset is exactly the kind of restriction the ruling removes.**
+
+⚠ **And one honesty note carried into the page:** the anchors for the three new environments (water / air /
+subterranean) are **invented and labelled as such** — there is no shipped submarine to anchor on. The orbital and
+surface anchors are the real shipped chassis.
 
 ### 45.7 🔒 The naming ruling — PLANETARY, not "ground"
 
