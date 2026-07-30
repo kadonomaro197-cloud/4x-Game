@@ -2262,6 +2262,45 @@ turbine wins per-m³, solar is asserted to be the *only* silent one, the RTG's z
 template, the battery is asserted to be a different job — and **`NoPowerType_IsDominatedOnEveryAxis` is the rule
 itself**, so the next dead recipe fails CI instead of shipping.
 
+#### 39.8c ⚠ CORRECTION 7 — the gauge went red, and **the gauge was wrong, not the data** (CI, 2026-07-30)
+
+`NoPowerType_IsDominatedOnEveryAxis` failed on first run with *"'Fission Reactor' is beaten on every axis"* — while the
+sibling test asserting the reactor wins per-kilogram **passed**. Two tests in one file disagreeing is a gauge fault, not
+a finding, and it is worth writing down because of *which* kind of fault it was.
+
+**What happened.** The domination test needed a kilowatt number for a solar array, and a panel has none: the engine
+**recomputes** it every tick from the star's attenuated light (`EnergyGenHotloopProcessor.ComputeSolarMax`). So the test
+did the physics itself — `Area × BestEfficiency × 1.361` — and **`BestEfficiency` is a percent, not a fraction.** The
+shipped panel reads `8.0`, so the test read **eight hundred percent absorption**: a 20 kg panel at 54 kW/kg, beating the
+1500 kg reactor's 50, leaving the reactor winning nothing. The engine has the conversion right — an explicit `* 0.01` at
+`EnergySolarGenProcessor.cs:106`. The test had re-derived what the simulation already computes, and got it wrong by 100×.
+
+**The fix is the campaign's own method applied to its own gauge:** *don't re-derive what the sim reads — read it.* The
+test now calls **`AbsorbedPower`** with a 1 AU illumination and uses what the engine returns, so the comparison cannot
+drift from the simulation again. Honest numbers, all three at the same place:
+
+| | kW/kg | kW/m³ | crew | silent |
+|---|---|---|---|---|
+| **Reactor** (1500 kg, 75,000 kW) | **50** ✅ | 50 | 3 | no |
+| **Turbine** (2000 kg, 48,000 kW) | 24 | **24,000** ✅ | 3 | no |
+| **Solar** (20 kg, ~10.9 kW *at 1 AU*) | 0.54 | 1,089 | **0** ✅ | **yes** ✅ |
+
+Every type wins at least one axis outright. **The rule held; the instrument was miscalibrated.**
+
+🔑 **And the correction names a general trap for the remaining doors.** Two of the five power options have **no single
+number to compare at all** — a solar array's output depends on *where it is*, and an RTG ships no design. A door's
+justification table therefore cannot be built from stored attribute values alone; for a position-dependent option you
+must **name the place you are measuring at** (this test names 1 AU, and says so in its own readout), and for a
+design-less option you assert on the **template**. Comparing a positional quantity as though it were a constant is how
+you get a confident wrong answer.
+
+⚠ **One unrelated thing found while reading that method, recorded not fixed:** `AbsorbedPower` computes
+`overlapFraction` (the share of the star's band the panel actually covers) and then **never uses it** — absorption is
+`magnitude × interpolatedEff` with no overlap term. A computed value with no consumer, which is the exact shape this
+campaign has flagged in seven doors, here in the *engine* rather than a template. It means a narrow-band panel is not
+penalised for the light it misses, only rewarded for the efficiency the narrow band buys — so the
+`Bandwidth` dial may be one-sided. Not touched in this slice; flagged for the solar pass.
+
 ### 39.8b 🔒 THE BALANCE RULE — a trade is added by SPLITTING a dial, never by DELETING one (developer, 2026-07-30)
 
 > *"I find that you took some slider options away when you made the fuel vs output efficiency/time. Find a balance.

@@ -29,6 +29,13 @@ namespace Pulsar4X.Tests
     /// option. ⚠ Its power density gap is flagged, not silently tuned (§39.8).</item>
     /// </list>
     ///
+    /// <para>⚠ <b>This fixture went red on its first CI run, and the fault was in the GAUGE, not the data</b>
+    /// (§39.8c). See <see cref="SolarKwAt1Au"/>: a solar array has no stored kilowatt figure, so the domination test
+    /// computed one by hand and read a <b>percent</b> as a fraction — a 100× error that made a 20 kg panel out-perform
+    /// a 1500 kg fission core per kilogram. It now asks the engine (<c>AbsorbedPower</c>) at a stated 1 AU
+    /// illumination. <b>The lesson is this campaign's own rule turned on its own instrument: do not re-derive what the
+    /// simulation already computes — read it.</b></para>
+    ///
     /// <para>And the finding that needed no fix at all: <b>solar is the only silent power source in the game.</b> The
     /// three fuelled generators all carry a <c>SensorSignatureAtb</c> at 1700 K — the reactor being the loudest thing
     /// aboard a ship — while a solar array emits nothing. That is a complete, already-wired justification that nothing
@@ -43,6 +50,38 @@ namespace Pulsar4X.Tests
         private const string Battery = "default-design-battery-2t";
 
         private static void Log(string m) => TestContext.Progress.WriteLine("[justify] " + m);
+
+        /// <summary>The solar constant at 1 AU, kW per square metre — the illumination Earth's orbit gets.</summary>
+        private const double SolarConstant_kWperM2 = 1.361;
+
+        /// <summary>
+        /// A solar array's output is NOT a stored number — <c>EnergyGenHotloopProcessor.ComputeSolarMax</c> recomputes
+        /// it every tick from the star's attenuated emission, so <b>a panel's kilowatts are a function of where it
+        /// is</b>. To compare it against a reactor at all we have to name a place, and this names 1 AU.
+        ///
+        /// <para>⚠ <b>And we ask the ENGINE, not our own arithmetic.</b> The first version of this test re-derived the
+        /// number as <c>Area × BestEfficiency × 1.361</c> and was wrong by <b>100×</b>: <c>BestEfficiency</c> is a
+        /// <b>percent</b> (the shipped panel reads <c>8.0</c>, from
+        /// <c>tech-panel-efficiency 12.0 × (200×0.5 / 150 nm bandwidth)</c>), and the engine converts it with an
+        /// explicit <c>* 0.01</c> at <c>EnergySolarGenProcessor.cs:106</c>. That made a 20 kg panel read 54 kW/kg —
+        /// beating the 1500 kg reactor's 50 — so the reactor appeared to win nothing and this fixture went red. The
+        /// engine was right; the test was doing the unit conversion by hand. Calling
+        /// <c>AbsorbedPower</c> means the comparison can no longer drift away from what the simulation actually does.</para>
+        /// </summary>
+        private static double SolarKwAt1Au(EnergySolarGenerationAtb panel)
+        {
+            var band = panel.AbsorptionWaveformCapability;
+            var litAt1Au = new System.Collections.Generic.List<Pulsar4X.Sensors.EMData>
+            {
+                new Pulsar4X.Sensors.EMData
+                {
+                    WaveForm = new Pulsar4X.Sensors.EMWaveForm(
+                        band.WavelengthMin_nm, band.WavelengthAverage_nm, band.WavelengthMax_nm),
+                    Magnitude = SolarConstant_kWperM2,
+                }
+            };
+            return EnergyGenHotloopProcessor.AbsorbedPower(panel, litAt1Au);
+        }
 
         private static ComponentDesign Design(TestScenario s, string id)
         {
@@ -151,15 +190,25 @@ namespace Pulsar4X.Tests
 
             double Kw(ComponentDesign d) =>
                   d.TryGetAttribute<EnergyGenerationAtb>(out var g) ? g.PowerOutputMax
-                : d.TryGetAttribute<EnergySolarGenerationAtb>(out var sol) ? sol.Area_m2 * sol.BestEfficiency * 1.361
+                : d.TryGetAttribute<EnergySolarGenerationAtb>(out var sol) ? SolarKwAt1Au(sol)
                 : 0;
             double PerKg(ComponentDesign d) => Kw(d) / d.MassPerUnit;
             double PerM3(ComponentDesign d) => Kw(d) / System.Math.Max(1e-9, d.VolumePerUnit);
             bool Silent(ComponentDesign d) => !d.TryGetAttribute<Pulsar4X.Sensors.SensorSignatureAtb>(out _);
 
+            Log("(a solar array's kW is measured AT 1 AU — it is the only one of the three whose output depends on where it is)");
             Log("type                                 kW/kg      kW/m3   crew  silent");
             foreach (var d in types)
                 Log($"{d.Name,-34} {PerKg(d),9:0.####} {PerM3(d),10:0.##} {d.CrewReq,5} {Silent(d),7}");
+
+            // Pin the unit bug that made this fixture red: at 1 AU a panel is ~0.5 kW/kg against the reactor's 50, so
+            // the reactor's density win is real and solar's apparent one was a missing '* 0.01'. Guards the direction,
+            // not the calibration, so a future panel-efficiency tech can move the number without breaking the rule.
+            var solarDesign = types.Single(d => d.TryGetAttribute<EnergySolarGenerationAtb>(out _));
+            var reactorDesign = types.Single(d => d.UniqueID == Reactor);
+            Assert.That(PerKg(reactorDesign), Is.GreaterThan(PerKg(solarDesign)),
+                "a panel is not denser than a fission core — if this flips, check the percent-vs-fraction conversion "
+                + "at EnergySolarGenProcessor.cs:106 before believing it");
 
             foreach (var d in types)
             {
