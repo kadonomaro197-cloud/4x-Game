@@ -1322,6 +1322,83 @@ choices + 4 sliders) and it is worth stating as a general result of the method:
 
 ---
 
+## 26f. 🔒 DECIDED — PROPULSION NAMING (compositional, 848 names) and NO "NOT A DIAL" DIALS (developer, 2026-07-30)
+
+> *"Get rid of the none dials and generalize the label and names of whatever can be created like you did for the
+> weapons names."*
+
+Two rulings in one sentence. Both applied.
+
+### 26f.1 NO GREYED "NOT A DIAL" SLIDERS — a slider you cannot set is a caption, not a dial
+
+The Propulsion builder carried two deliberately-greyed sliders under a *"Not dials — the entity decides these"*
+heading: **Fuel carried** (it is tankage → Logistical) and **Hull it must move** (chosen at the assembler). They were
+teaching aids for §1a, and the developer is right that they do not belong in a designer: **the door must contain only
+things you can actually set.**
+
+**Removed.** The numbers that genuinely need them — acceleration, Δv, evasion, cruise speed, jump range, all the
+`emergent` rows — are now quoted **against a stated reference**, which is what a real parts catalogue does:
+
+```
+REF_HULL = 38,000 kg      a 38 t reference hull
+REF_WET  = 2.0            a 2:1 wet/dry propellant load
+```
+
+🔒 **Generalise the rule for the remaining eight doors:** *an emergent number is shown against a stated reference,
+never against a slider the player cannot really set.* The §1a intrinsic test decides **whether** a number is a dial;
+this decides **how to display it when it is not.** Nothing is lost — the intrinsic-test section states the boundary in
+prose, which is where the teaching belongs.
+
+### 26f.2 NAMING — the same compositional scheme as Weapons (§7), extended to drives
+
+**`[modifier?] + [scale] + [temper] + [core noun]`** — built from the dials, never looked up.
+
+| Slot | Comes from | Values |
+|---|---|---|
+| **Modifier** (at most one, priority-ordered) | the special settings | `Veiled` (hidden transit) · `Helm-Linked` (navigator) · `Amphibious` · `Baffled` (heavily muffled) |
+| **Scale** | drive mass | `Compact · Light · — · Heavy · Capital` |
+| **Temper** | the zero-sum split | reaction `Hard · — · Long-Burn` · ground `Road · — · All-Terrain` · FTL `Sprint · — · Endurance` (continuous) or `Rapid · — · Deep-Reach` (instant) |
+| **Core noun** | the identity choice | the propellant · how it meets the ground · **route × transit**, graded by the reach dial |
+
+**Reads as:** Heavy Kerolox Booster · Compact Endurance Warp Coil · Amphibious Capital Strider Gantry ·
+Veiled Lane Drive · Helm-Linked Jump Drive · Baffled Light Hydrolox Sustainer.
+
+**Reachable distinct names — enumerated, not estimated:**
+
+| Family | Names |
+|---|---|
+| Reaction mass | 120 |
+| A surface | 98 |
+| FTL drive | **630** |
+| **The whole door** | **848** |
+
+🔴 **Vocabulary rule, same as Weapons: generic hardware language ONLY, no franchise IP in any design name.**
+Kerolox · methalox · hydrolox · nuclear · plenum · ground-effect · gantry · coil · coupler · aperture · threshold ·
+strider. **The franchise names stay as ANALYSIS of the taxonomy and never become product names** — the badge now reads
+*"You have just built a **Warp Drive** — the box Star Trek warp occupies"*, so the thing you build is called what it
+is and the franchise is only the reference frame. Box 5 (unclaimed) reads *"a box no franchise on the list claims."*
+
+### 26f.3 THREE GUARDS — and the third one corrected me
+
+1. **No stutters** — word-level de-duplication. No "Heavy Heavy Track Drive."
+2. **No contradictions** — the adjective is dropped when the noun already carries it: no "All-Terrain Strider Drive",
+   no "Hard Booster", no "Long-Burn Sustainer" — **and no scale word twice**, which caught
+   *"Capital **Heavy** Track Drive"* (the noun list had a scale word inside it; nouns may not contain one).
+3. **A length cap** — 🔴 **and this is the finding worth carrying to the other doors.** I first set the cap at **four**
+   words. It *fired*, and dropping a word **collapsed 848 reachable names down to 565** — two genuinely different
+   drives came out with the same name, which defeats the point of naming them at all. Fixed the right way: **shorten
+   the long core nouns** ("Tracked Running Gear" → "Tracked Gear", "Nuclear Thermal Motor" → "Nuclear Motor") so every
+   noun is at most two words, the cap sits at **five**, and it **never fires.**
+
+🔒 **The general rule:** *a name guard must never be able to merge two distinct designs. If a cap fires, shorten the
+vocabulary — do not drop a slot.* A guard that changes the output is a bug in the vocabulary.
+
+*(Verified by enumerating every reachable name through the real compose function: 848 distinct, max 5 words, zero
+stutters, zero double-scale names, zero cross-family collisions. And the whole builder re-rendered across 2,268
+dial/setting combinations with no throw, no `undefined` and no `NaN`.)*
+
+---
+
 ## 26a. 🔒 DECIDED — KEEP `Amphibious`, which means WIRING it (developer, 2026-07-29)
 
 > *"Keep amphibious."*
@@ -1432,3 +1509,7 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
 2. Its row flipped in **§27 RUNNING TALLY** and in `docs/DOCS-INDEX.md`, same commit.
 3. Every cheap win found on the way **shipped as its own gauged slice** — one per push, CI green between (the standing working agreement).
 4. Anything found dead is either **wired or cut** — never left charging mass for nothing (the `Amphibious` rule).
+5. **A compositional NAMING scheme** for whatever the door can create (§7 · §26f.2): built from the dials, generic
+   vocabulary, **no franchise IP**, with the three guards — and the reachable name count **enumerated, not estimated.**
+6. **No greyed "not a dial" dials** (§26f.1). Every slider in the door is settable; every emergent number is quoted
+   against a **stated reference** instead. And no name guard may merge two distinct designs (§26f.3).
