@@ -2381,11 +2381,75 @@ Doors 3–8 (Chassis · Logistical · Command · Enhancers · Industrial · Civi
 with a driveable reference page. **This part exists so the findings survive the session that produced them** — but
 see §51 first: the whole part is replaceable by one test.
 
-## 45. Door 3 — CHASSIS: the budget every other door spends against, and it is free
+## 45. Door 3 — CHASSIS: 🔒 REDERIVED to the developer's ruling, 2026-07-30
 
-**The door:** four hosts (ship hull · ground frame · station chassis · building foundation), one question — *how much
-frame are you building?* All four already share `IChassisAtb` (`StructuralBudget` / `BudgetKind` / `PartMount`), and
-that abstraction is the best-plumbed thing in the designer.
+> *"Chassis will be the thing the assembler calls first since chassis sets the budget of the entity. So chassis must
+> have a generalised category for whatever you intend to build but no restrictions — if I want a kaiju I should select
+> planetary (stop using ground) unit then put infantry. It is based on the chassis that will set the requirements on
+> what the assemblers will flag as 'this unit needs a reactor'. But it should also have specifics like what if this
+> building is organic or the infantry unit is mechanical."*
+
+**The ruling reorganises the door.** A chassis is not a budget plate — it is the **declaration the assembler reads
+first**: *what kind of thing is this, what is it made of, and therefore what does it need to be legal?*
+
+### 45.1 The rederived door — 3 choices + 2 sliders
+
+| # | Choice | What it sets | Where it lives today |
+|---|---|---|---|
+| ① | **DOMAIN** — Ship · **Planetary unit** · Station · Building | budget **currency** · **part mount** · which assembler runs. 🔒 **NO size limit** | ✅ `ChassisBudgetKind` + `ComponentMountType`, both exist ("structure" and "footprint" **merge** into one *volume* currency — both assemblers already sum `VolumePerUnit`) |
+| ② | **CLASS** — Infantry · Vehicle · Walker · Swarm | a **LABEL**. Sets `Locomotion` + `CarryClass` defaults. **Caps nothing.** | ✅ both already dials on `GroundChassisAtb` |
+| ③ | **SUBSTRATE** — Mechanical · Organic · Synthetic | 🔑 **generates the requirement set** | 🔴 **NEW** — grepped for `organic`/`biomass`/substrate-as-material-state: **zero hits** |
+| slider | **Frame size** | the budget, via `efficiency × √size` | 🔴 **NEW** — mass is a **constant per template** today |
+| slider | **Structural efficiency** | the `1128`, moved by **research** | 🔴 new (and research is `"0"` on every chassis) |
+
+**The kaiju, worked:** *planetary* (currency = carry-strength, mount = `GroundUnit`) + *infantry* (`Locomotion = Foot`,
+`CarryClass = Personnel`) + *organic* (biomass not reactor, no crew) + *size 80,000 kg* (budget ≈ 319,000 via the law).
+**Four values on one attribute — no monster subsystem.** Which is what the frame's own source already claims: *"It is
+NOT a rigid class … a Guardsman, a Space Marine, a mech and a walking cathedral are all just this attribute with
+different values."* **The intent was written down; the size dial and the substrate were the two missing pieces.**
+
+### 45.2 🔴 THE FINDING THE REDERIVATION SURFACED — the rules are right, nothing declares them
+
+Every assembler already takes the chassis as its **first argument** and returns early without one. That sequencing is
+correct. What is thin is what the chassis *says* — so each assembler contains the rules its author happened to write:
+
+| Assembler | Gates it hard-codes |
+|---|---|
+| `GroundUnitAssembly.Compute` | **four** — carry budget · per-item cap (`capacity × 0.5`) · **power supply** · **ammo magazine** |
+| `StationAssembly.Compute` · `BuildingAssembly.Compute` | **one each** — volume budget |
+| `ShipDesign.Recalculate` | **one** — mass budget |
+
+🔴 **So a planetary unit with an energy weapon and no reactor is REFUSED, and a SHIP with the same weapon and no
+reactor is ACCEPTED.** Same rule, same weapon, one domain. **Not a decision — an absence.**
+
+✅ **And the fix is a call-site change, because the checks are already domain-neutral.**
+`WeaponSupply.PowerDraw_W(ComponentDesign)` · `ReactorOutput_W` · `MagazineCapacity_kg` · `DrawsAmmo` all take a plain
+`ComponentDesign` and care nothing about where it is mounted. **They sit in `GroundCombat/` and are called by exactly
+one assembler.** Add a **requirement set** as a fourth member of `IChassisAtb` and the ship inherits both gates.
+
+### 45.3 The requirement set, generated from DOMAIN × SUBSTRATE
+
+| Requirement | Mechanical | Organic | Synthetic | The check today |
+|---|---|---|---|---|
+| Energy weapons need power | ✅ a reactor | 🔑 **metabolism** | ✅ a reactor | ✅ **built + domain-neutral**, called once |
+| Ammo weapons need a magazine | ✅ | ✅ | ✅ | ✅ **built + domain-neutral**, called once |
+| Needs crew | ⚠ yes | no — it IS the crew | no | 🔴 **and all four planetary frames author `CrewReq: "0"`** — the rule has *no input* on the domain where it matters most |
+| Needs feeding | no | 🔴 **biomass upkeep** | no | 🔴 new — but the food/sustenance chain it hangs off is **live and tested** |
+| Environmental seal | ⚠ on a hostile world | ⚠ same | ✅ immune | ✅ built as a **stat**, never a gate |
+| Repaired vs regrown | materials | 🔑 regenerates | materials | 🔴 no repair model either way |
+
+🔑 **Substrate applies to all four domains, which is what earns it an axis:** an *organic building* is grown and needs
+feeding and no work crew; an *organic ship* heals between battles and carries no complement; a *mechanical infantry*
+unit is a battle droid — no crew, needs a reactor, never needs air. **Two choices, one table, and a wide slice of what
+the north star asks for becomes expressible with no bespoke mechanic.**
+🔑 **And the data was already reaching for it:** `swarm-frame`'s shipped description reads *"a tiny, cheap, fragile
+**organism**/drone frame."* **Organism or drone — the author could not say which, because there was no field for it**,
+and the two need opposite things. ⚠ **Three values, not four:** an *energy/exotic* substrate (needs neither power nor
+food) has **no consumer today**, so it would be a dial writing nothing. Ship three; add the fourth when something reads it.
+
+### 45.4 The budget is still free, and the law is still already in the data
+
+*(unchanged from the first derivation — and it is what the size slider plugs into)*
 
 🔴 **THE HEADLINE, and it cancels the other seven doors.** Each chassis exists to sell **a budget**, and on all four
 the budget appears in **none of the seven cost channels**:
@@ -2441,6 +2505,37 @@ levers — a good error message is evidence about what its author expected to be
 change to every medium-hulled ship. Three options, each byte-identical for something: anchor on light+heavy (medium
 gains headroom) · anchor on medium (light and heavy tighten ~20%) · keep all three authored and apply the law only to
 new designs. **Which hull do you consider correctly tuned?**
+
+### 45.5 Build order — and one HARD pairing
+
+| Slice | What | Byte-identical? |
+|---|---|---|
+| **C1** | **The chassis declares its requirements.** Add the requirement set to `IChassisAtb`; all four assemblers read it instead of hard-coding. | ✅ **yes**, if each chassis declares exactly what its assembler already checks — and **the ship immediately inherits the power + ammo gates** |
+| **C2** | **Substrate.** One enum + one requirement table. Default every template to `Mechanical`. | ✅ **yes**. Then flip `swarm-frame` to `Organic`, which its own description implies |
+| **C3 + C4** | **The size dial AND the transport wire, TOGETHER.** A frame-size slider with the √-law budget, *and* `CarrySizeOf` reading the frame's `Size` instead of the hard-coded type table. | ⚠ C3 alone is **unsafe** |
+| **C5** | Price the budget (the √ law) + give the door a research rung. | ⚠ needs ruling ① |
+
+⚠ **The pairing is the one sequencing constraint in this door.** `GroundTransport.CarrySizeOf` reads a hard-coded
+three-value table off the unit's **type enum** (Infantry 1 / Artillery 2 / Armor 3) and ignores the frame entirely —
+so **shipping C3 without C4 means one troop bay hauls six kaiju.** "No restrictions" has to keep its consequences.
+🔑 And the dial that fixes it is the **dead `Size` dial** from this door: *documented as "feeds transport carry-size",
+zero readers.* **Both halves were built; nobody connected them.**
+
+### 45.6 Rulings owed on this door
+
+1. **Which shipped hull is correctly tuned?** Forcing the √-law moves the **medium** hull 90,000 → 112,800 (+25%) — a
+   live change to every medium-hulled ship. Anchor on light+heavy (medium gains headroom) · anchor on medium (light and
+   heavy tighten ~20%) · or keep all three as authored and apply the law only to new designs. **All three are
+   byte-identical for something; they differ in what.**
+2. **Three substrates or four?** (recommendation: three — the fourth has no consumer.)
+
+### 45.7 🔒 The naming ruling — PLANETARY, not "ground"
+
+Applied to the design vocabulary and to every page and doc from here on. **Not applied to class names**: the code says
+`Ground*` in ~40 places (`GroundChassisAtb`, `GroundUnitAssembly`, `GroundLocomotion`, `ComponentMountType.GroundUnit`),
+and `TypeNameHandling.Objects` embeds C# type names in every save — renaming a `*DB`/`*Atb` **breaks every existing
+save** without a converter (gotcha 7 / landmine L3). **It is a real slice with a real migration and deserves its own
+commit, not a rider on a design change.**
 
 ## 46. Door 4 — LOGISTICAL: thirteen templates, two attributes, and the worst-maintained door
 
