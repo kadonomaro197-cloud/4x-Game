@@ -1567,7 +1567,7 @@ dial charges mass and buys nothing** (how `Amphibious` and `Fluid` were caught).
 
 | # | Door | Input surface (where to grep) | Size | Why here |
 |---|---|---|---|---|
-| **1** | **Sensors** | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
+| ~~**1**~~ | ✅ **Sensors — DERIVED 2026-07-30 (PART FIVE §32–36).** Four dials fail the write-something test (`Resolution` dead AND free · `Scan Time` a free ladder · the jammer's self-signature opt-out · two fire-control size dials that cost mass and write nothing, a free 16× saving). One trap (the wavelength dial can blind a sensor silently), one honest-but-unpublished trade (bandwidth = coverage ↔ reach), one cost-law conflict (ground linear vs space quadratic). Six cheap slices named in §35, none built yet. | `Sensors/` SensorReceiverAtb · SensorSignatureAtb · CloakAtb · JammerAtb; `Weapons/BeamFireControlAtbDB`; `GroundCombat/GroundSensorAtb`; `GeoSurveys/GeoSurveyAtb`; `JumpPoints/GravSurveyAtb`; `Factions/IntelDirectorateAtb` | **~9 — largest** | **The context is already loaded.** Three findings this week land here (signature = thrust §23.2 · warp signature §26c.1 · detection range goes as **√magnitude**). It is also the door that decides **who shoots first**, which every combat finding has leaned on — and it holds the one thing we deliberately deferred: **FTL needs its own band AND a receiver that can see it** (§26c.1). Biggest single payoff. **➡ And it now formally inherits `GravSurveyAtb` — the developer moved the jump-point surveyor OFF Propulsion (§26d.3): finding a node is detection, not movement.** |
 | **2** | **Power** | `Energy/` EnergyGenerationAtb · EnergyStoreAtb · EnergySolarGenerationAtb | **3 — smallest** | It just gained **two fresh consumers** — warp bubble creation/sustain (§26b) and weapon energy draw. Deriving it **closes loops we opened this week** rather than opening new ones. Fast, and the supply side of two live demands. |
 | **3** | **Chassis** | `Ships/ShipHullAtb` · `GroundCombat/GroundChassisAtb` · `Stations/StationChassisAtb` · `Colonies/BuildingChassisAtb` (all four already share `IChassisAtb`) | 4 | **The door every other door mounts on.** Its budget is what every *"and it costs mass"* claim spends against — so deriving it here means the remaining four derive against a **real** budget. Mostly derivation-not-build: the interface, the mass-budget computation and an enforcement flag all exist. |
 | **4** | **Logistical** | `Storage/` CargoStorageAtb · CargoTransferAtb; `Combat/ShipMagazineAtb`; `GroundCombat/` GroundMagazineAtb · GroundBayAtb; `Logistics/LogiBaseAtb` | ~6 | **It is owed two debts.** Propulsion's intrinsic test **cut fuel load and sent it here** (§23.1); Weapons and Propulsion both sent **magazines** here. Also holds the **one confirmed dead attribute found so far — `LogiBaseAtb` has ZERO readers anywhere outside its own file.** |
@@ -1586,7 +1586,7 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
 
 | Door | Prediction |
 |---|---|
-| **Sensors** | Richest remaining door. Expect the two axes to be **what you can see × what you emit**, with EMCON as the posture. `CloakAtb`/`JammerAtb` are the likeliest dead-or-thin pair. The **band** question (§26c.1) becomes a real dial once a second receiver type exists. |
+| **Sensors** | Richest remaining door. Expect the two axes to be **what you can see × what you emit**, with EMCON as the posture. `CloakAtb`/`JammerAtb` are the likeliest dead-or-thin pair. The **band** question (§26c.1) becomes a real dial once a second receiver type exists. → **SCORED §36: two axes ✅ · richest ✅ · dead pair ❌** — cloak and jammer are among the best-built attributes in the door; the rot is in the OLDEST (the passive sensor and the fire control). 🔒 *Look hardest at the oldest attribute, not the newest.* |
 | **Power** | Healthy but **under-dialled** — likely one honest trade (**output ↔ storage**, or output ↔ mass) and little else. May turn out to need *adding*, like Propulsion. |
 | **Chassis** | Mostly already right. The finding will be about the **budget**, not the dials: whether four chassis kinds need four budget *currencies* or one. |
 | **Logistical** | At least one confirmed dead dial (`LogiBaseAtb`). Expect the door to collapse to **capacity × what-it-holds**, with the two owed items (fuel tankage, magazines) landing cleanly. |
@@ -1608,3 +1608,209 @@ Marked as predictions, not findings. Recording them makes the method falsifiable
 7. **The door's choices change the slider SET, not just the labels** (§26g.3) — if a setting leaves the same dials
    with new names, either the setting is cosmetic or a dial is now writing nothing. **And a hidden slider's value must
    not keep acting on the numbers**, or a stale position silently changes a result the player cannot see.
+
+---
+
+# PART FIVE — SENSORS (door 1 of the remaining eight, derived 2026-07-30)
+
+Run per the §28 recipe. Steps 1–4 and the findings are below; steps 5–7 (prove it reproduces what exists · the marked
+output map · land the cheap wins as gauged slices) are the next pass.
+
+## 32. STEP 1 — THE INPUT SURFACE (nine attributes, read in source)
+
+| Attribute | Player dials in its template | What the sim reads it for |
+|---|---|---|
+| `Sensors/SensorReceiverAtb` | **Antenna Size · Ideal Detection Wavelength · Detection Bandwidth · Resolution · Scan Time** | the whole detection gate — `SensorTools.DetectonQuality` |
+| `Sensors/SensorSignatureAtb` | **none — it has no template of its own** | what you EMIT. Authored *by other components* (a thruster, a warp drive, a reactor) |
+| `Sensors/CloakAtb` | **Signature Multiplier** | `EmconActivityProcessor` multiplies your `ActivityMultiplier` down |
+| `Sensors/JammerAtb` | **Sensitivity Degrade · Range · Self Signature Boost** | divides a hostile receiver's usable signal in `GetDetectedEntites` |
+| `GeoSurveys/GeoSurveyAtb` | **Survey Speed** | `GeoSurveyProcessor` — points per pass toward a body's requirement |
+| `JumpPoints/GravSurveyAtb` | **Survey Speed** | `JPSurveyProcessor` — inherited from Propulsion (§26d.3) |
+| `GroundCombat/GroundSensorAtb` | **Range (km)** | ground hex reveal per tick |
+| `Weapons/BeamFireControlAtbDB` | **Range · Tracking Speed** *(+ two mass-only dials — see §34.4)* | the firing gate; `WeaponUtils.GetMaxBeamRange_m` |
+| `Factions/IntelDirectorateAtb` | **Op Capacity · Counter-Intel Rating** | espionage ops + the counter-intel shield |
+
+**The physics all of it runs on, in two lines:**
+
+```
+attenuation:   signal_at_range = source × 1e6 / (4π r²)          SensorTools.AttenuationCalc
+the inverse:   range = √( source × 1e6 / (4π × threshold) )      SensorTools.RangeForSignal
+```
+
+🔑 **Everything in this door is that one equation read from a different end.** A receiver lowers `threshold`. A cloak
+lowers `source`. A jammer raises the effective `threshold` of someone else. A survey is the same read against a fixed
+target with a completion counter. **One law, five jobs** — the same shape Propulsion's `T·v = 2P` turned out to have.
+
+## 33. STEP 2 — GROUP BY THE QUESTION: one door, five answers
+
+**The question this door asks: *what does this part DO with the spectrum?*** The answers are mutually exclusive **per
+part** (§1a — a part is a receiver or a cloak, never both), and they split cleanly on the axis §30 predicted:
+
+| Answer | Job | Which end of the equation | Its sliders |
+|---|---|---|---|
+| **Listen** | see things you did not know were there | lowers **your threshold** | antenna size · band centre · **bandwidth** · scan rate |
+| **Look** | resolve a thing you already know is there | the same read, against a fixed target | survey speed |
+| **Track** | hold a lock good enough to shoot | threshold **plus** an angular-rate gate | range · tracking speed |
+| **Hide** | be seen from less far | lowers **your own source** | signature multiplier |
+| **Blind** | make *them* see from less far | raises **their** threshold | degrade · range · self-boost |
+
+**Listen / Look / Track are the "what you can see" axis; Hide / Blind are the "what you emit" axis.** §30's prediction
+that those are the two axes is **CONFIRMED.**
+
+### 33.1 ➡ WHAT LEAVES THIS DOOR — `IntelDirectorateAtb` is not a sensor
+
+`OpCapacity` and `CounterIntelRating` are a **seat and a staff rating**, not a reading of the spectrum: they gate how
+many covert operations a faction can run and how well it resists someone else's. That is the same shape as an
+administrative post — it belongs to **Command** (door 5), whose whole content is *officer + post + capacity*. Moving it
+there is the mirror of Propulsion handing the grav surveyor to Sensors: **the door that owns a capability is the one
+whose question it answers.**
+
+*(`GravSurveyAtb` arrives here from Propulsion in the same pass — §26d.3. Net: Sensors takes one, gives one.)*
+
+## 34. STEP 3–4 — BOTH TESTS APPLIED, AND FOUR DIALS FAIL
+
+The §1 tests are ① *which sim variable does it write? (none + costs nothing ⇒ a bug)* and ② §1a *can it be set knowing
+only this part?* **Four dials fail test ①, and two of those four are exploitable.** Every one is verified in source.
+
+### 34.1 🔴 `Resolution` — DEAD **and** FREE. The worst dial found in any door so far.
+
+```
+SensorTools.cs:125     var detectionResolution = recever.Resolution;      ← and it is NEVER USED AGAIN
+```
+
+Grepped the whole repository: **that local variable is the only reader in the game.** And `Resolution` does not appear
+in the mass formula (`90 + 0.01 × AntennaSize²`), so it **costs nothing either.** A player-facing slider with a
+0.1–1000 range that writes nothing and costs nothing.
+
+> This is **worse than `Amphibious`** (§23.3b), which at least charged mass for its silence. `Resolution` is the pure
+> case: **a dial that is entirely decoration.** It is the clearest single violation of test ① in the project.
+
+**It should not simply be deleted** — the concept is real and the code comments beg for it (*"resolution should play
+into how much gets detected"*, *"have resolution be required to pick out multiple ships close together instead of just
+one big signal"*). **The honest fix is to WIRE it**: resolution is what turns *"something is out there"* into *"it is
+three destroyers"*, and `SensorReturnValues` already carries a `SignalQuality` for exactly that. See §35.
+
+### 34.2 🔴 `Scan Time` — a FREE LADDER
+
+It writes something real (the reschedule interval, `SensorScan.cs:205`), so it half-passes test ①. But for a *sensor*
+it costs **nothing** — no mass, no power. The only energy path is the `IsEnergyGen` **solar-array** branch
+(`SensorScan.cs:138`), which is not a sensor at all. So a shorter scan time is **strictly better** and every player
+sets it to the 1-second minimum.
+
+**That is the §26.3 fuel failure again: a ladder, not a choice.** The fix is the same shape — give the dial a cost so
+the ends trade. Scanning faster should draw power (it is an active sweep) or cost mass, and then *"sweep often and
+run hot"* against *"sweep rarely and stay cold"* becomes a real EMCON decision that composes with the whole
+detection game.
+
+### 34.3 🔴 The jammer's downside is **PLAYER-OPTIONAL**, so it is not a trade
+
+`JammerAtb`'s own documentation states the catch plainly: *"Blind them, and paint a target on yourself."* But
+`Self Signature Boost` is a **dial** (1–10, default 5) and it is **not in the mass formula**
+(`200 + 100 × degrade + 50 × range`). So a player sets it to **1** and gets a jammer that blinds the enemy with **no
+beacon penalty at all.**
+
+> 🔒 **A general rule this earns:** *a PENALTY the player can dial away for free is not a cost — it is decoration.* If a
+> component's downside is settable, it must either be **coupled** to the upside (one number, zero-sum) or **priced**.
+> Here the coupling is obvious and physical: **a barrage jammer's noise IS its self-signature.** They should be the
+> same number — `SelfSignatureBoost = f(SensitivityDegrade)` — not two dials.
+
+### 34.4 🔴 Two fire-control dials cost mass and write NOTHING — and they are exploitable
+
+`Size vs Range` and `Size vs TrackingSpeed` (0.25–4, default 1) appear in **exactly one place**: the mass formula.
+
+```
+Mass  = (Range + TrackingSpeed/100) × Size vs Range × Size vs TrackingSpeed
+DBargs = AtbConstrArgs(Range, TrackingSpeed)          ← neither dial is passed to the atb
+```
+
+So they are **pure penalties under player control**: set both to 0.25 and fire-control mass drops to **1/16** with no
+loss of range or tracking. That is not a dead dial, it is a **free 16× mass saving** — and mass is the currency the
+Chassis door (door 3) is about to build its whole budget on. **Fix before Chassis, or Chassis derives against a
+budget that can be cheated.**
+
+### 34.5 ⚠ The wavelength dial is a TRAP — it can blind a sensor with no warning
+
+`Ideal Detection Wavelength` ranges **0.01 to 1e12** nm. But every signature in the game is authored at 3500 K, which
+Wien's law puts at **2898000 / 3500 ≈ 828 nm**, spanning `[428, 828, 1428]`. The receiver's band is
+`peak ± bandwidth/2`, so the shipped 600 nm ± 125 gives `[475, 725]` — which overlaps, and detection works.
+
+**Tune the peak to 2000 nm and the band becomes `[1875, 2125]`, which overlaps nothing in the game. The sensor is
+totally blind, and the designer says nothing.** A dial whose valid range is a narrow undocumented window inside a
+1e12-wide slider is a trap, not a choice.
+
+**Two ways out, and they point in opposite directions** — this is a developer call:
+- **(a) Hide it.** If there is only ever one band worth tuning to, the dial is not a decision — compute it and remove
+  the slider (the §1 test says a dial nobody can meaningfully set is not a dial).
+- **(b) Make it real.** Give different emitters genuinely different bands, so tuning is a *counter-intelligence*
+  decision: a sensor tuned for thruster plumes is blind to a cold hull. **This is the same deferred question §26c.1
+  flagged** — FTL wants its own band, and it needs a receiver that can see it. One ruling closes both.
+
+### 34.6 ✅ The one HONEST trade already in the door — and nothing tells the player
+
+`Detection Bandwidth` writes **two** things:
+
+```
+band width  = peak ± bandwidth/2                                        ← how many KINDS of signal you can see
+Efficiency  = techMaxBandwidth / bandwidth
+Sensitivity = tech / (EffectiveSize² × Efficiency)                       ← lower is BETTER
+            = tech × bandwidth / (EffectiveSize² × techMaxBandwidth)
+```
+
+So **a wider band sees more kinds of thing, each from less far.** That is a genuine zero-sum coverage ↔ reach trade,
+**already shipping**, and the designer presents it as two unrelated numbers. Wiring the readout is a pure §? Failure-A
+(the number exists, it is just unwired — `docs/combat/INFORMATION-DELTA-DESIGN.md`).
+
+### 34.7 ✅ And the size dial is already honest: **range ∝ √mass**
+
+```
+Sensitivity ∝ 1 / AntennaSize²        and     range ∝ √(1/Sensitivity) ∝ AntennaSize
+Mass        = 90 + 0.01 × AntennaSize²
+⇒  range ∝ √mass  —  DOUBLE YOUR REACH, QUADRUPLE THE ANTENNA.
+```
+
+**The inverse-square law shows up on both the physics side and the cost side, and they agree.** Nothing to fix; it
+just needs saying, because it is the reason a big sensor is a real commitment rather than a shopping choice.
+
+### 34.8 ⚠ Ground radar and space sensors price reach by DIFFERENT LAWS
+
+`ground-radar` mass = `Range × 0.5` — **linear**. The space sensor is **quadratic** (§34.7). Same capability, two cost
+laws: on the ground, doubling reach costs 2×; in space it costs 4×. One of them is wrong and it is a developer call
+which — but note the ground one is also the one where `GroundSensorAtb` is a flat reveal radius with no band, no
+threshold and no signature, so the ground half of this door is a **much simpler model than the space half.** Worth a
+ruling before ground detection gets deepened.
+
+## 35. STEP 4 RESULT — THE CHEAP WINS, ranked (not yet built)
+
+Each is a §31-style gauged slice, one per push, CI green between. **Nothing below is built yet.**
+
+| # | Slice | Why it is cheap | What it changes about PLAY |
+|---|---|---|---|
+| **S1** | **Price `Self Signature Boost` into `Sensitivity Degrade`** — one number, the jammer's noise *is* its self-signature | a formula change in one template; the atb already takes both args | 🔴 **The jammer gets its downside back.** Blinding the enemy paints you, and you cannot opt out. |
+| **S2** | **Make the two fire-control size dials write something, or delete them** | they appear in exactly one formula | 🔴 **Closes a free 16× mass saving before Chassis derives against that budget.** |
+| **S3** | **Give `Scan Time` a cost** (power draw or mass) | one formula; `EnergyGenAbilityDB` is already the consumer for the solar branch | **Sweep-often-and-run-hot vs sweep-rarely-and-stay-cold** becomes a real EMCON decision. |
+| **S4** | **Wire `Resolution`** into `SignalQuality` — resolution is what turns *"something"* into *"three destroyers"* | `SensorReturnValues.SignalQuality` already exists and survey reveal already gates on it | **Contact fidelity becomes a purchase.** A cheap sensor sees a blob; a good one counts hulls — which is what makes a scout worth building. |
+| **S5** | **Publish the bandwidth trade** as a readout (coverage ↔ reach) | Failure-A: the number exists, it is unwired | The one honest dial in the door starts reading as a decision. |
+| **S6** | **Move `IntelDirectorateAtb` to Command** (§33.1) | a doc/ownership move, no code | Keeps the door's question clean; Command inherits it with the other seats. |
+
+**Blocked on a developer ruling, not on work:** §34.5 (hide the wavelength dial, or make bands real — one ruling also
+closes the deferred FTL-band question) and §34.8 (one cost law for reach, or two).
+
+## 36. SCORING THE §30 PREDICTION — half right, and wrong in an informative direction
+
+§30 predicted, before any of this was read:
+
+> *"Richest remaining door. Expect the two axes to be **what you can see × what you emit**, with EMCON as the posture.
+> `CloakAtb`/`JammerAtb` are the likeliest dead-or-thin pair."*
+
+- ✅ **The two axes: CONFIRMED.** Listen/Look/Track vs Hide/Blind is exactly that split, and it fell out of the input
+  surface rather than being imposed on it.
+- ✅ **Richest door: CONFIRMED** — four failing dials, one trap, one unpublished real trade, one cost-law conflict.
+- ❌ **The dead pair: WRONG.** `CloakAtb` and `JammerAtb` are among the *best-built* attributes in the door —
+  health-scaled, flag-gated, defensively clamped, gauged. **The rot is in the OLDEST component**, the passive sensor
+  (`Resolution`) and the fire control (the two size dials).
+
+🔒 **The lesson, recorded because it will repeat:** *I predicted decay in the newest code and found it in the oldest.*
+Recent components were written with the conventions in hand; the long-standing ones predate them and nobody has had a
+reason to re-read them. **For the remaining seven doors, look hardest at the oldest attribute, not the newest.**
+
+---
