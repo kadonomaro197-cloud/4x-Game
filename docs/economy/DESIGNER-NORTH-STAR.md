@@ -2372,3 +2372,327 @@ refuelling** — wiring the gate at the shipped 8760 hours would strand the star
 other slice above is decidable from the derivation. ⚠ But **S0 (Sensors) now touches
 this door** (§39.5), so the band ruling should be made before P6 is calibrated.
 
+
+---
+
+# PART SEVEN — THE REMAINING SIX DOORS, DERIVED 2026-07-30
+
+Doors 3–8 (Chassis · Logistical · Command · Enhancers · Industrial · Civic), each derived by the §1 method and each
+with a driveable reference page. **This part exists so the findings survive the session that produced them** — but
+see §51 first: the whole part is replaceable by one test.
+
+## 45. Door 3 — CHASSIS: the budget every other door spends against, and it is free
+
+**The door:** four hosts (ship hull · ground frame · station chassis · building foundation), one question — *how much
+frame are you building?* All four already share `IChassisAtb` (`StructuralBudget` / `BudgetKind` / `PartMount`), and
+that abstraction is the best-plumbed thing in the designer.
+
+🔴 **THE HEADLINE, and it cancels the other seven doors.** Each chassis exists to sell **a budget**, and on all four
+the budget appears in **none of the seven cost channels**:
+
+| Chassis | Budget dial | Range | `Mass` formula | Costs? |
+|---|---|---|---|---|
+| `ship-hull` | `Mass Budget` | 1,000 → **100,000,000** kg | `PropertyValue('Hull Mass')` | 🔴 no |
+| `station-chassis` | `Structural Budget` | 500 → 10,000 | `100000` — a **constant** | 🔴 no |
+| `building-foundation` | `Footprint Budget` | 500 → 10,000 | `50000` — a **constant** | 🔴 no |
+| ground frames ×4 | `BaseStrength` | 1 → 1,000 (human) | `20` / `4000` / `2500` / `5` — **constants** | 🔴 no |
+
+**The wall is real and switched ON:** `ShipDesign.cs:285-290` computes `MassBudget` → `OverMassBudget` → `IsValid =
+false` when `EnforceMassBudget`, and `PulsarMainWindow.cs:144` sets that flag `true`. **49 hull references** across
+`shipDesigns.json` — ships mount hulls. So a hull authored `Hull Mass: 500` + `Mass Budget: 100000000` legally carries
+a hundred thousand tonnes. **Every "and it costs mass" fix this campaign shipped is enforced against a free ceiling.**
+
+⚠ **And the budget ADDS ACROSS HULLS** — `ShipDesign.cs:281` is `hullBudget += hull.MassBudget * component.count` with
+no "exactly one hull" rule. Two light hulls (1,000 kg of frame) grant 50,000 kg where one medium (10,000 kg) grants
+90,000. **Stacking cheap frames beats buying the right one, with no dial-fiddling.** The other three chassis are
+structurally immune (their assemblers take exactly one frame).
+
+🔑 **AND THE LAW IS ALREADY IN THE DATA, for the second door running.** The three shipped hull tiers:
+
+| Hull | Hull Mass | Mass Budget | budget ÷ √mass | √-law prediction |
+|---|---|---|---|---|
+| Light | 500 | 25,000 | **1,118** | 25,222 — **0.9% off** |
+| Medium | 10,000 | 90,000 | 900 | 112,800 — 25% high |
+| Heavy | 25,000 | 180,000 | **1,138** | 178,383 — **0.9% off** |
+
+**`budget = 1128 × √(frame mass)`**, fitted to nothing — light and heavy already sit on it to within 1%. And it is
+right for a *reason*: a square root means doubling capacity costs **4× the frame**, which is the square-cube law every
+real structure obeys, and it explains why the ratio *falls* with size (×50 → ×9 → ×7.2). **Eighth place one law does
+the work** (thrust↔ve · gearbox · bubble · jump range · gate cycle · solar bandwidth · RTG output↔endurance · this).
+
+**Other findings:** `BaseHP` is a free **10× toughness** multiplier on every ground frame (read straight into
+`GroundUnitAssembly` as `r.HitPoints`, frame mass constant) · `Size` on a ground frame is **dead AND free** (its own
+source says it "feeds transport carry-size"; **zero readers**) · `TileFootprint` 1–40 is a **cost with no benefit**
+(minimum dominant) · **research is `"0"` on every chassis in the game** · a lost hull sheds no budget (`MassBudget` is
+design-time).
+
+🔑 **Four currencies or one?** (the build plan's question). **Three, and two are the same.** `StationAssembly.cs:78`
+and `BuildingAssembly.cs:52` both sum **`d.VolumePerUnit * count`** — identical computation, identical units, two
+names, two same-ranged dials. Merging them removes a currency and changes no arithmetic. Ground's carry-strength earns
+its own currency for a real reason: **it is the only budget another component can ADD to** (power armour's
+`StrengthBonus`).
+
+⚠ **And the engine advises pulling the free lever:** `BuildingAssembly.cs:75` — *"over footprint budget: 3200 / 2000 —
+**raise the foundation Footprint Budget** or drop a module."* (The station assembler says the same about structure;
+`GroundUnitAssembly.cs:226` says *"Add an augment (e.g. power armour)"*.) 🔒 **Three helpful messages, three free
+levers — a good error message is evidence about what its author expected to be costly.**
+
+**⚠ DEVELOPER RULING NEEDED:** forcing the √-law moves the **medium** hull's budget 90,000 → 112,800 (+25%), a live
+change to every medium-hulled ship. Three options, each byte-identical for something: anchor on light+heavy (medium
+gains headroom) · anchor on medium (light and heavy tighten ~20%) · keep all three authored and apply the law only to
+new designs. **Which hull do you consider correctly tuned?**
+
+## 46. Door 4 — LOGISTICAL: thirteen templates, two attributes, and the worst-maintained door
+
+**The collapse:** every one of the thirteen is `CargoStorageAtb(storeTypeID, maxVolume)` — *a store* — or
+`CargoTransferAtb(rate, range)` — *a mover* — or both. Two attributes, four fields. **One choice (what it holds) +
+two sliders (how much · rate ↔ range)** reproduces all thirteen. Ammo, troops and fuel are **cargo types with their
+own consumer**, not separate systems.
+
+🔴 **F1 — `spaceport` is defined TWICE and silently merged.** `storage.json` and `installations.json` both declare it;
+`storage.json` loads second, and `ModLoader.ApplyModGeneric` takes the `Default` branch on a duplicate id and reflects
+over every non-null property — **including the whole `Properties` list** (no `CollectionOperation` given). So the
+`installations.json` planetary complex's **`Warehouse Size` and its `DBargsStorage` attribute are gone**: every
+start's spaceport (`default-design-spaceport`, unlocked on Earth · Kithrin · UMF · devtest) can move cargo and **holds
+nothing**. ⚠ **`BaseModIntegrityTests` cannot see it — a merge is not a skip:** nothing lands in `SkippedEntries`, the
+template count is unchanged, and the result is a valid blueprint. **Swept all 300 template ids: 7 collisions**
+(`spaceport` · `stainless-steel` · `water` · `ground-balanced` / `-offensive` / `-defensive` · `hydrogen-sulphide`
+twice in one file).
+
+🔴 **F2 — two fuel tanks; keep one, delete one.** `stainless-steel-fuel-tank` is the **best-authored template read in
+eight doors**: you set the volume, it solves the radius, then masses the **4 mm steel shell** —
+`1.333π(r³ − (r−0.004)³) × 8000` — so a 2,500 m³ tank is 8.42 m radius and 28.5 t dry, crew 0, four shipped designs.
+`fuel-cargo-hold` sets **`CrewReq = PropertyValue('Tank Volume')` = 65,449,847,000 crew** at its default, masses
+`Tank Radius` (2,500 kg for 6.5×10¹⁰ m³), has no shipped design, and **is unlocked on Earth.** 🔴 Third crew bug in
+one door: `space-port` has `CrewReq: "1000000"` hard-coded.
+
+🔴 **F3 — negative storage.** `ordnance-cargo-hold` (and the eaten spaceport): `Total Cargo Stored = Rack Size −
+Size Efficiency − **Cargo Transfer Rate**` — a rate subtracted from a volume. At the template defaults that is
+**−500 m³**, and `CargoStorageAtb.OnComponentInstallation` does `MaxVolume += MaxVolume` **unclamped**, so it
+*removes* storage from the host. The shipped design escapes only because its rate happens to be 100.
+
+⚠ **F4 — `Rate vs Range` fails the ladder test backwards.** rate is `base + base×RvR×0.1` (additive, saturates),
+range is `base − base×RvR×0.1` (subtractive, → 0). Measured on the shipped shuttlebay: **rate × range falls 9,281 →
+1,781 (−81%) while rate rises only ×1.73.** So `1` strictly dominates. The shipped design sits at `2`, near the good
+end — which is why nobody noticed. **Fix: multiply both sides instead of adding, making the product flat.**
+
+🔴 **F5 — `LogiBaseAtb` is the campaign's only fully dead attribute** — every reference is inside its own file; zero
+external readers; `logistics-office` isn't even unlocked on Earth. **DEVELOPER RULING: wire it as the cap on a
+colony's logistics routes, or delete it.**
+
+🔴 **F6 — `troop-bay` `Mass = 5000` constant** ⇒ `Capacity` 1–60 and `CarryClass` both free. 🔴 **F7 — a cargo hold
+weighs 1% of what it holds** (`Mass = Size Efficiency = Volume × 0.01`; the shipped *"Cargo Hold 5t"* masses **50
+kg**), and a ship's only wall is a **mass** budget — so **even a correctly-priced hull cannot constrain cargo.** The
+good fuel tank shows the fix.
+
+🔑 **F8 — THE CROSS-DOOR WIRE.** `GroundTransport.CarrySizeOf` is a hard-coded switch on the unit **type** enum
+(Infantry 1 / Artillery 2 / Armor 3) and **never reads the frame's `Size` dial** — the dead dial from §45. So a Titan
+takes the same bay room as a rifleman, while the atb's own docs say *"a size calc … not a fixed slot count."*
+**Both halves were built; nobody connected them. One line joins two doors' dead ends.**
+
+✅ **The model to copy:** `ship-magazine` — `Mass = Ammo Capacity × 1.2` with everything downstream of it, and **the
+only logistical template with a non-zero `ResearchCost`.** ⚠ Its crew coefficient (`[Mass] × 0.02` = 120 people on
+the shipped 5 t magazine) is steep and worth a calibration look.
+
+**Both owed debts land:** fuel load (Propulsion §23.1, on two templates — one unbuildable) and magazines (Weapons +
+Propulsion — cleanly, with a real hard gate in `GroundUnitAssembly`). 🔒 **The intrinsic test put both on the
+container rather than the consumer, and it held.**
+
+## 47. Door 5 — COMMAND: one component built twice, thirteen months apart
+
+**The door:** one seat — *what does it command · how well · does the occupant survive.* `CommandBerthAtb` has all
+three; `AdminSpaceAtb` has the first. **The source admits it:** `CommandBerthDB.cs:16` calls the berth's `Span`
+*"the force size the berth can command — **the old ConsoleSpace idea with teeth**."*
+
+✅ **What is right, and it is the √ law's third appearance.** `admin-complex`: `Mass = Office Space × 100` and
+`ColonyHexMapDB.UpdateMaxRadius: radius = Max(1, ceil(√(officeSpace ÷ 100)))` ⇒ **radius ∝ √mass, hex AREA ∝ mass.**
+Hexes per tonne 0.70 → 0.61 → 0.33 across the dial: **falls, so no dominant setting.**
+
+🔴 **`Console Space` costs mass ×100 and, on a ship, writes nothing.** Its only engine reader is
+`ColonyHexMapProcessor`, which returns early unless the entity has `ColonyInfoDB`. And `AdminSpaceProcessor.
+ReconcileSeats` creates **exactly one seat per component, keyed by NAME** — never by size. **A 1-console bridge is a
+20-console bridge for 100 kg instead of 2,000.**
+
+🔴 **The berth has three free dials, and the worst deletes the door's own grave rung.** `Support` (0–50, +50% work
+rate via `SiteWorkProcessor:280`) · **`Survivability` (0–100, and ≥100 ZEROES the leader-death roll in `SiteHazard`)**
+· `Span` (documented, **zero readers**, deferred to SE-3). **The one component in the designer that can destroy a
+named character ships with free immunity.** ✅ Contrast `Grade`: ×10 work rate for ×10 mass, crew and research —
+**benefit ÷ cost flat**, no dominant setting. Put Support and Survivability in Grade's formula and the component is
+finished.
+
+⚠ **`Admin Level` names the seat and nothing else** — an 11-value ladder (Ship→Empire) stored on every seat, and the
+orders that assign commanders never look at it. `AdminWindow.cs:172` prints it. **Any commander fits any post.** The
+berth's `Role` already *gates* properly (`GetWorkingBerth` refuses a mismatch) — level should gate the same way, and
+that is the hook the Governance design is waiting on.
+
+✅ **The best grave rung in the designer:** `AdminSpaceAtb.OnComponentUninstallation` **drops that specific seat by
+component name and frees its occupant** (with a comment explaining it must be by name, because the hook fires before
+the component leaves `ComponentInstancesDB`). **A decapitation strike genuinely collapses command.**
+⚠ **Hazard:** the door's only output blob, `ColonyHexMapDB`, has **zero `Clone()` references** — landmine L12.
+Harmless while colonies don't move managers; not harmless once berths ride ships that jump.
+
+## 48. Door 6 — ENHANCERS: the door where you set your own price
+
+**The collapse:** one choice (*what does it improve*) + one slider (*by how much*). And the four ground augments are
+**literally one attribute with four sets of defaults** — all four carry all five dials, each leaving the unused four
+at zero (a `shield-generator` ships with a live `StrengthBonus 0..1000`).
+
+🔴 **Six of eight templates have `Mass` on a SEPARATE dial** (`CarryMass` / `Cadre Mass` / `Automation Mass`),
+independent of capability. **You declare your own weight.** Worst first:
+
+- **`unit-caliber`** — `Firepower Caliber` and `Toughness Caliber` (both 1.0–2.0) in no cost formula. **The maximum
+  cadre is CHEAPER than the shipped one**: ×2.00 at 1,000 kg vs the shipped ×1.30 at 3,000 kg. **Largest free combat
+  multiplier in the designer** — ×1.54 firepower on every warship for a third of the mass.
+- **`reflex-booster`** — `EvasionBonus` 0→1.0 free. **Total evasion for one kilogram**, on the stat §1b measured as
+  an effective-health multiplier to **×20** (armour reaches ×10). Only saturation fire still floors it.
+- **`crew-automation`** — `Crew Reduction` 0→200 free. **200 people saved for nothing**, out of a pool its own
+  description calls *"scarce workforce"* and which `ManpowerTools.ResolveBuild` genuinely gates on.
+- **`shield-generator` / `ward-projector`** — 1,500-point pool, or 600 with `ShieldRegenFraction` 5.0, all free. ⚠ The
+  ward's description is a model of design writing (it explains the capacity↔recharge trade and **flags both dials for
+  a balance pass**). The trade is right; it just is not priced, so both ends are free.
+
+🔴🔴 **AND POWER ARMOUR IS A BOOTSTRAP, NOT A LEAK.** `GroundUnitAssembly` pass 1: `capacity += StrengthBonus * c`;
+pass 2: `used += g.Mass * c` where `Mass = PropertyValue('CarryMass')`. **Two independent dials on one part — one
+funds the budget, the other spends it.** At the extremes (CarryMass 1, StrengthBonus 3,000) a single part nets
+**+2,999** on a frame whose base is 100, and `MaxItemWeight = capacity × 0.5` lifts the per-item cap with it. **The
+ground carry budget has no ceiling, and every gate downstream of it (per-item weight, the P2b power gate, the ammo
+gate) is measured against an inflatable number.**
+
+🔑 **BOTH FIXES ARE ALREADY RUNNING IN THE REPOSITORY.**
+1. For the multipliers: **`ground-training-cadre`** does it right — `Mass = 50 × (1 + (TrainingMultiplier − 1) × 4)`,
+   so ×1→×2 takes the part 50 kg → 250 kg. And it says so: *"Training is EARNED: the higher you dial the multiplier,
+   the steeper the mass/credits/research/build-time. Multiplier range + cost curve are **FLAGGED balance values**."*
+   `sealed-systems` does the same (`Mass = 40 × (1 + Sealing × 1.5)`, also self-flagged).
+2. For the bootstrap: the ground weapons' **`itemMass = Math.Max(w.Mass, w.Attack * AttackCarryFactor)`** floor.
+   Applied as `Max(CarryMass, StrengthBonus × 0.1)` it is **byte-identical on the shipped Power Armour** (300 × 0.1 =
+   30, exactly its authored mass) and caps leverage at a **stated 10:1** — verified 3000:1 → 10.0:1 across the dial.
+
+✅ **Do not touch:** the stacking rules (shields and evasion **add** across parts; training and sealing take the
+**best** and are documented as not stacking) and the research costs (`[Mass] × 3` on the automation suite is the
+highest coefficient in any door).
+
+🔒 **THE LESSON THAT REPLACES THE "OLDEST ATTRIBUTE" HEURISTIC.** `unit-caliber` and `crew-automation` are *recent*
+(⚙6.2 / ⚙6.3, with their own CI gauges) and are the broken ones; `ground-training-cadre` and `sealed-systems` were
+written in the **same month** and price their dials. **Age does not predict honesty. Whether the author was thinking
+about COST does — and you can see it in the diff, because both who got it right left a "FLAGGED balance values" note.**
+
+## 49. Door 7 — INDUSTRIAL: the healthiest door, and the rule its exceptions name
+
+✅ **Seven of ten templates are correct.** `mine` · `automine` · `refinery` · `factory` · `shipyard` ·
+`local-construction` · `launch-complex` · `constructor` · `ground-constructor`: output linear in the dial, mass linear
+in the dial, **capability-per-tonne flat across the whole range.** After six doors of leaks that deserves saying.
+🔒 **And the build plan's predicted "rate ↔ efficiency" shape is wrong and should be:** industry is a **pure scale
+dial**, and the correct test for one is not *"is there a trade?"* but *"does benefit ÷ cost stay flat or fall?"*
+
+✅ **Both mines satisfy the §39.8 justification rule, unprompted.** Mine: 0.0002 output/kg (**80× the automine**),
+5,000 crew, colony-only. Automine: **0 crew** and a **ShipCargo mount** (droppable on an uncolonised rock). Each wins
+an axis outright. ⚠ The mine's 5,000-crew figure is steep — calibration, not structure.
+
+🔴 **`research-lab`: `Mass = 100000`, Volume 1000, Crew 20, Research 10, Credits 120 — all constants.** So
+`Research Points` **1 → 100 is free**: a hundredfold difference in how fast the empire advances, same price, and
+research gates every other door. **The most consequential free dial found.** Fix: `Mass = Research Points × 10,000`
+(byte-identical on the shipped 10-point/100-tonne lab).
+🔴 **And `Cost Per Day` (0–100,000) is DEAD** — `ResearchPointsAtbDB._costPerDay` is stored with a public getter and
+**read by nothing**; the three `.CostPerDay` consumers are all on `ResearcherDB`/`AdministratorDB` (a *scientist's*
+funding). **DEVELOPER RULING: bill it as the lab's operating cost, or delete the dial.**
+
+🔴 **`Fighter Construction Points` (factory, 0–1,000) is DEAD, and it is the factory's ONLY adjustable dial besides
+`Size`.** Absent from the `DataDict` that becomes the `IndustryAtb` rate table (which lists exactly
+`component-construction` · `installation-construction` · `ordnance-construction`), and **there is no
+`fighter-construction` industry type in the game** — the five are refining / component / installation / ordnance /
+ship-assembly. Shipped default is `0`, so nothing is mis-balanced; it is a UI-honesty problem. **DEVELOPER RULING:
+are fighters a production type?**
+
+🔴 **`bunker`: `Mass = 50000` constant** ⇒ `LocalFortify` and `AdjacentProjection` (both 0–1) free. A bunker that
+totally fortifies its region *and* projects full cover to every neighbour costs the shipped 0.25/0.12 price. 🔑 **This
+is where the Defense door's "fortification is infrastructure, not a combat defence" ruling landed — unpriced.** Plus
+`TileFootprint` 1–40, the same cost-with-no-benefit dial as the building foundation.
+🔴 **`infrastructure`: `Mass = 1000` AND `BuildPointCost = 100` AND `CreditCost = 0`** ⇒ **six** free dials. Most of
+them are Civic's; the Industrial one is **`Support Capacity`** — the colony's equivalent of a chassis budget, free.
+
+✅ **The one that looks like a leak and is not:** the `shipyard`'s `Mass` reads only `Slip Size`, but
+`CrewReq = PropertyValue('Crew Size')` **one for one**, and output is `Crew Size × 0.02`. So output is paid for in the
+currency that binds a planet-side yard: **people.** Verified flat at 0.020 output/crew across both dials.
+🔒 **The seven-channels rule working correctly: the question is never "is it in the mass formula" but "which of the
+seven, and is it one the player is constrained by?"**
+
+## 50. Door 8 — CIVIC: a forty-point morale term that can never fire
+
+🔴🔴 **THE HEADLINE.** `ColonyMoraleDB` carries a complete employment term — `MaxEmploymentBonus = 15.0`,
+`MaxUnemploymentPenalty = 25.0`, two-sided, with a documented negative sentinel so "no job data" reads *neutral*
+rather than as total unemployment, and correctly denominated against **workforce** rather than headcount
+(`PopulationProcessor:74-76`, with a comment saying why). It reads `GetTotalJobs()`, which sums `EmploymentAtbDB.Jobs`
+across installed components. **No template in the game carries `EmploymentAtbDB`.** So jobs is always 0,
+`employmentRatio` pins to `-1.0`, and **the widest single factor in the morale model contributes exactly zero, in
+every game.** 🔒 **The exact mirror of `LogiBaseAtb`** — that is a producer with no consumer; this is a **consumer
+with no producer.** Both invisible to every test in the project.
+
+✅ **And the producer already exists as data.** Every installation declares a `CrewReq` — factory `Size × 5`, refinery
+`[Mass] × 0.1`, mine `Area × 0.005`, lab 20. **Those figures ARE the jobs it provides**, and the engine already reads
+colony crew as a demand (`InfrastructureProcessor`). ⚠ **But this is the biggest live behaviour change in any of the
+eight doors** — morale feeds migration, tax income and legitimacy. **Flag-gate it and measure against the existing
+`MoraleTests` baseline**, the same treatment the fuel gate got.
+
+✅ **`food-production` is the best-priced template in the game.**
+`Mass = Food Output × 0.1 + **Food Quality³ × 200** + Automation × 500` — three dials priced, one **CUBICALLY**
+(0.5 → 25 kg · 1.0 → 200 kg · 3.0 → 5,400 kg: tripling quality costs 27×, a deliberate steep return on a bounded
+luxury stat, and the only cubic cost curve in ~90 templates). And `CrewReq = Max(1, Output × 0.02 × (1 − Automation))`
+— **automation buys crew down AND costs mass to do it.** 🔑 **That is precisely the trade `crew-automation` promises in
+its description and gives away free (§48). Fourth time the fix was already in the repository.**
+
+🔴 **`space-habitat`: `Mass = 1000` · `CreditCost = 0` · `BuildPointCost = 100` — three constants — and
+`Support Colonists` runs to 1,000,000.** **A million colonists for one tonne**, and **200× its sibling
+`infrastructure`'s 5,000 ceiling on an identical cost block.** Population is the resource everything else derives
+from. ✅ One thing right and worth defending: the habitat deliberately carries **no gravity/pressure attribute at
+all** — which is how a station escapes a planet's environment, and it **cannot** be done by setting those dials to 0
+(landmine L7: template values clamp to their tech bounds, so a 0 silently will not stick).
+⚠ **`Housing Comfort` runs 0–50 while `MaxComfortBonus = 20.0`** — 60% of the dial's travel is inert.
+
+🔑 **AN EIGHTH COST CHANNEL — TIME.** The academies price `Class Size` in mass (`× 100`) but `Class Length` (1–48
+months) appears in **none** of the seven channels — and it is **not** free: `NavalAcademyAtb.cs:46` sets
+`graduationDate = now + TrainingPeriodInMonths × 30 days`, so a longer course buys better graduates and pays in
+**throughput**. 🔒 **A dial is honest if it is priced in any currency the player is actually constrained by — mass ·
+volume · crew · research · credits · build points · resources · AND TIME.**
+
+**The reconciliation the build plan asked for:** the morale plan (M1–M5) **built the consumers correctly.** Four of
+six inputs are live (crowding · comfort · food · tax); **employment is dead-wired** and **power shortage is inert**
+until colony power demand is calibrated — which the Power door just unblocked by giving the solar array a colony
+mount. **Civic owes the morale plan two producers, not a design.** ⚠ And every "live" row means *the wire is
+connected*, not *the number is right* — **whether −35 for crowding feels like anything is a question only a played
+game answers.**
+
+## 51. 🔒 THE ONE THING TO BUILD OUT OF ALL EIGHT DOORS
+
+Every finding in the whole campaign is one of **three mechanically-detectable shapes**:
+
+| Shape | What it looks like | Where |
+|---|---|---|
+| **A — `Mass` = a constant** | every dial on the template is free at once | `research-lab` · `bunker` · `infrastructure` · `space-habitat` · `station-chassis` · `building-foundation` · 4 ground frames · `troop-bay` · `space-port` |
+| **B — `Mass` = a DIFFERENT dial** | you declare your own price | all six broken Enhancers · the ship hull's `Mass Budget` beside `Hull Mass` |
+| **C — no counterpart on the other side** | the dial writes nothing, or the attribute has no producer | `Fighter Construction Points` · `Cost Per Day` · `LogiBaseAtb` (no consumer) · `EmploymentAtbDB` (no producer) · ground-frame `Size` · berth `Span` · the fire-control pair · `Resolution` |
+
+**THE TEST — data-only, no engine change, no save risk, ~a dozen lines:**
+1. For every template, for every property whose `GuiHint` starts with `GuiSelection` (a real player dial): assert its
+   name appears in **at least one** of the seven cost formulas **or** in an `AtbConstrArgs` argument list (so it
+   reaches the simulation). Flag it if **neither**. *(Catches A, B and half of C.)*
+2. For every `*Atb` type: assert it has **both** a producing template and a consuming reader outside its own file.
+   *(Catches the other half of C — both `LogiBaseAtb` and `EmploymentAtbDB`.)*
+3. Assert **no `UniqueID` appears in two template files** (the §46 F1 merge, which no existing gauge can see).
+4. An explicit **allow-list**, where every entry carries a one-line reason. *"It costs time"* (the academies) is
+   valid; *"nobody noticed"* is not. **Writing that list IS the design review.**
+
+🔒 **It would have found every finding in this campaign, and unlike eight pages of hand audit it does not rot.** If
+only one thing is built out of PART SEVEN, build this.
+
+### 51a. Rulings owed, all eight doors — the short list
+
+| # | Ruling | Door |
+|---|---|---|
+| 1 | Which shipped **hull** is correctly tuned? (the √-law anchor; medium moves +25% otherwise) | §45 |
+| 2 | **`LogiBaseAtb`** — wire it as the colony logistics-route cap, or delete it? | §46 |
+| 3 | Are **fighters** a production type? (add the industry type, or delete the dial) | §49 |
+| 4 | Should a lab's **`Cost Per Day`** actually bill the colony? | §49 |
+| 5 | Arm **employment** in morale? (the biggest live behaviour change in the campaign) | §50 |
+| 6 | Arm **`EnableFuelExhaustion`**; is a reactor **refuelable**? | §39.7a |
+| 7 | The **RTG's power-density** gap — pick a number, or leave it flagged? | §39.8 |
+| 8 | The **Sensors S0 band** ruling (reaches Power's solar array and the deferred FTL band) | §34.5 |
