@@ -227,31 +227,11 @@
           "PropertyFormula": "5000"
         },
         {
-          "Name": "Size vs Range",
-          "Units": "SVR",
-          "GuiHint": "GuiSelectionMaxMin",
-          "DataDict": {},
-          "MaxFormula": "4",
-          "MinFormula": "0.25",
-          "StepFormula": "0.25",
-          "PropertyFormula": "1"
-        },
-        {
-          "Name": "Size vs TrackingSpeed",
-          "Units": "SVTS",
-          "GuiHint": "GuiSelectionMaxMin",
-          "DataDict": {},
-          "MaxFormula": "4",
-          "MinFormula": "0.25",
-          "StepFormula": "0.25",
-          "PropertyFormula": "1"
-        },
-        {
           "Name": "Mass",
           "Units": "kg",
           "GuiHint": "None",
           "DataDict": {},
-          "PropertyFormula": "(PropertyValue('Range') + PropertyValue('Tracking Speed') / 100) * PropertyValue('Size vs Range') *  PropertyValue('Size vs TrackingSpeed')"
+          "PropertyFormula": "PropertyValue('Range') + PropertyValue('Tracking Speed') / 100"
         },
         {
           "Name": "DBargs",

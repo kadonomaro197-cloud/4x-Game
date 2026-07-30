@@ -1677,12 +1677,13 @@ whose question it answers.**
 
 *(`GravSurveyAtb` arrives here from Propulsion in the same pass — §26d.3. Net: Sensors takes one, gives one.)*
 
-## 34. STEP 3–4 — BOTH TESTS APPLIED, AND **FIVE** DIALS FAIL
+## 34. STEP 3–4 — BOTH TESTS APPLIED, AND **FOUR** DIALS FAIL
 
 The §1 tests are ① *which sim variable does it write? (none + costs nothing ⇒ a bug)* and ② §1a *can it be set knowing
-only this part?* **Five dials fail test ①, and two of the five are exploitable.** Every one is verified in source.
-*(It was four on the first pass. Antenna size joined the list when §34.7's arithmetic was run over the dial's whole
-range instead of at a point.)*
+only this part?* **Four dials fail test ①, and one of the four is exploitable.** Every one is verified in source.
+*(The count went 4 → 5 → 4. Antenna size was added on a second look and then **retracted** — §34.7 — which is where the
+scale-vs-split rule in §34.7a came from. The retraction is left visible rather than edited away: the reasoning is the
+useful part.)*
 
 ### 34.1 🔴 `Resolution` — DEAD **and** FREE. The worst dial found in any door so far.
 
@@ -1800,30 +1801,51 @@ constant across the whole dial (verified numerically at bandwidth 1 / 62.5 / 250
 emitter in the game — so you take the narrow window's **6.27 Gm** and give up nothing. **The one honest trade in this
 door is only honest once the overlap test is fixed.** Two findings, one line of code.
 
-### 34.7 🔴 CORRECTION — antenna size is a FREE LADDER too. I had called this one honest.
+### 34.7 ⚠️ RETRACTED — antenna size WAS honest. I called it broken twice, and this is the more useful finding.
 
-On the first pass I wrote that this dial was already fine, because range goes as antenna size and mass as its square,
-so *range ∝ √mass*. **The proportionality is right and the SCALING is wrong by two orders of magnitude.**
+**First pass:** I said the dial was fine because *range ∝ √mass*. **Second pass:** I said that was wrong because the
+90 kg constant swamps the quadratic term. **Both readings compared the wrong two points, and the dial is fine.**
+
+What settled it was reading the shipped *design* rather than the template default:
 
 ```
-Sensitivity ∝ 1 / AntennaSize²   ⇒   range ∝ AntennaSize          (linear)
-Mass        = 90 + 0.01 × AntennaSize²
-the quadratic term only overtakes the 90 kg constant at  size ≈ 95
-…and the shipped passive-sensor sits at  size = 1.25
+template default   Antenna Size  1.25   →  mass  90.0156       (nobody builds this)
+default-design-passive-sensor    2500   →  mass  62,590        ← the SHIPPED sensor is at the dial's MAXIMUM
 ```
 
-**So across the dial's entire usable range the mass is effectively flat.** Measured through the real formula:
+So the quadratic term is not dormant — for the design the game actually ships it is **99.86% of the mass**. And
+plotting benefit ÷ cost across the whole dial shows a **well-formed interior optimum**:
 
-| Antenna size | Mass | Detection range vs a reactor |
-|---|---|---|
-| **1.25** *(shipped)* | 90.0 kg | 0.40 Gm |
-| 8.2 | 90.7 kg | 2.61 Gm |
-| 15.5 | 92.4 kg | 4.90 Gm |
-| 29.9 | 98.9 kg | **9.48 Gm** |
+| Antenna size | Mass | Range (relative) | **Range per kg** |
+|---|---|---|---|
+| 10 | 91.0 | 10 | 0.110 |
+| **95** | **180.3** | **95** | **0.528 ← the optimum** |
+| 500 | 2,590 | 500 | 0.193 |
+| 2500 | 62,590 | 2500 | 0.040 |
 
-**Size 30 buys 24× the detection range for +9 kg.** The cost law is correct in principle and mis-scaled in practice, so
-the dial behaves as a free ladder. *(Lesson: "the formula has the right shape" is not the same as "the dial trades."
-Run the numbers over the dial's actual range — the shape was right and the answer was still wrong.)*
+`d(range/mass)/ds = 0` at `s = √(90/0.01) = 95` — exactly where the fixed electronics package equals the scaling
+aperture. **That is a real engineering trade with a real sweet spot**, and the shipped design deliberately sits well
+past it (buying reach at a deliberately poor mass efficiency, then capping it with a hard `MaxDetectionRange_m`
+horizon). Nothing to fix. **S7 is withdrawn.**
+
+### 34.7a 🔒 THE RULE THIS EARNED — SCALE dials vs SPLIT dials, and the ladder test
+
+Two mis-readings in a row came from applying one test to two different kinds of dial. They are not the same thing:
+
+| Kind | Shape | Is monotonic a problem? | Example |
+|---|---|---|---|
+| **SCALE** dial — *buy more, pay more* | benefit ↑ and cost ↑ together | **No.** That is a purchase. It earns its keep if **benefit ÷ cost has an interior optimum**, so there is a right size rather than a biggest size. | antenna size · drive mass · total damage |
+| **SPLIT** dial — *divide a fixed budget* | one thing ↑ as another ↓ | **Yes.** A split whose product is not invariant is a ladder. | push ↔ economy · startup ↔ endurance · coverage ↔ reach |
+
+> 🔒 **THE LADDER TEST.** Plot **benefit ÷ cost** across the dial's *whole authored range*, and check the *shipped
+> design's* position on that curve — not the template default.
+> **A SPLIT dial is honest when the product is invariant. A SCALE dial is honest when benefit ÷ cost has an interior
+> maximum.** Monotonic benefit-per-cost with no maximum ⇒ a ladder. **Benefit that rises while cost stays flat ⇒ a
+> leak** — which is what the fire-control dials actually were (§34.4).
+
+*(This is why the fire-control pair is a genuine defect and antenna size is not: the director's phantom dials cut mass
+while the capability stayed **fixed**, so benefit ÷ cost rose without bound toward the minimum setting. There was no
+optimum to find.)*
 
 ### 34.8 ⚠ Ground radar and space sensors price reach by DIFFERENT LAWS
 
@@ -1841,12 +1863,12 @@ Each is a §31-style gauged slice, one per push, CI green between. **Nothing bel
 |---|---|---|---|
 | **S0** | 🔒 **BLOCKED ON A RULING — fix the overlap test AND add an infrared receiver, in ONE change** (§34.5) | the test is one line; the receiver is one template | 🔴 **The biggest single change in the door.** It makes band-matching real, which turns the wavelength dial from *"crank it to minimum"* into a counter-intelligence decision, and restores the coverage ↔ reach trade. **Must be one commit** — the fix alone makes a parked ship undetectable. Also closes the deferred FTL-band question. |
 | **S1** | **Price `Self Signature Boost` into `Sensitivity Degrade`** — one number, the jammer's noise *is* its self-signature | a formula change in one template; the atb already takes both args | 🔴 **The jammer gets its downside back.** Blinding the enemy paints you, and you cannot opt out. |
-| **S2** | **Make the two fire-control size dials write something, or delete them** | they appear in exactly one formula | 🔴 **Closes a free 16× mass saving before Chassis derives against that budget.** |
+| ~~**S2**~~ | ✅ **DONE 2026-07-30 — the two fire-control size dials are DELETED** (and the design's own `Size vs Range` override with them, in the same change: `ComponentDesignFromJson` indexes `ComponentDesignProperties[key]` unguarded, so a design pointing at a removed template property throws `KeyNotFoundException` on New Game — gotcha #10, check the other end). Mass is now `Range + TrackingSpeed/100`. **Byte-identical** — every shipped design used 1 for both, and 1 × 1 = 1. Gauge: `FireControlMassLeakTests` (structural: the dials cannot be re-added; byte-identity on both shipped directors; and mass is now a pure function of capability) | 🔴 **Closes a free 16× mass saving before Chassis derives against that budget.** |
 | **S3** | **Give `Scan Time` a cost** (power draw or mass) | one formula; `EnergyGenAbilityDB` is already the consumer for the solar branch | **Sweep-often-and-run-hot vs sweep-rarely-and-stay-cold** becomes a real EMCON decision. |
 | **S4** | **Wire `Resolution`** into `SignalQuality` — resolution is what turns *"something"* into *"three destroyers"* | `SensorReturnValues.SignalQuality` already exists and survey reveal already gates on it | **Contact fidelity becomes a purchase.** A cheap sensor sees a blob; a good one counts hulls — which is what makes a scout worth building. |
 | **S5** | **Publish the bandwidth trade** as a readout (coverage ↔ reach) | Failure-A: the number exists, it is unwired | The one honest dial in the door starts reading as a decision. |
 | **S6** | **Move `IntelDirectorateAtb` to Command** (§33.1) | a doc/ownership move, no code | Keeps the door's question clean; Command inherits it with the other seats. |
-| **S7** | **Re-scale the antenna mass term** so the quadratic bites inside the dial's real range (§34.7) | one constant in one formula | **A big dish becomes a real commitment** instead of +9 kg for 24× the reach. Pairs with S2 — both leak the mass budget Chassis is about to build on. |
+| ~~**S7**~~ | ⚠️ **WITHDRAWN 2026-07-30 — §34.7 retracted.** The antenna dial has a genuine interior optimum at size ≈ 95 and the shipped design sits at 2500, where the quadratic term is 99.86% of the mass. It was never a leak; I compared the wrong two points, twice. What it produced instead is the **§34.7a scale-vs-split rule and the ladder test**, which is worth more than the slice would have been. | — | — |
 
 **Blocked on a developer ruling, not on work:** **S0** (§34.5 — correct the overlap test *and* add an infrared receiver
 in the SAME change, or else compute the band and remove the dial; either way it also closes the deferred FTL-band
@@ -1897,13 +1919,13 @@ how the game is PLAYED.** `✅ LIVE` · `🟢 NEW` · `🔵 HALF` (the number ex
 | 16 | **Band match** | `DetectonQuality` — the overlap test | 🔵 **HALF, and BROKEN** | 🔴 **The receiver's upper edge is never checked (§34.5).** So band-matching gates nothing: the loudest emitter aboard a ship is detected by a sensor a thousand nanometres off its wavelength, the wavelength dial has a dominant setting, and the coverage ↔ reach trade is cancelled. **The game depends on the bug** — fix it alone and a parked ship becomes undetectable. |
 | 17 | **`Resolution`** | *nothing* — one dead local, `SensorTools.cs:125` | 🔵 **HALF** | **Contact fidelity is not a purchase.** Every sensor tells you the same amount about what it found, so there is no reason to build a good scout over a cheap one. Wiring it (§35 S4) is what makes *"it is three destroyers"* different from *"something is out there."* |
 | 18 | **`Scan Time`** | `SensorScan` reschedule interval | ✅ LIVE **but free** | **Nothing** — because it costs nothing, everyone pins it at 1 s. Priced (§35 S3) it becomes *sweep often and run hot* vs *sweep rarely and stay cold*, which composes with rows 3, 12 and 14. |
-| 19 | **`Size vs Range` · `Size vs Tracking`** | *nothing* — mass formula only | 🔵 **HALF** | 🔴 **A free 16× mass saving.** Mass is the currency **Chassis** (door 3) is about to build its whole budget on. Fix before then. |
+| 19 | ~~**`Size vs Range` · `Size vs Tracking`**~~ | **deleted** | 🟢 **NEW — FIXED** | ✅ **The free 16× mass saving is closed**, structurally: the dials no longer exist, so no design can re-open it. Mass is now `Range + TrackingSpeed/100` — a pure function of capability. Byte-identical (every shipped design used 1). **Chassis now derives against a budget that cannot be cheated.** Gauge: `FireControlMassLeakTests`. |
 | 20 | **Jammer `Self Signature Boost`** | `SelfSignatureFactor` — but it is a free dial | 🔵 **HALF** | 🔴 **The jammer's downside is opt-out**, so blinding the enemy is currently free. 🔒 *A penalty you can dial away is decoration.* |
 | 21 | **An infrared receiver band** | would let the overlap test be correct | 🔴 PROPOSED | **Makes tuning a counter-intelligence decision** — a sensor set for thruster plumes is blind to a cold hull. Same ruling as the deferred FTL band, so **one decision closes both.** |
 | 22 | **The sensor destroyed** | Damage → `ReCalcAbilities` | ✅ LIVE | 🔑 **Shoot the eyes out and row 3 reverses.** The grave rung that makes detection a *target*, not a stat — and it is how the first-strike gauge blinds its victim. |
 
-**Reading the marks:** 15 rows `✅ LIVE`, **5 `🔵 HALF`** (four of those five are the failing dials — the marks and §34
-line up one-to-one), 1 `🔴 PROPOSED`, and **0 `🟢 NEW`: nothing has been built in this door yet.**
+**Reading the marks:** 15 rows `✅ LIVE`, **4 `🔵 HALF`** (all four are the failing dials — the marks and §34 line up
+one-to-one), 1 `🔴 PROPOSED`, and **1 `🟢 NEW`** — row 19, the one leak that was real, now closed.
 
 🔑 **The shape of the map is itself the finding.** Propulsion's outputs mostly changed *how well* you fight. **Sensors'
 outputs decide _whether_ you fight (row 2), _whether you can shoot back_ (row 3), _how big the map is_ (row 7), and

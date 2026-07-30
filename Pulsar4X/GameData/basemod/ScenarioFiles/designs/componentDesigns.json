@@ -105,8 +105,7 @@
       "TemplateId": "beam-fire-control",
       "Properties": [
         { "Key": "Range", "Value": 100 },
-        { "Key": "Tracking Speed", "Value": 5000 },
-        { "Key": "Size vs Range", "Value": 1 }
+        { "Key": "Tracking Speed", "Value": 5000 }
       ]
     }
   },
