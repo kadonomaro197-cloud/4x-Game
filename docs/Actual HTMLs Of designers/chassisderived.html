@@ -1,0 +1,749 @@
+<title>Chassis — the assembler's first call, derived</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary .n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch — ";color:var(--ink3)}
+@media(min-width:700px){
+ .w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+ .ten{grid-template-columns:1fr 1fr}
+ .tenq{border-left:1px solid var(--rule2)}
+ .tenq:nth-child(odd){border-left:0}
+ .nums{grid-template-columns:repeat(5,1fr)}
+ .opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+ .oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)} .num.sh.a b{color:var(--warn)} .num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)} .num.a b{color:var(--warn)} .num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* ── added for the remaining six doors (same idiom) ────────────────────── */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)} .bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 3 — REDERIVED twice to the developer's rulings, 2026-07-30</p>
+<h1>The four chassis that exist are a 2×2 of the two things you just separated.</h1>
+<p class="lead"><b>Your ruling: the domain is the ENVIRONMENT the entity will function in, and then it gets more specific — unit or infrastructure — and then substrate.</b> That is not a relabelling. It splits a four-valued question into two two-valued ones, and when you do that, <b>the four chassis in the game fall out as the cells of a grid</b>:</p>
+<div class="scroll" style="margin-top:13px"><table class="t">
+<tr><th>Environment ↓ &nbsp;/&nbsp; is it a…</th><th>UNIT <s>mobile, an actor</s></th><th>INFRASTRUCTURE <s>fixed, a place</s></th></tr>
+<tr><td><b>Orbital / vacuum</b></td><td><b class="g">ship-hull</b></td><td><b class="g">station-chassis</b></td></tr>
+<tr><td><b>Planetary surface</b></td><td><b class="g">human / vehicle / walker / swarm frame</b></td><td><b class="g">building-foundation</b></td></tr>
+<tr><td><b>Open water</b></td><td>🔴 <b class="r">empty — and the map already has ocean regions</b></td><td>🔴 <b class="r">empty</b></td></tr>
+<tr><td><b>Atmospheric</b></td><td>🔴 <b class="r">empty</b> <s>though <code>Hover</code> locomotion exists</s></td><td>🔴 <b class="r">empty</b></td></tr>
+<tr><td><b>Subterranean</b></td><td>🔴 <b class="r">empty</b></td><td>🔴 <b class="r">empty</b></td></tr>
+</table></div>
+<p class="lead" style="margin-top:12px">🔑 <b>So the old "domain" was two questions wearing one coat</b>, which is why it had four values and no structure. Separate them and the door gets simpler <em>and</em> covers more: <b>five environments × two kinds = ten cells, four of which ship today.</b> And the empty cell with the strongest claim is <b>open water</b> — because <code>HexPathfinder</code> already treats an ocean region as <b>impassable unless the unit's locomotion is <code>Amphibious</code></b>. <b>There is already terrain in the game that no chassis is designed for.</b></p>
+<p class="lead" style="margin-top:10px">🔑 <b>And your size ruling forces the one genuinely hard decision in the door.</b> <em>"Hulls can be any size — a Death Star might be an average station to one faction but an outpost to another."</em> Taken seriously that kills absolute size classes outright: there is no "Heavy", only <b>heavy compared to what you already build</b>. It also means the <b>budget exponent</b> stops being a curiosity and becomes the thing that decides whether a megastructure is buildable at all — and the answer that falls out is a good one: <b>megastructures are gated by materials science, not by a cap.</b></p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>① ENVIRONMENT — where the thing has to function</h2>
+<p class="sub">This is the first question because it is the one that decides <b>what will kill it</b>. Everything the engine already models about hostile surroundings hangs off it.</p>
+<div class="scroll"><table class="t">
+<tr><th>Environment</th><th>What it has to survive</th><th>What the engine already models</th></tr>
+<tr><td><b>Orbital / vacuum</b></td><td>hard vacuum · radiation · no gravity to fight</td><td><b class="g">✅</b> the whole space sim · <code>SpaceHazardDB</code> (six hazard flavours) · <code>HazardResistanceAtb</code></td></tr>
+<tr><td><b>Planetary surface</b></td><td>gravity · pressure · atmosphere · terrain</td><td><b class="g">✅</b> <code>Gravity</code> · <code>GravityToleranceAtb</code> · <code>PressureToleranceAtb</code> · <code>AtmosphericDust</code> · <code>RadiationLevel</code> · <code>GroundTerrainClass</code> (Open/Cover/Rough) · <code>EnvironmentalResistance</code></td></tr>
+<tr><td><b>Open water</b> <s>submarines</s></td><td>submersion · <b>crush pressure at depth</b></td><td><b class="a">⚠ HALF</b> — ocean is a real <code>RegionFeatureType</code>, and <code>HexPathfinder.IsImpassable</code> <b>already blocks it unless the unit is <code>Amphibious</code></b>. So the terrain exists and the gate exists; <b>no chassis claims the environment.</b></td></tr>
+<tr><td><b>Atmospheric</b> <s>aircraft</s></td><td>staying up · <b>thin air at altitude</b></td><td><b class="a">⚠ THIN</b> — <code>GroundLocomotion.Hover</code> exists (a repulsor skimmer), and atmosphere is modelled per body. <b>True flight is not.</b></td></tr>
+<tr><td><b>Subterranean</b></td><td>overburden · no line of sight</td><td>🔴 <b class="r">nothing</b> — and it is the most interesting empty cell, because a buried thing is <b>immune to orbital bombardment</b>, which is a mechanic the game already has on the other side</td></tr>
+</table></div>
+<div class="okbox">✅ <b>Note what this makes cheap.</b> Environment is the natural owner of the <b>tolerance and resistance</b> machinery that is already built and already scattered: gravity tolerance, pressure tolerance, environmental sealing, hazard resistance. Today those are separate attributes bolted onto whatever needed them. <b>Under the derived door they are what the environment choice DEMANDS</b> — which is the same "the chassis declares it" move as the reactor gate, applied to survival instead of supply.</div>
+<div class="warnbox"><b>⚠ One honest scoping note.</b> I would ship <b>orbital + surface</b> (the two that exist) and <b>open water</b> (the one whose terrain and gate already exist and whose chassis does not), and hold <b>atmospheric</b> and <b>subterranean</b> as declared-but-empty cells. <b>An environment with no terrain to stand on is a dial writing nothing</b> — the rule this campaign has applied to every other door applies here too. Declaring the axis costs nothing; declaring values with no consumer is the bug.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>④ OPERATING ENVELOPE — "different levels", and the dial for it already exists</h2>
+<p class="big"><b>Your addition: aircraft and submarines are both things, and both function at different levels and different complexities.</b> That is a fourth element, and it is the one I would have missed — <b>an environment is not one place, it is a stack of bands</b>, and what a chassis must survive depends on which band it works in.</p>
+<div class="scroll"><table class="t">
+<tr><th>Environment</th><th>Its levels, low → high</th><th>What changes across the stack</th></tr>
+<tr><td><b>Open water</b></td><td><b>Surface</b> → <b>Shallow</b> → <b>Deep</b> → <b>Abyssal</b></td><td><b>crush pressure</b>, rising hard. And detection: a deep boat is nearly unfindable</td></tr>
+<tr><td><b>Atmospheric</b></td><td><b>Terrain-following</b> → <b>Medium</b> → <b>High</b> → <b>Near-space</b></td><td><b>air density falling</b> — thrust and lift both fade, and at the top it borders orbital</td></tr>
+<tr><td><b>Subterranean</b></td><td><b>Shallow</b> → <b>Deep</b> → <b>Deep-bedrock</b></td><td><b>overburden</b> — and <b class="g">immunity to orbital bombardment</b>, which the game already models on the other side</td></tr>
+<tr><td><b>Orbital</b></td><td><b>Inner (hot)</b> → <b>Habitable</b> → <b>Outer (cold)</b> → <b>Deep space</b></td><td><b>distance from the STAR</b> — corona heat close in, and starlight falling to nothing far out. <b class="g">Three live consumers</b> <em>(corrected — see below)</em></td></tr>
+<tr><td><b>Surface</b></td><td><s>one band</s></td><td>the terrain does this job instead (<code>Open</code> / <code>Cover</code> / <code>Rough</code>)</td></tr>
+</table></div>
+
+<div class="warnbox" style="margin-top:12px"><b>⚠ CORRECTION — you asked when low orbit, high orbit and deep space come into play. The answer is that two of those three never did, and I had the axis wrong.</b><br><br>
+I wrote <em>Low → High → Deep space</em> without checking whether anything reads it. Nothing does. <b>Nothing about a hull changes between low orbit and high orbit</b> — there is no gravity-well rule for going to warp, no altitude-dependent hazard, no structural difference. By the rule this campaign has applied to seven other doors, that made it <b>a dial writing nothing</b>: exactly the bug I have been flagging everywhere else, in my own work.<br><br>
+<b>And altitude is not even unpriced — it is priced somewhere else.</b> <code>OrbitMath.LowOrbitRadius</code> is <em>one fixed altitude</em> (planet radius × 1.1) that ships park at, and <code>FuelCostToOrbit</code> already charges real Tsiolkovsky fuel to reach a higher one. So altitude costs <b>fuel on the launch</b> — the <b>Logistical</b> door's bill, not the chassis's. Charging for it here as well would have been double-counting.<br><br>
+<b class="g">The axis that DOES belong to the chassis is distance from the STAR</b>, because that is what decides what a hull must survive and whether its power source works at all. It has <b>three consumers already running</b>:
+<div class="scroll"><table class="t">
+<tr><th>What already reads distance-from-star</th><th>Where</th><th>What it means for a chassis</th></tr>
+<tr><td>Every star gets a <b>permanent corona</b> — heat damage following real radiative flux (∝&nbsp;1/dist²) from the star's surface outward, countered by a <code>HazardResistanceAtb</code> <b>component</b></td><td><code>StarSystemFactory:62</code> → <code>SpaceHazardFactory.CreateStarCorona</code></td><td><b class="g">A real requirement close in</b> — an inner-system hull must carry heat resistance or it cooks. Cradle-to-grave already: research → build → install → lose it.</td></tr>
+<tr><td><b>Solar output attenuates with distance</b> (<code>AttenuatedForDistanceList</code>)</td><td><code>EnergySolarGenProcessor:60</code></td><td><b class="g">Your power choice is forced by where you operate</b> — panels out past the habitable band produce nothing, so you carry a reactor and its fuel.</td></tr>
+<tr><td><b>A body's base temperature</b> is computed from its star and orbit</td><td><code>SystemBodyFactory:145</code></td><td>The same axis the surface environment already reads.</td></tr>
+</table></div>
+<b>🔑 And orbital turns out to be the ASYMMETRIC one — which is the interesting part.</b> Only the <b>hot</b> end taxes the <b>frame</b>. Cold and dark are <b>structurally free</b> — vacuum insulates — so their cost lands on <b>power and endurance</b> instead. <b>Same axis, two different doors</b>, and the page now says so rather than inventing a frame multiplier for the cold bands. Click <b>Orbital</b> and then <b>Outer</b> or <b>Deep space</b> and the readout tells you the frame pays nothing and why.</div>
+
+<div class="okbox" style="margin-top:12px"><b>✅ And the dial for it is ALREADY BUILT — as a first-class blueprint feature, in exactly the right shape.</b> <code>ComponentTemplatePropertyBlueprint</code> supports <code>GuiHint.GuiSelectionMinMaxRange</code> with two companion fields:<br>
+• <code>PairedPropertyName</code> — <em>"the Name of the partner property (the upper bound when this property is the lower bound)"</em><br>
+• <code>MaxRangeFormula</code> — <em>"maximum allowed gap between this property's value and its partner's value (e.g. <code>TechData('tech-infra-gravity-range') * 2 * 9.81</code>)"</em><br><br>
+<b>A band with a floor, a ceiling, and a TECH-DRIVEN CAP on how wide it may be.</b> That is the operating envelope exactly — including the part I would have had to invent, which is what stops "works everywhere" being free.</div>
+<div class="warnbox"><b>🔴 And it is used on exactly ONE template, where it is free.</b> The <code>infrastructure</code> template declares a <b>gravity band</b> (8.8 → 10.8 m/s²) and a <b>pressure band</b> (0.9 → 1.1 atm), each with tech-widened ends: <code>tech-infra-gravity-range</code> · <code>-min-extension</code> · <code>-max-extension</code>, and the same three for pressure. <b>Six real technologies exist to widen a colony's operating envelope.</b> And <code>infrastructure</code>'s <code>Mass</code> is the constant <code>1000</code> — so <b>widening the envelope costs nothing</b>, which is the Industrial door's finding arriving here from a different direction.</div>
+<p class="sub" style="margin-top:11px">🔑 <b>So "different levels and different complexities" needs almost nothing built.</b> <b>Levels</b> = the band, using a range dial that already exists with a tech-capped width. <b>Complexity</b> = the size slider plus what you mount — which the door already covers, and which is why a crop-duster and a strike fighter are the same chassis at different settings. <b>What has to be ADDED is: bands for the four environments that do not have them, an envelope cost, and the two missing environments themselves.</b></p>
+<div class="okbox"><b>✅ And the envelope is where the honest trade lives — this is the door's second real decision, beside size.</b> A submarine rated <em>shallow only</em> is cheap and dies at depth. One rated <em>surface through abyssal</em> works anywhere and pays for it in structure, because a wide envelope means surviving the worst of every band. <b>Narrow and cheap, or broad and expensive</b> — and <code>MaxRangeFormula</code> means <b>research sets how broad you are allowed to go at all</b>, so an early faction physically cannot build the boat that goes everywhere. 🔒 Same shape as everything else in this designer: <b>a split dial whose width is what you pay for.</b></p>
+<p class="sub" style="margin-top:8px">🔑 <b>One consequence worth stating, because it is the payoff for aircraft specifically.</b> The top of the atmospheric stack <b>borders orbital</b>. A chassis whose envelope spans <em>near-space → low orbit</em> is a <b>spaceplane</b> — it can take off from a surface and reach orbit — and that is the thing the game currently needs a <code>LaunchComplexAtb</code> pad for. <b>So the envelope axis is also how a single-stage-to-orbit craft becomes expressible</b>: not a new mechanic, a wide band.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>② UNIT or INFRASTRUCTURE — and it is a sharper split than it looks</h2>
+<p class="big">Two values, and they differ on almost everything the engine cares about:</p>
+<div class="scroll"><table class="t">
+<tr><th></th><th>UNIT</th><th>INFRASTRUCTURE</th></tr>
+<tr><td><b>Moves?</b></td><td>yes — carries locomotion or a drive</td><td>no — it is a <b>place</b></td></tr>
+<tr><td><b>Budget currency</b></td><td><b>mass</b> or <b>carry-strength</b> — what it can lift and haul</td><td><b>volume</b> — what will fit inside</td></tr>
+<tr><td><b>Can it be captured?</b></td><td>no — it is destroyed</td><td><b class="g">yes</b> — the planetary capture chain already does this</td></tr>
+<tr><td><b>Does it employ people?</b></td><td>crew — they travel with it</td><td><b>jobs</b> — the colony's workforce fills it <s>the Civic door's dead wire</s></td></tr>
+<tr><td><b>Grave rung</b></td><td>dies whole</td><td>bombarded, damaged per-component, <b>rebuilt in place</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>And that last row but one is the payoff.</b> The Civic door found the morale model's <b>employment term — its widest factor, ±40 points — is permanently zero because nothing declares a job.</b> Under this split, <b>"declares jobs" is what INFRASTRUCTURE means.</b> A unit has crew that travels with it; a place has posts that the local workforce fills. <b>So the unit/infrastructure choice is the natural producer for the missing employment wire</b> — which makes two doors' findings into one change.</p>
+<div class="okbox">✅ <b>The currency split also resolves something the first derivation flagged and could not explain.</b> It found that <em>"structure"</em> and <em>"footprint"</em> are the same currency under two names — both assemblers sum <code>VolumePerUnit</code>. Now it is obvious <b>why</b>: they are both <b>infrastructure</b>, and infrastructure budgets in volume. <b>Two names collapse to one because the axis they differed on was never currency — it was environment.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>③ SUBSTRATE — expansive, and every option has to win an axis outright</h2>
+<p class="big"><b>Your ruling: this is a sci-fi game that should cover anything and everything, so substrate should be expansive with distinct options.</b> Agreed — with one constraint carried over from the Power door, because it is what stops "expansive" becoming "cluttered": <b>every option behind a door must win at least one axis outright, or it is not an option, it is noise.</b> Eight substrates, each distinct on the requirement it imposes:</p>
+<div class="scroll"><table class="t">
+<tr><th>Substrate</th><th>Power</th><th>Feeding</th><th>Who runs it</th><th>Seal</th><th>Damage is fixed by</th><th>The axis it wins OUTRIGHT</th></tr>
+<tr><td><b>Mechanical</b></td><td>reactor for energy weapons</td><td>—</td><td><b>crew</b></td><td>needs one</td><td>materials, at a yard</td><td><s>the baseline everything is measured against</s></td></tr>
+<tr><td><b>Organic</b></td><td>— it metabolises</td><td>🔑 <b>biomass</b></td><td>itself</td><td>needs one</td><td><b>regenerates</b></td><td><b class="g">the only one that EATS</b> — and the only one <b>grown</b> rather than built</td></tr>
+<tr><td><b>Synthetic</b></td><td>reactor</td><td>—</td><td><b>nobody</b></td><td><b class="g">immune</b></td><td>materials</td><td><b class="g">a machine with no occupants</b> — needs no air, ever</td></tr>
+<tr><td><b>Cybernetic</b></td><td>reactor</td><td>partial biomass</td><td>reduced crew</td><td>needs one</td><td>both</td><td><b class="g">the only one needing power AND food</b> — pays twice, and gets both upsides</td></tr>
+<tr><td><b>Crystalline</b></td><td>— stores its own charge</td><td>—</td><td>nobody</td><td>immune</td><td><b>re-grown, slowly</b></td><td><b class="g">needs NOTHING to sit there</b> — no power, no food, no crew. The derelict, the sleeper, the monolith</td></tr>
+<tr><td><b>Nanite</b></td><td>reactor, <b>continuous</b></td><td>—</td><td>nobody</td><td>immune</td><td>🔑 <b>self-repairs in the field</b></td><td><b class="g">the only one that heals without a yard</b> — and the only one <b>reconfigurable after build</b></td></tr>
+<tr><td><b>Energy-bound</b></td><td>🔴 <b>continuous, or it CEASES</b></td><td>—</td><td>nobody</td><td>immune</td><td>re-forms instantly</td><td><b class="g">indestructible while powered</b> — and gone the instant it is not. The purest risk/reward in the game</td></tr>
+<tr><td><b>Psionic</b></td><td>—</td><td>—</td><td>🔑 <b>one seated leader</b></td><td>needs one</td><td>re-forms with its operator</td><td><b class="g">the only one that needs a PERSON rather than a crew</b> — it hooks the Command Berth</td></tr>
+</table></div>
+<div class="okbox"><b>✅ And here is why this list is affordable: seven of the eight distinguishing requirements hook a system that ALREADY EXISTS.</b><br>
+• <b>crew</b> → <code>ManpowerTools.ResolveBuild</code> and the scarce workforce pool — <b>live</b><br>
+• <b>reactor for energy weapons</b> → <code>WeaponSupply.PowerDraw_W</code> / <code>ReactorOutput_W</code> — <b>live, and already domain-neutral</b><br>
+• <b>continuous power or it dies</b> → <code>EnergyGenProcessor.EnableFuelExhaustion</code> + <code>IsFuelStarved</code> — <b>wired this week</b><br>
+• <b>biomass</b> → <code>SustenanceProcessor</code> → <code>FoodProductionAtbDB</code>, food supply and shortage → morale — <b>live and tested</b><br>
+• <b>a seated leader</b> → <code>CommandBerthAtb</code> + <code>CommandBerthDB.GetWorkingBerth</code> — <b>live</b>, and the Command door found it the best-built new component in the designer<br>
+• <b>self-repair in the field</b> → <code>GroundConstructorAtb</code> / the field <code>constructor</code> — <b>live</b><br>
+• <b>environmental seal</b> → <code>sealed-systems</code> → <code>EnvironmentalResistance</code> — <b>live</b><br>
+🔴 <b>Only two things are genuinely new: a biomass upkeep, and "grown" as an industry type beside "manufactured".</b> Everything else is a table saying which existing check applies.</div>
+<div class="warnbox"><b>⚠ Two I deliberately did NOT include, and why — this is the rule doing its job.</b> <b>"Exotic / other-dimensional"</b> sounds excellent and has <b>no distinct requirement</b>: every profile I could write for it duplicates Crystalline or Energy-bound. <b>"Ancient / precursor"</b> is a <em>provenance</em>, not a substrate — it belongs to the Site Engine as a thing you <em>find</em>, not to the designer as a thing you <em>pick</em>. 🔒 <b>Expansive means "as many as win an axis", not "as many as we can name."</b> Add the ninth the moment something reads it.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔒 "Any size" — and the decision it forces</h2>
+<p class="big"><b>A Death Star is an average station to one faction and an outpost to another.</b> Two consequences, and the second one is the real work.</p>
+<div class="lay"><h4>Consequence 1 — absolute size classes are gone</h4><p>There is no "Light hull" and no "Heavy hull" as a <em>thing</em>. There is a <b>continuous size slider</b> and a name whose scale word is computed <b>relative to what your faction already builds</b>. The same 10 million tonnes reads <em>Colossal</em> to a young faction and <em>Light</em> to an old one. <b>The shipped light/medium/heavy hulls become three saved presets, not three template tiers</b> — which is also what makes them survivable as data: nothing breaks, they just stop being the only options.</p></div>
+<div class="lay" style="border-left-color:var(--warn)"><h4>Consequence 2 — the budget EXPONENT becomes a real ruling</h4><p>The shipped hulls follow <code>budget = 1128 × size<sup>0.5</sup></code> (light and heavy to within 1%). That was fitted across a <b>50× range</b>. Your ruling asks it to hold across <b>fifteen orders of magnitude</b>, and the exponent decides whether that is possible:</p></div>
+<div class="scroll"><table class="t">
+<tr><th>Exponent</th><th>What it means physically</th><th>Payload fraction at 10<sup>12</sup> kg</th><th>Ladder test</th><th>Fits the shipped hulls?</th></tr>
+<tr><td><b>1.0</b> — linear</td><td>structure is a fixed <em>fraction</em>, at any scale</td><td><b>900%</b> <s>budget exceeds the frame — nonsense at scale</s></td><td><b class="g">✅ flat</b></td><td>🔴 <b class="r">no</b> — it would make all three hulls ×9</td></tr>
+<tr><td><b>2/3</b> — surface ÷ volume</td><td>the true square-cube law</td><td><b class="a">1.9%</b></td><td><b class="g">✅ falls</b></td><td><b class="a">partly</b></td></tr>
+<tr><td><b>0.5</b> — √ <s>what ships</s></td><td>steeper than physics — deliberately punishing at scale</td><td><b>0.09%</b></td><td><b class="g">✅ falls</b></td><td><b class="g">✅ light + heavy to 0.9%</b></td></tr>
+</table></div>
+<div class="okbox"><b>✅ And the answer that falls out is the one you described, arrived at from the arithmetic.</b> Keep <b>√</b> — the data votes for it — and make <b>structural efficiency a research axis with an enormous range.</b> Then:<br><br>
+<b>a faction's largest feasible build ≈ 10<sup>4</sup> × efficiency²</b><br><br>
+At the shipped efficiency of <b>1,128</b>, the biggest thing you can hold together is about <b>1.3 × 10<sup>10</sup> kg</b> — a large asteroid station. At <b>100,000</b> it is <b>10<sup>14</sup> kg</b>. To make a genuine planet-killer feasible you need roughly <b>10<sup>7</sup></b> — about <b>nine thousand times</b> the shipped figure, which is a whole tech tree, not a slider nudge. 🔑 <b>So "a Death Star is average to one faction and impossible to another" is not a special case to code — it IS the efficiency gap between them.</b> Megastructures are gated by <b>materials science</b>, and the gate is a curve rather than a wall: every point of efficiency makes the next order of magnitude a little less absurd.</div>
+<p class="sub" style="margin-top:11px">⚠ <b>Flagged honestly:</b> the √ law is <b>measured over a 50× range and extrapolated over fifteen orders of magnitude.</b> That is a real leap and the page should say so rather than hide it. What makes me comfortable recommending it anyway is that the extrapolation <b>fails in the safe direction</b> — it makes megastructures too hard rather than free — and the efficiency research is the dial that buys them back at a pace you control. <b>An exponent that failed the other way would need a cap, and a cap is what your ruling forbids.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Build one</h2>
+<p class="sub">Environment, then unit-or-infrastructure, then substrate — the order the assembler asks in. The <b>requirement panel</b> is generated from your choices; the <b>scale word in the name is relative to your faction's own reach</b>, which the efficiency slider sets.</p>
+<div class="build">
+<div class="bsec"><p class="blab">① Environment — where it has to function</p><div class="chips">
+<button class="chip" type="button" data-v="orbital" aria-pressed="false">Orbital / vacuum</button>
+<button class="chip" type="button" data-v="surface" aria-pressed="true">Planetary surface</button>
+<button class="chip" type="button" data-v="water" aria-pressed="false">Open water 🔴</button>
+<button class="chip" type="button" data-v="air" aria-pressed="false">Atmospheric 🔴</button>
+<button class="chip" type="button" data-v="under" aria-pressed="false">Subterranean 🔴</button></div>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="bandsec"><p class="blab">② Operating level — which band of that environment</p><div class="chips" id="bandchips">
+<button class="bchip" type="button" data-b="0" aria-pressed="true">—</button>
+<button class="bchip" type="button" data-b="1" aria-pressed="false">—</button>
+<button class="bchip" type="button" data-b="2" aria-pressed="false">—</button>
+<button class="bchip" type="button" data-b="3" aria-pressed="false">—</button></div>
+<p class="sub" id="bnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">③ Is it a unit or infrastructure</p><div class="chips">
+<button class="kchip" type="button" data-k="unit" aria-pressed="true">Unit — it moves</button>
+<button class="kchip" type="button" data-k="infra" aria-pressed="false">Infrastructure — it is a place</button></div>
+<p class="sub" id="gnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">④ Substrate — what it is made of</p><div class="chips">
+<button class="schip" type="button" data-s="mech" aria-pressed="true">Mechanical</button>
+<button class="schip" type="button" data-s="organic" aria-pressed="false">Organic</button>
+<button class="schip" type="button" data-s="synth" aria-pressed="false">Synthetic</button>
+<button class="schip" type="button" data-s="cyber" aria-pressed="false">Cybernetic</button>
+<button class="schip" type="button" data-s="crystal" aria-pressed="false">Crystalline</button>
+<button class="schip" type="button" data-s="nanite" aria-pressed="false">Nanite</button>
+<button class="schip" type="button" data-s="energy" aria-pressed="false">Energy-bound</button>
+<button class="schip" type="button" data-s="psionic" aria-pressed="false">Psionic</button></div>
+<p class="sub" id="snote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<div class="sl" id="w1"><div class="slh"><span id="n1">Frame size</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="18" aria-label="frame size"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Structural efficiency — your faction's materials science</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="0" aria-label="structural efficiency"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div></div>
+<div class="sl" id="w3"><div class="slh"><span id="n3">Operating envelope — how many bands it works in</span><span id="s3"></span></div><input type="range" id="d3" min="0" max="100" value="0" aria-label="operating envelope"><div class="ends"><span id="e3a"></span><span id="e3b"></span></div></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix" checked> <span>The derived door — uncheck to see what ships today <b>(slices C1–C6)</b></span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4">Part mount</i><b id="v_a4"></b></div>
+<div class="num fixed"><i id="l_a5">Runs on</i><b id="v_a5"></b></div>
+<div class="num fixed"><i>Build cost</i><b id="v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">The requirement set this chassis DECLARES</p>
+<p class="muN">What the assembler would flag, generated from <b>environment × kind × substrate</b>. Green = the check exists today. Amber = built as a stat, never gated. Red = does not exist yet.</p>
+<div class="bars" id="reqs"></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">Scale is RELATIVE — this is your size ruling, live</p>
+<p class="muN">The same frame reads differently depending on what your faction can already hold together. Drag the efficiency slider and watch the name change without touching the size.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">Your faction's reach</i><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">This frame, relative to it</i><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Payload fraction</i><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Exists today?</i><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Three things to try.</b> ⓪ <b>Open water + Unit</b>, then drag the <b>envelope</b> slider: a shallow-only boat is cheap, a surface-to-abyssal boat costs multiples of it — and <b>research caps how wide you are allowed to go.</b> ① <b>Orbital + Infrastructure</b>, size to the top, then drag <b>efficiency</b> from bottom to top: the frame never changes and the name goes from <em>beyond your reach</em> to <em>Light</em>. <b>That is "an average station to one faction, an outpost to another", and it is one number.</b> ② <b>Surface + Unit + Psionic</b>: the requirement panel drops power and crew and asks for <b>a seated leader</b> — which is the Command Berth, already built.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>🔴 The finding that survives both rederivations: the rules are right, nothing declares them</h2>
+<p class="big">Every assembler already takes the chassis as its <b>first argument</b> and refuses without one. That sequencing was already correct. What is thin is what the chassis <em>says</em> — so each assembler contains the rules its author happened to write:</p>
+<div class="scroll"><table class="t">
+<tr><th>Assembler</th><th>Cell it serves</th><th>Gates it hard-codes</th></tr>
+<tr><td><code>GroundUnitAssembly.Compute</code></td><td>surface × unit</td><td><b>four</b> — carry budget · per-item cap · <b>power supply</b> · <b>ammo magazine</b></td></tr>
+<tr><td><code>BuildingAssembly.Compute</code></td><td>surface × infrastructure</td><td><b>one</b> — volume budget</td></tr>
+<tr><td><code>StationAssembly.Compute</code></td><td>orbital × infrastructure</td><td><b>one</b> — volume budget</td></tr>
+<tr><td><code>ShipDesign.Recalculate</code></td><td>orbital × unit</td><td><b>one</b> — mass budget</td></tr>
+</table></div>
+<div class="warnbox"><b>🔴 So a surface unit with an energy weapon and no reactor is REFUSED, and a SHIP with the same weapon and no reactor is ACCEPTED.</b> Same rule, same weapon, one cell of the grid. <b>Not a decision — an absence.</b> ✅ And the fix is a call-site change, because the checks are already domain-neutral: <code>WeaponSupply.PowerDraw_W(ComponentDesign)</code>, <code>ReactorOutput_W</code>, <code>MagazineCapacity_kg</code> and <code>DrawsAmmo</code> all take a plain component design and care nothing about where it is mounted. <b>They sit in <code>GroundCombat/</code> and are called by exactly one assembler.</b> Add the requirement set as a fourth member of <code>IChassisAtb</code> and every other cell inherits them.</div>
+<div class="warnbox"><b>🔴 And one more, surfaced by the substrate axis rather than caused by it:</b> all four surface frames author <code>CrewReq: "0"</code>. So <em>"mechanical things need people"</em> is a rule with <b>no input</b> on the cell where mechanical-versus-organic is most interesting — <b>a battle droid and a conscript currently cost the same zero people.</b> A one-number data fix on four templates, but it is why substrate has less immediate bite on surface units than it should.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔑 The budget is free on all four — and the law is already in the data</h2>
+<p class="big">This survives from the first derivation unchanged, and it is what the size slider plugs into.</p>
+<div class="scroll"><table class="t">
+<tr><th>Chassis</th><th>Budget dial</th><th>Its <code>Mass</code> formula</th><th>Costs?</th></tr>
+<tr><td><b>ship-hull</b></td><td><code>Mass Budget</code> 1,000 → <b>100,000,000</b></td><td><code>PropertyValue('Hull Mass')</code></td><td>🔴 <b class="r">NO</b></td></tr>
+<tr><td><b>station-chassis</b> · <b>building-foundation</b></td><td><code>Structural</code> / <code>Footprint Budget</code> 500 → 10,000</td><td><code>100000</code> / <code>50000</code> — <b>constants</b></td><td>🔴 <b class="r">NO</b></td></tr>
+<tr><td><b>surface frames ×4</b></td><td><code>BaseStrength</code> 1 → 1,000</td><td><code>20 / 4000 / 2500 / 5</code> — <b>constants</b></td><td>🔴 <b class="r">NO</b></td></tr>
+</table></div>
+<div class="warnbox"><b>🔴 The wall is real and switched ON</b> — <code>ShipDesign.cs:285-290</code> sets <code>IsValid = false</code>, <code>PulsarMainWindow.cs:144</code> arms the flag, and <b>49 hull references</b> mean ships mount hulls today. <b>Every "and it costs mass" fix this campaign shipped is enforced against a free ceiling.</b> ⚠ Plus the budget <b>adds across hulls</b> (<code>hullBudget += hull.MassBudget * count</code>, no "exactly one hull" rule) — two light hulls grant 50,000 kg where one medium grants 90,000, so <b>stacking cheap frames beats buying the right one.</b></div>
+<div class="okbox" style="border-left-color:var(--ac)"><b>budget = 1128 × √(frame size)</b> — fitted to nothing; it is what the light and heavy shipped hulls already are, to within <b>0.9%</b>. Light 500→25,000 (predicts 25,222) · Heavy 25,000→180,000 (predicts 178,383) · Medium is the outlier at 25% low.<br><span style="color:var(--ink3)">The <b>eighth</b> place one law does the work in this designer — and now also the thing that makes "any size" safe, because payload fraction <b>falls</b> as you scale.</span></div>
+<p class="sub" style="margin-top:11px"><b>Other findings that stand:</b> <code>BaseHP</code> is a free <b>10× toughness</b> multiplier on every surface frame (and under the derived door it scales with size instead, so it is priced by the same slider) · <code>Size</code> on a surface frame is <b>dead AND free</b> (documented as <em>"feeds transport carry-size"</em>, zero readers) · <code>TileFootprint</code> 1–40 is a <b>cost with no benefit</b>, so the minimum dominates · and <b>research is <code>"0"</code> on every chassis in the game</b> — which is exactly where the structural-efficiency axis belongs.</p>
+<div class="warnbox"><b>⚠ And the engine advises pulling the free lever, in three places.</b> <em>"raise the foundation Footprint Budget"</em> · <em>"raise the structure budget"</em> · <em>"Add an augment (e.g. power armour) or use a bigger frame."</em> 🔒 <b>Three helpful, accurate messages, each pointing at something free. A good error message is evidence about what its author expected to be costly.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Does it reproduce what exists — and what does it newly reach?</h2>
+<div class="scroll"><table class="t">
+<tr><th>Today</th><th>Environment</th><th>Kind</th><th>Substrate</th><th>Size</th><th></th></tr>
+<tr><td>Ship Hull ×3</td><td>Orbital</td><td>Unit</td><td>Mechanical</td><td>500 / 10,000 / 25,000 kg</td><td><b class="g">✅ presets, not tiers — budget emerges, light+heavy to 0.9%</b></td></tr>
+<tr><td>Human Frame</td><td>Surface</td><td>Unit</td><td>Mechanical</td><td>20 kg</td><td><b class="g">✅ exact</b></td></tr>
+<tr><td>Vehicle / Walker Frame</td><td>Surface</td><td>Unit</td><td>Mechanical</td><td>4,000 / 2,500 kg</td><td><b class="g">✅ exact</b></td></tr>
+<tr><td>Swarmling Frame</td><td>Surface</td><td>Unit</td><td>🔑 <b>Organic</b></td><td>5 kg</td><td>🔑 <b>its own description says "organism/drone" — the axis names a distinction the data was already reaching for</b></td></tr>
+<tr><td>Station Chassis</td><td>Orbital</td><td>Infra</td><td>Mechanical</td><td>100,000 kg</td><td><b class="g">✅ and the currency question dissolves</b></td></tr>
+<tr><td>Building Foundation</td><td>Surface</td><td>Infra</td><td>Mechanical</td><td>50,000 kg</td><td><b class="g">✅ same currency as the station, for the same reason</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:13px">🔑 <b>And what it newly reaches, using nothing but the three choices and the size slider:</b></p>
+<div class="scroll"><table class="t">
+<tr><th>The thing</th><th>Environment</th><th>Kind</th><th>Substrate</th><th>What makes it possible</th></tr>
+<tr><td>a hundred-tonne war-beast</td><td>Surface</td><td>Unit</td><td>Organic</td><td>the size slider + biomass instead of a reactor</td></tr>
+<tr><td>a battle droid legion</td><td>Surface</td><td>Unit</td><td>Synthetic</td><td>no crew, no seal — a genuinely different unit from a rifleman on the same frame</td></tr>
+<tr><td>a submarine</td><td><b>Open water</b></td><td>Unit</td><td>Mechanical</td><td>the environment cell — <b>and the ocean terrain + amphibious gate already exist</b></td></tr>
+<tr><td>an undersea base</td><td><b>Open water</b></td><td>Infra</td><td>Mechanical</td><td>same cell, volume currency</td></tr>
+<tr><td>a grown coral habitat</td><td>Surface</td><td>Infra</td><td>Organic</td><td>infrastructure that is fed and employs nobody</td></tr>
+<tr><td>a self-repairing swarm-hull</td><td>Orbital</td><td>Unit</td><td>Nanite</td><td>heals without a yard — hooks the field constructor</td></tr>
+<tr><td>a derelict monolith you find</td><td>any</td><td>Infra</td><td>Crystalline</td><td>needs nothing to sit there — the Site Engine's natural prize</td></tr>
+<tr><td>a mind-held vessel</td><td>Orbital</td><td>Unit</td><td>Psionic</td><td>needs <b>a seated leader</b>, not a crew — hooks the Command Berth</td></tr>
+<tr><td>a planet-killer</td><td>Orbital</td><td>Infra</td><td>Mechanical</td><td>🔑 <b>efficiency research, not a bigger template</b></td></tr>
+</table></div>
+<div class="okbox"><b>✅ Nine things, and not one of them needs a bespoke mechanic.</b> Three choices, one slider, and a requirement table that mostly points at checks the engine already runs. 🔒 <b>That is the test the north star actually sets</b> — <em>"the systems, taken to real depth and connected, let a player stage their own version of specific aspects of the great sci-fi universes"</em> — and it is met here by <b>separating two axes that were fused and adding one that was missing.</b></div>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>The rederived door: three choices — ENVIRONMENT × (UNIT | INFRASTRUCTURE) × SUBSTRATE — and two sliders (frame size · structural efficiency).</b> It reproduces all nine shipped chassis, dissolves the "four currencies" question, and reaches a large space of things that currently need a new template.</p>
+<p>🔑 <b>Your first ruling was a simplification, not an addition.</b> The old four-valued "domain" was <b>environment and unit-vs-infrastructure fused together</b> — which is why it had four values and no structure, and why <em>"structure"</em> and <em>"footprint"</em> looked like two currencies when they were one. <b>Split them and the four shipped chassis are the cells of a 2×2</b>, the empty cells are visible, and <b>open water is the one with a real claim: the map already has ocean regions that block any unit without <code>Amphibious</code>, and no chassis claims the environment.</b></p>
+<p>🔑 <b>Your second ruling — expansive substrate — is affordable because seven of the eight distinguishing requirements hook something already live:</b> crew → the manpower pool · reactors → <code>WeaponSupply</code> · continuous-power-or-death → the fuel gate wired this week · biomass → the food/sustenance chain · a seated leader → the Command Berth · field self-repair → the constructor · sealing → <code>EnvironmentalResistance</code>. <b>Genuinely new: a biomass upkeep, and "grown" as an industry type.</b> ⚠ And I held two candidates back — <em>exotic</em> (no distinct requirement; duplicates Crystalline or Energy-bound) and <em>ancient/precursor</em> (a provenance, not a substrate — it belongs to the Site Engine). <b>Expansive means "as many as win an axis."</b></p>
+<p>🔑 <b>Your third ruling kills absolute size classes and forces the exponent decision — and the answer is a good mechanic.</b> Keep <b>√</b> (the shipped hulls vote for it, to 0.9%), make <b>structural efficiency a research axis with an enormous range</b>, and then <b>a faction's largest feasible build ≈ 10<sup>4</sup> × efficiency²</b>. At the shipped 1,128 that is a large asteroid station; a planet-killer needs about <b>9,000× the efficiency</b> — a tech tree, not a slider nudge. <b>So "an average station to one faction, an outpost to another" is not a special case. It is the materials-science gap between them.</b> ⚠ Flagged: this extrapolates a law measured over a 50× range across fifteen orders of magnitude. It fails in the <b>safe</b> direction (too hard, not free) and the research dial buys it back at a pace you set — <b>an exponent that failed the other way would need a cap, and a cap is what your ruling forbids.</b></p>
+<p><b>Build order, with the one hard pairing unchanged:</b> <b>C1</b> the chassis declares its requirements (byte-identical if each declares what its assembler already checks — <b>and the ship immediately inherits the power + ammo gates</b>) · <b>C2</b> substrate, defaulting every template to Mechanical (byte-identical), then flip <code>swarm-frame</code> to Organic · <b>C3+C4 TOGETHER</b> the size slider <em>and</em> <code>CarrySizeOf</code> reading the frame's <code>Size</code> instead of the hard-coded type table — <b>C3 alone means one troop bay hauls six war-beasts</b> · <b>C5</b> price the budget and put efficiency on the research tree · <b>C6</b> the open-water cell, which is the cheapest new environment because its terrain and its gate already exist.</p>
+<p><b>Nothing here is blocked on a ruling any more</b> — your three answers closed both questions I had open. The only judgement left inside the door is the <b>medium hull</b>: forcing the √-law moves its budget 90,000 → 112,800 (+25%). <b>My recommendation, given "any size":</b> treat the three shipped hulls as <b>presets</b> and let the law govern, accepting the medium's +25% as a one-time calibration — because under your ruling they stop being tiers anyway, and keeping a bespoke exception for one preset is exactly the kind of restriction you are removing.</p>
+</div></footer>
+<script>
+
+// ── verbatim from installations.json + the four assemblers + the blueprint system ───────────────────────────
+//  ship-hull   Mass = Hull Mass (500..5e7) · Mass Budget 1e3..1e8  <- in NO cost formula
+//  surface frames  Mass = a CONSTANT (human 20 / vehicle 4000 / walker 2500 / swarm 5) -> NO size dial
+//              BaseStrength (the budget) · BaseHP · Size (ZERO readers) · Locomotion · CarryClass
+//  station     Mass = 100000 CONSTANT · Structural Budget 500..10000   <- free
+//  building    Mass = 50000  CONSTANT · Footprint Budget 500..10000    <- free · TileFootprint 1..40
+//  infrastructure  Mass = 1000 CONSTANT, and it carries the ONLY band dials in the game:
+//              Min/Max Gravity 8.8..10.8 · Min/Max Pressure 0.9..1.1, GuiHint GuiSelectionMinMaxRange,
+//              tech-widened by tech-infra-{gravity,pressure}-{range,min-extension,max-extension}  <- free
+//  THE BLUEPRINT SYSTEM ALREADY SUPPORTS THE ENVELOPE: ComponentTemplatePropertyBlueprint has
+//              PairedPropertyName ("the partner property, the upper bound when this is the lower")
+//              MaxRangeFormula   ("maximum allowed gap ... e.g. TechData('tech-infra-gravity-range')*2*9.81")
+//  THE LATENT LAW (light + heavy hulls to within 0.9%):  budget = 1128 * sqrt(frame size)
+//  THE GATES: GroundUnitAssembly 4 (carry · per-item · POWER · AMMO) · the other three 1 each.
+//              WeaponSupply.PowerDraw_W / ReactorOutput_W / MagazineCapacity_kg / DrawsAmmo all take a
+//              ComponentDesign -> ALREADY DOMAIN-NEUTRAL, called by exactly one assembler.
+const K_SHIP = 1128;                       // the shipped hulls' structural efficiency
+const LASER_KG = 10100, REACTOR_KG = 1500, RIFLE_CARRY = 10;
+
+// ── ① ENVIRONMENT × ② BAND. Bands are the "different levels" axis; each sets what must be survived.
+const ENV = {
+  // ⚠ CORRECTED after the developer asked "when does low/high orbit come into picture?" — it doesn't.
+  // ALTITUDE is already modelled and already COSTED, on the other side of the ledger: OrbitMath.LowOrbitRadius
+  // is one fixed altitude (planet radius x 1.1) that ships PARK at, and FuelCostToOrbit already charges
+  // Tsiolkovsky fuel to reach a higher one. That bill lands on the LAUNCH, i.e. the Logistical door — nothing
+  // about the hull changes between low and high orbit. Pricing it here too would double-count it.
+  // DISTANCE FROM THE STAR is the axis that belongs to the chassis, because it has three live consumers:
+  //   StarSystemFactory:62  every star gets a permanent corona (heat damage ~ 1/dist^2, countered by
+  //                         HazardResistanceAtb — a real component requirement close in)
+  //   EnergySolarGenProcessor:60  solar output attenuates with distance (AttenuatedForDistanceList)
+  //   SystemBodyFactory:145 BaseTemperature = CalculateBaseTemperatureOfBody(sun, orbitDB)
+  orbital: {label:'Orbital / vacuum', exists:true, def:1,
+            bands:['Inner (hot)','Habitable','Outer (cold)','Deep space'],
+            survive:'hard vacuum · radiation · corona heat close in · no starlight far out',
+            has:'the whole space sim · SpaceHazardDB (every star gets a corona) · HazardResistanceAtb · solar attenuation · BaseTemperature'},
+  surface: {label:'Planetary surface', exists:true,
+            bands:['Surface'],
+            survive:'gravity · pressure · atmosphere · terrain',
+            has:'Gravity · Gravity/PressureToleranceAtb · GroundTerrainClass · EnvironmentalResistance'},
+  water:   {label:'Open water', exists:false, half:true,
+            bands:['Surface','Shallow','Deep','Abyssal'],
+            survive:'submersion · crush pressure at depth',
+            has:'⚠ HALF — ocean is a real RegionFeatureType and HexPathfinder already blocks it unless Amphibious'},
+  air:     {label:'Atmospheric', exists:false, half:true,
+            bands:['Terrain-following','Medium','High','Near-space'],
+            survive:'staying up · thin air at altitude',
+            has:'⚠ THIN — GroundLocomotion.Hover exists; true flight does not'},
+  under:   {label:'Subterranean', exists:false,
+            bands:['Shallow','Deep','Deep-bedrock'],
+            survive:'overburden · no line of sight',
+            has:'🔴 nothing — but a buried thing is immune to orbital bombardment, which IS modelled'}
+};
+// how hard each band is on the frame — the multiplier a chassis pays to work THERE (illustrative, flagged)
+const BANDCOST = {
+  // 🔑 ORBITAL IS THE ASYMMETRIC ONE, and saying so is the honest answer. Only the HOT end taxes the FRAME
+  // (corona heat is real damage a hull must resist). Cold and dark cost nothing structurally — vacuum insulates —
+  // so their bill lands on POWER and ENDURANCE instead: a solar array's output collapses (attenuation), which
+  // forces a reactor and its fuel. Same axis, two different doors. Inventing a frame multiplier for the cold
+  // bands would be exactly the dial-that-writes-nothing this campaign has flagged in seven doors.
+  orbital:[1.45, 1.0, 1.0, 1.0], surface:[1.0],
+  water:[1.0, 1.6, 3.2, 7.0],          // crush pressure rises hard
+  air:[1.0, 1.25, 1.9, 3.4],           // thinning air; the top band borders orbital
+  under:[1.0, 1.9, 4.2]                // overburden
+};
+// ── ③ UNIT | INFRASTRUCTURE — the currency + what it employs + what its grave rung is
+const KIND = {
+  unit:  {label:'Unit', cur:e=>e==='surface'?'carry-strength':'kg of mass', kindName:e=>e==='surface'?'Carry':'Mass',
+          mount:e=>e==='surface'?'GroundUnit':'ShipComponent',
+          employs:'crew — they travel with it', grave:'dies whole', capture:'no — destroyed',
+          note:'It moves, so it carries locomotion or a drive, and its budget is what it can LIFT.'},
+  infra: {label:'Infrastructure', cur:()=>'volume', kindName:()=>'Volume',
+          mount:e=>e==='orbital'?'Station':'PlanetInstallation',
+          employs:'JOBS — the local workforce fills them', grave:'bombarded, repaired in place', capture:'yes',
+          note:'It is a PLACE, so its budget is what will FIT inside — and it declares JOBS, which is the Civic door’s missing producer.'}
+};
+// ── ④ SUBSTRATE — expansive, and every option wins an axis outright
+const SUB = {
+  mech:    {label:'Mechanical', power:'reactor', feed:false, run:'crew',   seal:true,  fix:'materials at a yard',
+            wins:'the baseline', runsOn:'fuel + people',
+            note:'Metal and crew. Energy weapons need a reactor; people run it; repaired with materials at a yard.'},
+  organic: {label:'Organic', power:'none', feed:true, run:'itself', seal:true, fix:'regenerates',
+            wins:'the only one that EATS — and the only one GROWN rather than built', runsOn:'biomass',
+            note:'It metabolises instead of drawing power and it IS its own crew. Needs feeding; heals rather than being repaired.'},
+  synth:   {label:'Synthetic', power:'reactor', feed:false, run:'nobody', seal:false, fix:'materials',
+            wins:'a machine with no occupants — needs no air, ever', runsOn:'fuel',
+            note:'A drone or automaton. Needs a reactor like a machine, needs NOBODY aboard, and does not care about atmosphere.'},
+  cyber:   {label:'Cybernetic', power:'reactor', feed:true, run:'reduced crew', seal:true, fix:'both',
+            wins:'the only one needing power AND food — pays twice, gets both upsides', runsOn:'fuel + biomass + people',
+            note:'Flesh and metal. It is the only substrate that pays both bills, and the only one that can be repaired OR healed.'},
+  crystal: {label:'Crystalline', power:'none', feed:false, run:'nobody', seal:false, fix:'re-grown, slowly',
+            wins:'needs NOTHING to sit there — the derelict, the sleeper, the monolith', runsOn:'nothing',
+            note:'A charged lattice with no moving parts. No power, no food, no crew — it simply endures. Slow to repair.'},
+  nanite:  {label:'Nanite', power:'continuous', feed:false, run:'nobody', seal:false, fix:'self-repairs in the field',
+            wins:'the only one that heals without a yard — and the only one reconfigurable after build', runsOn:'continuous power',
+            note:'A cloud of machines holding a shape. It mends itself wherever it stands, and can be re-tasked after it is built.'},
+  energy:  {label:'Energy-bound', power:'or-it-ceases', feed:false, run:'nobody', seal:false, fix:'re-forms instantly',
+            wins:'indestructible while powered — and GONE the instant it is not', runsOn:'power, or nothing at all',
+            note:'A coherent field. Cut the power and it does not break down — it stops existing. The purest risk/reward in the game.'},
+  psionic: {label:'Psionic', power:'none', feed:false, run:'a seated leader', seal:true, fix:'re-forms with its operator',
+            wins:'the only one needing a PERSON rather than a crew — it hooks the Command Berth', runsOn:'one mind',
+            note:'Held in shape by a will. It needs no fuel and no complement — it needs the right individual, seated.'}
+};
+
+let env='surface', bandIx=0, kind='unit', sub='mech';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);
+  if(a>=1e15)return (v/1e15).toFixed(2)+'P'; if(a>=1e12)return (v/1e12).toFixed(2)+'T';
+  if(a>=1e9)return (v/1e9).toFixed(2)+'G'; if(a>=1e6)return (v/1e6).toFixed(2)+'M';
+  if(a>=1e3)return (v/1e3).toFixed(1)+'k'; return v.toFixed(a<10?2:0);}
+function kg(v){const a=Math.abs(v);
+  if(a>=1e12)return (v/1e9).toFixed(0)+' Mt'; if(a>=1e9)return (v/1e6).toFixed(0)+' kt';
+  if(a>=1e6)return (v/1e6).toFixed(2)+' kt'; if(a>=1000)return (v/1000).toFixed(1)+' t'; return v.toFixed(0)+' kg';}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+function unmap(v,lo,hi){return 100*Math.log(v/lo)/Math.log(hi/lo);}
+function band(v,cuts){let i=0;while(i<cuts.length&&v>=cuts[i])i++;return i;}
+
+// the shipped anchor per cell, and the size range — ENORMOUS, because "hulls can be any size"
+const SIZE = {orbital:{lo:100, hi:1e18}, surface:{lo:1, hi:1e12},
+              water:{lo:100, hi:1e12}, air:{lo:50, hi:1e10}, under:{lo:1000, hi:1e12}};
+// The ANCHOR is the real shipped chassis for that cell (⚠ the three new environments' anchors are invented
+// and flagged as such — there is no shipped submarine to anchor on).
+const ANCHOR = {orbital:{unit:10000, infra:100000},   // medium hull · station-chassis
+                surface:{unit:20,    infra:50000},    // human-frame · building-foundation
+                water:{unit:5000,    infra:50000},    // ⚠ invented
+                air:{unit:3000,      infra:20000},    // ⚠ invented
+                under:{unit:8000,    infra:50000}};   // ⚠ invented
+function anchor(){ return ANCHOR[env][kind]; }
+function anchorIsReal(){ return env==='orbital' || env==='surface'; }
+// Every REAL shipped chassis size, so each one is exactly expressible. A log slider spanning sixteen orders of
+// magnitude in 100 integer steps moves ~1.45x per step, so without this the 500 kg light hull lands at 437 kg and
+// reads as a size nothing in the game actually is. Snapping only AT a preset's own step changes nothing else.
+const PRESETS = {orbital:{unit:[500,10000,25000], infra:[100000]},     // light/medium/heavy hull · station chassis
+                 surface:{unit:[5,20,2500,4000],  infra:[50000]},      // swarm/human/walker/vehicle · building
+                 water:{unit:[5000],  infra:[50000]},                  // ⚠ invented, no shipped counterpart
+                 air:{unit:[3000],    infra:[20000]},                  // ⚠ invented
+                 under:{unit:[8000],  infra:[50000]}};                 // ⚠ invented
+function snapSize(d, lo, hi){
+  for(const p of (PRESETS[env]||{})[kind]||[])
+    if(Math.round(unmap(p,lo,hi))===d) return p;
+  return logmap(d,lo,hi);
+}
+
+// ── RELATIVE SCALE: "a Death Star is an average station to one faction and an outpost to another."
+//    A faction's largest FEASIBLE build follows from the law: payload fraction = eff/sqrt(size), and a
+//    build stops being worth making below ~1% payload => reach ≈ 1e4 * eff².  So the scale word compares
+//    this frame to THAT, not to any absolute table.
+function reachOf(eff){ return 1e4*eff*eff; }          // the FEASIBILITY ceiling: can it be held together at all
+// What this faction TYPICALLY builds. It scales as efficiency² — the SAME power as the ceiling — so
+// "what we normally make" and "what we could possibly hold together" stay a fixed ratio apart.
+function refOf(eff){ const r=eff/K_SHIP; return anchor()*r*r; }
+const SCALE=['Trivial','Light','','Heavy','Colossal'];
+function scaleWord(size,ref){
+  const r=size/ref;                                    // 1.0 = the ordinary size FOR THIS FACTION
+  return SCALE[band(r,[0.25,0.7,2.5,25])];
+}
+const NOUN={ orbital:{unit:['Boat','Hull','Keel'], infra:['Platform','Station Frame','Orbital Spine']},
+             surface:{unit:['Body','Frame','Colossal Frame'], infra:['Slab','Foundation','Deep Foundation']},
+             water:{unit:['Launch','Boat Hull','Pressure Hull'], infra:['Caisson','Sea Platform','Abyssal Base']},
+             air:{unit:['Airframe','Aeroframe','Lifting Body'], infra:['Tether','Aerostat','Sky Platform']},
+             under:{unit:['Borer','Tunneller','Deep Borer'], infra:['Cellar','Vault','Deep Vault']} };
+
+function requirements(S,fixed){
+  const rows=[]; const surfaceUnit = env==='surface' && kind==='unit';
+  rows.push({n:'Budget in '+KIND[kind].cur(env), cls:'g', s:'✅ all four assemblers enforce this today'});
+  if(surfaceUnit) rows.push({n:'Per-item weight cap', cls:'g', s:'✅ capacity × 0.5, in GroundUnitAssembly'});
+  if(S.power==='reactor') rows.push({n:'Energy weapons need a reactor', cls:(surfaceUnit||fixed)?'g':'r',
+    s: surfaceUnit ? '✅ enforced (WeaponSupply — already domain-neutral)'
+       : (fixed?'✅ the chassis declares it — this cell INHERITS the gate':'🔴 NOT enforced in this cell today')});
+  if(S.power==='continuous') rows.push({n:'Continuous power — it degrades without it', cls:fixed?'a':'r',
+    s: fixed?'⚠ NEW, but the fuel gate (EnableFuelExhaustion) is the mechanism':'🔴 not enforced'});
+  if(S.power==='or-it-ceases') rows.push({n:'Continuous power OR IT CEASES TO EXIST', cls:fixed?'g':'r',
+    s: fixed?'✅ the fuel gate wired this week is exactly this — IsFuelStarved':'🔴 not enforced'});
+  rows.push({n:'Ammo weapons need a magazine', cls:(surfaceUnit||fixed)?'g':'r',
+    s: surfaceUnit ? '✅ enforced (WeaponSupply — already domain-neutral)'
+       : (fixed?'✅ declared — inherited':'🔴 NOT enforced in this cell today')});
+  if(S.run==='crew'||S.run==='reduced crew') rows.push({n:'Needs '+S.run+' to operate', cls: surfaceUnit?'r':'a',
+    s: surfaceUnit ? '🔴 all four surface frames author CrewReq "0" — the rule has NO input here'
+       : '⚠ CrewReq is computed everywhere, gated at design time nowhere'});
+  else if(S.run==='a seated leader') rows.push({n:'Needs A SEATED LEADER, not a crew', cls:fixed?'g':'r',
+    s: fixed?'✅ CommandBerthAtb + GetWorkingBerth — the best-built new component in the designer':'🔴 nothing connects it'});
+  else rows.push({n:'Needs nobody aboard', cls:'g', s:'✅ crew is simply 0 — nothing to gate'});
+  if(S.feed) rows.push({n:'Needs feeding — biomass upkeep', cls:fixed?'a':'r',
+    s: fixed?'⚠ NEW — but SustenanceProcessor → FoodProductionAtbDB is live and tested':'🔴 does not exist'});
+  const bcost = (BANDCOST[env]||[1])[bandIx]||1;
+  rows.push({n:'Survive its band: '+ENV[env].bands[bandIx], cls: ENV[env].exists?'a':'r',
+    s: ENV[env].exists ? '⚠ tolerance atbs exist (gravity/pressure/seal) but are never a design GATE'
+       : '🔴 this environment has no chassis today — '+(ENV[env].half?'though its terrain does':'nothing exists')});
+  if(S.seal) rows.push({n:'Environmental seal', cls:'a', s:'⚠ built as a STAT (sealed-systems → EnvironmentalResistance), never a gate'});
+  else rows.push({n:'Immune to atmosphere', cls:'g', s:'✅ nothing to enforce'});
+  rows.push({n:'Damage fixed by: '+S.fix, cls: S.fix.indexOf('field')>=0 ? (fixed?'a':'r') : 'r',
+    s: S.fix.indexOf('field')>=0 ? (fixed?'⚠ hooks GroundConstructorAtb / the field constructor':'🔴 no repair model')
+       : '🔴 no repair model exists for any answer'});
+  if(kind==='infra') rows.push({n:'Declares JOBS for the local workforce', cls:fixed?'a':'r',
+    s: fixed?'⚠ NEW producer — and it fixes the Civic door’s dead ±40-point morale term':'🔴 EmploymentAtbDB has no producer'});
+  return rows;
+}
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, d3=+$('d3').value, fixed=$('fix').checked;
+ const E=ENV[env], K=KIND[kind], S=SUB[sub], SZ=SIZE[env];
+ const nb=E.bands.length;
+ if(bandIx>=nb) bandIx=E.def||0;
+
+ // band chips relabel per environment
+ const bchips=document.querySelectorAll('.bchip');
+ for(let i=0;i<bchips.length;i++){
+   bchips[i].textContent = E.bands[i]||'—';
+   bchips[i].style.display = E.bands[i]?'':'none';
+   bchips[i].setAttribute('aria-pressed', i===bandIx);
+ }
+ show('bandsec', nb>1);
+ show('w3', fixed && nb>1);
+
+ // Snap to any shipped chassis at its own slider position — an integer slider cannot land exactly on a
+ // log-mapped size, and a shipped design must read as itself.
+ const size = fixed ? snapSize(d1, SZ.lo, SZ.hi) : anchor();
+ const eff  = fixed ? K_SHIP*Math.pow(10,d2*0.06) : K_SHIP;    // 1128 → ~1.1e9: six orders of materials science
+ const width = (fixed && nb>1) ? Math.round(d3/100*(nb-1)) : 0; // how many EXTRA bands it spans
+ const bandsSpanned = Math.min(nb, 1+width);
+ // the envelope costs: you must survive the WORST band you claim
+ const bc = BANDCOST[env]||[1];
+ let worst = 1; for(let i=bandIx;i<Math.min(nb,bandIx+bandsSpanned);i++) worst=Math.max(worst,bc[i]||1);
+ const envelopeMult = fixed ? worst*(1+0.35*width) : 1;
+
+ const budget = fixed ? eff*Math.sqrt(size) : (kind==='infra'?2000:(env==='surface'?100:90000));
+ const mass = size*envelopeMult;
+ const reach = reachOf(eff), ref = refOf(eff);
+ const frac = budget/mass;
+
+ const crewPeople = (S.run==='crew'||S.run==='reduced crew');
+ const crew = crewPeople ? (env==='surface'&&kind==='unit' ? 0 : mass*0.001*(S.run==='reduced crew'?0.5:1)) : 0;
+ const credits = mass*0.1, bp = mass;
+
+ set('n1', fixed?'Frame size':'Frame size  🔴 not a dial today — mass is a constant per template');
+ set('s1', kg(size)); set('e1a', kg(SZ.lo)); set('e1b', kg(SZ.hi)+'  ·  '+(anchorIsReal()?'shipped anchor = ':'⚠ invented anchor = ')+kg(anchor()));
+ set('n2', fixed?'Structural efficiency — your faction’s materials science':'Structural efficiency  🔴 does not exist');
+ set('s2', fmt(eff)+' per √unit'); set('e2a','1,128 — what ships'); set('e2b','~10⁹ — six orders of materials science');
+ if(nb>1){ set('n3','Operating envelope — bands it works in'); set('s3', bandsSpanned+' of '+nb);
+   set('e3a','1 band — cheap, and it dies outside it'); set('e3b', nb+' bands — works anywhere, pays for it'); }
+
+ set('l_a1','Budget — '+(fixed?'EMERGENT from the frame':'a free DIAL today'));
+ set('v_a1', kind==='unit'&&env==='surface' ? fmt(budget)+' carry' : kind==='infra' ? fmt(budget)+' vol' : kg(budget));
+ set('l_a2', fixed?'Frame + envelope you paid for':'Frame you paid for'); set('v_a2', kg(mass));
+ set('l_a3', fixed?'Budget ÷ √size — the law':'Does the budget cost anything?');
+ set('v_a3', fixed?fmt(budget/Math.sqrt(size))+'  ◄ the efficiency, always':'🔴 no — in none of the seven channels');
+ $('l_a3').parentElement.className='num '+(fixed?'g':'r');
+ set('l_a4','Part mount'); set('v_a4', K.mount(env));
+ set('l_a5','Runs on'); set('v_a5', S.runsOn);
+ set('v_cost', fmt(credits)+' cr  ·  '+fmt(bp)+' BP'+(crew>=1?'  ·  '+fmt(crew)+' crew':'  ·  no crew'));
+
+ const reqs=requirements(S,fixed);
+ $('reqs').innerHTML = reqs.map(r=>
+   '<div class="bar"><i>'+r.n+'</i><u><s class="'+(r.cls==='g'?'':r.cls)+'" style="width:100%"></s></u><b>'+r.s+'</b></div>').join('');
+
+ set('l_m1','Ceiling — can it be held together?'); set('m_1', kg(reach));
+ set('s_m1','≈ 10⁴ × efficiency² — beyond this, nothing you build stands up');
+ const rel = size/ref, feas = size/reach;
+ set('l_m2','vs what your faction TYPICALLY builds'); set('m_2', rel>=1? rel.toFixed(rel<10?1:0)+'×' : (rel*100).toFixed(rel*100<10?1:0)+'%');
+ set('s_m2', feas>1 ? '🔴 past the ceiling — your materials science cannot hold it'
+   : 'so it reads as “'+(scaleWord(size,ref)||'the ordinary size')+'”');
+ $('m_2').parentElement.className='mt '+(feas>1?'r':(rel>2.5?'a':'g'));
+ set('l_m3','Payload fraction'); set('m_3', (frac*100).toFixed(frac*100<1?3:1)+'%');
+ set('s_m3', !fixed ? 'the free dial, so meaningless'
+   : frac>1 ? 'over 100% — the frame is a MINORITY of the whole. A megastructure civilisation.'
+   : 'falls as √size — no dominant setting');
+ $('m_3').parentElement.className='mt '+(fixed?(frac<0.01?'a':'g'):'r');
+ const cellExists = E.exists;
+ const newThings = [];
+ if(!cellExists) newThings.push('the '+E.label.toLowerCase()+' environment');
+ if(sub!=='mech') newThings.push('the substrate axis');
+ if(fixed && Math.abs(size-anchor())>anchor()*1e-6) newThings.push('a size dial');
+ if(fixed && bandsSpanned>1) newThings.push('the envelope dial');
+ set('l_m4','Exists today?'); set('m_4', newThings.length?'🔴 no':'✅ yes');
+ set('s_m4', newThings.length? 'needs '+newThings.join(' + ') : 'this is a shipped template');
+ $('m_4').parentElement.className='mt '+(newThings.length?'r':'g');
+
+ const sw=scaleWord(size,ref), sn=(sub==='mech'?'':S.label);
+ let noun=NOUN[env][kind][band(size,[anchor()*0.85,anchor()*2.5])];
+ let parts=[sw,sn,noun].filter(Boolean);
+ if(SCALE.some(w=>w&&noun.includes(w))) parts=parts.filter(w=>w!==sw);
+ set('v_name', parts.join(' ') || noun);
+ set('v_namesub', E.label.toLowerCase()+' · '+E.bands[bandIx].toLowerCase()+' · '+K.label.toLowerCase()
+   +' · '+S.label.toLowerCase()+' · the scale word is RELATIVE to what you normally build');
+ set('oname', (kind==='unit'&&env==='surface'?fmt(budget)+' carry':kind==='infra'?fmt(budget)+' vol':kg(budget))
+   +' of budget on '+kg(mass)+' of frame');
+
+ const nGood=reqs.filter(r=>r.cls==='g').length, nMiss=reqs.filter(r=>r.cls==='r').length;
+ $('odesc').innerHTML = fixed
+   ? 'The chassis declares <b>'+reqs.length+' requirements</b> — <b>'+nGood+' already have a working check</b>'
+     +(nMiss?', '+nMiss+' would be new':'')+'. Working the <b>'+E.bands[bandIx].toLowerCase()+'</b> band'
+     +(bandsSpanned>1?' and '+(bandsSpanned-1)+' more, which costs <b>×'+envelopeMult.toFixed(2)+'</b> the frame':'')+'.'
+   : '🔴 <b>Today this cell’s chassis declares nothing</b> — its assembler contains whatever gates its author wrote, its size is a <b>constant on the template</b>, and it has <b>no band dial at all</b> outside the one on <code>infrastructure</code>.';
+ const relV=size/ref, feasV=size/reach;
+ $('verdict').innerHTML = !fixed
+   ? (env==='surface'&&kind==='unit'
+      ? '🔴 <b>Four gates here, one gate everywhere else</b> — so a ship with an energy weapon and no reactor is <b>accepted</b> while a rifleman with the same weapon is <b>refused</b>.'
+      : '🔴 <b>This cell inherits none of the four gates the surface-unit assembler enforces.</b> Same rules, same weapons, one cell of the grid.')
+   : (feasV>1
+      ? '🔴 <b>This is past your ceiling — your materials science cannot hold it together</b> — and that is the mechanic, not a cap. Drag <b>efficiency</b> right and the same frame becomes ordinary. <b>“An average station to one faction, an outpost to another” is one number.</b>'
+      : sub==='energy'
+      ? '✅ <b>Indestructible while powered, and gone the instant it is not</b> — and the mechanism already exists: the fuel gate wired this week (<code>IsFuelStarved</code>) is exactly this requirement.'
+      : sub==='psionic'
+      ? '✅ <b>It needs a PERSON, not a crew</b> — which hooks <code>CommandBerthAtb</code>, the best-built new component in the designer. No new system.'
+      : bandsSpanned>1
+      ? '✅ <b>A wide envelope works anywhere and pays ×'+envelopeMult.toFixed(2)+' in frame</b> — and <code>MaxRangeFormula</code> means <b>research decides how wide you may go at all.</b>'
+      : '✅ <b>The budget is earned, the requirements are declared, and the scale word is relative</b> — no absolute size classes anywhere.');
+
+ $('jobnote').textContent = 'Must survive: '+E.survive+'.  Engine today: '+E.has;
+ const thisBc = (BANDCOST[env]||[1])[bandIx]||1;
+ $('bnote').textContent = nb<=1
+   ? 'This environment is one band — terrain does the job instead (Open / Cover / Rough).'
+   : thisBc>1
+   ? 'This band is harsher on the FRAME — it costs ×'+thisBc.toFixed(2)+'. A wide envelope must survive the worst band it claims.'
+   : env==='orbital'
+   ? 'This band costs the frame NOTHING — and that is the honest answer, not a gap. Out here cold and dark are structurally free (vacuum insulates); the bill lands on POWER instead, because a solar array’s output attenuates to nothing and you must carry a reactor and its fuel. Only the hot end taxes the frame, where a star’s corona is real damage.'
+   : 'This band costs the frame nothing — it is the baseline the others are measured against.';
+ $('gnote').textContent = K.note+'  Employs: '+K.employs+'.  Grave rung: '+K.grave+'.  Capturable: '+K.capture+'.';
+ $('snote').textContent = S.note+'  ► Wins outright: '+S.wins+'.';
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+ env=c.dataset.v; document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ bandIx=ENV[env].def||0; $('d1').value=Math.round(unmap(anchor(),SIZE[env].lo,SIZE[env].hi)); render();}));
+document.querySelectorAll('.bchip').forEach(c=>c.addEventListener('click',()=>{
+ const i=+c.dataset.b; if(ENV[env].bands[i]!==undefined){ bandIx=i; render(); }}));
+document.querySelectorAll('.kchip').forEach(c=>c.addEventListener('click',()=>{
+ kind=c.dataset.k; document.querySelectorAll('.kchip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ $('d1').value=Math.round(unmap(anchor(),SIZE[env].lo,SIZE[env].hi)); render();}));
+document.querySelectorAll('.schip').forEach(c=>c.addEventListener('click',()=>{
+ sub=c.dataset.s; document.querySelectorAll('.schip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ render();}));
+['d1','d2','d3'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+$('d1').value=Math.round(unmap(anchor(),SIZE.surface.lo,SIZE.surface.hi));
+render();
+
+</script>

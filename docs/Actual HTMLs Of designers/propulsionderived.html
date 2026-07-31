@@ -1,0 +1,860 @@
+<title>Propulsion, fully derived — one door, four ways to move</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+h4,.chip,.num b{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.fchip,.lchip,.rchip,.tchip,.schip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px;
+ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.chip[aria-pressed=true],.fchip[aria-pressed=true],.lchip[aria-pressed=true],
+.rchip[aria-pressed=true],.tchip[aria-pressed=true],.schip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],:root[data-theme=dark] .fchip[aria-pressed=true],
+:root[data-theme=dark] .lchip[aria-pressed=true],:root[data-theme=dark] .rchip[aria-pressed=true],
+:root[data-theme=dark] .tchip[aria-pressed=true],:root[data-theme=dark] .schip[aria-pressed=true]{color:#0B1013}
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true],.fchip[aria-pressed=true],.lchip[aria-pressed=true],
+ .rchip[aria-pressed=true],.tchip[aria-pressed=true],.schip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,.fchip:focus-visible,.lchip:focus-visible,.rchip:focus-visible,.tchip:focus-visible,
+.schip:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.axr{margin:0 0 9px}
+.axr:last-of-type{margin-bottom:0}
+.axq{font:10px/1.35 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin:0 0 5px}
+.fran{font:12px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.05em;padding:8px 11px;margin:11px 0 0;
+ border:1px solid var(--ac);border-radius:3px;background:color-mix(in srgb,var(--ac) 9%,transparent);color:var(--ink)}
+.amph{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.amph input{width:17px;height:17px;accent-color:var(--ac);margin:0;flex:0 0 auto}
+
+.sl.nd .slh span:first-child{color:var(--ink3)}
+.sl.nd input[type=range]{accent-color:var(--ink3);opacity:.75}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+@media(min-width:700px){
+ .w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+ .nums{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+.num.g b{color:var(--ac2)} .num.a b{color:var(--warn)} .num.r b{color:var(--flag)}
+
+
+.lay{border:1px solid var(--rule);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:8px}
+.lay h4{margin:0 0 4px;font-size:14px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.big{font-size:13.5px;color:var(--ink2);margin:0 0 12px}
+
+.blab.notd{margin:18px 0 2px;padding-top:14px;border-top:1px dashed var(--rule);color:var(--flag)}
+/* the axis matrix — the page's thesis, encoded as state not prose */
+.mx{display:flex;flex-direction:column;gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:4px;overflow:hidden}
+.mxr{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--card);padding:10px 12px}
+.mxr.us{background:var(--card2);box-shadow:inset 3px 0 0 var(--ac)}
+.mxn{font-size:13px;line-height:1.3}.mxn b{font-weight:660}
+.mxn s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.pips{display:flex;gap:4px;flex:0 0 auto}
+.pip{width:30px;height:30px;border-radius:3px;display:grid;place-items:center;
+ font:9px/1 ui-monospace,Menlo,monospace;letter-spacing:.02em;text-align:center;
+ border:1px solid var(--rule);background:var(--card2);color:var(--ink3)}
+.pip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .pip.on{color:#0B1013}
+@media(prefers-color-scheme:dark){.pip.on{color:#0B1013}}
+.pip.na{opacity:.35}
+.lgd{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 0;font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--ink3)}
+.lgd span{display:flex;align-items:center;gap:5px}
+.lgd i{width:12px;height:12px;border-radius:2px;border:1px solid var(--rule);background:var(--card2);flex:0 0 auto}
+.lgd i.on{background:var(--ac);border-color:var(--ac)}
+.axhd{display:grid;grid-template-columns:1fr auto;gap:10px;padding:0 12px 6px;
+ font:9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3)}
+.axhd .pips span{width:30px;text-align:center}
+</style>
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 3 of 11 · complete</p>
+<h1>One door for everything that moves — reaction mass, a surface, and one FTL tab that builds any franchise.</h1>
+<p class="lead">The engine designer today gives you <b>a size and a fuel</b>. Thrust, exhaust velocity and burn rate are all <b>computed and shown, not set</b> — so a bigger engine is strictly better and there is no trade to make. This is the whole door re-derived from what the simulation actually reads, with everything built so far marked ✅.</p>
+<p class="lead" style="margin-top:10px">⚠ <b>&ldquo;Spacetime&rdquo; is gone, and it was my error.</b> I had it as a fourth thing you push against, sitting beside reaction mass — but <b>a ship carries both</b>, so they were never alternatives. The door asks two questions: <b>how you move inside a system</b>, and <b>how you leave it.</b></p>
+<p class="lead" style="margin-top:10px">🔑 <b>And the second question is ONE tab, not a list of drives.</b> Warp, hyperspace, jump drives and gates are not separate components — they are <b>three settings</b> (route × transit × can-you-be-found) on the same part, over the same sliders. The count comes out exactly right: <b>six settings-combinations, six science-fiction FTLs, one empty box</b> the derivation predicts and nobody has claimed.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>What it gives you today</h2>
+<p class="sub">Verified in <code>engines.json</code>. Every line is the real formula.</p>
+<div class="scroll"><table class="t">
+<tr><th>Dial</th><th>Editable</th><th>How it is decided</th></tr>
+<tr><td>Mass</td><td><b class="g">yes — the only one</b></td><td>bounded by two techs</td></tr>
+<tr><td>Fuel Type</td><td><b class="g">a dropdown</b></td><td>which fuels you have unlocked</td></tr>
+<tr><td>Exhaust Velocity</td><td><b class="r">display only</b></td><td><code>lookup(Fuel) + tech</code></td></tr>
+<tr><td>Fuel Consumption</td><td><b class="r">display only</b></td><td><code>Mass × 0.3 × tech</code></td></tr>
+<tr><td>Thrust</td><td><b class="r">display only</b></td><td><code>Exhaust Velocity × Fuel Consumption</code></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔴 Follow that chain and the door empties out. Thrust is <b>linear in engine mass</b>, and exhaust velocity does not depend on mass at all. <b>A bigger engine is strictly better on both counts.</b> The most famous trade in rocketry — hard push and poor economy, or gentle push and enormous range — <b>cannot be expressed.</b></p>
+<p class="sub" style="margin-top:8px"><b>So this door is the opposite problem from Weapons.</b> Weapons had five doors and forty-one dial groups that needed collapsing to two choices and four sliders. Propulsion needs <b>dials ADDED</b> — and the physics for them is already half-computed.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The trade it is missing — and it runs three ways</h2>
+<div class="lay"><h4>For a given engine power, thrust × exhaust velocity is a constant</h4>
+<p>Power is <b>½·ṁ·v²</b> and thrust is <b>ṁ·v</b>, so <b>T·v = 2P</b>. Spend your power on a fast thin exhaust and you get economy with little push; on a slow heavy one and you get push with little range. <b>Real zero-sum physics, already true</b> — it needs no invention, only exposing. It is the exact mirror of the weapon's shot-size ↔ rate-of-fire, and of the zero-sum plate tuning.</p></div>
+<div class="lay"><h4>And the third leg is already wired: signature IS thrust</h4>
+<p><code>Sensor Signature → SensorSignatureAtb(3500 K, magnitude = Thrust)</code>. That feeds live detection — so pushing harder costs you <b>stealth</b>, not merely economy. <b>Detection decides who shoots first</b>, which makes this the richest single trade found in any category, and <b>it already ships.</b> Nothing in the designer tells the player.</p></div>
+<div class="scroll"><table class="t">
+<tr><th>Push harder</th><th>Ease off</th></tr>
+<tr><td>more thrust → <b class="g">more evasion</b></td><td>more exhaust velocity → <b class="g">more Δv per kg</b></td></tr>
+<tr><td>🔴 <b class="r">louder — seen from farther</b></td><td><b class="g">quieter</b> — you pick your moment</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>But loud has to cost more than it does.</b> Detection range grows as <b>√signature</b> — double your thrust and you are seen from only 1.41× as far, so loud is nearly free. The ruling: <b>signature suppression is a tax on the whole power budget</b> (<code>P_drive = P_total × (1 − suppression)</code>), costing push <em>and</em> economy at once, with the shroud's mass dragging acceleration down again. <b>It pays twice.</b></p>
+<p class="sub" style="margin-top:8px">And the cost already there is the largest in the game: the test suite's <code>FirstStrike_SeerWipesBlindEnemy_Unscathed</code> — two <b>equal</b> fleets, one blinded, and the seeing side <b>wipes it taking zero losses.</b> Signature does not cost a stat; it costs the opening exchange.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Build a drive</h2>
+<p class="sub"><b>Three</b> kinds of drive part. <b>Which kind changes which dials you even get</b> — and every number below is the real shipped formula. <b>Every slider here is a real dial</b>; nothing is greyed out for decoration.</p>
+<div class="build">
+<div class="bsec"><p class="blab">What kind of drive is this part</p>
+<p class="sub" style="margin:0 0 7px">Sublight — how it moves <b>inside</b> a system</p><div class="chips">
+<button class="chip" type="button" data-v="reaction" aria-pressed="true">Reaction mass</button>
+<button class="chip" type="button" data-v="surface" aria-pressed="false">A surface</button></div>
+<p class="sub" style="margin:11px 0 7px">FTL — how it crosses <b>between</b> systems</p><div class="chips">
+<button class="chip" type="button" data-v="ftl" aria-pressed="false">FTL drive</button></div>
+<p class="sub" id="famnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="ftlsec"><p class="blab">The FTL method — three settings, and they name the franchise</p>
+<div class="axr"><p class="axq">① Route — where can it go</p><div class="chips">
+<button class="rchip" type="button" data-r="free" aria-pressed="true">Free — anywhere</button>
+<button class="rchip" type="button" data-r="fixed" aria-pressed="false">Fixed — node to node</button></div></div>
+<div class="axr"><p class="axq">② Transit — what happens in between</p><div class="chips">
+<button class="tchip" type="button" data-t="cont" aria-pressed="true">Continuous — you cross it</button>
+<button class="tchip" type="button" data-t="inst" aria-pressed="false">Instant — you arrive</button></div></div>
+<div class="axr" id="seenrow"><p class="axq">③ In transit — can you be found <s>only asks when transit takes time</s></p><div class="chips">
+<button class="schip" type="button" data-s="seen" aria-pressed="true">Trackable — normal space</button>
+<button class="schip" type="button" data-s="hidden" aria-pressed="false">Hidden — elsewhere</button></div></div>
+<label class="amph"><input type="checkbox" id="nav"> <span>Navigator-gated — a seated specialist flies it 🔴 proposed</span></label>
+<p class="fran" id="franbadge"></p>
+<p class="sub" id="ftlstate" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="fuelsec"><p class="blab">What it burns — refinement level multiplies the budget ✅ built</p><div class="chips">
+<button class="fchip" type="button" data-f="rp1" aria-pressed="true">RP-1</button>
+<button class="fchip" type="button" data-f="methalox" aria-pressed="false">Methalox</button>
+<button class="fchip" type="button" data-f="hydrolox" aria-pressed="false">Hydrolox</button>
+<button class="fchip" type="button" data-f="ntp" aria-pressed="false">NTP</button></div>
+<p class="sub" id="fuelnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="locosec"><p class="blab">How it meets the ground — any planetary unit ✅ named</p><div class="chips">
+<button class="lchip" type="button" data-l="foot" aria-pressed="true">Legs</button>
+<button class="lchip" type="button" data-l="tracked" aria-pressed="false">Tracks</button>
+<button class="lchip" type="button" data-l="walker" aria-pressed="false">Walker</button>
+<button class="lchip" type="button" data-l="hover" aria-pressed="false">Hover</button></div>
+<p class="sub" id="loconote" style="margin:9px 0 0"></p>
+<label class="amph"><input type="checkbox" id="amph"> <span>Amphibious — cross open water ✅ wired</span></label></div>
+
+<div class="bsec">
+<p class="blab" style="margin:0 0 8px">The same two dials, re-purposed</p>
+<div class="sl"><div class="slh"><span id="sizename">How much drive you fit</span><span id="sizesub">this engine&rsquo;s own mass</span></div><input type="range" id="size" min="0" max="100" value="45" aria-label="drive size"><div class="ends"><span id="sizelo">small</span><span id="sizehi">huge</span></div></div>
+<div class="sl" id="splitwrap"><div class="slh"><span id="splitname">Push ↔ economy</span><span id="splitsub">one budget, three ways</span></div><input type="range" id="split" min="0" max="100" value="50" aria-label="the split"><div class="ends"><span id="splitlo">hard shove</span><span id="splithi">long haul</span></div></div>
+<div class="sl" id="thirdwrap"><div class="slh"><span id="thirdname">Signature suppression</span><span id="thirdsub">proposed — taxes the WHOLE budget</span></div><input type="range" id="supp" min="0" max="100" value="0" aria-label="third dial"><div class="ends"><span id="thirdlo">bare drive</span><span id="thirdhi">heavily muffled</span></div></div>
+<div class="sl" id="fourthwrap"><div class="slh"><span id="fourthname">Quietness</span><span id="fourthsub">proposed — taxes the WHOLE budget</span></div><input type="range" id="quiet" min="0" max="100" value="0" aria-label="fourth dial"><div class="ends"><span id="fourthlo">bare drive</span><span id="fourthhi">heavily muffled</span></div></div>
+<p class="blab notd">Every dial here is a dial — and that is the whole test</p>
+<p class="sub" style="margin:0">Fuel load and hull mass used to sit here greyed out. They are gone: <b>a slider you cannot set is not a dial, it is a caption.</b> The numbers that need them are marked <em>emergent</em> and quoted against a stated reference — <b>a 38 t hull at a 2:1 wet/dry load</b> — exactly as a real parts catalogue quotes a figure.</p>
+</div>
+<div class="out" id="outpanel">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="v_ev">—</p><p class="odesc" id="v_evdesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4"></i><b id="v_a4"></b></div>
+<div class="num fixed" id="sigbox"><i id="l_sig">Signature</i><b id="v_sig"></b></div>
+<div class="num fixed" id="seenbox"><i id="l_seen">Seen from — vs a stock drive</i><b id="v_seen"></b></div>
+<div class="num fixed" id="massbox"><i>All-up mass</i><b id="v_mass"></b></div>
+<div class="num fixed"><i>Runs on</i><b id="v_runs"></b></div>
+</div>
+<p class="sub" id="tradenote" style="margin-top:10px"></p>
+<p class="sub" id="verdict" style="margin-top:6px"></p>
+</div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Try all three.</b> On <b>Reaction</b>, drag push↔economy and watch acceleration, delta-v and signature all move at once. On <b>A surface</b>, switch modes and watch the same slider become a gearbox. Then open <b>FTL drive</b> and flip the three settings — <b>the badge names the franchise you just built</b>, and one combination has no franchise at all.</p>
+<p class="sub" style="margin-top:8px">🔑 <b>Watch the slider SET change, not just the labels.</b> Box 1 has four sliders. Turn on hidden transit and <b>quietness disappears</b> — you are not in normal space, so there is nothing to be quiet in front of. Switch the route to fixed and the <b>bubble split becomes the rocket trade</b>, because a lane needs nothing spun up. Pick fixed + instant and you are down to <b>two sliders</b>, because the gate does the work. Every one of those removals is a dial that would otherwise write nothing.</p>
+<p class="sub" style="margin-top:8px">🔑 <b>Note that the two rows are separate questions.</b> A ship picks one from each — a thruster <em>and</em> an FTL drive. You are designing <b>one part</b>, so the picker is exclusive; the <b>ship</b> is where they add up.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Two questions, not one — why &ldquo;spacetime&rdquo; had to go</h2>
+<p class="big">The test for a door is <b>are the answers mutually exclusive.</b> Reaction mass and a surface pass — nothing both flies on rockets and walks. <b>Spacetime failed it,</b> and the game&rsquo;s own ships say so. Every warship in the base mod carries a thruster <em>and</em> a warp drive:</p>
+<div class="scroll"><table class="t">
+<tr><th>Base-mod ship</th><th>Sublight thrusters</th><th>Warp drives</th></tr>
+<tr><td>Sanctum Adroit Gunship</td><td>2</td><td>1</td></tr>
+<tr><td>Ob&rsquo;enn Dropship</td><td>2</td><td>1</td></tr>
+<tr><td>Freighter · Cargo Courier · Surveyor · Lander</td><td>1</td><td>1</td></tr>
+<tr><td>Sensor Sat</td><td>0</td><td>0</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">🔒 <b>So the honest reading:</b> a door whose options can all be true at once is not a door — it is two doors wearing one label. The fix is to say what each one asks:</p>
+<div class="lay"><h4>① Sublight — how do you move <em>inside</em> a system?</h4>
+<p><b>Reaction mass</b> or <b>a surface.</b> Genuinely exclusive, and one power budget spent two ways in both cases. This is the question the door was always answering well.</p></div>
+<div class="lay"><h4>② FTL method — how do you cross <em>between</em> systems?</h4>
+<p><b>One tab, three settings</b> — route × transit × what can find you. Those three ARE the science-fiction taxonomy, and they land in a completely different box from the first question. &ldquo;Spacetime&rdquo; was one <em>value</em> of one of these settings, mis-filed as a rival to the first question.</p></div>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Kind of drive part</th><th>The budget split</th><th>Runs on</th><th>In a fight</th></tr>
+<tr><td><b>Reaction mass</b> <s>sublight</s></td><td>thrust ↔ exhaust velocity &nbsp;<code>T·v = 2P</code></td><td>fuel</td><td><b>evasion + control of the range</b></td></tr>
+<tr><td><b>A surface</b> <s>sublight</s></td><td><b>speed ↔ tractive effort</b> — the gearbox trade</td><td>fuel · power · muscle</td><td>march speed + a terrain edge</td></tr>
+<tr><td><b>FTL drive</b> <s>route × transit × seen</s></td><td>drive mass · <b>startup ↔ endurance</b> (or range ↔ tempo) · reach ↔ power · quietness</td><td><b>stored power</b></td><td>none directly — but the signature is real, and <b>hidden transit is untouchable</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">🔑 <b>Tall gearing is fast on roads; low gearing crawls over rough.</b> Speed and rough-handling are the SAME zero-sum split — they were simply authored as two independent dials. That is why space thrust and planetary locomotion belong behind one door: <b>the same budget law in different media.</b></p>
+<div class="lay" style="margin-top:12px"><h4>The code still has two implementations of that one verb</h4>
+<p><code>NewtonionThrustAtb</code> (ExhaustVelocity · FuelType · FuelBurnRate) and <code>GroundLocomotionAtb</code> (SpeedFactor · RoughHandling · Amphibious) share <b>zero fields</b>. The design already said to merge them; grouping means <b>deleting <code>GroundLocomotionAtb</code></b>, not merging it. ⚠ That is a serialized-type removal — it breaks existing saves, so it needs a converter or a clean-save decision.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The surface family splits by how a unit meets the ground</h2>
+<p class="sub">Not invented — these are the four modes the simulation already reads (<code>GroundLocomotion</code>), with their real speed multipliers.</p>
+<div class="scroll"><table class="t">
+<tr><th>Mode</th><th>Speed</th><th>Rough ground</th><th>What it is</th></tr>
+<tr><td><b>Legs</b></td><td>×1.0</td><td><b class="g">best</b></td><td>infantry, powered armour — slow, goes anywhere</td></tr>
+<tr><td><b>Tracks</b></td><td>×2.0</td><td><b class="a">poor</b></td><td>tanks — fast on open ground, bogged in the rough</td></tr>
+<tr><td><b>Walker</b></td><td>×1.5</td><td><b class="g">very good</b></td><td>the big multi-leg machines</td></tr>
+<tr><td><b>Hover</b></td><td>×3.0</td><td><b class="a">ignores it</b></td><td>skimmers — fastest, but nothing to grip</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">✅ <b>The mode dial existed all along — it was just unreadable.</b> All four frames exposed it as a raw integer, so the assembler showed <em>&ldquo;Locomotion: 1&rdquo;</em> with the meaning stuffed into a description reading <code>'0=Foot 1=Tracked 2=Walker 3=Hover.'</code> It is now a named picker. ⚠ One trap for the next enum dial: the renderer builds <code>max − min</code> entries, so the max must be the <b>count</b>, not the top index — leaving it at 3 would have silently cut <b>Hover</b> off the list.</p>
+<p class="sub" style="margin-top:8px">✅ <b>Amphibious is now a real dial.</b> It used to charge mass and be read by <em>nothing</em> — ocean was hard-coded impassable to everyone. Passability is now <b>per-unit</b>: an amphibious drive crosses water at a steep cost (4.0 vs rough ground's 2.5 — swimming is slower than climbing a mountain, so it buys <b>access, not speed</b>), and it is <b>lost with the drive</b> below half health.</p>
+<p class="sub" style="margin-top:8px">🔴 <b>One thing still wrong here.</b> <code>SpeedMultForUnit</code> returns a mounted locomotion component's <code>SpeedFactor</code> <em>outright</em>, falling back to the frame's mode only when nothing is mounted. So the moment a unit carries a designed drive, <b>whether its frame is Legs or Hover stops affecting speed at all</b> — the four modes are dead weight on any properly-designed unit. The mode should <em>scale</em> the designed factor, not be replaced by it. Behaviour change; needs a ruling and a re-baselined gauge.</p>
+<p class="sub" style="margin-top:8px">❌ <b>&ldquo;Air or water&rdquo; is not a family.</b> Grepped for airbreathing, hover, buoyancy, fluid-drive, atmospheric-thrust: <b>zero components.</b> It is <b>Reaction with the propellant scooped instead of carried</b>, plus a medium requirement — the same collapse as reactionless and gravitic.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>✅ Built — the fuel&rsquo;s refinement level drives the engine</h2>
+<p class="big">A fuel used to affect one number: exhaust velocity. But <code>Thrust = Exhaust Velocity × Fuel Consumption</code> — so a better fuel raised range <b>and</b> push at once. <b>A ladder, not a choice.</b> Each fuel now carries a <b>grade</b> multiplying the engine&rsquo;s mass flow, set so grade × exhaust velocity is nearly constant across the chemical three: <b>one budget, split differently.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Fuel</th><th>Exhaust vel</th><th>Grade</th><th>Product</th><th>What it&rsquo;s for</th></tr>
+<tr><td>RP-1</td><td>3510</td><td><b class="g">1.15</b></td><td>4036</td><td><b>most push</b> — the dense booster fuel</td></tr>
+<tr><td>Methalox</td><td>3615</td><td>1.05</td><td>3796</td><td>the middle</td></tr>
+<tr><td>Hydrolox</td><td>4462</td><td><b class="a">0.85</b></td><td>3793</td><td><b>most Δv</b> — the high-Isp upper stage</td></tr>
+<tr><td>NTP</td><td>7000</td><td>0.75</td><td><b>5250</b></td><td>a <b>reactor</b> — better at everything, paid in fissionables and 125× the credits</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">🔑 The multiplier went on <b>mass flow</b>, not exhaust velocity: exhaust velocity sets Δv per kg, so scaling <em>that</em> would rebuild the ladder. Mass flow sets thrust and burn RATE — so a high-grade fuel pushes harder and drains the tank faster. <b>RP-1 stopped being a dead recipe</b> (Methalox beat it on both counts before). And it composes with signature for free: <b>a higher-grade fuel is heard from farther.</b> Your refinery already makes all four — every one is a <code>refining</code> recipe, so the cradle-to-grave chain was already whole.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The three settings ARE the taxonomy — and the boxes come out exactly saturated</h2>
+<p class="sub">The FTL tab is not a list of franchises with a slider each. It is <b>three settings</b>, and every FTL in science fiction is one combination of them. Filled = yes.</p>
+<div class="axhd"><span></span><div class="pips"><span>route</span><span>transit</span><span>seen</span></div></div>
+<div class="mx">
+<div class="mxr us"><div class="mxn"><b>Pulsar — Alcubierre warp</b><s>you have this</s></div>
+ <div class="pips"><i class="pip on">FREE</i><i class="pip on">CONT</i><i class="pip on">SEEN</i></div></div>
+<div class="mxr us"><div class="mxn"><b>Pulsar — jump points</b><s>you have this, with a discovery layer</s></div>
+ <div class="pips"><i class="pip">NODE</i><i class="pip">INST</i><i class="pip na">—</i></div></div>
+<div class="mxr"><div class="mxn"><b>Star Trek</b> warp<s>identical to yours</s></div>
+ <div class="pips"><i class="pip on">FREE</i><i class="pip on">CONT</i><i class="pip on">SEEN</i></div></div>
+<div class="mxr"><div class="mxn"><b>Star Wars</b> hyperspace<s>the one axis you do not have</s></div>
+ <div class="pips"><i class="pip on">FREE</i><i class="pip on">CONT</i><i class="pip">HIDE</i></div></div>
+<div class="mxr"><div class="mxn"><b>Battlestar Galactica</b> jump drive</div>
+ <div class="pips"><i class="pip on">FREE</i><i class="pip">INST</i><i class="pip na">—</i></div></div>
+<div class="mxr"><div class="mxn"><b>Stellaris</b> hyperlanes</div>
+ <div class="pips"><i class="pip">NODE</i><i class="pip on">CONT</i><i class="pip on">SEEN</i></div></div>
+<div class="mxr"><div class="mxn"><b>B5 gates · Stargate · Mass Effect relays</b><s>the same box as your jump points</s></div>
+ <div class="pips"><i class="pip">NODE</i><i class="pip">INST</i><i class="pip na">—</i></div></div>
+<div class="mxr"><div class="mxn"><b>Dune fold · Andromeda slipstream</b><s>gated on a NAVIGATOR — a worker, not a drive</s></div>
+ <div class="pips"><i class="pip on">FREE</i><i class="pip">INST</i><i class="pip na">—</i></div></div>
+</div>
+<div class="lgd">
+<span><i class="on"></i>route: go anywhere</span><span><i></i>route: reach a node first</span>
+<span><i class="on"></i>transit: takes time</span><span><i></i>transit: you arrive</span>
+<span><i class="on"></i>findable in transit</span><span><i></i>untouchable in transit</span>
+</div>
+<p class="sub" style="margin-top:14px">🔑 <b>Notice what the &ldquo;—&rdquo; cells prove.</b> Three of these rows cannot answer the <em>seen</em> question at all, because an instant transit <b>has no transit to be observed during.</b> That is not a gap in the survey — it is a real dependency, and it is why the third setting only appears when transit is continuous. <b>Two settings and a conditional third, not three independent ones.</b></p>
+
+<h2 style="margin-top:26px">Count the boxes</h2>
+<p class="big">2 routes × (2 continuous variants + 1 instant) = <b>six</b>. The list above has <b>six rows</b>. The taxonomy is <b>exactly saturated</b> — which means two things fall out for free.</p>
+<div class="scroll"><table class="t">
+<tr><th>Box</th><th>Route</th><th>Transit</th><th>Seen</th><th>Who lives there</th><th>Build state</th></tr>
+<tr><td>1</td><td>free</td><td>continuous</td><td>trackable</td><td><b>Star Trek warp</b></td><td>✅ <b class="g">ships today — this is Pulsar</b></td></tr>
+<tr><td>2</td><td>free</td><td>continuous</td><td><b>hidden</b></td><td><b>Star Wars hyperspace</b></td><td>🔴 scan <em>and</em> battle trigger must skip a ship in transit</td></tr>
+<tr><td>3</td><td>free</td><td><b>instant</b></td><td>—</td><td><b>BSG jump drive</b> · <b>Dune fold</b> · <b>Andromeda slipstream</b></td><td>⚠ a whole movement mode: order + range + cooldown</td></tr>
+<tr><td>4</td><td><b>fixed</b></td><td>continuous</td><td>trackable</td><td><b>Stellaris hyperlanes</b></td><td>✅✅ <b class="g">the cheapest unbuilt box</b> — see below</td></tr>
+<tr><td>5</td><td><b>fixed</b></td><td>continuous</td><td><b>hidden</b></td><td>🔓 <b>nobody</b></td><td>🔓 <b>an empty box the derivation predicts</b></td></tr>
+<tr><td>6</td><td><b>fixed</b></td><td><b>instant</b></td><td>—</td><td><b>B5 gates · Stargate · ME relays · Aurora jump points</b></td><td>⚠ the network ships; <b>the drive does not</b></td></tr>
+</table></div>
+<div class="lay" style="margin-top:12px"><h4>① The navigator is a REAL fourth axis — your own table proves it</h4>
+<p>Box 3 holds <b>three</b> franchises, and BSG is not the same thing as Dune. What separates them is not route, transit or visibility: it is that a Guild fold and a slipstream jump are <b>gated on a person.</b> Without that axis the taxonomy would call them identical — so <b>&ldquo;a worker, not a drive&rdquo; is not a footnote, it is the setting that distinguishes the box&rsquo;s occupants.</b> It is a checkbox on the tab, and <code>CommandBerthAtb</code> already exists to seat them.</p></div>
+<div class="lay"><h4>② Box 4 is the cheapest new FTL flavour in the game, and I did not expect that</h4>
+<p><b>Stellaris-style lanes need almost no new code.</b> <code>JumpRouter</code> is already a live breadth-first walk over the <em>discovered</em> jump-point graph — the AI&rsquo;s <code>MilitaryReach</code> and <code>ConquerResolver</code> call it every cycle to plan multi-gate strikes. And warp already does continuous transit. <b>Forbid off-lane destinations and route the legs through the router you already have.</b> That is a rule, not a system.</p></div>
+<div class="lay"><h4>③ Box 5 is empty, and an empty box is the point of a saturated grid</h4>
+<p><b>Fixed lanes, a real crossing, and untouchable while you make it.</b> No franchise on the list claims it. Whether it is worth building is your call — but the derivation found it rather than someone having to imagine it, which is exactly what a complete taxonomy is for.</p></div>
+<div class="scroll" style="margin-top:14px"><table class="t">
+<tr><th>Missing</th><th>What it would take</th><th>Verdict</th></tr>
+<tr><td><b>Untouchable transit</b> (hyperspace)</td><td>the sensor scan <em>and</em> the combat trigger both have to skip a ship in transit</td><td>🔴 <b class="r">not simple</b> — a design decision, not a dial</td></tr>
+<tr><td><b>Instant free jump</b> (BSG)</td><td>a new order, a per-jump range limit, a cooldown</td><td><b class="a">⚠ medium</b> — a whole movement mode</td></tr>
+<tr><td><b>Navigator-gated FTL</b> (Dune)</td><td>the Site Engine&rsquo;s <b>Command Berth</b> pattern pointed at a drive</td><td><b class="a">⚠ a system</b>, not a dial — but it has a home already</td></tr>
+<tr><td><b>Spool-up time</b> (BSG)</td><td>—</td><td>✅ <b class="g">already emergent</b> — creation cost gates departure, so a high-creation drive on weak generation <em>is</em> a long spool</td></tr>
+</table></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>🔴 Calling it a &ldquo;method&rdquo; exposed two things in the code</h2>
+<p class="big">Once the question is <em>which method</em> rather than <em>what you push against</em>, you can go and check what methods the engine actually supports. The answer is <b>one</b> — and the one is compulsory.</p>
+<div class="lay"><h4>① There is no way to build a ship with NO FTL drive</h4>
+<p>Three separate movement paths gate on the warp blob: <code>JumpOrder</code> (<code>if (!ship.HasDataBlob&lt;WarpAbilityDB&gt;()) continue;</code>), <code>MoveToNearestAction</code>, and <code>MoveToSystemBodyOrder</code>. So a hull with a thruster and no warp drive <b>cannot be ordered anywhere at the strategic layer — including through a gate that would do the work for it.</b></p>
+<p style="margin-top:8px">That kills the &ldquo;gate-only civilisation&rdquo; build outright — B5, Stargate and Mass Effect all run on it, and it is the cheapest FTL flavour there is because <b>the map already does the moving.</b> It is also a <b>Cradle-to-Grave hole</b>: shoot a warp drive off a ship and by these three checks it should be stranded, which is a far more interesting loss than it currently reads as.</p></div>
+<div class="lay"><h4>② You transit a jump point <em>using your warp drive</em></h4>
+<p>Grepped for a jump drive: none exists. There is no charge time, no jump range, no cooldown, no per-jump cost — a gate transit is free and instant if you happen to own a warp drive. <b>So of the six boxes above, only box 1 is fully built.</b> Box 6&rsquo;s network ships without a drive; boxes 2–5 are unbuilt. Every &ldquo;build state&rdquo; cell in that table is a grep, not a guess.</p></div>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>The gate machinery that DOES exist</th><th>Where it lives</th><th>Verdict</th></tr>
+<tr><td>Knowing where the points are</td><td><code>IsDiscovered</code> — a per-faction set</td><td>✅ genuinely good, and the bit most 4X games skip</td></tr>
+<tr><td>Finding one</td><td><code>GravSurveyAtb</code> — one dial, Survey Speed, mass <code>(10 × speed)²</code></td><td>➡ <b>moves to Sensors.</b> Finding a thing is not moving a thing</td></tr>
+<tr><td>Making one permanent</td><td><code>IsStabilized</code>, read in one place; the branch behind it is <code>// TODO: Introduce a random chance to stablize jumppoints.</code></td><td>🔴 <b class="r">dead.</b> Set once at galaxy generation; nothing in play changes it</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">➡ <b>The grav surveyor left this door.</b> It is a detection instrument that happens to point at jump points — same shape as every other sensor: a receiver, a speed, a mass that grows quadratically with capability. It belongs with the rest of the survey abilities in <b>Sensors ▸ Survey</b>, and it is now on that door&rsquo;s list rather than this one&rsquo;s.</p>
+<p class="sub" style="margin-top:8px"><b>Yours to call:</b> whether <b>no-FTL-drive</b> becomes a legal build (three one-line gates to relax, and it makes losing a warp drive matter), and whether <b>stabilisation</b> becomes a real spend — it is the obvious home for a player decision and the code for it is a comment.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>✅ Built — the warp dial, and FTL stopped being silent</h2>
+<div class="lay"><h4>Warp had one performance dial. Two live numbers had no choice in them.</h4>
+<p><b>Bubble creation</b> gates departure — a ship refuses to leave while stored energy is below it. <b>Bubble sustain</b> is charged <em>per second in transit</em>. Both were computed from engine power with nothing to decide. The new slider multiplies creation and <b>divides</b> sustain, so their product never moves — zero-sum, the same shape as <code>T·v = 2P</code>.</p></div>
+<div class="scroll"><table class="t">
+<tr><th>Setting</th><th>Creation</th><th>Sustain</th><th>Signature</th><th>The build</th></tr>
+<tr><td><b>0.4</b></td><td>×0.4</td><td>×2.5</td><td><b class="r">loudest</b></td><td>cheap to start, dear to hold — <b>short hops</b>, leaves on a part-charged battery</td></tr>
+<tr><td><b>1.0</b></td><td>×1</td><td>×1</td><td>—</td><td>today&rsquo;s numbers exactly — <b>byte-identical</b></td></tr>
+<tr><td><b>2.5</b></td><td>×2.5</td><td>×0.4</td><td><b class="g">quietest</b></td><td>dear to start, cheap to hold — <b>one long haul</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">The range is <b>reciprocal-symmetric</b> around 1.0 (1/2.5 = 0.4), so the two ends are equal and opposite.</p>
+<div class="kill" style="border-left-color:var(--ac);margin-top:12px"><h4>✅ And FTL emitted nothing at all</h4>
+<p>Grepped every engine template: the two thrusters carry a sensor signature; <b><code>alcubierre-warp-drive</code>, <code>inertialess-drive</code> and <code>reactionless-drive</code> carry none.</b> So a ship crossing a system at FTL was <b>exactly as detectable as one parked</b> — against a genre where warp signatures and hyperspace wakes are staples.</p>
+<p style="margin-top:8px">Fixed with one property, and it makes the dial trade <b>three ways</b>: the magnitude is the power you pour into <em>holding</em> the bubble, so it divides by the dial. <b>The endurance drive buys range AND stealth with the same slider, and pays for both at the departure gate.</b></p></div>
+<div class="lay" style="margin-top:9px"><h4>⚠ Why the band is the thruster band and not something exotic</h4>
+<p>A <b>gravimetric</b> signature — its own long wavelength, needing a dedicated sensor — is the richer idea, and the scan genuinely <b>does</b> band-match. <b>But the only receiver in the base mod is tuned to 600 nm ± 250</b>, so a 300 K warp signature at ~9,660 nm would be <b>invisible to every sensor in the game</b> — a stealth exploit, not a feature. Giving FTL its own band is a <b>two-part</b> change: the signature <em>and</em> a receiver that can see it. Flagged, not done; the gauge pins the band so nobody moves half of it.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Why this door is the game&rsquo;s biggest defensive purchase</h2>
+<div class="lay"><h4>Evasion is a multiplier — there is no to-hit roll anywhere</h4>
+<p><code>EffToughness = Toughness ÷ landedFraction</code>. Evasion divides <em>into toughness</em>, so <code>1 ÷ landed</code> <b>is</b> an effective-health multiplier. The ground resolver writes the same arithmetic backwards. <b>Nothing rolls a die</b> — so &ldquo;42% on target&rdquo; is describing dice that do not exist.</p></div>
+<div class="scroll"><table class="t">
+<tr><th>Layer</th><th>Ceiling on effective health</th><th>Set by</th></tr>
+<tr><td><b>Evasion</b></td><td><b class="g">×20</b></td><td><code>EvasionCap</code> 0.95 — ✅ <b>and now <code>MinLandedFraction</code> 0.05 too</b></td></tr>
+<tr><td>Armour</td><td><b class="a">×10</b></td><td><code>ArmourMinPassFraction</code> 0.1</td></tr>
+<tr><td>Shields</td><td>a finite pool</td><td>designed capacity</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">✅ <b>The two ceilings used to disagree</b> — ×20 point-blank but ×50 at range, because a different dial bound each case and only one was named &ldquo;cap&rdquo;. They now agree at ×20 everywhere. It only ever bit low-rate-of-fire ballistics (saturation below ~2.6); flak floors itself far higher.</p>
+<p class="sub" style="margin-top:8px">🔴 <b>Evasion is still twice the multiplier armour can ever be</b> — and it is bought at <em>this</em> door, in a different currency, against no defence budget. It is a <b>matchup</b> multiplier though: ×1 against a beam, because you cannot dodge light. So any readout must be a curve, never one number.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What collapses</h2>
+<div class="kill"><h4>Reactionless · Gravitic</h4><p><b>Reaction with a rule removed</b> — thrust set directly, propellant burn zero; or the medium requirement lifted. A flag, not a family.</p></div>
+<div class="kill"><h4>Inertialess · Teleport</h4><p>Neither is propulsion. Inertialess writes one thing — an <b>evasion floor</b>; it produces no thrust and moves nothing, so it is a <em>defensive</em> component sitting in this category because it happens to be about dodging. Teleport breaks distance rather than crossing it — a logistics mechanic.</p></div>
+<div class="kill"><h4>Fluid</h4><p>No component, no variable. <b>Reaction with the propellant scooped</b>, plus a medium requirement.</p></div>
+<div class="kill"><h4>Spacetime — as a thing you push against</h4><p>My own error, corrected above. A ship carries a thruster <em>and</em> a warp drive, so the two were never alternatives. Warp survives as <b>one setting of the FTL tab</b>; the word &ldquo;spacetime&rdquo; goes.</p></div>
+<div class="kill"><h4>One component per FTL flavour</h4><p>Four separate drive templates — warp, hyperspace, jump, gate-tug — would be <b>four copies of the same four sliders</b> with a rule changed. They collapse to <b>one part with three settings.</b> Exactly the collapse Weapons needed: <em>five doors and forty-one dial groups became two choices and four sliders.</em></p></div>
+<div class="kill"><h4>The grav surveyor ➡ Sensors</h4><p><b>Finding a jump point is not moving through one.</b> <code>GravSurveyAtb</code> is a detection instrument with a receiver, a speed and a quadratic mass — the same shape as every other sensor. It moves to <b>Sensors ▸ Survey</b>.</p></div>
+<div class="kill"><h4>Dials that write nothing</h4><p>Thrust vectoring and spool-up response (the resolver is non-positional and not per-shot-timed); reliability and ground pressure (not modelled). <b>Drive heat is the real gap</b> — weapons feed a fleet heat pool; propulsion feeds nothing. The asymmetry is real and the wire is small.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The settings change WHICH SLIDERS EXIST — not just what they are called</h2>
+<p class="big">A setting that only renames a slider is decoration. These change the slider <b>set</b>, because <b>different settings make different dials meaningless</b> — and a dial that writes nothing is the exact bug the first test in the method exists to catch.</p>
+<div class="scroll"><table class="t">
+<tr><th>Box</th><th>Drive mass</th><th>The split — and what it splits</th><th>Reach vs power</th><th>Quietness</th></tr>
+<tr><td><b>1</b> Warp <s>free · continuous · seen</s></td><td><b class="g">✅</b></td><td><b class="g">startup ↔ endurance</b> — make a bubble, hold a bubble</td><td><b class="g">✅</b></td><td><b class="g">✅</b></td></tr>
+<tr><td><b>2</b> Veiled warp <s>free · continuous · hidden</s></td><td><b class="g">✅</b></td><td><b class="g">spool ↔ endurance</b> — how long you sit exposed before you vanish</td><td><b class="g">✅</b></td><td><b class="r">DEAD</b></td></tr>
+<tr><td><b>3</b> Jump <s>free · instant</s></td><td><b class="g">✅</b></td><td><b class="g">range ↔ tempo</b> — one long bound, or many quick ones</td><td><b class="g">✅</b></td><td><b class="g">✅</b></td></tr>
+<tr><td><b>4</b> Lane <s>fixed · continuous · seen</s></td><td><b class="g">✅</b></td><td><b class="g">speed ↔ economy</b> — the rocket trade, on a rail</td><td><b class="g">✅</b></td><td><b class="g">✅</b></td></tr>
+<tr><td><b>5</b> Veiled lane <s>fixed · continuous · hidden</s></td><td><b class="g">✅</b></td><td><b class="g">speed ↔ economy</b></td><td><b class="g">✅</b></td><td><b class="r">DEAD</b></td></tr>
+<tr><td><b>6</b> Threshold <s>fixed · instant</s></td><td><b class="g">✅</b></td><td><b class="g">cycle ↔ tonnage</b> — how much, how often</td><td><b class="r">DEAD</b></td><td><b class="r">DEAD</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">So the tab shows <b>four sliders in box 1, three in box 2, and two in box 6.</b> Every removal has a physical reason, and the panel states it as you switch:</p>
+<div class="lay"><h4>🔴 Quietness dies under hidden transit</h4>
+<p>You are <b>not in normal space</b> during the crossing, so there is no signature to suppress. The only exposure left is the spool — and the split slider already decides how long that lasts. Keeping a quietness dial here would be a slider that writes nothing.</p></div>
+<div class="lay"><h4>🔴 The bubble split dies on a lane — and that is a real gameplay difference</h4>
+<p>A lane <b>already exists</b>. There is nothing to spin up and nothing to hold, so the creation lump that <code>WarpMoveCommand</code> uses to <b>gate departure</b> simply does not apply. Which means: <b>a warp ship with a flat battery cannot leave. A lane ship can</b> — it just crawls. The budget splits the <em>rocket</em> way instead (push hard and burn a lot per AU, or sip and take longer), so the panel drops the &ldquo;energy to start&rdquo; tile entirely.</p></div>
+<div class="lay"><h4>🔴 Three of four die on the gate coupler</h4>
+<p><b>Reach vs power</b> — there is no distance to cover, so power-per-kg buys nothing. <b>Quietness</b> — the transit is instant, and the loud thing is the gate, not you. <b>The bubble split</b> — no path to make, no duration to hold. What is left is the one trade a coupler <em>has</em>: <b>tonnage per transit against cycle time</b>, with throughput fixed by drive mass. Two sliders, and that is the honest size of a part whose only job is to <em>couple</em>.</p></div>
+<p class="sub" style="margin-top:11px">🔑 <b>And every box keeps its own zero-sum.</b> Drag the split end to end in any of the six and the product holds: start × draw · range × tempo · speed ÷ energy-per-AU · tonnage × cycles-per-hour. <b>Four different trades, one law</b> — the same <code>T·v = 2P</code> shape the reaction engine and the gearbox already run on.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The name is BUILT from the dials — 848 of them, and no franchise IP</h2>
+<p class="big">Same scheme as the Weapons door: <b>the name is composed, not looked up.</b> Four slots, three of them driven by the dials you just set — so a design announces what it is before you read a single number, and there is nothing to maintain when a new option lands.</p>
+<div class="scroll"><table class="t">
+<tr><th>Slot</th><th>Comes from</th><th>Values</th></tr>
+<tr><td><b>Modifier</b> <s>at most one</s></td><td>the special settings</td><td><code>Veiled</code> (hidden transit) · <code>Helm-Linked</code> (navigator) · <code>Amphibious</code> · <code>Baffled</code> (heavily muffled)</td></tr>
+<tr><td><b>Scale</b></td><td>drive mass</td><td><code>Compact · Light · — · Heavy · Capital</code></td></tr>
+<tr><td><b>Temper</b></td><td>the zero-sum split</td><td>reaction <code>Hard · — · Long-Burn</code> · ground <code>Road · — · All-Terrain</code> · FTL <code>Sprint · — · Endurance</code> or <code>Rapid · — · Deep-Reach</code></td></tr>
+<tr><td><b>Core noun</b></td><td>the identity choice</td><td>the propellant · how it meets the ground · <b>route × transit</b>, graded by the reach dial</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">Reads as: <b>Heavy Kerolox Booster</b> · <b>Compact Endurance Warp Coil</b> · <b>Amphibious Capital Strider Gantry</b> · <b>Veiled Lane Drive</b> · <b>Helm-Linked Jump Drive</b> · <b>Baffled Light Hydrolox Sustainer</b>.</p>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Family</th><th>Distinct names reachable</th></tr>
+<tr><td>Reaction mass</td><td>120</td></tr>
+<tr><td>A surface</td><td>98</td></tr>
+<tr><td>FTL drive</td><td><b>630</b></td></tr>
+<tr><td><b>The whole door</b></td><td><b>848</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔴 <b>Generic hardware vocabulary only — no franchise IP ever reaches a design name.</b> The franchise names on this page are <em>analysis of the taxonomy</em>, never product names: the thing you build is called <b>a Warp Drive</b>, and the badge only tells you which box that is. Kerolox, methalox, hydrolox, plenum, ground-effect, gantry, coil, coupler, aperture, threshold — all ordinary engineering words.</p>
+<div class="lay" style="margin-top:12px"><h4>Three guards, and one of them corrected me</h4>
+<p><b>① No stutters</b> — word-level de-duplication, so no &ldquo;Heavy Heavy Track Drive.&rdquo; <b>② No contradictions</b> — an adjective is dropped when the noun already carries it: no &ldquo;All-Terrain Strider Drive&rdquo;, no &ldquo;Hard Booster&rdquo;, and <b>no scale word twice</b> (that guard caught &ldquo;Capital Heavy Track Drive&rdquo;). <b>③ A length cap</b> — and this is the one worth reporting: I first set it at <b>four</b> words, which <em>fired</em>, and dropping a word collapsed <b>848 reachable names down to 565</b>. Two genuinely different drives came out with the same name. Fixed by shortening the long core nouns instead, so the cap sits at five and <b>never fires</b> — which is what a guard should do.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔒 The intrinsic test — what may be a dial at all</h2>
+<p class="big"><em>&ldquo;Determine what parameters can be set regardless of the other components on an entity.&rdquo;</em></p>
+<p class="sub">You are designing <b>a part</b>, not a ship. At design time you do not know the hull, the fuel it will carry, or what else is bolted on — so a number needing any of those is an <b>assembly decision</b> or an <b>emergent readout</b>, never a dial. This is the missing test for the two-tool split: the design always said the Component Designer makes pieces and the Entity Assembler puts them on a chassis, but never how to decide which side a number belongs on.</p>
+<div class="scroll"><table class="t">
+<tr><th>Candidate</th><th>Verdict</th><th>Why</th></tr>
+<tr><td>What it pushes against</td><td><b class="g">dial</b></td><td>true of the part, always</td></tr>
+<tr><td>Drive size · the split</td><td><b class="g">dial</b></td><td>this engine&rsquo;s own mass, thrust and exhaust velocity</td></tr>
+<tr><td>Fuel grade · locomotion mode</td><td><b class="g">dial</b></td><td>a property of the part; needs nothing else on the entity</td></tr>
+<tr><td>Route · transit · can-you-be-found</td><td><b class="g">dial</b></td><td>what kind of crossing this drive makes. True of the drive alone — so all three are settings, not assembly choices</td></tr>
+<tr><td>Navigator-gated</td><td><b class="g">dial</b></td><td>the drive either requires a seated specialist or it does not. Whether one is <em>aboard</em> is the assembler&rsquo;s problem</td></tr>
+<tr><td>Cruise speed · jump range</td><td><b class="a">emergent</b></td><td><code>MaxSpeed = power ÷ SHIP mass × 1000</code> — it needs the finished hull, so the FTL tab shows it and never sets it</td></tr>
+<tr><td>Signature suppression</td><td><b class="g">dial</b> — <em>proposed</em></td><td>quiet costs mass or efficiency; both are the part&rsquo;s own</td></tr>
+<tr><td>Fuel load</td><td><b class="r">NOT a dial</b></td><td>fuel is <b>tankage</b> — an engine does not carry fuel. Belongs to Logistical.</td></tr>
+<tr><td>Acceleration · Δv · evasion · signature</td><td><b class="a">emergent</b></td><td>every one needs the finished hull&rsquo;s mass or volume</td></tr>
+</table></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What goes out — the full blast radius</h2>
+<p class="sub">Verified in source. This is the list to check before changing anything in this door.</p>
+<div class="scroll"><table class="t">
+<tr><th>What leaves</th><th>Goes to</th><th>Why it matters</th></tr>
+<tr><td>Thrust ÷ mass</td><td><code>CalculateEvasion</code></td><td>🔴 <b>the best defence in the game is bought HERE</b></td></tr>
+<tr><td>Thrust, as <b>signature</b></td><td><code>SensorSignatureAtb</code> → Detection</td><td>the same dial that buys evasion <b>sells your position</b></td></tr>
+<tr><td>Thrust</td><td><code>FleetManeuver</code></td><td>decides <b>who dictates the range</b> in a closing fight</td></tr>
+<tr><td>Δv</td><td><code>DeltaVFloor</code> → <code>ManeuverBudget</code></td><td>the <b>kiting clock</b> — run dry and the enemy closes</td></tr>
+<tr><td>Warp max speed</td><td><code>WarpSpeedFloor</code></td><td>the fleet moves at its slowest ship</td></tr>
+<tr><td>Bubble creation</td><td><code>WarpMoveCommand</code></td><td><b>gates departure</b> — a flat battery is a ship that cannot leave</td></tr>
+<tr><td>Bubble sustain</td><td><code>WarpMoveProcessor</code> → <b>Power</b></td><td>charged per second in transit — <b>and it is the FTL signature</b></td></tr>
+<tr><td>Speed factor</td><td><code>Speed_kmh</code> → the closing march</td><td>how fast you cross a battle&rsquo;s real metres</td></tr>
+<tr><td>Rough handling</td><td>march time <b>and</b> a combat multiplier</td><td><b>one dial, two systems</b></td></tr>
+<tr><td>Amphibious</td><td><code>HexPathfinder.IsImpassable</code></td><td>✅ <b>wired</b> — where you may go at all; lost with the drive</td></tr>
+<tr><td>Fuel burn</td><td><b>Logistics</b> — tankers, refuelling</td><td>a thirsty fleet is a supply problem</td></tr>
+<tr><td>Drive mass</td><td><b>Chassis</b> budget — <b>and back into its own acceleration</b></td><td>the only door whose output fights its own input</td></tr>
+<tr><td>The drive destroyed</td><td>Damage</td><td>shoot the engine off and evasion collapses</td></tr>
+</table></div>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>Two questions</b> — how you move inside a system, and how you leave it — and then <b>the same two dials, re-purposed by the medium.</b> Every kind of drive is <b>how much drive you fit × how you spend it</b>. Reaction splits thrust ↔ exhaust velocity; Surface splits speed ↔ grip; FTL splits startup ↔ endurance, or range ↔ tempo when the transit is instant — <b>the same two numbers under different names.</b></p>
+<p><b>And the settings change WHICH SLIDERS EXIST</b>, not just their labels: four in box 1, three under hidden transit (quietness has nothing to hide from), a different split on a lane (no bubble to create — so a lane ship can leave on a flat battery where a warp ship cannot), and <b>two</b> on the gate coupler (no distance, no duration, no path to make). Each box keeps its own zero-sum: <b>start × draw · range × tempo · speed ÷ energy-per-AU · tonnage × cycles-per-hour</b> — four trades, one law.</p>
+<p><b>The FTL tab is ONE part with three settings</b> (route × transit × can-you-be-found) plus a navigator flag, and it reproduces <b>every FTL in the list</b>: Star Trek warp, Star Wars hyperspace, BSG jump drives, Stellaris lanes, B5/Stargate/Mass Effect gates, Dune folds. Six combinations, six franchises, <b>one empty box</b>. <b>Cut:</b> fuel load (it is tankage) · Fluid (no component, no variable) · &ldquo;spacetime&rdquo; as a rival to reaction mass (a ship has both) · <b>four separate FTL components</b> (they are one part with a setting changed). <b>Moved out:</b> the grav surveyor, to Sensors. Exotic dissolves into a rule-removed flag; inertialess and teleport leave the category.</p>
+<p><b>The name is composed from the dials</b> — four slots, generic hardware vocabulary, <b>848 distinct names</b> across the door and <b>no franchise IP in any of them.</b> And <b>the greyed &ldquo;not a dial&rdquo; sliders are gone</b>: a slider you cannot set is a caption, not a dial, so the numbers that needed them are quoted against a stated reference instead — a 38 t hull at a 2:1 wet/dry load.</p>
+<p><b>✅ Shipped from this derivation:</b> fuel grade drives the engine · amphibious wired and losable · the locomotion modes named · the warp startup↔endurance dial with a buildable endurance drive · FTL emits a signature · the two evasion ceilings agree at ×20.</p>
+<p><b>Yours to call, in rough order of value:</b> ① <b>Stellaris lanes (box 4) — the cheapest new capability found in this whole derivation.</b> <code>JumpRouter</code> already walks the discovered gate graph for the AI and warp already crosses continuously; forbidding off-lane destinations is a rule, not a system ② make the frame&rsquo;s locomotion mode <em>scale</em> the designed speed factor instead of being overridden by it — otherwise the four modes are dead weight ③ whether a ship may legally carry <b>no FTL drive</b> — three one-line gates stand in the way, and relaxing them is what makes a shot-off warp drive matter ④ give propulsion a <b>drive-heat</b> feed, mirroring the weapon heat pool ⑤ whether untouchable transit (boxes 2 and 5) earns its blast radius — the scan <em>and</em> the battle trigger both have to skip a ship in transit ⑥ whether the <b>navigator</b> flag is worth building, given <code>CommandBerthAtb</code> already seats one ⑦ whether FTL gets its own sensor band, with a receiver to match ⑧ whether jump-point <b>stabilisation</b> becomes a real spend ⑨ the fate of <code>GroundLocomotionAtb</code> — deleting it is the grouping, and it breaks saves.</p>
+</div></footer>
+<script>
+// Every number below is the shipped formula, with tech factors at 1.0 so the SHAPE is what you see.
+// FUEL — exhaust velocity from materials.json, grade from the FuelGrade formula.
+const FUEL={
+ rp1:      {n:'RP-1',     ev:3510, grade:1.15, note:'Dense kerolox. Lowest exhaust velocity, highest grade — most PUSH per kg of engine. The booster fuel.'},
+ methalox: {n:'Methalox', ev:3615, grade:1.05, note:'The middle of the chemical three: a little more range than RP-1, a little less push.'},
+ hydrolox: {n:'Hydrolox', ev:4462, grade:0.85, note:'Highest chemical exhaust velocity — most delta-v per kg of fuel — but the lowest grade, so it pushes softest. Also 3.3x bulkier, so you carry less.'},
+ ntp:      {n:'NTP',      ev:7000, grade:0.75, note:'Nuclear thermal — better at everything (grade x ev = 5250 vs ~3800) because it is a reactor. Paid in fissionables and 125x the credits.'}};
+// SURFACE — the four modes the sim reads, with their real speed multipliers.
+const LOCO={
+ foot:    {n:'Legs',   speed:1.0, rough:0.85, note:'Infantry and powered armour. Slowest, but it goes where nothing else can — the best rough-ground handling in the game.'},
+ tracked: {n:'Tracks', speed:2.0, rough:0.30, note:'Tanks. Twice foot speed on open ground and bogged the moment it leaves it — the clearest gearbox trade of the four.'},
+ walker:  {n:'Walker', speed:1.5, rough:0.75, note:'The big multi-leg machines. Middling speed with almost all of the legs advantage — pays for it in mass.'},
+ hover:   {n:'Hover',  speed:3.0, rough:0.50, note:'Skimmers. Fastest by far and terrain-indifferent rather than terrain-good: nothing to grip means no edge either way.'}};
+// "Seen from" is a RATIO (range goes as sqrt(magnitude)), so it is reported against the STOCK drive
+// of the SAME family — mixing a demo thrust with a real engine's magnitude would be a fake comparison.
+// A component designer cannot know the hull or the propellant load, so the emergent numbers are quoted against a
+// STATED REFERENCE — the way a parts catalogue quotes a figure — never against a slider the player cannot really set.
+const REF_HULL=38000, REF_WET=2.0;               // a 38 t hull at a 2:1 wet/dry load
+const BASE_SIG={reaction:109103, ftl:3179310};   // each family's signature at the default slider positions
+let fam='reaction', fuelId='rp1', locoId='foot', route='free', transit='cont', seen='seen';
+
+// The six science-fiction rows, keyed by route|transit|seen. Instant transit has NO "seen" state — there is no
+// transit to be observed during — which is exactly why the developer's own table reads n/a on those rows. That
+// dependency is why this is TWO choices and a conditional third, not three independent ones.
+const FRAN={
+ 'free|cont|seen'  :{n:'★ Star Trek warp — and this is Pulsar TODAY', f:'Star Trek warp',
+   d:'Free route, you stay in normal space, and a warp trail is trackable. Every shipped Alcubierre drive is this box.',
+   s:'✅ Ships today, byte for byte. Route, transit and signature all already behave this way.'},
+ 'free|cont|hidden':{n:'Star Wars hyperspace', f:'Star Wars hyperspace',
+   d:'Same free route and continuous crossing — but you are somewhere else while you do it, so nothing can find or touch you.',
+   s:'🔴 Needs the sensor scan AND the battle trigger to both SKIP a ship in transit. Two systems, not a dial.'},
+ 'free|inst|seen'  :{n:'Battlestar Galactica jump drive', f:'the BSG jump drive',
+   d:'Vanish here, appear there. No crossing at all — so the spool-up before it and the recharge after it are the whole game.',
+   s:'⚠ Needs a jump order, a per-jump range limit and a cooldown. A whole movement mode — but the SPOOL is already emergent.'},
+ 'fixed|cont|seen' :{n:'Stellaris hyperlanes', f:'Stellaris hyperlanes',
+   d:'You must reach a node, then you travel ALONG the lane — so you can be caught in the middle of one.',
+   s:'✅✅ The CHEAPEST unbuilt row: JumpRouter already walks the discovered gate graph, and warp already does continuous transit. Forbid off-lane destinations and you are done.'},
+ 'fixed|cont|hidden':{n:'🔓 UNCLAIMED — a lane nobody can see you inside', f:'',
+   d:'The derivation predicts this box and no franchise on the list fills it: fixed lanes, a real crossing, and untouchable while you make it.',
+   s:'🔓 An empty box is the useful output of a saturated taxonomy. Costs whatever hyperspace costs, plus the lane rule.'},
+ 'fixed|inst|seen' :{n:'★ B5 gates · Stargate · ME relays · Aurora jump points — Pulsar&rsquo;s OTHER half', f:'B5 gates, Stargate and Mass Effect relays',
+   d:'Reach the gate and step through. The network does the moving, so the drive barely has to be anything.',
+   s:'⚠ Half-shipped: the gates, the discovery layer and the router all exist — but there is NO drive component. JumpOrder just checks you own a warp drive.'}
+};
+function franKey(){return route+'|'+transit+'|'+(transit==='inst'?'seen':seen);}
+
+// ── NAMING ─────────────────────────────────────────────────────────────────────────────────────────────────
+// The SAME compositional shape the Weapons door uses: [modifier?] + [scale] + [temper] + [core noun], built from
+// the dials rather than looked up, with the same two guards — no contradictions (drop an adjective the noun
+// already carries) and no stutters (word-level de-duplication). Generic hardware vocabulary ONLY: no franchise
+// IP ever reaches a design name. Franchise names appear on this page as ANALYSIS of the taxonomy, never as a
+// product name — the thing you build is called what it is.
+const SCALE=['Compact','Light','','Heavy','Capital'];
+const NOUN={
+ // Reaction — the propellant names the motor, the split names its job.
+ 'rp1'     :['Kerolox Booster','Kerolox Motor','Kerolox Sustainer'],
+ 'methalox':['Methalox Booster','Methalox Motor','Methalox Sustainer'],
+ 'hydrolox':['Hydrolox Booster','Hydrolox Motor','Hydrolox Sustainer'],
+ 'ntp'     :['Nuclear Booster','Nuclear Motor','Nuclear Sustainer'],
+ // Surface — how it meets the ground names the running gear.
+ 'foot'    :['Marching Gear','Powered Gait','Leg Gantry'],
+ 'tracked' :['Track Drive','Tracked Gear','Track Gantry'],
+ 'walker'  :['Strider Drive','Walker Gear','Strider Gantry'],
+ 'hover'   :['Lift Drive','Ground-Effect Drive','Plenum Gantry'],
+ // FTL — route x transit names the drive; the reach dial picks how grand the word is.
+ 'free|cont' :['Warp Coil','Warp Drive','Displacement Drive'],
+ 'free|inst' :['Hop Drive','Jump Drive','Translation Drive'],
+ 'fixed|cont':['Lane Coil','Lane Drive','Corridor Drive'],
+ 'fixed|inst':['Gate Coupler','Threshold Drive','Aperture Drive']
+};
+const TEMPER={reaction:['Hard','','Long-Burn'], surface:['Road','','All-Terrain'],
+ // one per FTL box, because the split means something different in each: bubble / bound / lane push / gate cycle
+ 'free|cont' :['Sprint','','Endurance'], 'free|inst' :['Rapid','','Deep-Reach'],
+ 'fixed|cont':['Express','','Frugal'],   'fixed|inst':['Shuttle','','Bulk']};
+function bucket(v,n){return Math.min(n-1,Math.floor(v/100*n));}   // slider 0..100 -> 0..n-1
+// One modifier at most, by priority. Each is a real setting, so a name never claims something the part is not.
+function composeName(parts){
+  const words=[]; const seenW=new Set();
+  for(const p of parts){ if(!p) continue;
+    for(const w of String(p).split(' ')){
+      const k=w.toLowerCase(); if(seenW.has(k)) continue;   // no stutters: "Heavy Heavy Track Drive"
+      seenW.add(k); words.push(w); } }
+  return words.join(' ');
+}
+function driveName(o){
+  const scale=SCALE[bucket(o.size,5)];
+  let temper, noun, mod='';
+  if(o.fam==='reaction'){
+    temper=TEMPER.reaction[bucket(o.split,3)];
+    noun=NOUN[o.fuelId][bucket(o.split,3)];
+    if(o.supp>=66) mod='Baffled';
+  } else if(o.fam==='surface'){
+    temper=TEMPER.surface[bucket(o.split,3)];
+    noun=NOUN[o.locoId][bucket(o.size,3)];
+    if(o.amph) mod='Amphibious';
+  } else {
+    const box=o.route+'|'+o.transit;
+    temper=TEMPER[box][bucket(o.split,3)];
+    // the gate-coupler box has NO reach dial, so its noun grades on drive mass instead of a slider that is hidden
+    noun=NOUN[box][bucket(box==='fixed|inst'?o.size:o.supp,3)];
+    if(o.transit==='cont'&&o.seen==='hidden') mod='Veiled';       // it leaves normal space
+    else if(o.nav)      mod='Helm-Linked';                        // a seated specialist flies it
+    else if(o.quiet>=66) mod='Baffled';
+  }
+  // no contradictions: drop an adjective the noun already carries in spirit
+  if(temper==='Hard'&&/Booster/.test(noun)) temper='';
+  if(temper==='Long-Burn'&&/Sustainer/.test(noun)) temper='';
+  if(temper==='All-Terrain'&&/Strider|Plenum|Ground-Effect/.test(noun)) temper='';
+  if(temper==='Road'&&/Track/.test(noun)) temper='';
+  if(SCALE.some(w=>w&&noun.includes(w))) scale='';   // no scale word twice — "Capital Heavy Track Drive"
+  // Guard 3 — FIVE WORDS MAX, and it is a SAFETY NET that never fires: every core noun is at most two words,
+  // so modifier + scale + temper + noun tops out at five. An earlier four-word cap DID fire, and dropping a word
+  // collapsed distinct designs onto one name (848 reachable names became 565) — a name must still identify a part.
+  let n=composeName([mod,scale,temper,noun]);
+  if(n.split(' ').length>5) n=composeName([mod,scale,noun]);
+  return n;
+}
+const $=id=>document.getElementById(id);
+function fmt(v){return v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(v<10?2:0);}
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function band(id,x,hi,mid){$(id).className='num '+(x>hi?'set r':x>mid?'set a':'set g');}
+
+function render(){
+ const size=+$('size').value, split=+$('split').value, supp=+$('supp').value, quiet=+$('quiet').value,
+       amph=$('amph').checked, nav=$('nav').checked;
+ const F=FUEL[fuelId], L=LOCO[locoId];
+
+ show('fuelsec',   fam==='reaction');
+ show('locosec',   fam==='surface');
+ show('ftlsec',    fam==='ftl');
+ show('seenrow',   transit==='cont');                 // instant transit has no transit to be seen during
+ show('thirdwrap', fam!=='surface');                  // suppression | reach-vs-power; the ground has no third dial
+ show('fourthwrap',fam==='ftl');
+ show('splitwrap', true);
+ show('sigbox',    fam!=='surface');                  // a ground unit's signature is not modelled
+ show('seenbox',   fam!=='surface');
+ show('massbox',   true);
+ set('v_name', driveName({fam,size,split,supp,quiet,fuelId,locoId,route,transit,seen,nav,amph}));
+ set('v_namesub', fam==='reaction' ? 'scale ← drive mass · job ← the push/economy split · noun ← the propellant'
+   : fam==='surface' ? 'scale ← drive mass · gearing ← the speed/grip split · noun ← how it meets the ground'
+   : 'scale ← drive mass · temper ← the split · noun ← route × transit, graded by reach');
+
+
+ if(fam==='reaction'){
+   const sf=supp/100;
+   const driveMass=(100+size*80)*(1+0.45*sf);
+   const dry=REF_HULL+driveMass, wet=dry*REF_WET;   // stated reference, not a dial (see the intrinsic test)
+   // Power = 1/2 x massflow x ve^2, massflow ~ size x grade  =>  P ~ size x grade x ev^2.
+   // At the nominal split (ve = the fuel's own ev) thrust ~ size x grade x ev, which is exactly
+   // the shipped engine's thrust = ev x massflow. Builder and engine agree.
+   const power=(100+size*80)*45000*F.grade*Math.pow(F.ev/3510,2)*(1-sf);
+   const ve=F.ev*(0.55+split*0.009);
+   const thrust=2*power/ve, accel=thrust/dry, dv=ve*Math.log(wet/dry);
+   const ev=0.95*(1000/(1000+dry/150))*(accel/(5.0+accel));
+   const mult=1/Math.max(1-ev,0.05);          // floor = MinLandedFraction, now 1 - EvasionCap
+   const sig=thrust*(1-sf), seenX=Math.sqrt(sig/BASE_SIG.reaction);
+   set('sizename','How much drive you fit'); set('sizesub','this engine’s own mass');
+   set('sizelo','small'); set('sizehi','huge');
+   set('splitname','Push ↔ economy'); set('splitsub','one budget, three ways');
+   set('splitlo','hard shove — loud'); set('splithi','long haul — quiet');
+   set('thirdname','Signature suppression'); set('thirdsub','proposed — taxes the WHOLE budget');
+   set('thirdlo','bare drive'); set('thirdhi','heavily muffled');
+   set('l_a1','Thrust — set');            set('v_a1',fmt(thrust)+' N');
+   set('l_a2','Exhaust velocity — set');  set('v_a2',fmt(ve)+' m/s');
+   set('l_a3','Acceleration — emergent'); set('v_a3',accel.toFixed(2)+' m/s²');
+   set('l_a4','Delta-v — emergent');      set('v_a4',fmt(dv)+' m/s');
+   set('l_sig','Signature'); set('l_seen','Seen from — vs a stock drive');
+   set('v_sig',fmt(sig)+(supp>0?' ▼':'')); set('v_seen',seenX.toFixed(2)+'×');
+   set('v_mass',fmt(wet)+' kg'); set('v_runs',F.n);
+   band('sigbox',seenX,1.35,1.12); band('seenbox',seenX,1.35,1.12);
+   set('v_ev','×'+mult.toFixed(2)+' effective health');
+   $('v_evdesc').innerHTML='the evasion <b>multiplier</b> — emergent, it needs the finished hull. ×1 against a beam.';
+   $('famnote').textContent='Carry your own reaction mass. The only family that pays off directly in a fight: thrust ÷ mass is acceleration, and acceleration is the evasion multiplier.';
+   $('fuelnote').textContent=F.n+' — exhaust velocity '+F.ev+' m/s, grade '+F.grade.toFixed(2)+'. '+F.note;
+   $('tradenote').textContent='Thrust × exhaust velocity = '+fmt(2*power)+', fixed by how much drive you fit. Push hard, briefly and LOUDLY; or gently, forever and quietly.';
+   $('verdict').textContent = ev>0.35 ? 'Nimble: it dodges, and it dictates the range in a closing fight.'
+     : ev>0.12 ? 'Middling: it can be juked into, but it is not helpless.'
+     : 'A brick. Everything hits it, and the faster side chooses the range.';
+ } else if(fam==='surface'){
+   const speed=L.speed*(1.6-split*0.011);
+   const rough=Math.min(0.98,Math.max(0.05,L.rough*(0.45+split*0.011)));
+   const terrainMult=1+(2.5-1)*Math.max(0.1,1.5-rough);   // GroundMobility.TerrainMult on a rough hex
+   const combatMult=Math.max(0.1,1+(rough-0.5)*0.5);      // GroundTerrain.LocomotionTerrainMult
+   const marchOpen=20/speed, marchRough=marchOpen*terrainMult;
+   const unitMass=(100+size*80)+REF_HULL;
+   set('sizename','How much drive you fit'); set('sizesub','the drive’s own mass');
+   set('sizelo','light'); set('sizehi','heavy');
+   set('splitname','Speed ↔ grip'); set('splitsub','the gearbox trade');
+   set('splitlo','tall gearing'); set('splithi','low gearing');
+   set('l_a1','Speed factor — set');      set('v_a1','×'+speed.toFixed(2));
+   set('l_a2','Rough handling — set');    set('v_a2',(rough*100).toFixed(0)+'%');
+   set('l_a3','March, open ground');           set('v_a3',marchOpen.toFixed(1)+' min/hex');
+   set('l_a4','March, rough ground');          set('v_a4',marchRough.toFixed(1)+' min/hex');
+   set('v_mass',fmt(unitMass)+' kg');
+   set('v_runs', amph?'fuel · power — and it swims':'fuel · power · muscle');
+   set('v_ev','×'+combatMult.toFixed(2)+' fighting on rough ground');
+   $('v_evdesc').innerHTML='<b>one dial, two systems</b> — rough handling sets march time <em>and</em> a combat multiplier.';
+   $('famnote').textContent='Push against terrain, so terrain decides everything. It is the SAME budget law as a rocket, written in a gearbox.';
+   $('loconote').textContent=L.n+' — base speed ×'+L.speed.toFixed(1)+'. '+L.note;
+   $('tradenote').textContent='Speed × tractive effort, fixed by how much drive you fit. Tall gearing is fast on roads and bogs in the rough; low gearing crawls everywhere but never stops.'
+     + (amph?' Water costs 4.0 a hex — worse than a mountain — so amphibious buys ACCESS, not speed.':'');
+   $('verdict').textContent = rough>0.7 ? 'All-terrain: slow on the road, but it fights and marches where wheels cannot.'
+     : rough>0.35 ? 'Balanced: no strong ground of its own.'
+     : 'Road-bound: fast on open ground, out-fought the moment it leaves it.';
+ } else if(fam==='ftl'){
+   // ONE FTL tab — and the SLIDER SET changes with the settings, because different settings make different
+   // sliders meaningless. Every removal below has a physical reason, not a UI reason.
+   //
+   //   Shipped warp arithmetic (engines.json, alcubierre-warp-drive):
+   //     Engine Power = EvP x mass x 1000 · creation = power x tech x 0.5 x SvE (gates DEPARTURE)
+   //     sustain = power x 0.001 x tech / SvE (charged per second) · signature = (3500 K, sustain x 1000)
+   //     MaxSpeed = power / SHIP mass x 1000  (WarpMath.MaxSpeedCalc)  -> EMERGENT
+   //
+   //   WHAT IS ALIVE WHERE
+   //     drive mass     every box            it is the drive's own size
+   //     reach vs power every box but 6      box 6 has no distance to cover, so power-per-kg buys nothing
+   //     the SPLIT      every box, DIFFERENT MEANING:
+   //                      free  + cont  creation <-> sustain   (you make a bubble and hold it)
+   //                      free  + inst  range    <-> tempo     (one long bound, or many quick ones)
+   //                      fixed + cont  speed    <-> economy   (the lane exists; you only choose how hard to push)
+   //                      fixed + inst  cycle    <-> tonnage   (the gate moves you; you choose how much, how often)
+   //     quietness      only when you are IN NORMAL SPACE for the part that matters — dead under hidden
+   //                    transit (nothing to be quiet in front of) and dead on box 6 (instant, and the GATE is
+   //                    the loud thing, not you)
+   const hidden=(transit==='cont'&&seen==='hidden');
+   const gateOnly=(route==='fixed'&&transit==='inst');
+   const lane=(route==='fixed'&&transit==='cont');
+   show('thirdwrap', !gateOnly);
+   show('fourthwrap', !hidden && !gateOnly);
+   const mass=500+size*245;                     // 500..25000 kg, the template's own Mass range
+   const k=0.4+split*0.021;                     // 0.4..2.5, reciprocal-symmetric about 1.0 — every box's split
+   const evp=gateOnly?1:(0.4+supp*0.016);       // Efficency vs Power — the real shipped dial, 0.4..2.0
+   const qf=(hidden||gateOnly)?0:quiet/100;     // a hidden slider must not act on the numbers behind your back
+   let power=evp*mass*1000*(1-0.6*qf);          // quietness taxes the WHOLE budget (§23.2a)
+   if(nav)      power/=0.45;                    // a navigator does work the machine would: same reach, less drive
+   if(hidden)   power*=0.5;                     // leaving normal space eats half the budget
+   if(route==='fixed') power*=6;                // the NETWORK does the moving, so the drive barely has to be anything
+   const driveMass=mass*(1+0.45*qf), shipMass=REF_HULL+driveMass;
+   const AU=1.495978707e11;
+   set('sizename','Drive mass'); set('sizesub','sets engine power');
+   set('sizelo','500 kg'); set('sizehi','25,000 kg');
+   set('thirdname','Reach vs power'); set('thirdsub','the shipped Efficency-vs-Power dial');
+   set('thirdlo','0.4 — efficient'); set('thirdhi','2.0 — powerful');
+   set('fourthname','Quietness'); set('fourthsub','proposed — taxes the WHOLE budget');
+   set('fourthlo','bare drive'); set('fourthhi','heavily muffled');
+   set('v_mass',fmt(shipMass)+' kg');
+   let sig=0, deadnote='';
+   if(!lane && !gateOnly){
+     // ── BOXES 1-3: you make your own path. The bubble budget, spent two ways.
+     const create=power*0.5*k, sustain=power*0.001/k;
+     sig=sustain*1000;
+     set('l_a1','Energy to START — set');  set('v_a1',fmt(create)+' kJ');
+     set('l_a2','Continuous draw — set');  set('v_a2',fmt(sustain)+' kW');
+     set('v_runs','stored power');
+     if(transit==='cont'){
+       // Under HIDDEN transit the same slider means something sharper: how long you sit exposed in normal
+       // space before you vanish. The arithmetic is identical; the thing it decides is not.
+       set('splitname',hidden?'Spool ↔ endurance':'Startup ↔ endurance');
+       set('splitsub',hidden?'how long you sit EXPOSED before you vanish':'their product is fixed at a given power');
+       set('splitlo',hidden?'0.4 — vanish fast':'0.4 — quick to leave'); set('splithi','2.5 — cheap to hold');
+       const speed=power/shipMass*1000;
+       set('l_a3','Cruise speed — emergent'); set('v_a3',fmt(speed)+' m/s');
+       set('l_a4','Days to cross 1 AU');      set('v_a4',(AU/speed/86400).toFixed(1)+' days');
+       set('l_sig',hidden?'Signature — only while you SPOOL':'Signature — the whole way');
+       set('v_sig',hidden?fmt(sig)+' ▸ then 0':fmt(sig));
+       set('v_ev', k<0.8?'A courier':k>1.6?'A long-haul hull':'Balanced');
+       $('v_evdesc').innerHTML = hidden
+         ? 'You still spool up in <b>normal space</b> — so hidden transit hides the CROSSING, never the departure.'
+         : k<0.8 ? 'Leaves on a part-charged battery and drinks power all the way. <b>The loudest thing in the sky.</b>'
+         : k>1.6 ? 'Needs a full charge before it can move at all — then crosses quietly on almost nothing.'
+         : 'The stock drive. No strong preference either way.';
+       $('tradenote').textContent='Start × draw = '+fmt(create*sustain)+', fixed by engine power alone — the slider only decides WHERE on that curve you sit. Drag it end to end and watch that number hold.';
+       $('verdict').textContent='And the fleet moves at its SLOWEST ship, so one frugal drive sets the pace for everyone.';
+       if(hidden) deadnote='🔴 <b>Quietness is DEAD here and the slider is gone.</b> You are not in normal space during the crossing, so there is no signature to suppress — the only exposure is the spool, and the split above already decides how long that lasts.';
+     } else {
+       set('splitname','Range ↔ tempo'); set('splitsub','one big bound, or many quick ones');
+       set('splitlo','0.4 — short, often'); set('splithi','2.5 — far, rarely');
+       const rechargeS=create/sustain, rangeAU=create/2.2e5, perHour=rangeAU/(rechargeS/3600);
+       set('l_a3','Range per jump — emergent'); set('v_a3',rangeAU.toFixed(1)+' AU');
+       set('l_a4','Ready again in');            set('v_a4',(rechargeS/60).toFixed(1)+' min');
+       set('l_sig','Signature — while you SPOOL'); set('v_sig',fmt(sig)+' ▸ then gone');
+       set('v_ev', k<0.8?'A raider — short bounds, relentless':k>1.6?'A strategic jumper — one long bound':'Balanced');
+       $('v_evdesc').innerHTML='no crossing at all, so <b>nothing can intercept you</b> — the spool before and the recharge after are the entire game.';
+       $('tradenote').textContent='Range per jump × tempo = '+(rangeAU*perHour).toFixed(0)+' and it does NOT move when you drag the slider: right now '+rangeAU.toFixed(1)+' AU a bound at '+perHour.toFixed(0)+' AU an hour. Reach further in one leap and your overall tempo drops; hop short and often and you cover more ground but cannot cross a gap in one go.';
+       $('verdict').textContent='And you cannot be caught in transit at all, which is the strongest defensive property in the list.';
+     }
+   } else if(lane){
+     // ── BOXES 4-5: the LANE already exists. There is no bubble to create, so the startup↔endurance slider is
+     // dead — the budget splits the rocket way instead: go hard and burn a lot per AU, or sip and crawl.
+     set('splitname','Speed ↔ economy'); set('splitsub','no bubble to create — this is the ROCKET trade on a rail');
+     set('splitlo','0.4 — frugal crawl'); set('splithi','2.5 — full express');
+     const spd0=power/shipMass*1000, draw0=power*0.001;
+     const speed=spd0*k/1.45, energyAU=(draw0*(AU/spd0)/1e6)*k/1.45;   // GJ per AU
+     const draw=energyAU*1e6*speed/AU;
+     sig=draw*1000;
+     set('l_a1','Lane speed — emergent');   set('v_a1',fmt(speed)+' m/s');
+     set('l_a2','Continuous draw — set');   set('v_a2',fmt(draw)+' kW');
+     set('l_a3','Days to cross 1 AU');      set('v_a3',(AU/speed/86400).toFixed(1)+' days');
+     set('l_a4','Energy per AU');           set('v_a4',fmt(energyAU)+' GJ');
+     set('v_runs','stored power — but NO starting lump');
+     set('l_sig',hidden?'Signature — only as you ENTER':'Signature — all down the lane');
+     set('v_sig',hidden?fmt(sig)+' ▸ then 0':fmt(sig));
+     set('v_ev', k<0.8?'A freighter — slow and cheap':k>1.6?'An express — fast and thirsty':'Balanced');
+     $('v_evdesc').innerHTML='🔑 <b>and there is NO energy-to-start tile</b>, because a lane needs no bubble spun up — <b>this drive can set off on a flat battery.</b> It just crawls.';
+     $('tradenote').textContent='Speed ÷ energy-per-AU = '+fmt(speed/energyAU)+' and it holds across the slider: push the express end and you arrive in '+(AU/speed/86400).toFixed(1)+' days burning '+fmt(energyAU)+' GJ an AU; crawl and you pay less for every AU but take far longer.';
+     $('verdict').textContent='And you may only do it along a DISCOVERED lane — so a rival who holds the node holds you.';
+     deadnote='🔴 <b>Startup ↔ endurance is DEAD here and the slider is repurposed.</b> The path already exists, so there is no bubble to create and nothing to hold — the creation lump that gates a warp departure simply does not apply. That is a real gameplay difference: <b>a warp ship with a flat battery cannot leave. A lane ship can.</b>'
+       + (hidden?' <b>Quietness is dead too</b> — hidden inside a lane means nothing can read you between the nodes.':'');
+   } else {
+     // ── BOX 6: the GATE does everything. No distance, no duration, no path to make. Three of the four
+     // sliders write nothing at all, which is the honest state of a drive whose job is only to COUPLE.
+     set('splitname','Cycle ↔ tonnage'); set('splitsub','proposed — the only thing a coupler can trade');
+     set('splitlo','0.4 — light and quick'); set('splithi','2.5 — heavy and slow');
+     const tonnage=mass*0.02*k, cycleMin=4*k, perHour=tonnage/(cycleMin/60);
+     const transits=Math.ceil(shipMass/1000/tonnage);
+     set('l_a1','Tonnage per transit — set'); set('v_a1',tonnage.toFixed(1)+' t');
+     set('l_a2','Cycle time — set');          set('v_a2',cycleMin.toFixed(1)+' min');
+     set('l_a3','Tonnage per hour — fixed');  set('v_a3',perHour.toFixed(1)+' t/h');
+     set('l_a4','Transits for the reference hull'); set('v_a4',transits+'');
+     set('v_runs','nothing — the gate does the work');
+     set('v_ev','A coupler, not a drive');
+     $('v_evdesc').innerHTML='it does not move you. It lets you <b>engage a gate</b> — which is why three of the four sliders vanished rather than being renamed.';
+     $('tradenote').textContent='Tonnage × cycles-per-hour = '+perHour.toFixed(1)+' t an hour and it does not move with the slider — drive mass alone sets your throughput, and the slider only decides whether that arrives as one heavy push or several light ones.';
+     $('verdict').textContent='🔴 And this is the box Pulsar already half-ships: the gates, the discovery layer and the router all exist, but NO drive component does — JumpOrder simply checks you own a warp drive.';
+     deadnote='🔴 <b>Three sliders are gone, and none of it is a UI choice.</b> <b>Reach vs power</b> — there is no distance to cover, so power-per-kg buys nothing. <b>Quietness</b> — the transit is instant, and the loud thing is the gate, not you. <b>The bubble split</b> — there is no path to make and no duration to hold, so it becomes the one trade a coupler has: how much, how often.';
+   }
+   const seenX=Math.sqrt(sig/BASE_SIG.ftl);
+   show('sigbox', !gateOnly); show('seenbox', !gateOnly);
+   if(!gateOnly){ band('sigbox',seenX,1.35,1.12); band('seenbox',seenX,1.35,1.12);
+     set('l_seen','Seen from — vs a stock FTL drive'); set('v_seen',seenX.toFixed(2)+'×'); }
+   const fr=FRAN[franKey()];
+   // Box 3 holds three franchises; the NAVIGATOR flag is what separates Dune from BSG — so say which.
+   const fname=(nav&&route==='free'&&transit==='inst') ? 'the Dune fold and the Andromeda slipstream' : fr.f;
+   $('franbadge').innerHTML='You have just built a <b>'+$('v_name').textContent+'</b>'
+     +' <s style="opacity:.8">— '+(fname ? 'the box '+fname+' occupies' : 'a box no franchise on the list claims')+'</s>';
+   $('ftlstate').innerHTML=fr.d+'<br>'+fr.s
+     +(deadnote?'<br>'+deadnote:'')
+     +(nav?'<br>🔴 <b>Navigator-gated</b> adds a Command Berth requirement — <code>CommandBerthAtb</code> exists (Role · Grade · Support · Survivability · Span), so the seat has a chassis. The drive is <b>dead without a living specialist aboard</b>: the cheapest reach in the game, and the only one you can lose to a sniper.':'');
+   $('famnote').textContent='ONE tab, and the settings do not merely re-label the sliders — they change WHICH sliders exist, because different settings make different dials meaningless. Paid in stored electricity rather than fuel.';
+ }
+}
+function chipRow(sel,fn){document.querySelectorAll(sel).forEach(c=>c.addEventListener('click',()=>{
+ fn(c);document.querySelectorAll(sel).forEach(x=>x.setAttribute('aria-pressed',x===c));render();}));}
+chipRow('.chip',  c=>{fam=c.dataset.v;});
+chipRow('.fchip', c=>{fuelId=c.dataset.f;});
+chipRow('.lchip', c=>{locoId=c.dataset.l;});
+chipRow('.rchip', c=>{route=c.dataset.r;});
+chipRow('.tchip', c=>{transit=c.dataset.t;});
+chipRow('.schip', c=>{seen=c.dataset.s;});
+['size','split','supp','quiet'].forEach(i=>$(i).addEventListener('input',render));
+$('amph').addEventListener('change',render);
+$('nav').addEventListener('change',render);
+render();
+</script>
