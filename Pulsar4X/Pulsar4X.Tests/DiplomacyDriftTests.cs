@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the reactive-diplomacy DRIFT (docs/DIPLOMACY-DESIGN.md "Are we good?"): the previously-dead
+    /// Gauge for the reactive-diplomacy DRIFT (docs/society/DIPLOMACY-DESIGN.md "Are we good?"): the previously-dead
     /// <see cref="ReactiveDiplomacy"/> table is now a LIVE monthly loop in <see cref="NPCDecisionProcessor"/> — a
     /// faction's feelings move on what it can observe of its neighbours. Proves the DIRECTION (a militarist
     /// neighbour cools relations; a standing treaty warms them; a plain neutral neither), and the crucial

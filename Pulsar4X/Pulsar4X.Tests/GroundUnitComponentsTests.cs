@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// Units-as-entities (Option A) — SLICE 1 gauge: the assembler must KEEP the unit's mounted components (frame +
     /// parts) on the design, not just the flattened combat stats. This is the foundation for turning a raised unit
     /// into an entity that carries those components, so every ability falls out of the shared component infrastructure
-    /// (docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md). Additive — the flat stats still drive combat today.
+    /// (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md). Additive — the flat stats still drive combat today.
     /// </summary>
     [TestFixture]
     public class GroundUnitComponentsTests

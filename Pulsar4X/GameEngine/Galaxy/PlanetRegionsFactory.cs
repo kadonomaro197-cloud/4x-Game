@@ -17,7 +17,7 @@ namespace Pulsar4X.Galaxy
     /// defensively guarded and idempotent — a bad body or a math edge case skips just that body and can never crash
     /// generation. Hooked into <see cref="StarSystemFactory"/> at the procedural + blueprint + Sol gen paths.
     ///
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public static class PlanetRegionsFactory
     {

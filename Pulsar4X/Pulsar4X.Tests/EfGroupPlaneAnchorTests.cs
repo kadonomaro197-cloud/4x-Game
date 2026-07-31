@@ -11,7 +11,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Slice S1 of the 2D group-plane resolver (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13; Operation
+    /// Slice S1 of the 2D group-plane resolver (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5; Operation
     /// Earthfall T2.1). S0 built the pure <see cref="GroupPlane"/> math with no caller; S1 WIRES it into the space
     /// engagement: at a fight's start a battle-local 2D plane is seeded from the fleets' real 3D positions and
     /// FROZEN, each fleet's anchor is its projected point, and <see cref="CombatEngagement.AdvanceClosing"/> slides

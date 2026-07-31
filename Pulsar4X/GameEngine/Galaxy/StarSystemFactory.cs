@@ -525,6 +525,17 @@ namespace Pulsar4X.Galaxy
                 blobs.Add(new NameDB(beltName + " " + (i + 1).ToString()));
                 blobs.Add(new VisibleByDefaultDB());
 
+                // Give the rock ore. These scattered belt bodies are the ones a player sends a mining ship
+                // to, but they were born mineral-dead — GenerateAsteroidBelt never attached a MineralsDB, so
+                // Sol's main + Kuiper belts read as barren gravel. The RNG-FREE body-type-abundance fallback
+                // (the same one the authored named bodies use) fills every rock deterministically, WITHOUT
+                // drawing system.RNG — so the belt's positions/masses stay byte-identical and galaxy-gen
+                // determinism is untouched. Returns null only for a type with no surface (not the case here,
+                // these are Asteroid/DwarfPlanet), so every belt rock ends up mineable.
+                var beltMinerals = Pulsar4X.Industry.MineralDepositFactory.GenerateBodyTypeFallback(game, bodyType);
+                if(beltMinerals != null)
+                    blobs.Add(beltMinerals);
+
                 var entity = Entity.Create();
                 system.AddEntity(entity, blobs);
             }

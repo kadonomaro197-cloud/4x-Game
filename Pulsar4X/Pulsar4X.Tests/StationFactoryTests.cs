@@ -25,7 +25,7 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// The station-host foundation gauge. A space station is the deliberate PARALLEL to a colony
-    /// (docs/SPACE-STATIONS-DESIGN.md): its OWN chassis, but carrying the SAME shared component-equipment
+    /// (docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md): its OWN chassis, but carrying the SAME shared component-equipment
     /// layer a colony does. These tests assert StationFactory wires that chassis correctly — the same blob
     /// set a colony gets, registered on the faction's parallel Stations registry — which is the precondition
     /// for the economy processors (which discover work by ability component, not by host type) to process a

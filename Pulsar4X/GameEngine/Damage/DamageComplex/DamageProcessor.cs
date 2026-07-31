@@ -380,7 +380,7 @@ namespace Pulsar4X.Damage
         /// Orbital bombardment of a STATION — the parallel to <see cref="OnColonyDamage"/>. Reached when a weapon
         /// strikes a station entity (<see cref="Pulsar4X.Stations.StationInfoDB"/>) directly. It shares the colony's
         /// population-casualty and module-damage passes, but differs in the two ways that make a station the cheap,
-        /// fragile alternative to a planet (docs/SPACE-STATIONS-DESIGN.md):
+        /// fragile alternative to a planet (docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md):
         ///  • NO atmospheric contamination (a sealed habitat has no atmosphere to poison), and
         ///  • a STRUCTURAL-INTEGRITY kill trigger — unlike a colony (which this path never destroys), a station is
         ///    DESTROYED once its <see cref="StationInfoDB.StructuralIntegrity"/> pool is exhausted. That finite pool

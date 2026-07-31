@@ -6,7 +6,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-5e — the Diplomat/Intelligence YIELD ROUTES (docs/SITE-ENGINE-DESIGN.md §3 Yield dial, §7). The
+    /// Site Engine SE-5e — the Diplomat/Intelligence YIELD ROUTES (docs/explore/SITE-ENGINE-DESIGN.md §3 Yield dial, §7). The
     /// final Site Engine slice: a resolved site can now pay into the diplomacy and espionage systems, not just research.
     /// A Diplomacy-yield site WARMS the working faction's relations with everyone it's met; an Intel-yield site CONFIRMS
     /// its picture of those rivals. Proves both deliveries land in their real engine ledgers, and that a faction that has

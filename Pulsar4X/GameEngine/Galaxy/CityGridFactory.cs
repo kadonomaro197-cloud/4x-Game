@@ -10,7 +10,7 @@ namespace Pulsar4X.Galaxy
     /// single operational hex's fine tile disk when a colony DEVELOPS that hex. Only developed hexes carry a grid, so a
     /// planet isn't bloated with fine tiles for wilderness it never builds on. Idempotent, deterministic, defensive
     /// (never throws — it runs near the ground hotloop / at colony creation). Save-safe (the grid rides
-    /// <see cref="GroundHex"/>'s clone). Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.
+    /// <see cref="GroundHex"/>'s clone). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public static class CityGridFactory
     {
@@ -53,7 +53,7 @@ namespace Pulsar4X.Galaxy
 
         // ── GLOBAL grid (G4) — the same "city under a hex" idea addressed on the ONE continuous cylinder ────────────
         // A hex is found by its GLOBAL (Q,R) on regionsDB.SurfaceGrid instead of region+local. The disk path above stays
-        // until G6 retires it. Design: docs/GLOBAL-HEX-GRID-DESIGN.md (G4).
+        // until G6 retires it. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (G4).
 
         /// <summary>Resolve the <see cref="GroundHex"/> at GLOBAL (<paramref name="gQ"/>,<paramref name="gR"/>) on the
         /// body's cylinder grid (generating the grid on demand), or null. Q wraps at the seam; an out-of-range row → null.

@@ -1,12 +1,41 @@
 # The Planet Surface — One Continuous Map (Design Lock)
 
-**As of 2026-07-13. Consolidated 2026-07-13 from:** `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`, `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`, `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`, and the hex-**map** half of `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`. (That last doc's other half — the ~60-command *order catalog* / O-track — lives in its own doc, NOT here.)
+**As of 2026-07-24.** Consolidated **2026-07-13** from four now-deleted docs — `GROUND-COMBAT-MAP-DESIGN`, `HEX-GROUND-AND-ORDERS-DESIGN`, `GLOBAL-HEX-GRID-DESIGN`, and the hex-**map** half of `GROUND-CITY-AND-WARMAP-DESIGN` (that last doc's other half — the ~60-command *order catalog* / O-track — lives in `docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md`, NOT here). *(Those four names are historical, deliberately plain text: the 2026-07-13 link-sweep rewrote them into this doc's own path and destroyed the provenance — restored 2026-07-24.)* Consolidated again **2026-07-24** from `MINI-HEX-TACTICAL-GRID-DESIGN` (→ Layer 5) and the tile-naming spec that was orphaned in `docs/ai/DEVTEST-CONQUEST-SANDBOX-DESIGN.md` (→ Layer 6).
 
-**What this is:** the single design for turning a planet from a *dimensionless point* into a **place** — a surface with locations you build at, distances you march across, geography you discover, and ground you fight over region-by-region and hex-by-hex. Companions: `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md`, and `docs/MVP.md` (the scope firewall).
+**What this is:** **THE single design for the planet surface** — turning a planet from a *dimensionless point* into a **place**: a surface with locations you build at, distances you march across, geography you discover, ground you fight over, and a map that tells you what's on it. **All three zooms live here** (region ring → operational hex → mini hex). Companions: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` (the *rules* units fight by — real km ranges; this doc is the *board* they fight on), `docs/aurora/GROUND-COMBAT.md` (the combat spec), `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` (the host-pattern this reuses), `GameEngine/GroundCombat/CLAUDE.md` (as-built state), and `docs/MVP.md` (the scope firewall).
 
 **Why one doc:** the surface is ONE design that *evolved* through four map models — region-graph → per-region hex disks → **one global cylinder grid** → a two-zoom war-map/city sub-grid. Each later model **supersedes** the earlier one's map. This doc presents them as one design with the **global cylinder as the current target**, and keeps the earlier models as recorded history (they explain why the current one is shaped the way it is, and some of their build-state still stands underneath).
 
 ---
+
+> # 🔒 CANON OVERRIDE — THE 2026-07-28 MOVEMENT & GEOGRAPHY RULINGS
+>
+> **`docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (rulings M1–M12) OVERRIDES this
+> document wherever they disagree. Read it first.** The headline changes to *this* doc:
+>
+> - **REGIONS ARE A VISUAL AID (M2).** Layer 1's "strategic region ring" is **demoted** — it is a display grouping, not
+>   a strategic layer, not a movement graph, and not a combat container. The region `Neighbors` graph is **no longer a
+>   movement graph** (M1).
+> - **⛔ LAYER 2 IS DEAD (M2/M6).** "Ground combat on the region ring" is superseded outright. Combat proximity resolves
+>   at the **mini-hex** level on continuous real distances. *(Layer 4's combat half and Layer 5 already said this — M6
+>   confirms them; it is Layer 2's region-scale model that goes.)*
+> - **ONE movement layer, not three (M1).** The coarse region hop and the region-local hex march are both deleted; the
+>   one continuous grid is the only layer.
+> - **Position is a TWO-PART ADDRESS (M3/M4):** regional-hex address **+** mini-hex address, and **the player orders to a
+>   specific mini hex inside a specific regional hex.**
+> - **⭐ TRANSITIONAL HEXES at the regional-hex level (M5)** — NEW, not described anywhere below. Connective ground
+>   between the per-regional-hex mini patches so the planet is one seamlessly-connected graph.
+> - **CAPTURE IS PER-HEX (M8).** Region capture is gone. *What victory means is a written deferral until the system is
+>   built* — distinct from ruling #21 (what a capture transfers), which stays OPEN.
+> - **ORDERS ONLY FROM FORCE MANAGEMENT (M9).** Every order surface on the planet view goes.
+> - **Fortification's region-adjacency is deleted (M10); hazards become per-hex from terrain + geography (M11).**
+>
+> **What is NOT changed, and must not be "fixed":** the mini-hex construction layer, the roll-up invariant, Layer 5's
+> mini-hex fight, and the scale answer below. **And the two-part address already works as live code** —
+> `GroundMiniHex.ContinuousPosKm` sums coarse-hex + mini-hex + a sub-mini-hex km offset, so *"two units at a shared
+> coarse-hex edge read a small gap regardless of which coarse hex each is filed under"* (`GroundMiniHex.cs:70-71`).
+> **⇒ M5's transitional hexes are NOT needed to make ranges work across a boundary** — that is already solved. Their job
+> is the connected movement graph and addressable standing ground.
 
 ## The north star (the developer's own framing)
 
@@ -37,7 +66,13 @@ The surface map went through four models. **The current target is Model 4 (the g
 
 ---
 
-## Layer 1 — The strategic region ring (KEPT from Model 1)
+## Layer 1 — The region ring — ⚠ **DEMOTED TO A VISUAL AID (M2, 2026-07-28)**
+
+> **Regions are a DISPLAY GROUPING.** Not a strategic layer, not a movement graph, not a combat container, not the unit
+> of capture. The schema below still describes the live `PlanetRegionsDB`, and regions remain useful for *grouping and
+> presentation* — but **`Region.Neighbors` is no longer a movement graph** (M1 deletes the adjacency-gated region hop)
+> and **`Region.CrossingTimeSeconds` is no longer a transit clock**. Read the rest of this Layer as *how the display
+> grouping is generated*, not as a layer units traverse.
 
 **What it's for:** the coarse global topology — where ownership, area, crossing-time, survey-fog, and features live. It solved the sphere problem (4 longitude slices, no seam → "the Pacific survives") and it's still the layer that combat/capture resolve on (now per column-band rather than per disk).
 
@@ -87,7 +122,20 @@ Net: slice 3 stayed the base; the tactical map is **slice 5's client half** (uni
 
 ---
 
-## Layer 2 — Ground combat on the region ring (slice 5, FULL TACTICAL)
+## ~~Layer 2 — Ground combat on the region ring (slice 5, FULL TACTICAL)~~ — ⛔ **SUPERSEDED OUTRIGHT (M2/M6, 2026-07-28)**
+
+> **This whole Layer's model is dead.** Combat does **not** resolve on the region ring. Proximity resolves at the
+> **mini-hex** level on continuous real-metre distances (M6), and a fight starts when a party enters **weapons range**
+> (M7) — drawn on the mini-hex map as a **RED** border, with sensor/radar range as a **WHITE** border.
+>
+> **The concrete thing being deleted, and it is the ruling's load-bearing change:** the resolver buckets units into
+> `byRegion` keyed on `unit.RegionIndex` and calls `ResolveRegionCombat` **once per bucket**
+> (`GroundForcesProcessor.cs:268-278,295-304`). Two units in **different regions never enter the same list**, so they
+> are never compared at all — no matter how close they are in metres. **That bucket is why the planet is not seamlessly
+> connected.** The metre range gate (`WeaponReaches` → `CombatKernel.WithinReach`) only ever runs *inside* a bucket.
+>
+> Kept as history because it explains the shape of what replaced it. **Do not build from it.** Live truth for a fight:
+> **Layer 5**.
 
 **Slice 5 v1 TARGET = FULL TACTICAL (developer decision, 2026-07-04).** Not just an auto-resolve garrison — unit *types*, terrain-as-leverage, base-defends-city coverage, formations, AND the navigable click-to-place/units-on-surface map. The target is the ceiling; it still ships as CI-gated **sub-slices 5a–5i** toward that ceiling (a single untested "full tactical" commit is what breaks a branch).
 
@@ -198,17 +246,56 @@ The coarse ring already solved the *global topology* (4 longitude slices, no sea
 
 ### The one analogy
 Think of the operational map like the **fleet plot** — a ship is one icon. But you can open the damage-control diagram and see the ship's individual **compartments**. Same ship, two zoom levels, one physical thing. Buildings work the same way:
-- **Operational hex** (the war map, ~560 km — the hexes we already built) is the *"ship icon."* A hex that holds a base shows its **strategic presence** (a fort, a spaceport, an HQ) and is the unit you **bombard / capture / defend**. This is where the **war** happens.
+- **Operational hex** (the war map, ~560 km on Earth *— ⚠ see "SCALE — THE ONE TRUE ANSWER" above: the pitch is DERIVED per region, and this figure is the one still awaiting the S0 measurement*) is the *"ship icon."* A hex that holds a base shows its **strategic presence** (a fort, a spaceport, an HQ) and is the unit you **bombard / capture / defend**. This is where the **war** happens.
 - **Zoom into that hex → it opens its own fine hex grid** — the *"compartment diagram."* Here every building sits on its **own tile, 1:1**, and this is where the **planning** happens (terrain-matched placement, adjacency, running out of good tiles).
 
 The fine grid does **not** try to fill the whole 560 km — it's just the **developed footprint** of that base (a patch of radius ~5–8, a few hundred fine tiles), generated **lazily** only for a hex that actually has a colony. Same anti-bloat rule as the operational hexes: undeveloped wilderness never gets a fine grid; only the places you build do.
 
 ### Locked layer split — buildings live on MINI hexes; units fight on OPERATIONAL hexes (2026-07-04)
+
+> ### ⚠ PARTLY SUPERSEDED (2026-07-22) — read Layer 5 before trusting the combat half of this section
+> The **construction** half below still stands exactly as written (buildings live on mini tiles; the operational hex is a
+> pure roll-up). The **combat** half — *"Battles stay at this scale (never per-mini-tile)"* — was **overturned** by the
+> later locked mini-hex tactical model (**Layer 5**, 2026-07-22): **units DO plot and fight on mini hexes**, on continuous
+> real-metre distances. The "don't simulate combat across a hundred-thousand mini tiles" worry was answered by *lazy*
+> mini-grids (only where units/bases are) plus a continuous real position, not by keeping combat coarse. Layer 5 is the
+> live truth for where a fight happens; this section remains the live truth for where a building sits.
+
 The two grids each do ONE job, and the operational hex is a **pure roll-up** of what's built inside it (not a second place you drop buildings):
 - **Mini-hex grid = the CONSTRUCTION layer.** *Every* building physically lives here — factory / farm / power plant AND fort / spaceport / HQ (the strategic ones are just a few mini tiles, not a whole hex). Placement, terrain-match, adjacency all happen here. You build by zooming into a developed operational hex's city grid.
-- **Operational grid = the WAR layer.** Units move, fight, capture here. Battles stay at this scale (never per-mini-tile). The operational hex **reads the roll-up** of the buildings on its mini tiles (`GroundHex.InstallationIds` = the aggregate) → it knows "this hex contains a spaceport" (strategic marker + capture/bomb/fortify target), without any building being placed on it directly.
+- **Operational grid = the WAR layer.** Units move and capture here, and it is the **strategic** scale of the war. ~~Battles stay at this scale (never per-mini-tile).~~ *(struck 2026-07-22 — see Layer 5: the fight resolves on the mini-hex field at real distances; the operational hex remains the scale of march, capture and objectives.)* The operational hex **reads the roll-up** of the buildings on its mini tiles (`GroundHex.InstallationIds` = the aggregate) → it knows "this hex contains a spaceport" (strategic marker + capture/bomb/fortify target), without any building being placed on it directly.
 
 **One placement path** (place on a mini tile → it rolls up), **one connection** (the roll-up invariant), no double-bookkeeping. This RETIRES the v1 "place a footprint building directly on the operational hex" path (`W1 LocateFootprintsOnHexes` / `PlaceInstallationInRegionOrder`) in favour of "develop the hex → build on mini tiles → roll up" once C-track lands. Beats the alternatives: no "spaceport fills a hex" absurdity, no simulating combat across a hundred-thousand mini tiles, and it keeps the LOCKED PRINCIPLE (every building is a real, capturable place). Tradeoff: you zoom in to build — but strategic buildings still show at the war zoom via the roll-up.
+
+### ⚖ SCALE — THE ONE TRUE ANSWER (settled from code 2026-07-27; quote THIS, not a remembered number)
+
+This doc used to state two different pairs of numbers for the same board — **~560 km / ~47 km** in this layer
+and **~477 km / ~37 km** in Layer 5 — and `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12` used 560. **Both pairs
+were arithmetically self-consistent. They measured different things.** Here is the resolution:
+
+**The truth is a FORMULA, not a constant. There is no single hex size.**
+
+| Quantity | How the code derives it | Where |
+|---|---|---|
+| **Coarse (operational) pitch** | `√( 2 × (region.Area_km2 ÷ region.Hexes.Count) ÷ √3 )` — **per region, per body.** *This is exactly why a hex means a different real distance on Earth than on Io.* | `GroundRangeTools.HexPitchKm`, `GroundRangeTools.cs:39-44` |
+| **Mini pitch** | **coarse pitch ÷ 13** (`coarsePitchKm / (2·cityRadius + 1)`, with `CityPatchRadius = 6`) | `GroundMiniHex.MiniPitchKm`, `GroundMiniHex.cs:28-34`; `Galaxy/CityGridFactory.cs:20` |
+
+**Which number is load-bearing:** the **mini pitch (coarse ÷ 13)** is what the resolver actually measures with
+(`GroundForcesProcessor.cs:612,749`). On an Earth coarse hex of ~477 km that is **~37 km**, and the code's own
+comment says so (`GroundMiniHex.cs:25-26`).
+
+**Where ~47 km came from, and why it is NOT the number to quote:** it was derived a different way — coarse-hex
+**area** (~271,000 km²) ÷ 127 tiles ≈ 2,100 km² per tile ≈ 47 km "across". That is an **area-equivalent**, and
+**no code uses it.** Cross-check: 47 × 13 = 611 ≠ 560, so the 560/47 *pair* is not even self-consistent under
+the ÷13 rule, while 477 ÷ 13 = 36.7 ≈ 37 is.
+
+**⚠ The one honestly-open number: Earth's COARSE pitch.** 560 km vs 477 km is a disagreement about how many
+hexes Earth's generator actually produces (~1,880 vs ~2,600). That **cannot be settled by reading** — no .NET
+SDK in the audit container, and two hex models still coexist (per-region disks + the global cylinder grid). So
+it is **deliberately left to a measurement, not a guess**: plan slice **S0** in
+`docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` adds a CI readout that prints the real `HexPitchKm` and
+`MiniPitchKm` for Earth / Mars / Luna. **When that lands, quote the readout here and delete this warning.**
+*(Visibility Gate: build the gauge, then state the number.)*
 
 ### Scale reconciliation — "occupies a hex" is about ZOOM, not physical size (2026-07-04)
 A spaceport does **NOT** physically fill an operational hex (that's hundreds of km — nothing is). "Occupies the operational hex" was v1 shorthand; the honest model **decouples two separate things**:
@@ -264,13 +351,216 @@ That way you get the **tactical payoff right away**, and the big builder subsyst
 
 **Slices (engine-first, CI-gauged):**
 - **C1 — the fine-grid data layer (the substrate). START HERE.** `CityTile` + `CityGrid` (save-safe data objects) + `GroundHex.CityGrid` (lazy, deep-copied) + `CityGridFactory.EnsureCityForHex(body, region, q, r)` (builds the fine disk, terrain seeded from the operational hex + system RNG, idempotent, defensive — the `PlanetHexFactory` twin one zoom down) + the placement primitive `CityBuilder.PlaceBuildingOnTile` / `RemoveBuildingFromTile` that **keeps the roll-up invariant** + `DevelopColonyHex` (generate a colony hex's city grid and lay its existing footprint buildings onto tiles — the migration from W-track's coarse "it's here" to the fine "it's on THIS tile"). Gauge: `CityGridTests` (lazy gen + scaling + clone-safety; place/remove keeps the roll-up in sync; develop lays the colony's buildings; a bombed operational hex clears its city tiles).
-- **C1b — MORE (not bigger) hexes on bigger planets (developer refinement, 2026-07-04). RESOLVED — keep current scaling, NO code change (2026-07-05).** **Nothing gets bigger — there are just MORE of them.** A mini hex is a **fixed real footprint** (a factory takes exactly 1 mini hex, everywhere) AND an operational hex is a **fixed real size** everywhere too. A bigger planet therefore has **MORE operational hexes AND MORE mini hexes** (more surface area → more tiles at *both* scales), not bigger tiles. The per-operational-hex mini count is ~**constant** across planets (fixed operational-hex area ÷ fixed mini-hex footprint); Earth just has far more operational hexes overall than Mars. (The developer's "Earth hex = 7 mini, Mars hex = 3" was loosely gesturing at *more total* on Earth, not a per-hex ratio — corrected: **don't make hexes bigger, make there be more**.) **DECISION (2026-07-05):** keep the current operational-hex scaling (`HexPatchRadiusFor` = `round(12 × radius/EarthRadius)`, clamp [2,24] — a super-Earth ≈ 4× Earth's operational hexes), which already keeps each operational hex at a ~fixed real size and puts more of them on bigger planets. So the **mini-hex grid stays a FIXED count** under each operational hex (`CityPatchRadius = 6` → 127 tiles); planet-size scaling is carried **entirely by the number of operational hexes**. The mini-hex footprint falls out for free: a fixed op-hex (~560 km across on Earth, ~271,000 km²) ÷ 127 tiles ≈ **~2,100 km²/mini-hex (~47 km across)** — i.e. `CityPatchRadius = 6` *already* encodes a ~fixed, sensible mini-hex footprint. **The C1b "replace `CityPatchRadius` with a derived count" task is DROPPED** (the derived count ≈ 6 anyway). The "open number" (mini-hex footprint km²) is **RETIRED**. Remaining C-track work is per-tile placement of NEW buildings + multi-tile footprints (`GroundFootprintAtb.TileFootprint`), not scaling.
+- **C1b — MORE (not bigger) hexes on bigger planets (developer refinement, 2026-07-04). RESOLVED — keep current scaling, NO code change (2026-07-05).** **Nothing gets bigger — there are just MORE of them.** A mini hex is a **fixed real footprint** (a factory takes exactly 1 mini hex, everywhere) AND an operational hex is a **fixed real size** everywhere too. A bigger planet therefore has **MORE operational hexes AND MORE mini hexes** (more surface area → more tiles at *both* scales), not bigger tiles. The per-operational-hex mini count is ~**constant** across planets (fixed operational-hex area ÷ fixed mini-hex footprint); Earth just has far more operational hexes overall than Mars. (The developer's "Earth hex = 7 mini, Mars hex = 3" was loosely gesturing at *more total* on Earth, not a per-hex ratio — corrected: **don't make hexes bigger, make there be more**.) **DECISION (2026-07-05):** keep the current operational-hex scaling (`HexPatchRadiusFor` = `round(12 × radius/EarthRadius)`, clamp [2,24] — a super-Earth ≈ 4× Earth's operational hexes), which already keeps each operational hex at a ~fixed real size and puts more of them on bigger planets. So the **mini-hex grid stays a FIXED count** under each operational hex (`CityPatchRadius = 6` → 127 tiles); planet-size scaling is carried **entirely by the number of operational hexes**. The mini-hex footprint falls out for free: a fixed op-hex (~560 km across on Earth, ~271,000 km²) ÷ 127 tiles ≈ **~2,100 km²/mini-hex (~47 km across** — ⚠ **an AREA-EQUIVALENT that no code uses; the load-bearing mini pitch is coarse ÷ 13 ≈ 37 km. See "SCALE — THE ONE TRUE ANSWER" above)** — i.e. `CityPatchRadius = 6` *already* encodes a ~fixed, sensible mini-hex footprint. **The C1b "replace `CityPatchRadius` with a derived count" task is DROPPED** (the derived count ≈ 6 anyway). The "open number" (mini-hex footprint km²) is **RETIRED**. Remaining C-track work is per-tile placement of NEW buildings + multi-tile footprints (`GroundFootprintAtb.TileFootprint`), not scaling.
 - **C2 — the placement economy.** Terrain affinity (a tile's suitability for a building type) + adjacency bonuses + the scarcity of good tiles. The rules that make *where* you place matter — the decision layer.
 - **C3 — the client zoom view.** `PlanetViewWindow`: zoom from the operational hex into its city grid, drag-place buildings on tiles, see terrain/adjacency feedback. The Civ layer made visible. (CI compiles it; feel is the developer's local build.)
 
 **Cradle-to-grave (C-track):** mineral → material → **building** (a `ComponentInstance` on the colony) → **placed on a fine city-tile** (`CityTile.BuildingInstanceId`, gated by terrain affinity + adjacency — C2) → rolls up to the operational hex's footprint (`GroundHex.InstallationIds`) → the **decision** (lay out your base to win the adjacency economy AND survive a strike) → **bombed/captured** on the operational hex → the fine tile is cleared too (roll-up invariant). One physical building, two zooms, one grave.
 
 ---
+
+## Layer 5 — The mini-hex TACTICAL grid: "where exactly is my unit" (LOCKED 2026-07-22)
+
+*(Merged here 2026-07-24 from the deleted `MINI-HEX-TACTICAL-GRID-DESIGN` — name kept as plain text so a future link
+sweep can't eat the provenance the way the 2026-07-13 one did. Its sibling —
+`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12`, the real-km **rules** units fight by — stays a separate doc. This layer is
+the **board**; that doc is the **rules**. Read together.)*
+
+### The point, before the plumbing
+
+A planet is too big to plot units on at one zoom. An Earth operational hex is ~477 km across — you can't say "my marine
+is *here*" to within 477 km and expect a real fight. So we use **two zooms of the same map**, the same trick already used
+for buildings:
+
+- **The operational/coarse hex — the "what's here" view.** `GroundHex` on the global `SurfaceGrid`. It tells you *which
+  neighbourhood* a force is in: "there's a UEF battalion and a hostile battalion somewhere in this ~477 km cell." The
+  strategic chart.
+- **The mini hex — the "where exactly" view.** Zoom in and you get that hex's **`CityGrid`** — *the same fine tile grid
+  the infrastructure/city view already uses* (~127 `CityTile`s at `CityPatchRadius = 6`), **~37 km per tile on Earth**.
+  **Units plot on mini hexes.** That's where "my marine is *here*, the enemy is 3 mini-hexes away" becomes a real,
+  sub-continental position.
+
+**The developer's rule, verbatim:** *"the regional hexes show all of what's in that hex and the mini hexes show where the
+things are. just use the same mini hexes that the infrastructure uses."*
+**On tile size, verbatim:** *"10 to 50 km, I don't care, it's just more exact."* (~37 km sits in that band; tunable via
+`CityPatchRadius`.)
+
+Why this is CONNECT, not rebuild: the mini-hex grid **already exists and is already the right shape** — `CityGrid` hangs
+off `GroundHex.CityGrid`, is generated **lazily**, is **save-safe**, and every `CityTile` **already carries its own
+`Terrain`**. Plotting units on it and fighting on real mini-hex distances is mostly *wiring what's there*.
+
+### Why this beats a uniform fine grid (the feasibility wall)
+
+You cannot give a whole planet 1-km hexes: Earth would need **~590 million** of them. That can't be generated, saved, or
+drawn. The two-zoom model sidesteps the wall because **mini-grids are materialized only where units or bases actually
+are**. A hundred active battle sites cost a hundred ~127-tile grids, not a 590-million-tile planet. You get fine
+precision *where it matters* and pay nothing for the wilderness.
+
+| Grid | What it is | Size on Earth | Cost |
+|---|---|---|---|
+| Coarse (`GroundHex`/`SurfaceGrid`) | strategic "what's here" | ~477 km/hex, ~2,600 hexes | always present, cheap |
+| Mini (`CityGrid`/`CityTile`) | tactical "where exactly" | ~37 km/tile, ~127 tiles per developed/occupied coarse hex | **lazy** — only where units/bases are |
+
+### The one hard part — continuity across coarse-hex edges ("transitional hexes")
+
+The developer flagged the real subtlety: *"we will need transitional hexes between the normal ones so that if 2 entities
+are at the edges of their respective hexes they will actually engage and see each other."*
+
+A hexagon can't be tiled perfectly by smaller hexagons, so the mini-grid under coarse hex A and the one under neighbour B
+don't line up at the shared border. Naively checking "same coarse hex → can fight" would leave two units standing a mile
+apart across a boundary blind to each other.
+
+**The fix — measure on a continuous REAL position, not on hex membership:**
+
+> `real position = (its coarse hex's real centre) + (its mini-hex's real offset) + (a sub-tile km offset)`
+
+All in real kilometres. The distance between two units is the **real metric distance** between their positions — small
+when they're near a shared edge *no matter which coarse hex each is filed under*. The "transitional" behaviour falls out
+for free: **there are no walls, because the coarse hex stopped being a wall and became a coarse label over a continuous
+field.** This is exactly what space combat already does (a fleet has a real position; `Separation_m` is the real gap;
+nobody asks "are you in the same sensor cell"). Visible bridging tiles, if ever wanted, are a rendering nicety on top.
+
+### How a fight works under this model
+
+1. **Strategic:** forces march on the coarse grid. Detection uses real radar km on the continuous position — so you can
+   see a contact in the *next* coarse hex if it's physically close.
+2. **Contact:** two hostile forces come within real weapon/sensor range on the continuous field → they're in contact.
+3. **Tactical:** the fight resolves on the mini-hex field — each weapon fires when the **real** gap falls inside its
+   **real** range, units close at real speed (`Speed_kmh`), and each mini-tile's **own terrain/hazard** shapes the ground
+   (cover, rough going, a hazard the crosser bleeds in — Layer 5's M4, still to build).
+
+### Build state (as-built, verified in `GameEngine/GroundCombat/CLAUDE.md`)
+
+| Slice | What it does | State |
+|---|---|---|
+| **M1** | The mini-hex POSITION field (`GroundUnit.MiniQ/MiniR`) + the pure `GroundMiniHex` math (`ContinuousPosKm`, `RealGapMetres` measured **across** coarse-hex boundaries) | ✅ built (2026-07-22), gauge `GroundMiniHexTests` |
+| **M2** | The resolver gates on the real gap (`WeaponReaches`), behind `EnableMiniHexCombat` — OFF in the CI suite (byte-identical), **ON for menu games** | ✅ built |
+| **M3** | The **initial engagement spread** — the keystone: units used to muster at the same hex, so fights opened point-blank with no approach. Now a contested region deterministically opens at range and the closing machinery plays it out | ✅ built (on the coarse hex grid) |
+| **K1 / K1b** | **Real metre ranges on ground weapons** — melee 0, rifle 500 m, autocannon 2 km, tank cannon 4 km, tube artillery 30 km, ground laser 20 km; a mounted SPACE weapon keeps its real ship range. Designer shows **one** range knob, metres (*"range is in METERS… That is IT"*) | ✅ built |
+| **K2 / K3** | Continuous **sub-mini-hex** offset (`MiniOffX_km`/`MiniOffY_km`) + the resolver gate = real distance vs real range, with the spread and the closing step both on the continuous field — so a longer real gun thins a closing force during the approach | ✅ built |
+| **K4** | Round-down hex readout (*"4 km ≈ 0 hexes on this world"*) — the honest display of a real range on a coarse ruler | ✅ built |
+| **M4** | **Per-mini-tile geology/environment** — fill each `CityTile.Terrain` (and later a hazard field) with real variation instead of copying the coarse hex's single terrain. **The field already exists and is filled with a copy.** The developer's *"more geological and environmental variations across a planet."* Feeds cover + the closing fight | ❌ **NOT BUILT — the main remaining mini-hex gap** |
+| **M5 / client** | Units drawn on mini tiles at their exact tile + sub-tile offset, fog-honest (un-scouted enemy hidden); enemy weapon/radar reach tinted; formation plan lines | ⚠️ built but **compile-checked only — never run** (CI can't run the client) |
+
+### Connections (Prime Directive)
+
+- **`Galaxy/CityGrid` + `CityTile` + `GroundHex`** — the mini-hex host (lazy, save-safe, per-tile `Terrain`). This model
+  *consumes* it as the unit-position grid; the roll-up invariant is untouched (**units aren't buildings** — they share
+  the tile grid without sharing the roll-up).
+- **`GroundForcesProcessor` / `GroundForcesDB`** — the mini position sits beside `HexQ/HexR` + `GlobalQ/GlobalR`; all
+  changes stay inside the one ground hotloop (landmine L9).
+- **`GroundRangeTools` / `GroundMiniHex`** — the km↔hex + continuous-position math.
+- **Movement** — strategic march stays coarse; tactical micro-moves on the mini field at real speed. Pathfinding stays
+  bounded (mini-grids are local, ~127 tiles).
+- **Detection (`GroundSensors`)** — already real-km; reads the continuous position, so a contact in an adjacent coarse
+  hex is seen when physically close (the "see each other across the edge" half of the transitional requirement).
+- **Save/load + client** — mini-grids already serialize (they hang off `GroundHex`); the client already renders tiles.
+
+### Cradle-to-grave
+
+Nothing here parachutes in an abstraction. A unit is still built from components and raised; it now simply has an exact
+place to stand. Its weapon's real range (a designed/built/losable component) decides the fight on a real board. A
+destroyed radar still blinds it; a destroyed weapon still stops its reach. **The mini-hex grid is a *ruler*, not a
+capability.**
+
+---
+
+## Layer 6 — What the map SHOWS and what you can NAME (developer requirements, 2026-07-24)
+
+*(The display/authoring contract for all three zooms. Gathered in a requirements pass with the developer; the
+tile-naming spec was merged here from `docs/ai/DEVTEST-CONQUEST-SANDBOX-DESIGN.md` §5, where it was orphaned.)*
+
+**The north star:** *convey as much GENERAL information as possible at a glance* — achieved by **layered reveal**, not by
+drawing everything at once.
+
+### The interaction model (the spine)
+
+**Always-on markers carry the general signal; HOVER reveals the words and the detail.** At rest a hex shows only its
+terrain **colour**, any **glyph** stamped on it, and — if the player named it — its **floating name**. Everything else
+(full terrain type, deposit tonnage, unit roster, city stats, hazard detail) appears **only on mouse-over**.
+
+**The declutter rule.** Always-on layer, highest priority first: **named-hex label → player glyph → city marker →
+terrain colour**. Unit stacks and detected-enemy markers ride on top where present. *Everything else is hover.*
+
+### The regional (operational) zoom
+
+| Element | Requirement | Build shape |
+|---|---|---|
+| **Terrain type** | Keep the **colour** (already there). No text label at rest; full type name **on hover**. Want **as many terrain types as possible** — this is where planetary diversity shines | Colour exists; ADD hover tooltip. Expand `RegionFeatureType` |
+| **Terrain ↔ planet generator** *(load-bearing)* | Diversity is only worth showing if the **generator produces it** from real physics — a planet's orbit, its star's activity and other variables **MUST change the topology**, so every world is authentically different | **Two connected jobs:** display (here) + **generation** (planet gen assigns diverse terrain from stellar/orbital inputs). *A rich terrain display over a uniform generator is a lie.* |
+| **Player-placed glyphs** | The player can **stamp a glyph** on a hex to mark information ("I put a city here", a landmark, a note); hover reveals what it means. An **authoring** feature, not just a renderer | NEW: a small player-authored marker layer (glyph + optional note) |
+| **City marker** | **Population-based**: a hex with population reads as a city, with **a line/outline no research outpost or mine has**. **City name shown right on the map.** "Is there a city here" is enough — no size tiers | NEW-ish: distinct outlined city glyph gated on population; distinct from the generic ⚙ installation draw |
+| **Battalions** | Draw as a **stack of names**. Conveys **whose** it is (friendly/enemy = distinct colours) — that's enough, no type/strength needed here. **Enemy units only when detected/scouted.** City + unit on one hex **stack** | Mostly exists (`GroundThreat.DetectedEnemyUnits` is the fog seam); ADD stacked-name presentation |
+| **Weather / hazards** | Surface a weather/hazard signal per hex (hover-revealed) | NEW display; ties to the Layer-5 M4 terrain/hazard fill and the space-hazard vocabulary |
+
+### The mini-hex (city) zoom
+
+Same hover-reveal model. Already drawn: terrain tiles, buildings (▧), units at their exact tile + sub-tile offset,
+fog-honest enemies, the mineral deposit gem, and orange "under construction" rings. **The open design questions are what
+fine terrain should *do* mechanically, and whether weather/hazards are per-mini-tile** — both land on Layer 5's M4.
+
+### LOCKED (2026-07-24): what fine terrain DOES — and the "nothing is impossible, just costs" law
+
+The developer's ruling on the mini-hex terrain question. **Fine terrain is load-bearing, not decoration**, and it does
+three jobs:
+
+1. **Building affinity** — a farm wants plains, a mine wants highlands/a deposit. *Where* you place matters.
+2. **It bends the fight** — rough ground gives cover, a river slows a crossing, a ridge shapes who can shoot whom. The
+   Layer-5 resolver already reads per-tile terrain, so this is the cheap half of a real tactical layer.
+3. **Hard terrain COSTS more — it does not forbid.**
+
+> **⚖ THE LAW (developer, 2026-07-24, verbatim):** *"nothing is impossible its just costs."*
+>
+> There is **no unbuildable tile**. A mountain, a swamp, open water — each is a **cost multiplier**, not a wall. And the
+> multiplier is **not universal**: a faction that is *good at building in uncanny ways* pays less for the terrain
+> everyone else calls impossible. That makes "bad ground" a **faction-differentiating advantage** instead of a dead
+> tile, and it keeps scarcity real (good tiles are still cheaper) without ever telling the player "no."
+>
+> This generalises past terrain — treat it as the default answer whenever a system wants to hard-forbid something:
+> **price it, don't ban it.**
+
+**The governing requirement, verbatim:** *"the main point is that the mini hexes must add diversity and variation THAT
+MAKE SENSE."* Variation is not noise — a coastal city's tiles must read as a coast, a mountain base's as a mountain.
+This is why M4 (per-tile terrain) and the generator requirement below are the *same* job seen at two zooms.
+
+### LOCKED (2026-07-24): weather + hazards live at BOTH zooms
+
+**Regional level tells you it EXISTS; the mini hexes show you WHERE it is.** Same split the whole map already runs on
+(*"the regional hexes show all of what's in that hex and the mini hexes show where the things are"*) — now applied to
+weather and hazards. So a storm reads as one signal on the operational hex, and resolves into the specific tiles it
+covers when you zoom in — which is what makes a hazard something you **maneuver around** rather than just suffer.
+
+### Naming — hexes AND tiles (merged from the DevTest doc, still NOT built)
+
+Surface tiles (`GroundHex` on the globe, `CityTile` in the city zoom) carry terrain/deposit/building data but **no name
+field at all**. The spec:
+
+- **What can be named:** any hex the player **clicks** — naming is an option on the hex, at both zooms.
+- **How it shows:** the name **floats as a text label** on the map (the one thing besides colour/glyph shown at rest).
+- **What it means:** a **pure label/bookmark** — no gameplay effect.
+- **Persistence:** names **save/load** (a name that doesn't survive a save isn't real — the grave-adjacent rung).
+- **Build shape:** add a `Name` string to the hex/tile data + a small "rename" action in `PlanetViewWindow` (globe +
+  city zoom), mirroring the entity `RenameCommand` pattern, and render the label. Self-contained client+data slice;
+  pairs naturally with the ground war (**name the hill you defend**).
+
+---
+
+## Where the terrain diversity COMES FROM → `docs/environment/SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md`
+
+Layer 6 is the **window**; the generator is the **world behind it**. The developer's requirement — that a system
+generated for the first time produces everything from *a grassland with a resource node in it* out to *the asteroids in
+the star's Oort cloud*, and then **writes a spec file** — reaches all the way up to full star-system generation, so it
+lives in its own doc (🔒 locked 2026-07-24, five decisions: hybrid recipe+frozen-detail file · written the first time ·
+per-save-vs-shared-library chosen at game setup · hand-editable · surfaces materialize on demand).
+
+**Why it's gated to here:** *a rich terrain display over a uniform generator is a lie.* This layer's terrain-type
+readout and **Layer 5's M4** (per-mini-tile terrain) are the display half of that doc's **G6** (terrain shaped by
+stellar activity + orbital position). Two concrete gaps it records: **no system writer exists anywhere** in
+`GameEngine/Galaxy/`, and **procedurally generated systems get no asteroid belts** (`GenerateAsteroidBelt` is reachable
+only from the authored path).
+
+---
+
 
 ## LOCKED (2026-07-04): TERRAIN is the ground twin of a SPACE HAZARD — dynamic, sci-fi, contextually generated
 

@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 5.1b gauge (docs/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, authoring). Proves a scenario can AUTHOR a
+    /// Phase 5.1b gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, authoring). Proves a scenario can AUTHOR a
     /// faction's OPENING DIPLOMACY from data: <see cref="FactionFactory.ApplyOpeningRelations"/> reads an
     /// <c>"openingRelations"</c> JSON array (target by name/abbreviation → score + opening war) and applies it through
     /// the real DiplomacyDB / Diplomacy.DeclareWar machinery. Targets resolve by name or abbreviation; an unknown

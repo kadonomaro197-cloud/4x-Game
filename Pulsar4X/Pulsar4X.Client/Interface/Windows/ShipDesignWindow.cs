@@ -51,6 +51,9 @@ namespace Pulsar4X.Client
         // SQUAD SIZE — how many ground units ONE build of the assembled design produces (the assembler dial; cost/time
         // scale with it in the engine so there's no free multiplication). Ground-assembly only; 1 = one unit per build.
         private int _groundUnitsPerBuild = 1;
+        // Dedupe flag for the Entity Assembler body backstop — log a render throw ONCE, not every frame (mirrors the
+        // SafeRender/[RenderError] dedupe used across the other client windows). Once is enough to see it in the console.
+        private bool _renderErrorLogged = false;
 
         private IntPtr _shipImgPtr;
 
@@ -302,6 +305,12 @@ namespace Pulsar4X.Client
             // in-progress work (same window, no new window — see UNIVERSAL-ASSEMBLY §0).
             if (Window.Begin("Entity Assembler", ref IsActive, _flags))
             {
+              // Whole body wrapped so a throw can NEVER skip Window.End() below. An unbalanced Begin cascades a
+              // "Begin(...) while already inside Entity Assembler" error onto every OTHER window that frame — the
+              // whole-UI break the developer hit. The known inner throws are also made graceful at their source
+              // (GenImage, Create-New-Design armour, component/armour-name guards, UpdateShipStats); this is the backstop.
+              try
+              {
                 if(_existingShipDesignNames.Count != _uiState.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.Count)
                 {
                     RefreshExistingClasses();
@@ -350,6 +359,15 @@ namespace Pulsar4X.Client
                     }
                     ImGui.EndChild();
                 }
+              }
+              catch (Exception ex)
+              {
+                  if (!_renderErrorLogged)
+                  {
+                      Console.WriteLine("[RenderError] ShipDesignWindow (Entity Assembler) body threw (logged once): " + ex);
+                      _renderErrorLogged = true;
+                  }
+              }
             }
             Window.End();
         }
@@ -378,8 +396,16 @@ namespace Pulsar4X.Client
                         }
                     }
 
+                    // No armour to save onto the ship design — abort the save cleanly instead of throwing (a throw here
+                    // propagated up through DisplayStats, skipped EndChild/Window.End(), and cascaded a broken UI). Nothing
+                    // is opened above in this handler, so a bare return is safe. The click is a no-op; the console says why.
                     if(_armor == null)
-                        throw new NullReferenceException();
+                    {
+                        // GAUGE: flushed to game_logs/ so a "Save did nothing" is diagnosable (was a silent
+                        // Console line). Fires when the viewed faction has no unlocked armour (e.g. SM mode).
+                        SessionLog.Action("Entity Assembler: Save Design SKIPPED — no armour selected/unlocked for this ship design (SM mode?).");
+                        return;
+                    }
                     _workingDesign.Armor = (_armor, _armorThickness);
                     _workingDesign.IsObsolete = SelectedDesignObsolete;
 
@@ -403,6 +429,10 @@ namespace Pulsar4X.Client
                     }
 
                     RefreshExistingClasses();
+                    // GAUGE: confirm the ship design saved (flushed to game_logs/). valid=false means it saved but
+                    // is not buildable yet — check the "Current design is invalid" list (ship needs engine + reactor
+                    // + battery + hull). A saved design appears in the left "Existing Designs" panel.
+                    SessionLog.Action($"Entity Assembler: saved ship design '{name}' (valid={_workingDesign.IsValid}).");
                     // var shipDesign = new ShipDesign(_uiState.Faction.GetDataBlob<FactionInfoDB>(), name, SelectedComponents, (_armor, _armorThickness))
                     // {
                     //     DesignVersion = version
@@ -882,15 +912,33 @@ namespace Pulsar4X.Client
                 RefreshArmor();
                 DesignChanged = true;
 
+                // A brand-new SHIP design is seeded with an armour type. If the viewed faction has NO armour unlocked
+                // (RefreshArmor left _armor null — e.g. a scenario faction with no armour tech, or SM's view), skip
+                // creating the ShipDesign rather than throwing mid-frame (a throw here skipped Window.End() and cascaded
+                // a broken UI). The list is left unchanged and the console records why.
                 if(_armor == null)
-                    throw new NullReferenceException();
-
-                ShipDesign design = new(_factionInfoDB, name, SelectedComponents, (_armor, _armorThickness))
                 {
-                    IsValid = false
-                };
-                RefreshExistingClasses();
-                SelectedExistingDesignID = design.UniqueID;
+                    // GAUGE (2026-07-23): the developer reported "clicked Create and nothing happened", and the
+                    // session log had NO assembler line at all — this button was UNINSTRUMENTED, so the outcome was
+                    // invisible (the Visibility Gate: you can't diagnose what you can't see). Log the skip, flushed
+                    // to game_logs/, so the next click self-diagnoses. This path fires when the VIEWED faction has
+                    // no unlocked armour — notably SM mode (the viewed faction becomes the armour-less GameMaster).
+                    SessionLog.Action("Entity Assembler: Create New Design SKIPPED — the viewed faction has no unlocked armour to seed a ship design (are you in SM mode? switch back to your own faction).");
+                }
+                else
+                {
+                    ShipDesign design = new(_factionInfoDB, name, SelectedComponents, (_armor, _armorThickness))
+                    {
+                        IsValid = false
+                    };
+                    RefreshExistingClasses();
+                    SelectedExistingDesignID = design.UniqueID;
+                    // GAUGE: confirm the blank design was created + selected. "Create New Design" makes an EMPTY
+                    // canvas (and clears the current component selection); you then ADD a chassis + components and
+                    // click "Save Design" (or switch the 'Assembling' combo to Ground Unit for a ground unit). This
+                    // line makes the click visible in game_logs/ so a "nothing happened" report is diagnosable.
+                    SessionLog.Action($"Entity Assembler: created new blank ship design '{name}' (id {design.UniqueID}) — now add a chassis + components, then Save Design.");
+                }
             }
         }
 
@@ -928,10 +976,14 @@ namespace Pulsar4X.Client
                 ImGui.Text("Type");
                 ImGui.TableNextColumn();
 
-                if(_armorNames == null)
-                    throw new NullReferenceException();
-
-                if (ImGui.Combo("##Armor Selection", ref _armorIndex, _armorNames, _armorNames.Length))
+                // A ship needs armour, but if the viewed faction has none unlocked (_armorNames null/empty) show a
+                // placeholder instead of throwing — a throw here skipped EndTable + Window.End() and cascaded the UI.
+                bool haveArmor = _armorNames != null && _armorNames.Length > 0 && _armorSelection.Count > 0;
+                if(!haveArmor)
+                {
+                    ImGui.Text("(no armour unlocked)");
+                }
+                else if (ImGui.Combo("##Armor Selection", ref _armorIndex, _armorNames, _armorNames.Length))
                 {
                     _armor = _armorSelection[_armorIndex];
                     DesignChanged = true;
@@ -940,7 +992,8 @@ namespace Pulsar4X.Client
                 ImGui.TableNextColumn();
                 ImGui.Text("Density");
                 ImGui.TableNextColumn();
-                ImGui.Text(_armorSelection[_armorIndex].Density.ToString());
+                ImGui.Text(haveArmor && _armorIndex >= 0 && _armorIndex < _armorSelection.Count
+                    ? _armorSelection[_armorIndex].Density.ToString() : "-");
 
                 ImGui.TableNextColumn();
                 ImGui.Text("Thickness");
@@ -1049,8 +1102,10 @@ namespace Pulsar4X.Client
 
         internal void DisplayComponentSelection()
         {
+            // Component list not built yet (RefreshComponentDesigns hasn't run) — nothing to render this frame. Returning
+            // here is safe: no ImGui child/table is open yet, so Window.End() and the caller's EndChild still run.
             if(_sortedComponentNames == null)
-                throw new NullReferenceException();
+                return;
 
             DisplayHelpers.Header("Available Components");
 
@@ -1136,8 +1191,13 @@ namespace Pulsar4X.Client
 
         internal void GenImage()
         {
+            // A brand-NEW or component-less design has no damage profile yet — there's simply nothing to render.
+            // This USED to `throw new NullReferenceException()`, which fired the instant you clicked "Create New Design"
+            // (that handler calls GenImage BEFORE _profile is ever built), crashing the whole Entity Assembler window
+            // mid-render and cascading a "Begin(...) while already inside Entity Assembler" error onto every other
+            // window that frame. Just return — the image is (re)generated once components give the design a profile.
             if(_profile == null)
-                throw new NullReferenceException();
+                return;
 
             Textures.CreateTexture(_uiState.ViewPort.Renderer, _profile.DamageProfile, ref _shipImgPtr, SDL.PixelFormat.ARGB8888);
             rawimagewidth = _profile.DamageProfile.Width;
@@ -1325,8 +1385,11 @@ namespace Pulsar4X.Client
         {
             if(!DesignChanged) return;
 
+            // Ship stats need armour + a faction. If either is missing (a no-armour faction, or the SM view), bail
+            // WITHOUT building _profile rather than throwing — a throw from here propagated up through DisplayStats,
+            // skipped its EndChild/Window.End(), and cascaded a broken UI. Stats simply stay at their last values.
             if(_armor == null || _uiState.Faction == null)
-                throw new NullReferenceException();
+                return;
 
             _profile = new EntityDamageProfileDB(SelectedComponents, (_armor, _armorThickness));
             if(displayimage)

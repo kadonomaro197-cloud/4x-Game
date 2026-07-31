@@ -6,7 +6,7 @@ using Pulsar4X.Industry;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.4c gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the brain's first ACT.
+    /// Phase-2.4c gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the brain's first ACT.
     /// A GrowEconomy objective now queues a real industry job (the same lever a player pulls). Proves the emission
     /// gate defaults OFF (byte-identical), the GrowEconomy action queues exactly one job on a free line, and
     /// `EmitOrders` routes by objective (a routed objective acts; an UNROUTED one — `None` — queues nothing).

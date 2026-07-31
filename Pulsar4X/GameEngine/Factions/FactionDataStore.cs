@@ -43,7 +43,7 @@ namespace Pulsar4X.Factions
         public CargoDefinitionsLibrary CargoGoods { get; private set; }
 
         /// <summary>
-        /// F-D2 (docs/AI-BRAIN-BUILD-TRACKER.md): CAPABILITIES this faction has unlocked. Unlike everything above —
+        /// F-D2 (docs/ai/AI-BRAIN-BUILD-TRACKER.md): CAPABILITIES this faction has unlocked. Unlike everything above —
         /// which are buildable/cargo IDs a tech moves locked→available — a capability is an ABILITY the sim reads
         /// (an ascension breakthrough, a game-changing tech), NOT a thing you build. A tech grants one by listing a
         /// "<see cref="CapabilityPrefix"/>xxx" id in its Unlocks; <see cref="Unlock"/> routes such an id here instead

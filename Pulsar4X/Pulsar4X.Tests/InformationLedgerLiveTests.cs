@@ -7,7 +7,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-3.1 gauge (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger made LIVE + the "is this
+    /// Phase-3.1 gauge (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger made LIVE + the "is this
     /// rival RISING over time" read). The sibling of the F-C3a data-model gauge (<see cref="InformationLedgerTests"/>):
     /// that one pins Inferred→Confirmed→Stale; this one pins the new trend read + the live driver + byte-identity.
     /// Proves:

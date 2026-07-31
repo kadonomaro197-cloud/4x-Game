@@ -7,7 +7,7 @@ namespace Pulsar4X.Factions
     /// Where one faction stands toward another, on a five-step ladder from open war to alliance. This is the
     /// "headline" of a relationship — the single word a player sees ("we are Hostile toward the Vega Combine") —
     /// derived from the underlying <see cref="RelationshipState.RelationScore"/> the way a temperature gauge's
-    /// COLD/WARM/HOT band is derived from the actual degrees. See docs/DIPLOMACY-DESIGN.md.
+    /// COLD/WARM/HOT band is derived from the actual degrees. See docs/society/DIPLOMACY-DESIGN.md.
     /// </summary>
     public enum DiplomaticStance
     {
@@ -23,7 +23,7 @@ namespace Pulsar4X.Factions
     /// <see cref="DiplomacyDB"/>. It is deliberately a plain value object (not a DataBlob): a faction owns a
     /// whole table of these, one per other faction it knows about.
     ///
-    /// The load-bearing idea (docs/DIPLOMACY-DESIGN.md, the relationship TRACK): a relationship is a NUMBER on a
+    /// The load-bearing idea (docs/society/DIPLOMACY-DESIGN.md, the relationship TRACK): a relationship is a NUMBER on a
     /// track (<see cref="RelationScore"/>, −100..+100) that events nudge up and down, and the <see cref="DiplomaticStance"/>
     /// the rest of the game reads is DERIVED from that number by fixed thresholds. So a treaty signing, a border
     /// incident, or a caught spy each move one dial — the score — and the stance follows. War is a latched

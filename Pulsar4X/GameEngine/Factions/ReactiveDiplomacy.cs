@@ -2,7 +2,7 @@ namespace Pulsar4X.Factions
 {
     /// <summary>
     /// Something one faction OBSERVES about another (through its own sensor fog) that makes it act
-    /// (docs/DIPLOMACY-DESIGN.md "Reactive diplomacy — the world acts on its own"). The external mirror of an
+    /// (docs/society/DIPLOMACY-DESIGN.md "Reactive diplomacy — the world acts on its own"). The external mirror of an
     /// INTERNAL sim-pressure: an observation, not a scripted event.
     /// </summary>
     public enum ExternalStimulus

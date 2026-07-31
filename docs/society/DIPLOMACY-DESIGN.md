@@ -455,14 +455,17 @@ Wide but **funneled through three keystones**. The full hidden-information versi
 > **UPDATE 2026-07-07 — all three keystones are now cleared or dissolved (see the status banner at the top). The prerequisite wall this section erected is DOWN; politics is buildable now.**
 
 1. **The GlobalManager-not-iterated trap** — ✅ **DONE.** `MasterTimePulse` now iterates the `GlobalManager`; `NPCDecisionProcessor` fires monthly. The single fix that unblocked all the autonomous loops is in.
-2. **Detection-quality is degenerate** — ✅ **DISSOLVED, not fixed.** `SignalQuality` was **CUT** (`docs/combat/DETECTION-DESIGN.md`, 2026-07-07); the hidden-information gradient moved to the **Information Ledger** (agents + decay), which is where it belonged. This keystone no longer exists — the prerequisite is "the Ledger carries the gradient," not "fix the sensor field."
+2. **Detection-quality is degenerate** — ✅ **DISSOLVED as a diplomacy prerequisite** (the hidden-information gradient moved to the **Information Ledger** — agents + decay — which is where it belonged). So this keystone no longer blocks politics: the prerequisite is "the Ledger carries the gradient," not "fix the sensor field."
+   > **⚠ CORRECTED 2026-07-27 (OPERATION GROUND TRUTH Phase B).** This used to say `SignalQuality` **"was CUT"** — **REFUTED against the code.** The field is **live in 9 files** and is load-bearing for **survey accuracy**, gating reveal at `> 0.20` and `> 0.80` (`SystemBodyInfoDB.cs:154-160`, `StarInfoDB.cs:130`). What was cut is its **role as the diplomacy/hidden-info gradient**, not the field. Read literally, the old wording invited someone to delete a live field. *(`ThreatAssessment.cs:11` documents the design cut correctly: it deliberately uses signal **STRENGTH** instead.)*
+   >
+   > **And a separate live bug this exposed, which is NOT dissolved:** the AI's threat read is degenerate for a different reason — `GreatestThreatTo` sums `SignalStrength_kW` (`ThreatAssessment.cs:39`) and every ship contact reports **0**, so all AI decisions evaluate "no threat." That is the planetary plan's slice **S1e**, and it stands on its own evidence — **not** on this keystone, which was dissolved 20 days earlier.
 3. **Hostility-from-diplomacy** — ✅ **substantially DONE.** `CombatEngagement`/`AreHostile` consults `DiplomacyDB` — signed non-aggression/defensive pacts and Friendly/Allied stance make `AtPeace` and suppress the fight. Remaining gap: **fire-control IFF** (can still target own/allied ships) — a small finish, not a foundation.
 
 | System | State | The change |
 |---|---|---|
 | Fleets / Orders | ✅ order system is faction-agnostic (NPC issues the same orders) | small wire — a commitment→order translator |
 | Logistics | ✅ routes exist; gate already faction-aware | medium — cross-faction access + cargo order + payment |
-| Combat / IFF | ⚠️ works, but hostility isn't diplomacy-driven; no IFF | **keystone 3** — hostility from `DiplomacyDB` |
+| Combat / IFF | ✅ **hostility IS diplomacy-driven** (row corrected 2026-07-27, Phase B — it contradicted this doc's own status banner ~460 lines above). `CombatEngagement.AreHostile` (`:1847-1874`) reads `DiplomacyDB` **both ways**: a declared-war latch either direction forces hostility, and a *mutual* Friendly/Allied stance suppresses it. **The precise shape:** diplomacy can only **SUPPRESS** default hostility or **force** war — it never *creates* hostility from a score, and an unmet stranger still falls through to "different faction = hostile" | **keystone 3 — CLEARED.** Residue: fire-control IFF may still lag the combat read |
 | Money / Ledger | ⚠️ single-faction | medium — add cross-faction `Transfer` |
 | Sensors / Detection / EMCON | ⚠️ contacts + fog + EMCON work; quality degenerate | **keystone 2** — graduated detection quality |
 | Espionage | ❌ none | new build — agents as M3 people, covert actions, detection risk |

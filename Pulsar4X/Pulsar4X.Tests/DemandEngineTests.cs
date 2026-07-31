@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C2b gauge (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands): the demand engine surfaces emergent demands
+    /// F-C2b gauge (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands): the demand engine surfaces emergent demands
     /// from the morale-factor breakdown. Proves (a) a factor bad past the threshold surfaces the right bloc's demand
     /// with pressure = badness × bloc loudness, (b) a mild factor surfaces nothing, and (c) war surfaces a political
     /// demand whose flavour flips on the regime's militarism (hawks: Confront Rival; otherwise: End the War). Pure →

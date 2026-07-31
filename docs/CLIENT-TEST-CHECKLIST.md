@@ -1,4 +1,16 @@
 # Client-Side Test Checklist — what only YOUR local build can verify
+> **⚠ PRUNED 2026-07-27 (OPERATION GROUND TRUTH Phase C).** This file had grown to **103 items**, 7 of them
+> already confirmed live and 96 still open, with the passed ones interleaved among the live ones. The confirmed
+> block is now **folded** under a "RETIRED" summary rather than deleted — a passed runtime check is evidence, and
+> deleting it would lose the only record that the fleet-menu freeze fix was ever verified. **Everything still
+> visible is OPEN and needs a run on the developer's Windows build.**
+>
+> **Read the newest block first** (⛔ NEW 2026-07-27, at the bottom): it is the one added from the real
+> 2026-07-23 play logs, and four of its rows are about **instruments that lied** rather than features — a dead
+> simulation that reads as "paused", a `faults=0` summary that counted the wrong things, unexplained clock
+> stops, and a ground UI that leaves no trace at all. Those cost the developer 2.7 minutes of pressing play at
+> a dead engine, so they rank above any feature check.
+
 
 **Why this exists:** CI now *compiles* the client (the `build-client` job, added 2026-06-28), so compile breaks are caught automatically. But CI still **cannot run** the client — it's display-coupled, headless CI can't open a window. So **runtime behavior, rendering, and clicks are verified only by your local build** + the `game_logs/` pages. This is the running list of client things awaiting that local check. Tick them off; tell me what's broken (send the relevant `game_logs/` page) and I'll fix.
 
@@ -57,6 +69,9 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 - [ ] **Crew gate (C1).** Build a large fleet (or drain the pool) → a ship build **blocks** under the default regime; flip to Totalitarian → it **conscripts** (builds understaffed).
 - [ ] **Reactive diplomacy drift (D3).** Spawn a hostile fleet (first contact) → set that faction militarist → advance several months → Dump Society: your view of them cools toward Hostile on its own.
 
+<details>
+<summary><strong>🗄 RETIRED — 7 items confirmed live 2026-07-03 (Fleet UX + the testing-strategy branch). Kept for history; nothing here needs re-running.</strong></summary>
+
 ## Fleet UX — ✅ PASSED 2026-07-03 (after the fleet-menu freeze fix)
 - [x] **Left-click a fleet selects it immediately** — no menu, no dead-click, no "click elsewhere first." **PASSED.**
 - [x] **Right-click shows the context menu** (right-click only). **PASSED.**
@@ -69,6 +84,9 @@ All engine-green; these are the *runtime/feel* checks. Full detail + what-right-
 - [x] **Visual pass** — planets deeper shades, space darker.
 - [ ] **Save/load a PLAYED game** (D1) — the one remaining "survives a session" risk. Play a bit → Save → Load → confirm no exception + state persists. (Engine `SaveLoadWithJobTests` covers the queued-job NRE that was fixed; the full played-game round-trip is the live check.)
 - [ ] **Range-ring hover tooltips render** — hover a weapons/sensor/EMCON ring line → a label names the unit + which ring. CI-green; live render unconfirmed.
+
+
+</details>
 
 ## Hazards — the headline (the whole cradle-to-grave loop)
 - [ ] **Hazards render on the system map.** Corona = faint red-orange ring at the star; solar flare = bright orange (transient). *Note:* gas cloud, debris field, ion storm, and gravimetric anomaly currently **all render the same green** — distinct colors per type is a flagged follow-on, not built yet. So you'll see green blobs; that's expected for now.
@@ -159,6 +177,106 @@ The post-merge cross-lane buttons: (a) **rename a battalion** (both Force Manage
 - [ ] **City-zoom infra section.** On the Planet view, double-click an operational hex to enter the **city view**. If that hex's region band holds footprint buildings, an **"Infrastructure combat — Region N"** section appears at the bottom. If one of YOUR battalions is standing in that region it offers **Raze with '\<battalion\>'** / **Capture with '\<battalion\>'**; if none is, it tells you to "move one of your battalions into this region." Confirm the raze/capture works via the named battalion.
 - [ ] **Out-of-reach is a safe no-op.** Queue a raze, then march the battalion OUT of the region before it fires → the order should pop harmlessly (nothing razed, no wedge, no crash). Razing your OWN infrastructure is allowed (scorched earth) — the buttons don't block it, so double-check you're on the enemy's region.
 
+## 🩺 AUDIT M1 — P3 legitimacy fixes now active in menu games (2026-07-22)
+The audit found the P3 stale-morale/rebellion fixes shipped dormant (flags default-off, never flipped in the menu path). Slice 1 flips `ReadCurrentMorale` + `EnableRebellionDebounce` ON in both `NewGameMenu` start blocks. CI can't run the client; this is the live check.
+- [ ] **Colonies don't revolt on a single bad morale sample.** Start a menu game, let it run through a transient morale dip (or use DevTools to poke a colony's morale down for one cycle). The colony should NOT immediately flip to rebellion — a one-month transient dip clears without a revolt (the debounce). A sustained low reading still escalates.
+- [ ] **The AI doesn't abandon its own invasion.** Play/observe a UMF-vs-target invasion long enough to see the objective hold — the AI should not drop a winning in-flight conquest to a phantom "Defend" from a one-sample legitimacy crash (the A3 failure). If it still does, capture the AI Inspector tape and tell me.
+
 ---
 
 *Maintenance: when a client feature ships that CI can't runtime-verify, add a line here. Remove a line once you've confirmed it live. This is the standing "runtime gauge is the developer" list — the companion to CI's compile gate.*
+
+---
+
+## ⛔ NEW 2026-07-27 — rows from the 2026-07-23 log forensics (OPERATION GROUND TRUTH)
+
+Evidence: `docs/DOCS-AUDIT-2026-07-27.md` §9. These are the runtime checks CI structurally cannot make, and
+the first four are about **instruments that lied**, not features.
+
+- [ ] **A dead simulation announces itself.** Force a sim-thread fault, and confirm the log says the sim is
+      dead on the first frozen heartbeat — and that the **play button says so** instead of silently doing
+      nothing. *(Observed failing: 7 ignored play presses over 2.7 min.)*
+- [ ] **The clean-exit summary is honest.** Confirm `faults=` reflects `[FATAL]`/`[HANG]` too, not just
+      render/input. *(Observed failing: `faults=0` with 7 `[FATAL]`s.)*
+- [ ] **Every clock pause states its reason** — including the event-log auto-pause on a new hostile contact,
+      which currently writes nothing.
+- [ ] **The ground UI leaves a trace.** Open the planet view, click a hex, order a march — confirm each writes
+      a `SessionLog` line. *(Today `PlanetViewWindow.cs` has zero.)*
+- [ ] **`console_output.txt` captures runtime output**, not just build warnings. *(Observed failing: 1667/1667
+      lines were compiler warnings.)*
+- [ ] **The boot texture pre-load finds its files** — 24 `Resources\*.bmp` misses at startup because the
+      pre-load runs before `ResourcesPath` is combined with the exe directory.
+- [ ] **An arriving hostile fleet produces *something*.** An AI strike fleet warped 250.6 Gm to an undefended
+      Earth and produced no battle, no interrupt, no alert — correct given zero player ships, but the player
+      should still see an arrival.
+
+### Added 2026-07-27 by the A5 test-coverage sweep (audit §13b) — a crash hiding behind an `[Ignore]`
+
+- [ ] **⚠ New Game with `Pulsar4x-Testing` TICKED.** On the New Game **"Select Mods to Enable"** page, tick
+      **Pulsar4x-Testing** alongside the base mod and start a game. **Expected today: it throws
+      `NullReferenceException` during the colony build** — the testing mod ships incomplete Armor/Theme data.
+      This is *not* the old "no mod enabled" crash (that one is fixed in `DisplayModsPage`). It is
+      **`[Ignore]`d in CI** (`NewGameStartSmokeTests.cs:24`), so no gauge is watching it.
+      **Why it's here:** the mod ships (`Pulsar4X/GameData/testingmod/`) and the page lists *every* discovered
+      mod with a checkbox (`NewGameMenu.cs:157-171`) — it is **one tick away from a player**. It is *not* on
+      by default (its manifest has no `DefaultEnabled` field → `false`, `ModsState.cs:62`), which is the only
+      reason this isn't a boot-blocker. **What right looks like:** either the game starts, or it refuses the
+      mod with a readable message — never an NRE. Report which you get.
+
+
+---
+
+## 🔬 ADDED 2026-07-28 — the designer/client items from the verification campaign
+
+Full detail + predictions: `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` §7.2 and `docs/TESTING-TRACKER.md` (G-B1…G-B5).
+**CI compiles the client and can never run it, so every item below is local-runtime only.**
+
+- [ ] **⭐ THE BRICK (do this first).** In a **Debug** build: open the Component Designer, **collapse it** (double-click the
+      title bar), then open any other window. **If they all go blank, a 16-window bug is live** — `Window._beginCount` is
+      static with no per-frame reset and those windows call `End()` inside the `if`. Not a designer bug; a client-wide one.
+- [ ] **The four dead doors.** Click **Logistical ▸ Transfer** — predicted to throw on the door click itself (it sorts
+      first). Then **Weapons ▸ Guided**, **Sensors ▸ Detection**, **Civic ▸ Development** — those three throw when you pick
+      the bad entry in the **"Type" dropdown**, not on the door click.
+- [ ] **The frozen list.** Save a component → reopen the designer → is it in the middle list? *(predicted: no)* Research a
+      template → does it appear in the tree? *(predicted: no)*
+- [ ] **Reopen fidelity.** Reopen a saved design with an enum/tech dial (e.g. a ground weapon's `Mode`) — does the combo
+      show what you saved, or the template default? *(predicted: the default; the stored number is correct)*
+- [ ] **Type-switch data loss.** Set several dials, then change the "Type" dropdown. *(predicted: everything is discarded)*
+- [ ] **Layout.** Does the **Save** button fit on screen? The panes use hardcoded fractions and the button is placed from
+      the *available* region.
+- [ ] **The dual-handle range slider** (`infrastructure` ▸ gravity/pressure) — do both handles track, and does the gap clamp
+      hold? Its geometry is hand-drawn off window pos/size rather than the cursor.
+- [ ] **SM mode.** Open the designer with the viewed faction set to Game Master — predicted throw at the fuel-type row.
+- [ ] **A printf tooltip.** Hover the `[?]` on `bunker` ▸ **LocalFortify** — its description contains a bare `%` that is not
+      escaped (the unit tooltip escapes correctly; the description path does not).
+- [ ] **`solarArray`'s duplicate "Area"** — confirm the dial list shows Area twice (the mod has `Area` and `Area ` with a
+      trailing space).
+- [ ] **Confirm `OrdnanceDesignWindow` is genuinely unreachable** before anyone plans work against it — no toolbar entry,
+      no hotkey, no menu name were found.
+
+---
+
+## 🎯 ADDED 2026-07-29 — the auto-resolver consolidation
+
+Source: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`. CI can't run the client, so these need the local Windows build.
+
+- [ ] **🔒 RULED 2026-07-29 (LD-29): the 2D group plane is the DEFAULT for all combat — but it CANNOT be switched
+      on yet.** Wiring the ruling surfaced a live defect (record §13.9): `AdvanceAnchorPlane` moves **only the
+      controller fleet's** anchor while `SeparationOf` now reads the anchor pair-distance, so with **3+ fleets** any
+      pair where neither is the controller has a **permanently frozen gap** — typically far outside weapon range, so
+      that fleet sits out the whole battle. All eight existing group-plane tests are two-fleet and cannot see it.
+      **Order: fix §13.9 → land the 3-fleet gauge (TESTING-TRACKER G-C1) → then add the client line + DevTools
+      checkbox (G-C7) and run this item.** Do not flip the flag before G-C1 is green.
+- [ ] **Watch a fight and read the `[Combat]` narration.** The closing model narrates itself (gated on `NarrateToLog`,
+      client-on): a per-step gap / IN-or-OUT-of-RANGE / reach / maneuver-reserve line per fleet, a **WEAPONS RELEASE**
+      line when the first-shot rule breaks a standoff, and a **maneuver-reserve-spent** line when a kiter burns out.
+      Plus DevTools ▸ "Dump Combat" and "Spawn Combat Scenario". **This is the only runtime gauge the closing fight
+      has** — confirm the lines actually appear in `console_output.txt`.
+- [ ] **The standoff-vs-brawl gut-check (the one the design says only a play-test can answer).** Fight a fast
+      long-range fleet against a slower brawler. Does kiting *feel* like a real decision, or a dominant strategy?
+      `ClosingSpeedScale_mps` and `ManeuverBurnRate` are the dials, and their calibration has been the developer's
+      open item since 2026-06-27 (record §16 Q-6).
+- [ ] **A 3-way ground fight.** Put one faction's units in range of TWO hostile factions at once and watch the damage.
+      Expected today: **the middle faction takes roughly double** — a unit applies its full attack pool to each enemy
+      faction (`GroundForcesProcessor.cs:443/:445` + `:491`/`:524`). This is the live double-count bug (record §10
+      row 4); the fix is the pinned residual allocation in §13.7.

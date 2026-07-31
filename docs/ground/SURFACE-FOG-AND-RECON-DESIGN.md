@@ -1,5 +1,15 @@
 # Surface Fog of War & Reconnaissance — Design (LOCKED 2026-07-17)
 
+> **⚠ CANON 2026-07-28:** where this doc treats the **region** as a combat container, a movement layer, or the unit of capture, it is **superseded** — see `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` → the 2026-07-28 addendum (M2/M6/M8). Regions are a **visual aid**; combat proximity resolves at the **mini-hex** level on continuous real distances; **capture is per-hex**.
+
+
+> **Build state corrected 2026-07-27:** this doc **under-reported itself** — slices **5 and 6** carried no status
+> at all and read as pending, but **both are built** (they landed in `GroundThreat` and `ExpandResolver` /
+> Operation Earthfall, outside this doc's own slice track). **Engine-side, slices 1–6 are done.** The one real
+> remaining gap is the **client**: the planet view's deposit fog is still world-level/omniscient instead of
+> reading the per-faction masked assay slices 1b/3 already compute — so a rival's survey leaks to the player.
+> Evidence: `docs/DOCS-AUDIT-2026-07-27.md`.
+
 > **Status:** design LOCKED with the developer. Build path chosen: **A — ground fog first** (the foundation both the
 > two-tier survey and an honest "easiest landing" score stand on). Build in the gauged slices below, one CI-green slice
 > at a time. Companion: `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` (the surface map this rides on), the two-tier survey
@@ -136,9 +146,30 @@ no new buildables — the new part is the AI logic (pick the easy region, plant 
 5. **Fog-limited enemy garrison read:** the landing-intel helper returns only what the faction has scouted (an
    un-scouted region reads "unknown", not "empty"). Gauge: faction A can't see faction B's garrison in an un-scouted
    region.
+   **✅ BUILT — this doc was UNDER-reporting itself (annotated 2026-07-27).** It landed in `GroundThreat`, not here:
+   `GroundThreat.DetectedEnemyStrength(body, region, faction)` is the fog-honest read, and its own comment states
+   the design contract — *"an un-scouted one reads low (fog) — so the 'easiest landing' choice is fog-honest, never
+   [omniscient]"* (`GroundCombat/GroundThreat.cs:118`), with un-seen territory simply **not returned**
+   (`:137`, deliberately matching the space contact model). It is **consumed**: the ground tactical brain reads it
+   for detected enemy firepower in-region and adjacent (`GroundCombat/GroundTactics.cs:41`, feeding the posture
+   decision at `:136`). Honest caveat: the reveal it rests on is **region-granular**, not per-walked-hex (the same
+   refinement already flagged on slices 3 and 4).
 6. **Consumers:** the **Kithrin expand loop** (survey→build-surveyor→found rungs on `ExpandResolver`) and the
    **easiest-landing score + FOB** both read the fog-limited picture. Gauge: the AI dispatches a survey then colonizes;
    the landing score ranks a scouted weak region above an un-scouted one.
+   **✅ BUILT (annotated 2026-07-27) — both consumers exist, landed by Operation Earthfall rather than by this
+   doc's own track, which is why the row was never ticked.**
+   - **The expand loop:** `Factions/ExpandResolver.cs` runs the **survey→move→found** chain one step per monthly
+     cycle, and — the cradle-to-grave-correct part its header calls out — it **gates on the PLAYER-visible signal**
+     (a body is colonizeable when it carries `ColonizeableDB` *and* its geo-survey is complete), so the AI uses the
+     same survey truth a player does rather than a parallel omniscient one. It also builds the surveyor when it
+     lacks an idle one, instead of stalling on a "survey leg pending" no-op.
+   - **The landing read + FOB:** the fog-honest `GroundThreat` scoring above (slice 5) is what ranks a scouted weak
+     region over an un-scouted unknown, and the beachhead/FOB anchor is built (Earthfall G1).
+   - **⚠ Still owed:** the **client** half — `PlanetViewWindow` deposit fog is still world-level/omniscient rather
+     than reading the per-faction masked assay this doc's slices 1b/3 already compute. That is the real remaining
+     gap in this stack (plan slice **S11**, `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`), and it is the
+     one that leaks a rival's survey to the player.
 
 Each slice is gated/additive so CI stays byte-identical until the consumer slice flips it on (the same discipline the
 detection/EMCON stack used).

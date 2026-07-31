@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.4a gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the objective selector.
+    /// Phase-2.4a gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the objective selector.
     /// Proves the tier picks the family (survive→defend, stabilize→consolidate) and, at Thrive/Ambition, doctrine +
     /// personality pick the specific aim — including that an Aggressive faction reaches for Conquer even behind a
     /// peaceful doctrine.

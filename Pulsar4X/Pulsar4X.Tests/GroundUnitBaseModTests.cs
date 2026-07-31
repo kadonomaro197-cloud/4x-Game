@@ -20,7 +20,7 @@ namespace Pulsar4X.Tests
     ///
     /// The combat stats asserted here are REUSED verbatim from the already-shipped start garrison
     /// (<see cref="GroundStartGarrison"/>) — no new balance numbers. Only the build COSTS are new (flagged for the
-    /// developer). Engine-only → runs in CI. Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// developer). Engine-only → runs in CI. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundUnitBaseModTests

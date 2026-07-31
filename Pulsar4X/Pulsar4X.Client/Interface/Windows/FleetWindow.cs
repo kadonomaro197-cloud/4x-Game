@@ -74,6 +74,10 @@ namespace Pulsar4X.Client
         // count changes (the cheap-sync pattern DevToolsWindow uses), so it's safe to touch every frame.
         private CombatDoctrineBlueprint[] _doctrineBlueprints = Array.Empty<CombatDoctrineBlueprint>();
         private string[] _doctrineNames = Array.Empty<string>();
+        // The RAW catalog size the filtered list was last built from. Tracked separately because the catalog is now
+        // SHARED with ground formations and we only show the space-selectable subset — comparing the filtered array's
+        // length against the raw count would re-sync every frame.
+        private int _doctrineCatalogCount = -1;
         private int _selectedDoctrine = 0;
         private string _doctrineStatus = "";
 
@@ -1100,9 +1104,14 @@ namespace Pulsar4X.Client
         {
             if (_uiState.Game == null) return;
             var catalog = _uiState.Game.StartingGameData.CombatDoctrines;
-            if (_doctrineBlueprints.Length == catalog.Count) return;
+            if (_doctrineCatalogCount == catalog.Count) return;
+            _doctrineCatalogCount = catalog.Count;
 
-            _doctrineBlueprints = catalog.Values.ToArray();
+            // ONE doctrine catalog now serves ALL combat (space fleets AND ground formations), so filter to the
+            // entries a FLEET may actually fly — without this a fleet commander is offered "Dig In".
+            _doctrineBlueprints = catalog.Values
+                .Where(d => CombatDoctrine.IsSelectableBy(d, DoctrineDomain.Space))
+                .ToArray();
             _doctrineNames = _doctrineBlueprints.Select(d => $"{d.DisplayName} [{d.Family}]").ToArray();
             if (_selectedDoctrine >= _doctrineNames.Length) _selectedDoctrine = 0;
         }

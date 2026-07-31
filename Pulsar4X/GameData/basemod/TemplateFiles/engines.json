@@ -64,7 +64,7 @@
           "Units": "kg/s",
           "DescriptionFormula": "'Fuel Consumption per second'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "[Mass] * 0.3 * TechData('tech-conventional-engine-fuel-consumption')"
+          "PropertyFormula": "[Mass] * 0.3 * TechData('tech-conventional-engine-fuel-consumption') * FuelGradeLookup(PropertyValue('Fuel Type'))"
         },
         {
           "Name": "DataBlob",
@@ -150,7 +150,7 @@
           "Units": "kg/s",
           "DescriptionFormula": "'Fuel Consumption per second'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "[Mass] * 0.017"
+          "PropertyFormula": "[Mass] * 0.017 * FuelGradeLookup(PropertyValue('Fuel Type'))"
         },
         {
           "Name": "DataBlob",
@@ -216,6 +216,16 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Startup vs Endurance",
+          "Units": "SvE",
+          "DescriptionFormula": "'Trades the cost of CREATING the warp bubble against the cost of HOLDING it. Turn it down for a drive that spins up cheaply but drinks power in transit — short hops, and it can leave on a part-charged battery. Turn it up for a drive that costs a lot to start and almost nothing to hold — one long haul. The product is fixed, so neither end is free.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2.5",
+          "MinFormula": "0.4",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
           "Name": "Engine Power",
           "Units": "EP",
           "DescriptionFormula": "'Move Power for ship'",
@@ -227,14 +237,14 @@
           "Units": "KJ",
           "DescriptionFormula": "'How much energy required to create the warp bubble.'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Engine Power') * TechData('tech-alcubierre-bubble-creation-cost') * 0.5"
+          "PropertyFormula": "PropertyValue('Engine Power') * TechData('tech-alcubierre-bubble-creation-cost') * 0.5 * PropertyValue('Startup vs Endurance')"
         },
         {
           "Name": "Bubble Sustain Energy Cost",
           "Units": "KW",
           "DescriptionFormula": "'How much energy required to sustain the warp bubble per second during the warp'",
           "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Engine Power') * 0.001 * TechData('tech-alcubierre-sustain-cost')"
+          "PropertyFormula": "PropertyValue('Engine Power') * 0.001 * TechData('tech-alcubierre-sustain-cost') / PropertyValue('Startup vs Endurance')"
         },
         {
           "Name": "Bubble Collapse Energy Returned",
@@ -248,6 +258,14 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Engine Power'), 'electricity', PropertyValue('Bubble Creation Energy Cost'), PropertyValue('Bubble Sustain Energy Cost'), -PropertyValue('Bubble Collapse Energy Returned'))",
           "AttributeType": "Pulsar4X.Movement.WarpDriveAtb"
+        },
+        {
+          "Name": "Sensor Signature",
+          "Units": "unknown",
+          "DescriptionFormula": "'A held warp bubble is not quiet. The signature is the power you are continuously pouring into holding it, so a drive tuned for endurance runs quieter than one tuned for quick hops. Same 3500K band as a thruster plume — a warp trail is loud, not exotic.'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(3500, PropertyValue('Bubble Sustain Energy Cost') * 1000)",
+          "AttributeType": "Pulsar4X.Sensors.SensorSignatureAtb"
         }
       ]
     }
@@ -360,6 +378,90 @@
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Thrust'), 1000000)",
           "AttributeType": "Pulsar4X.Movement.ReactionlessThrustAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "antimatter-engine",
+      "Name": "Antimatter Drive",
+      "Formulas": {
+        "Description": "An annihilation drive. The highest exhaust velocity in the game - it goes further per kilogram of fuel than anything else - and the lowest fuel grade, so it pushes SOFTEST. It burns antimatter, which rides a CONTAINMENT hold, so a ship carrying this engine and no containment has a drive it cannot feed.",
+        "Mass": "PropertyValue('Mass')",
+        "Volume": "[Mass] / 48",
+        "HTK": "0.5",
+        "CrewReq": "Max(2, [Mass] * 0.002)",
+        "ResearchCost": "[Mass] * 2.5",
+        "CreditCost": "[Mass] * 4",
+        "BuildPointCost": "[Mass] * 2"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.1",
+        "titanium": "[Mass] * 0.3",
+        "tungsten": "[Mass] * 0.3",
+        "rare-earth-elements": "[Mass] * 0.15",
+        "electronics": "[Mass] * 0.05"
+      },
+      "ComponentType": "Engine",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Mass",
+          "Units": "kg",
+          "DescriptionFormula": "'The size of the engine in kg'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "TechData('tech-conventional-engine-max-size')",
+          "MinFormula": "TechData('tech-conventional-engine-min-size') + 1400",
+          "StepFormula": "1",
+          "PropertyFormula": "3000"
+        },
+        {
+          "Name": "Fuel Type",
+          "DescriptionFormula": "'The type of fuel the engine burns. Antimatter rides a CONTAINMENT hold, not a fuel tank.'",
+          "GuiHint": "GuiFuelTypeSelection",
+          "DataDict": {
+            "contained-storage": "'antimatter'"
+          },
+          "PropertyFormula": "UniqueID('antimatter')"
+        },
+        {
+          "Name": "Exhaust Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'Specific Impulse in m/s - the highest of any drive, which is what buys the range'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "ExhaustVelocityLookup(PropertyValue('Fuel Type'))"
+        },
+        {
+          "Name": "Fuel Consumption",
+          "Units": "kg/s",
+          "DescriptionFormula": "'Fuel Consumption per second. The fuel GRADE is low, so the mass flow is small - which is why thrust is modest despite the exhaust velocity.'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "[Mass] * 0.017 * FuelGradeLookup(PropertyValue('Fuel Type'))"
+        },
+        {
+          "Name": "Thrust",
+          "Units": "N",
+          "DescriptionFormula": "'The maximum thrust output of this engine'",
+          "GuiHint": "GuiTextDisplay",
+          "PropertyFormula": "PropertyValue('Exhaust Velocity') * PropertyValue('Fuel Consumption')"
+        },
+        {
+          "Name": "DataBlob",
+          "DescriptionFormula": "''",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Exhaust Velocity'), PropertyValue('Fuel Type'), PropertyValue('Fuel Consumption'))",
+          "AttributeType": "Pulsar4X.Movement.NewtonionThrustAtb"
+        },
+        {
+          "Name": "Sensor Signature",
+          "DescriptionFormula": "''",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(3500, PropertyValue('Thrust'))",
+          "AttributeType": "Pulsar4X.Sensors.SensorSignatureAtb"
         }
       ]
     }

@@ -22,6 +22,13 @@ namespace Pulsar4X.GroundCombat
         public const double WalkerSpeed  = 1.5;   // FLAGGED
         public const double HoverSpeed   = 3.0;   // FLAGGED
 
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — the Foot-baseline march SPEED in real km/h, the metric twin of
+        /// the abstract <see cref="SpeedMultForUnit"/> multiplier, used to stamp a raised unit's
+        /// <see cref="GroundUnit.Speed_kmh"/> readout. ⚠ FLAGGED: = <c>PlanetRegionsFactory.BaseMarch_KmPerSec</c>
+        /// (0.116 km/s) × 3600 s/h; keep it in step with that canonical march datum if it changes. READOUT ONLY — the
+        /// march TIMER still runs on the multiplier × the region crossing time, so this number affects nothing yet.</summary>
+        public const double BaseMarchSpeed_kmh = 417.6;   // FLAGGED — 0.116 km/s × 3600 (mirror of PlanetRegionsFactory.BaseMarch_KmPerSec)
+
         /// <summary>Speed multiplier for a locomotion kind (Foot = 1.0 baseline; higher = faster). Pure.</summary>
         public static double SpeedMultFor(GroundLocomotion loco)
         {
@@ -82,6 +89,37 @@ namespace Pulsar4X.GroundCombat
             }
             catch { }
             return 0.5;
+        }
+
+        /// <summary>The minimum locomotion HEALTH a unit needs for its amphibious rating to count. A half-wrecked drive
+        /// is fine limping over land and lethal in open water — this is the grave rung for
+        /// <see cref="GroundLocomotionAtb.Amphibious"/>. ⚠ FLAGGED balance value.</summary>
+        public const double AmphibiousMinHealth = 0.5;
+
+        /// <summary>Can this unit cross OPEN WATER? True only if it carries a designed locomotion component whose
+        /// <see cref="GroundLocomotionAtb.Amphibious"/> is set AND that component is still healthy enough
+        /// (<see cref="AmphibiousMinHealth"/>) — shoot the drive up and the unit can no longer swim, so the flag is
+        /// LOSABLE like every other capability (cradle-to-grave). A unit with no designed locomotion (monolithic /
+        /// garrison / DevTools) is NOT amphibious → false → every existing march is byte-identical. Never throws.
+        /// <para>Read by <see cref="HexPathfinder.IsImpassable(RegionFeatureType, bool)"/> via the march call sites —
+        /// see docs/economy/DESIGNER-NORTH-STAR.md §23.3b for why this wire exists.</para></summary>
+        public static bool AmphibiousForUnit(Entity body, GroundUnit unit)
+        {
+            try
+            {
+                if (GroundUnitEntity.TryGetBacking(body, unit, out var backing)
+                    && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb)
+                    && cidb.TryGetComponentsByAttribute<GroundLocomotionAtb>(out var locos))
+                {
+                    foreach (var comp in locos)
+                    {
+                        var la = comp.Design?.GetAttribute<GroundLocomotionAtb>();
+                        if (la != null && la.Amphibious && comp.HealthPercent >= AmphibiousMinHealth) return true;
+                    }
+                }
+            }
+            catch { }
+            return false;
         }
 
         /// <summary>Adjust a terrain move-penalty by a unit's rough-terrain handling. PURE. Open terrain (baseMult ≤ 1)

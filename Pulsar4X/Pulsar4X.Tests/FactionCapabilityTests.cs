@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-D2 gauge (docs/AI-BRAIN-BUILD-TRACKER.md): a tech can grant a CAPABILITY (an ability the sim reads), not
+    /// F-D2 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md): a tech can grant a CAPABILITY (an ability the sim reads), not
     /// only move a buildable id. Proves (a) a fresh faction has no capabilities, (b) unlocking a "capability-"
     /// prefixed id grants that capability, (c) unlocking an ordinary id grants none (only the prefix routes to the
     /// capability set → byte-identical for every existing unlock), and (d) capabilities survive a clone (save/load,

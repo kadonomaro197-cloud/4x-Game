@@ -3,7 +3,9 @@
 Source: aurora-manual `13-ground-forces/` (v2.7.1) + AuroraWiki `C-Ground_Units` / `C-Ground_Combat`.
 Status: design reference. Constants are approximate — see `INDEX.md` caveats. ⚠️ = cross-source conflict.
 
-This is the **single largest gap** between Pulsar and Aurora. Pulsar has **no ground combat at all** — no ground unit entity, no formation concept, no ground combat processor, no invasion order, no UI. Everything below is new work. The good news: Aurora's "units are designed from researched components" model maps almost 1:1 onto Pulsar's existing **component/attribute/`ComponentInstancesDB`** framework (see `CONVENTIONS.md` → "Units are component-bearing entities").
+> **⚠ CORRECTED 2026-07-27 (was badly stale, and root `CLAUDE.md` points every ground designer here).** This doc used to open by claiming *"Pulsar has no ground combat at all — no ground unit entity, no formation concept, no ground combat processor, no invasion order, no UI."* **All five are now false.** Pulsar has a **55-file** ground subsystem *(count verified 2026-07-28)*: unit entities (`GameEngine/GroundCombat/GroundUnitEntity.cs`), formations (`GroundForcesDB.cs`), an auto-discovered hourly resolver (`GroundForcesProcessor.cs`), invasion orders (`LoadTroopsOrder.cs` / `LandTroopsOrder.cs`, wired to FleetWindow buttons and to the AI's `ConquerResolver`), and client surfaces (Force Management, `PlanetViewWindow`). **For what Pulsar actually has, read `Pulsar4X/GameEngine/GroundCombat/CLAUDE.md` and `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` first.**
+
+Treat everything below as the **Aurora reference spec** — the external design we diff against for depth we may still want (Aurora's formation hierarchy, its bombardment and fortification detail), *not* a to-do list of missing work. The genuinely useful mapping still holds: Aurora's "units are designed from researched components" model lands almost 1:1 on Pulsar's **component/attribute/`ComponentInstancesDB`** framework (see `CONVENTIONS.md` → "Units are component-bearing entities") — which is exactly how Pulsar's ground units are already built.
 
 ---
 

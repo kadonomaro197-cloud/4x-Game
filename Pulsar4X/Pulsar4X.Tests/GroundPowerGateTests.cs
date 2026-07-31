@@ -18,7 +18,7 @@ namespace Pulsar4X.Tests
     /// Calibration-INDEPENDENT by construction: it reads the assembler's new EnergyDemand_W / ReactorSupply_W gauges and
     /// derives how many reactors are "enough" from those numbers, so it proves the GATE LOGIC without depending on the
     /// base-mod tuning (whether a stock laser needs 1 reactor or 5). Engine-only → runs in CI. Uses the real faction
-    /// designs (the same laser/flak/reactor a ship uses — the unification payoff). Design: docs/WEAPON-UNIFICATION-DESIGN.md P2.
+    /// designs (the same laser/flak/reactor a ship uses — the unification payoff). Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md P2.
     /// </summary>
     [TestFixture]
     public class GroundPowerGateTests

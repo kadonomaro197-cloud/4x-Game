@@ -24,6 +24,7 @@ The `GameEngine` project is the core domain library. It has no dependency on any
 | `Tech/` | Research, scientists, tech unlocks |
 | `Energy/` | Power generation and consumption |
 | `Storage/` | Cargo holds and cargo types |
+| `Docking/` | **NEW 2026-07-30 — its own area, on the developer's call.** Berths for WHOLE VESSELS: `DockBayAtb` (buildable — `Berth Tonnage` split into `Berths`, so total capacity is invariant and each extra door narrows the rest and costs structure + deck crew), `DockedShipsDB` (the carrier's registry, ids not references), `DockTools` (capacity/door gates, dock, undock, and `UndockAll` — the grave rung). **Deliberately NOT a cargo class:** every compartment measures cubic metres poured in, but a vessel is discrete and leaves under its own power, so the question is *how many and how big*. A docked ship is re-parented via `PositionDB.SetParent`, so it travels with its carrier. Nothing in the engine calls it yet — the order is the next slice — so stock behaviour is byte-identical. |
 | `Ships/` | Ship design blueprint + factory |
 | `Factions/` | Faction state, tech DB, ability DB, event log |
 | `People/` | Commander and scientist entities |

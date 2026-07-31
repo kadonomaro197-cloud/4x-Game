@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 5.3 — THE NORTH-STAR ACCEPTANCE TEST (docs/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane; docs/NORTH-STAR-VISION.md).
+    /// Phase 5.3 — THE NORTH-STAR ACCEPTANCE TEST (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane; docs/NORTH-STAR-VISION.md).
     /// "Stage one aspect of a franchise; it plays believably." This composes the WHOLE brain stack in one staged galaxy
     /// and asserts the emergent behaviour is both BELIEVABLE and TRACEABLE to the authored inputs:
     ///

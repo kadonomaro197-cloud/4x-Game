@@ -10,7 +10,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-A3 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I): the faction-tier roll-up reads that the NPC
+    /// F-A3 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement I): the faction-tier roll-up reads that the NPC
     /// needs-ladder will consume. Proves (a) the roll-up equals a hand-sum of the same per-colony sources, (b) the
     /// morale/legitimacy means are genuinely POPULATION-WEIGHTED (a big unhappy world outweighs a small content one),
     /// and (c) a colony-less faction reads sane neutral/zero defaults ("no data" is not "in crisis"). Read-only and

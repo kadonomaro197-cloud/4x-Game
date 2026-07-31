@@ -19,7 +19,7 @@ namespace Pulsar4X.Tests
     /// Ground combat, slice 5a — RAISE A UNIT. A ground unit is a buildable design (`GroundUnitDesign :
     /// IConstructableDesign`) that rides the existing industry rails; when a build completes it's placed on the
     /// colony's planet in a region (`GroundForcesDB`), stamped with owner + region + combat stats. These gauges
-    /// prove the place-primitive, the build→place hook, and persistence. Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// prove the place-primitive, the build→place hook, and persistence. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundForcesTests
@@ -792,7 +792,7 @@ namespace Pulsar4X.Tests
             Log($"stance: dig-in defender {dug.Health:0} hp vs no-stance defender {open.Health:0} hp after 3 salvos");
         }
 
-        // ───────────────────────── H2 — hex movement + pathfinding (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+        // ───────────────────────── H2 — hex movement + pathfinding (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         /// <summary>Build an open hex disk of the given radius (all one terrain) — the shape PlanetHexFactory generates.</summary>
         private static List<GroundHex> OpenDisk(int radius, RegionFeatureType fill = RegionFeatureType.Plains)
@@ -871,6 +871,45 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("AMPHIBIOUS (2026-07-29, developer: 'keep amphibious'): the dial used to charge mass and be read by NOTHING — ocean was hard-coded impassable to everyone. Now passability is PER-UNIT: an amphibious drive crosses water (at a steep cost, so it buys ACCESS not speed) and can be ordered onto it; a non-amphibious unit still routes around. Byte-identical for every caller that passes no flag.")]
+        public void HexPath_Amphibious_CrossesWater_ButPaysForIt()
+        {
+            // The gate itself, both ways.
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean, false), Is.True, "ocean still blocks an ordinary unit");
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean, true), Is.False, "an amphibious drive crosses water");
+            Assert.That(HexPathfinder.IsImpassable(RegionFeatureType.Ocean), Is.True,
+                "the one-arg form is unchanged — every existing caller (muster snap, base placement, the in-battle step) is byte-identical");
+
+            // Water must COST something, or amphibious is a free strictly-better upgrade rather than a trade.
+            Assert.That(HexPathfinder.HexMoveMult(RegionFeatureType.Ocean), Is.EqualTo(HexPathfinder.Move_Water));
+            Assert.That(HexPathfinder.Move_Water, Is.GreaterThan(HexPathfinder.Move_Rough),
+                "swimming is slower than climbing a mountain — a land route is still preferred when one exists");
+
+            // A STRAIT that genuinely cuts the patch in two: the whole r=0 row is ocean. A neighbour step changes r by
+            // at most 1, so there is no land route from the r<0 half to the r>0 half at all. (A partial wall would NOT
+            // prove anything — A* correctly prefers a land detour even for an amphibious unit, because Move_Water costs
+            // more than going around. Amphibious buys ACCESS, not a shortcut.)
+            var disk = OpenDisk(2);
+            for (int i = 0; i < disk.Count; i++)
+                if (disk[i].R == 0)
+                    disk[i] = new GroundHex(disk[i].Q, disk[i].R, RegionFeatureType.Ocean);
+
+            var landRoute = HexPathfinder.FindPath(disk, 0, -2, 0, 2, amphibious: false);
+            var swimRoute = HexPathfinder.FindPath(disk, 0, -2, 0, 2, amphibious: true);
+            Assert.That(landRoute.Count, Is.EqualTo(0), "no land route exists across the strait — the ordinary unit is stuck");
+            Assert.That(swimRoute.Count, Is.GreaterThan(0), "the amphibious unit crosses");
+            Assert.That(swimRoute.Any(h => h.Terrain == RegionFeatureType.Ocean), Is.True, "and its route genuinely goes through water");
+
+            // And it can be ordered ONTO water, which a land unit cannot.
+            Assert.That(HexPathfinder.FindPath(disk, 0, -2, 0, 0, amphibious: false).Count, Is.EqualTo(0),
+                "a land unit still can't be ordered onto an ocean hex");
+            Assert.That(HexPathfinder.FindPath(disk, 0, -2, 0, 0, amphibious: true).Count, Is.GreaterThan(0),
+                "an amphibious unit can");
+
+            Log($"amphibious: crossed the strait in {swimRoute.Count} hexes where a land unit has no route at all; water costs {HexPathfinder.Move_Water} vs rough {HexPathfinder.Move_Rough}");
+        }
+
+        [Test]
         [Description("H2: the move-cost tiers are the developer's Moderate call (open ×1, cover ×1.5, rough ×2.5); per-hex base time is derived from the region's crossing-time datum, not a magic number.")]
         public void HexPath_CostModel_TiersAndDerivedBaseTime()
         {
@@ -933,7 +972,7 @@ namespace Pulsar4X.Tests
             Log($"hex march: unit walked {steps} hexes to ({dest.Q},{dest.R}) and arrived; path clone-safe");
         }
 
-        // ───────────────────────── G3 — units on the ONE continuous global grid (docs/GLOBAL-HEX-GRID-DESIGN.md) ─────────────────────────
+        // ───────────────────────── G3 — units on the ONE continuous global grid (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         [Test]
         [Description("G3: a raised unit is ALSO placed on the global cylinder grid — at its region BAND's centre column (the global twin of the disk's (0,0) muster).")]
@@ -1010,7 +1049,7 @@ namespace Pulsar4X.Tests
             Assert.That(u2.GlobalPath, Is.Not.Null.And.Count.GreaterThan(0), "the follower has a global march path");
         }
 
-        // ───────────────────────── H3 — range-based directed combat (docs/HEX-GROUND-AND-ORDERS-DESIGN.md) ─────────────────────────
+        // ───────────────────────── H3 — range-based directed combat (docs/ground/GROUND-SURFACE-MAP-DESIGN.md) ─────────────────────────
 
         private static GroundUnitDesign MakeDesign(string id, string name, GroundUnitType type, int range, double hp = 1000) => new GroundUnitDesign
         {
@@ -1075,6 +1114,46 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Mini-hex M2 (flag ON): the resolver gates on the REAL metre gap on the continuous coarse-hex + mini-hex field, not hex-count. Two enemies in the SAME coarse global hex read gap 0 and fight ('same hex = combat'); an enemy many coarse hexes away is a real thousands-of-km apart and holds fire until it closes. Flag OFF (the default the whole CI suite runs on) keeps the legacy local-patch hex gate → every existing combat gauge is byte-identical. docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5.")]
+        public void MiniHexCombat_SameCoarseHexFights_DifferentCoarseHexHoldsFire()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();   // isolate combat from attrition
+            var regions = body.GetDataBlob<PlanetRegionsDB>().Regions;
+            regions[0].OwnerFactionID = -1;   // neutral ground → no cover bias, so we measure ONLY the range gate
+
+            var proc = new GroundForcesProcessor();
+            GroundForcesProcessor.EnableMiniHexCombat = true;
+            try
+            {
+                // (1) SAME coarse global hex — both muster at region 0's band centre, mini (0,0) → real gap 0 → they fight.
+                var a = GroundForces.RaiseUnit(body, MakeDesign("mh-a", "A", GroundUnitType.Infantry, range: 1), s.Faction.Id, 0);
+                var b = GroundForces.RaiseUnit(body, MakeDesign("mh-b", "B", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+                Assert.That(a.Range_m, Is.GreaterThan(0), "Slice 1b populated the unit's real reach");
+                Assert.That(GroundMiniHex.RealGapMetres(a, b, body), Is.EqualTo(0.0).Within(1e-6),
+                    "same coarse global hex + mini (0,0) → gap 0 (the 'same hex = combat' case)");
+
+                proc.ProcessEntity(body, 3600);
+                Assert.That(a.Health, Is.LessThan(a.MaxHealth), "same coarse hex → they fight (A takes fire)");
+                Assert.That(b.Health, Is.LessThan(b.MaxHealth), "same coarse hex → they fight (B takes fire)");
+                Log($"same coarse hex: A {a.Health:0}/{a.MaxHealth:0}, B {b.Health:0}/{b.MaxHealth:0} — both trading fire");
+
+                // (2) push B ~20 coarse hexes away → a real gap of thousands of km, far beyond any real weapon reach → hold fire.
+                b.GlobalQ = a.GlobalQ + 20;
+                double gap_m = GroundMiniHex.RealGapMetres(a, b, body);
+                Assert.That(gap_m, Is.GreaterThan(1_000_000.0), "~20 coarse hexes is a real distance of thousands of km, not a hex-count");
+                double aBefore = a.Health, bBefore = b.Health;
+                proc.ProcessEntity(body, 3600);
+                Assert.That(a.Health, Is.EqualTo(aBefore), "B is a real distance away (different coarse hex) — A takes no new fire");
+                Assert.That(b.Health, Is.EqualTo(bBefore), "A can't reach across coarse hexes — B takes no new fire until it closes");
+                Log($"far apart ({gap_m / 1000:N0} km): A {a.Health:0} + B {b.Health:0} both unchanged — real distance holds fire");
+            }
+            finally { GroundForcesProcessor.EnableMiniHexCombat = false; }
+        }
+
+        [Test]
         [Description("System ① — flat ARMOUR in a REAL fight (proves the resolver reads a unit's Defense): two identical infantry defenders each face an identical swarm of small-attack attackers; the ARMOURED one (high Defense) ends with far more health, because flat armour bounces most of each little volley. The wiring half of the pure-math armour gauge (GroundDamageMatrixTests).")]
         public void Armour_InAFight_ArmouredDefenderOutlastsUnarmoured_VsASwarm()
         {
@@ -1135,6 +1214,125 @@ namespace Pulsar4X.Tests
                 "the same hex range covers less real distance on a smaller world (1 hex ≠ the same distance everywhere)");
             Assert.That(GroundRangeTools.HexPitchKm(new Region()), Is.EqualTo(0.0), "no hex patch / no area → no readout");
             Log($"readout: a 3-hex gun ≈ {GroundRangeTools.RealReachKm(3, big):N0} km on the big region vs {GroundRangeTools.RealReachKm(3, small):N0} km on the small one");
+        }
+
+        [Test]
+        [Description("Real-distance foundation (Slice 1): the km↔hex translation both ways. A REAL weapon range (km) maps onto the hex ruler DIFFERENTLY per body — a 1 km gun needs the same hex on a continent-scale world but reaches an adjacent hex on a tiny moon — and round-trips back. Additive/byte-identical: nothing in the resolver reads these yet. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
+        public void RealDistance_HexTranslation_BothWays_AndByBody()
+        {
+            // An Earth-scale region: ~550 km per hex (a continent). A 1 km gun is a sliver of one hex → same-hex only.
+            var earthly = new Region { Area_km2 = 5_000_000, Hexes = OpenDisk(2) };   // 19 hexes → pitch ≈ 551 km
+            double pitchEarth = GroundRangeTools.HexPitchKm(earthly);
+            Assert.That(pitchEarth, Is.GreaterThan(100), "a continent-scale region has a big hex pitch");
+            Assert.That(GroundRangeTools.HexesForKm(1.0, earthly), Is.LessThan(1.0),
+                "a 1 km weapon spans well under one Earth-scale hex → contact needs the SAME hex");
+
+            // A tiny-moon region: sub-km per hex. Now a 1 km gun reaches beyond one hex (adjacent-hex fire falls out).
+            var moon = new Region { Area_km2 = 4, Hexes = OpenDisk(2) };              // 19 hexes → pitch ≈ 0.49 km
+            double pitchMoon = GroundRangeTools.HexPitchKm(moon);
+            Assert.That(pitchMoon, Is.LessThan(1.0), "a tiny moon has a sub-km hex pitch");
+            Assert.That(GroundRangeTools.HexesForKm(1.0, moon), Is.GreaterThan(1.0),
+                "the SAME 1 km weapon reaches more than one hex on a tiny moon — the hex is just the ruler, the km is the truth");
+
+            // metres form agrees with the km form (1000 m == 1 km), on both bodies.
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, earthly), Is.EqualTo(GroundRangeTools.HexesForKm(1.0, earthly)).Within(1e-9));
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, moon), Is.EqualTo(GroundRangeTools.HexesForKm(1.0, moon)).Within(1e-9));
+
+            // Round-trip: hexes → real metres → hexes returns the original (the two directions are exact inverses).
+            foreach (double h in new[] { 0.5, 1.0, 3.5 })
+            {
+                double back = GroundRangeTools.HexesForMetres(GroundRangeTools.MetresForHexes(h, earthly), earthly);
+                Assert.That(back, Is.EqualTo(h).Within(1e-9), $"round-trip of {h} hexes on the Earth-scale body");
+            }
+
+            // Degenerate / defensive: no hex geometry, or non-positive inputs → 0, never a throw or divide-by-zero.
+            Assert.That(GroundRangeTools.HexesForKm(1.0, new Region()), Is.EqualTo(0.0), "no hex patch → 0 (no divide-by-zero)");
+            Assert.That(GroundRangeTools.HexesForMetres(1000.0, null), Is.EqualTo(0.0), "null region → 0");
+            Assert.That(GroundRangeTools.MetresForHexes(5.0, new Region()), Is.EqualTo(0.0), "no hex patch → 0 metres");
+            Assert.That(GroundRangeTools.HexesForKm(0.0, earthly), Is.EqualTo(0.0), "zero distance → 0 hexes");
+            Assert.That(GroundRangeTools.HexesForKm(-5.0, earthly), Is.EqualTo(0.0), "negative distance → 0 hexes");
+            Assert.That(GroundRangeTools.MetresForHexes(-1.0, earthly), Is.EqualTo(0.0), "negative hexes → 0 metres");
+
+            // The Slice-1 seam holds byte-identical to today's readout (Slice 2 substitutes a real per-weapon stat here).
+            Assert.That(GroundRangeTools.RealRangeKmFor(3, earthly), Is.EqualTo(GroundRangeTools.RealReachKm(3, earthly)).Within(1e-9),
+                "the real-range seam equals the existing readout in Slice 1 (byte-identical)");
+
+            Log($"translation: 1 km weapon → {GroundRangeTools.HexesForKm(1.0, earthly):F3} hex on a {pitchEarth:N0} km/hex world (same-hex) vs {GroundRangeTools.HexesForKm(1.0, moon):F2} hex on a {pitchMoon:F2} km/hex moon (reaches out)");
+        }
+
+        [Test]
+        [Description("K4 — the round-down hex READOUT (INFORMATION-DELTA #11): the real km on the gun is the truth, 'round down to hexes' is a per-body DISPLAY fact. A 4 km tank cannon floors to 0 WHOLE hexes on an Earth-scale world (single-hex combat) but spans several on a small moon; DescribeReach states both, and HexesFloorForMetres == floor(HexesForMetres). docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
+        public void RoundDownHexReadout_FloorsPerBody_AndRoundTrips()
+        {
+            // Earth-scale region (~551 km/hex): a 4 km gun is a sliver of one hex → floors to 0 whole hexes.
+            var earthly = new Region { Area_km2 = 5_000_000, Hexes = OpenDisk(2) };   // pitch ≈ 551 km
+            Assert.That(GroundRangeTools.HexesFloorForMetres(4000, earthly), Is.EqualTo(0),
+                "a 4 km cannon covers well under one Earth-scale hex → 0 whole hexes (single-hex combat)");
+            Assert.That(GroundRangeTools.DescribeReach(4000, earthly), Does.Contain("4 km").And.Contain("0 hex"),
+                "the readout states the real km + rounds DOWN to 0 hexes on this world");
+
+            // Tiny-moon region (sub-km/hex): the SAME 4 km gun now spans several whole hexes.
+            var moon = new Region { Area_km2 = 4, Hexes = OpenDisk(2) };              // pitch ≈ 0.49 km
+            int moonHexes = GroundRangeTools.HexesFloorForMetres(4000, moon);
+            Assert.That(moonHexes, Is.GreaterThan(1), "the SAME 4 km gun reaches multiple whole hexes on a tiny moon");
+            Assert.That(moonHexes, Is.EqualTo((int)System.Math.Floor(GroundRangeTools.HexesForMetres(4000, moon))),
+                "the floor readout == floor(the fractional hex count) — the two agree");
+
+            // A pitch-less region prints the km with an unknown ruler, never throws.
+            Assert.That(GroundRangeTools.HexesFloorForMetres(4000, new Region()), Is.EqualTo(0), "no hex geometry → 0 whole hexes");
+            Assert.That(GroundRangeTools.DescribeReach(4000, null), Does.Contain("km"), "a null region still prints the real km (no throw)");
+            Assert.That(GroundRangeTools.DescribeReach(0, earthly), Does.Contain("0 hex"), "a zero-range weapon reads 0 hexes");
+
+            Log($"round-down readout: 4 km cannon → '{GroundRangeTools.DescribeReach(4000, earthly)}' vs '{GroundRangeTools.DescribeReach(4000, moon)}'");
+        }
+
+        [Test]
+        [Description("Real-distance foundation (Slice 1b/1c): the new real-metre FIELDS populate and round-trip through the km↔hex helper WITHOUT perturbing the hex combat stats. A raised unit carries a real Range_m (from its design, else derived from the hex range × the nominal pitch) and a real Speed_kmh; the mount + unit copy-ctors deep-copy them; and Range_m → hexes reproduces the 'same gun, different hex count per body' behaviour. ADDITIVE at the time of writing; Speed_kmh is now READ by the resolver's closing step (corrected 2026-07-27) — this fixture still only asserts the fields populate/round-trip, which stays true. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
+        public void RealDistance_Slice1Fields_PopulateAndRoundTrip()
+        {
+            double pitch_m = GroundCombatant.NominalHexPitch_m;   // the nominal reference pitch (a real per-body pitch is Slice 2)
+
+            // (1) A DESIGN carrying a real Range_m snapshots it verbatim onto the raised unit; the hex stats are unchanged.
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            var design = MakeInfantryDesign();
+            design.Range = 3;
+            design.Range_m = 3 * pitch_m;   // author a real reach
+            var unit = GroundForces.RaiseUnit(body, design, s.Faction.Id, regionIndex: 0);
+
+            Assert.That(unit.Range, Is.EqualTo(3), "the hex Range read-model is unchanged (byte-identical)");
+            Assert.That(unit.Attack, Is.EqualTo(100), "combat Attack is unchanged");
+            Assert.That(unit.MaxHealth, Is.EqualTo(500), "combat HP is unchanged");
+            Assert.That(unit.Range_m, Is.EqualTo(3 * pitch_m).Within(1e-6), "the unit snapshots the design's real Range_m");
+            Assert.That(unit.Speed_kmh, Is.EqualTo(GroundMobility.BaseMarchSpeed_kmh).Within(1e-6),
+                "a foot unit (no backing → ×1.0) reads the Foot-baseline real speed");
+
+            // (2) A design with NO real Range_m (a code-built / garrison design) has it DERIVED from the hex range at raise.
+            var garrison = MakeInfantryDesign();
+            garrison.Range = 2;   // hexes only; Range_m left 0
+            var g = GroundForces.RaiseUnit(body, garrison, s.Faction.Id, regionIndex: 0);
+            Assert.That(g.Range_m, Is.EqualTo(2 * pitch_m).Within(1e-6), "an un-authored design derives Range_m from its hex range");
+
+            // (3) The mount value object deep-copies Range_m (save-safety).
+            var mount = new GroundWeaponMount { Attack = 40, RangeHexes = 3, Range_m = 3 * pitch_m, Mode = GroundWeaponMode.Ballistic };
+            Assert.That(new GroundWeaponMount(mount).Range_m, Is.EqualTo(mount.Range_m), "the mount copy-ctor carries Range_m");
+
+            // (4) The GroundUnit deep-copies both new fields.
+            var uClone = new GroundUnit(unit);
+            Assert.That(uClone.Range_m, Is.EqualTo(unit.Range_m), "the unit copy-ctor carries Range_m");
+            Assert.That(uClone.Speed_kmh, Is.EqualTo(unit.Speed_kmh), "the unit copy-ctor carries Speed_kmh");
+
+            // (5) The SAME real reach draws a DIFFERENT hex count per body (the locked principle): sub-hex on a
+            //     continent-scale world (same-hex only), reaching out on a tiny moon — the km is the truth, the hex the ruler.
+            var earthly = new Region { Area_km2 = 5_000_000, Hexes = OpenDisk(2) };   // pitch ≈ 551 km/hex
+            var moon = new Region { Area_km2 = 4, Hexes = OpenDisk(2) };              // pitch ≈ 0.49 km/hex
+            Assert.That(GroundRangeTools.HexesForMetres(unit.Range_m, earthly), Is.LessThan(1.0),
+                "a nominal 3-km reach is sub-hex on a continent-scale world (same-hex only)");
+            Assert.That(GroundRangeTools.HexesForMetres(unit.Range_m, moon), Is.GreaterThan(1.0),
+                "the SAME reach spans multiple hexes on a tiny moon");
+
+            Log($"slice-1 fields: unit Range_m={unit.Range_m:N0} m, Speed_kmh={unit.Speed_kmh:N0} km/h; draws " +
+                $"{GroundRangeTools.HexesForMetres(unit.Range_m, earthly):F3} hex on Earth vs {GroundRangeTools.HexesForMetres(unit.Range_m, moon):F2} hex on a moon");
         }
 
         // ───────────────────────── ROE — commander engagement rules (the space closing-model echo) ─────────────────────────
@@ -1288,6 +1486,153 @@ namespace Pulsar4X.Tests
                 "the long-range unit's free shots during the approach decide the fight — the rusher ends more damaged");
             Assert.That(kiter.Health, Is.GreaterThan(0),
                 "the long-range unit survives: it whittled the rusher before it could close to trade evenly");
+        }
+
+        [Test]
+        [Description("INITIAL ENGAGEMENT SPREAD (M3) — the north-star closing fight from an AUTO spread, the way a real game deploys. Same as ClosingFight_LongRangeWhittles, EXCEPT the two sides are NOT hand-placed apart: both muster at region 0's centre hex (0,0) like the real game (RaiseUnit → StampGlobalMuster co-locates everyone), and EnableInitialEngagementSpread does the opening. With the flag on, the first tick pushes the shorter-ranged rusher the holder's range (3 hexes) away — so the range-3 kiter opens fire immediately and the range-1 rusher must close, ending more damaged. This proves the processor produces the separation the old test hard-coded, so the artillery-during-approach fight happens in a game, not just in a hand-set fixture.")]
+        public void InitialEngagementSpread_OpensAGap_ThenLongRangeWhittlesTheRusher()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();  // no attrition skew
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;   // neutral → the range-based holder rule makes the range-3 kiter hold
+
+            var proc = new GroundForcesProcessor();
+            GroundForcesProcessor.EnableInitialEngagementSpread = true;   // the client runs the HEX gate (EnableMiniHexCombat off = CI default)
+            try
+            {
+                // Equal stats EXCEPT reach — and BOTH mustered at (0,0), co-located, like a real deployment (NOT hand-placed apart).
+                var kiter = GroundForces.RaiseUnit(body, MakeDesign("spk", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+                var rusher = GroundForces.RaiseUnit(body, MakeDesign("spr", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+                Assert.That(HexDistBetween(kiter, rusher), Is.EqualTo(0), "both muster co-located at (0,0) — the real game's start, gap 0");
+
+                // The rusher's formation CLOSES; the kiter has none → holds ground and fires (mirrors ClosingFight).
+                var f = GroundForces.CreateFormation(body, InvaderFaction, "Swarm");
+                GroundForces.AssignUnit(f, rusher);
+                GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+                var forces = body.GetDataBlob<GroundForcesDB>();
+                // (a) ONE tick applies the spread BEFORE the opening salvo → the sides now stand the holder's range apart.
+                proc.ProcessEntity(body, 3600);
+                int gapAfterSpread = HexDistBetween(kiter, rusher);
+                Log($"initial spread opened the fight: kiter(reach 3) at ({kiter.HexQ},{kiter.HexR}), rusher(reach 1) at ({rusher.HexQ},{rusher.HexR}) → gap {gapAfterSpread}");
+                Assert.That(gapAfterSpread, Is.GreaterThan(0), "the spread opened a real gap from a co-located muster (there's an approach to fight across)");
+                Assert.That(gapAfterSpread, Is.EqualTo(3), "opened to the HOLDER's longest reach (3), so its gun opens fire and the rusher must close");
+
+                // (b) play the fight out — the range advantage, from the auto spread, decides it exactly as the hand-placed test.
+                for (int i = 0; i < 60 && forces.Units.Count > 1; i++)
+                    proc.ProcessEntity(body, 3600);
+                Log($"closing fight from auto-spread: kiter ends {kiter.Health:0} hp, rusher ends {rusher.Health:0} hp");
+                Assert.That(rusher.Health, Is.LessThan(kiter.Health),
+                    "the long-range unit's free shots during the approach decide it — the rusher ends more damaged");
+                Assert.That(kiter.Health, Is.GreaterThan(0), "the long-range unit survives — it whittled the rusher before it closed");
+            }
+            finally { GroundForcesProcessor.EnableInitialEngagementSpread = false; }
+        }
+
+        [Test]
+        [Description("INITIAL ENGAGEMENT SPREAD — BYTE-IDENTITY: with the flag OFF (the CI default), two co-located hostile units stay point-blank (gap 0) and trade fire on tick 1, exactly as every pre-M3 fight. Proves the spread only runs inside the flag (the whole existing combat suite is unchanged).")]
+        public void InitialEngagementSpread_FlagOff_UnitsStayPointBlank()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            PaveRegionHexes(body, regionsDB, 0);
+            regionsDB.Regions[0].OwnerFactionID = -1;
+
+            Assert.That(GroundForcesProcessor.EnableInitialEngagementSpread, Is.False, "the spread flag defaults OFF (the CI suite is byte-identical)");
+            var kiter = GroundForces.RaiseUnit(body, MakeDesign("nsk", "LongGun", GroundUnitType.Infantry, range: 3), s.Faction.Id, 0);
+            var rusher = GroundForces.RaiseUnit(body, MakeDesign("nsr", "Zergling", GroundUnitType.Infantry, range: 1), InvaderFaction, 0);
+
+            new GroundForcesProcessor().ProcessEntity(body, 3600);
+            Assert.That(HexDistBetween(kiter, rusher), Is.EqualTo(0), "flag off → no spread → the sides stay co-located (point-blank)");
+            Assert.That(kiter.Health, Is.LessThan(kiter.MaxHealth), "co-located → they fight at gap 0 (kiter takes fire)");
+            Assert.That(rusher.Health, Is.LessThan(rusher.MaxHealth), "co-located → they fight at gap 0 (rusher takes fire)");
+            Log($"flag off: gap {HexDistBetween(kiter, rusher)} — point-blank fight, byte-identical to every pre-M3 gauge");
+        }
+
+        [Test]
+        [Description("K3 — the REAL-DISTANCE closing fight on the CONTINUOUS mini-hex field (the mini twin of InitialEngagementSpread_OpensAGap): with BOTH the metre gate (EnableMiniHexCombat) and the spread (EnableInitialEngagementSpread) on, two co-located units with AUTHORED real ranges — a 30 km artillery kiter and a 500 m rifle rusher — are pushed the holder's REAL range apart on the Global/Mini/offset field, so RealGapMetres ≈ 30 km. The rusher (Close-to-Engage) crosses that real distance at its march speed while the long gun fires free the whole approach; range is the only difference, so the artillery-thins-the-approach fight decides it. Both flags default OFF → the CI suite is byte-identical; reset in finally. docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.")]
+        public void MiniHexClosingFight_RealDistanceSpread_LongRangeWhittlesTheRusher()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            if (body.HasDataBlob<PlanetEnvironmentsDB>()) body.RemoveDataBlob<PlanetEnvironmentsDB>();  // no attrition skew
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            regionsDB.Regions[0].OwnerFactionID = -1;   // neutral → the longest REAL-ranged faction (the artillery) holds
+
+            var proc = new GroundForcesProcessor();
+            GroundForcesProcessor.EnableMiniHexCombat = true;
+            GroundForcesProcessor.EnableInitialEngagementSpread = true;
+            try
+            {
+                // Authored REAL ranges: a 30 km tube-artillery kiter vs a 500 m rifle rusher. Equal otherwise. Both muster
+                // co-located at region 0's band centre (RaiseUnit → StampGlobalMuster), Mini (0,0), offset (0,0) → gap 0.
+                var kDesign = MakeDesign("mck", "LongGun", GroundUnitType.Artillery, range: 3);
+                kDesign.Range_m = 30000; kDesign.DamageType = GroundWeaponMode.Artillery;   // area fire lands at range (undodgeable)
+                var rDesign = MakeDesign("mcr", "Zergling", GroundUnitType.Infantry, range: 1); rDesign.Range_m = 500;
+                var kiter = GroundForces.RaiseUnit(body, kDesign, s.Faction.Id, 0);
+                var rusher = GroundForces.RaiseUnit(body, rDesign, InvaderFaction, 0);
+                Assert.That(kiter.Range_m, Is.EqualTo(30000).Within(1e-6), "the kiter carries its authored 30 km real reach");
+                Assert.That(GroundMiniHex.RealGapMetres(kiter, rusher, body), Is.EqualTo(0.0).Within(1e-6), "co-located muster → real gap 0");
+
+                // The rusher CLOSES; the kiter has no formation → holds and fires (mirrors the hex ClosingFight).
+                var f = GroundForces.CreateFormation(body, InvaderFaction, "Swarm");
+                GroundForces.AssignUnit(f, rusher);
+                GroundFormationDoctrine.SetEngagementStance(f, GroundEngagementStance.CloseToEngage);
+
+                var forces = body.GetDataBlob<GroundForcesDB>();
+                // (a) ONE tick applies the real-distance spread → the sides now stand ~30 km apart on the continuous field.
+                proc.ProcessEntity(body, 30);
+                double gapAfterSpread = GroundMiniHex.RealGapMetres(kiter, rusher, body);
+                Log($"real-distance spread: kiter(30 km) at mini({kiter.MiniQ},{kiter.MiniR})+({kiter.MiniOffX_km:0.#}km), rusher(500 m) opened to {gapAfterSpread / 1000:0.##} km");
+                Assert.That(gapAfterSpread, Is.EqualTo(30000).Within(1.0), "the spread opened the fight to the HOLDER's real range (30 km) on the continuous field");
+
+                // (b) play it out in fine ticks — the rusher marches 30 km while the long gun fires free the whole approach.
+                for (int i = 0; i < 40 && forces.Units.Count > 1; i++) proc.ProcessEntity(body, 30);
+                Log($"real-distance closing fight: kiter(30 km) ends {kiter.Health:0} hp, rusher(500 m) ends {rusher.Health:0} hp");
+                Assert.That(rusher.Health, Is.LessThan(kiter.Health),
+                    "the long gun's free shots across the REAL 30 km approach decide it — the rusher ends more damaged");
+                Assert.That(kiter.Health, Is.GreaterThan(0), "the long-range unit survives: it whittled the rusher before it could close");
+            }
+            finally
+            {
+                GroundForcesProcessor.EnableMiniHexCombat = false;
+                GroundForcesProcessor.EnableInitialEngagementSpread = false;
+            }
+        }
+
+        [Test]
+        [Description("C2 fog accessor — GroundThreat.DetectedEnemyUnits returns the enemy units the viewer can SEE: an enemy in a region the viewer has a unit standing in (CONTACT) is seen; own + neutral units are never returned; and an enemy in a region the viewer neither owns, scouts, nor stands in is FOGGED (invisible). The client rings/tokens only the seen — fog-honest, matching the space contact blips.")]
+        public void DetectedEnemyUnits_FogHonest_ContactSeenUnscoutedHidden()
+        {
+            var s = TestScenario.CreateWithColony();
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = s.StartingBody;
+            var regionsDB = body.GetDataBlob<PlanetRegionsDB>();
+            regionsDB.Regions[0].OwnerFactionID = -1;               // neutral ground → detection is by CONTACT, not ownership
+
+            var ownU = GroundForces.RaiseUnit(body, MakeInfantryDesign(), s.Faction.Id, 0);      // my unit in region 0 → contact there
+            var enemyNear = GroundForces.RaiseUnit(body, MakeInfantryDesign(), InvaderFaction, 0); // enemy in region 0 → seen (contact)
+            GroundForces.RaiseUnit(body, MakeInfantryDesign(), Game.NeutralFactionId, 0);          // a neutral — never an "enemy"
+
+            // region 1: no unit of mine, owned by the rival, not per-faction revealed to me → fogged (unless the world is revealed).
+            regionsDB.Regions[1].OwnerFactionID = InvaderFaction;
+            var enemyFar = GroundForces.RaiseUnit(body, MakeInfantryDesign(), InvaderFaction, 1);
+
+            var seen = GroundThreat.DetectedEnemyUnits(body, s.Faction.Id);
+            Assert.That(seen, Does.Contain(enemyNear), "an enemy in a region I have units in (contact) is SEEN");
+            Assert.That(seen, Does.Not.Contain(ownU), "my own unit is not returned as an enemy");
+            Assert.That(seen.TrueForAll(u => u.FactionOwnerID != Game.NeutralFactionId), "neutral presence is never an enemy");
+            if (!regionsDB.IsRegionRevealedFor(s.Faction.Id, 1))
+                Assert.That(seen, Does.Not.Contain(enemyFar), "an un-scouted, un-contacted enemy region is FOGGED (invisible)");
+            Log($"fog read: {seen.Count} enemy unit(s) seen (contact region 0); region-1 enemy revealed? {regionsDB.IsRegionRevealedFor(s.Faction.Id, 1)}");
         }
 
         [Test]

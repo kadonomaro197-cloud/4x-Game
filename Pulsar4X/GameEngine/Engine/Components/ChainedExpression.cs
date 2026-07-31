@@ -484,8 +484,16 @@ namespace Pulsar4X.Components
 
                 case "TechData":
                     techID = (string)args.EvaluateParameters()[0];
-                    var tech = _factionDataStore.Techs[techID];
-                    args.Result = tech.TechDataFormula();
+                    // Guard the tech lookup the SAME way the sibling TechLevel case (below) does. A component
+                    // formula can reference a tech the DESIGNING faction has not researched yet (e.g. the rtg's
+                    // Efficiency = TechData('tech-conductors')+10, and tech-conductors is start-locked for every
+                    // faction) — a raw Techs[techID] index then throws KeyNotFoundException and crashes the designer.
+                    // Degrade an un-researched tech's data contribution to 0 (its base) instead of crashing, so the
+                    // stat simply improves once the tech is researched (correct tech-progression behaviour).
+                    if (_factionDataStore.Techs.ContainsKey(techID))
+                        args.Result = _factionDataStore.Techs[techID].TechDataFormula();
+                    else
+                        args.Result = 0;
                     break;
 
                 //Returns the tech level for the given guid
@@ -530,6 +538,25 @@ namespace Pulsar4X.Components
                     var cargo = (ProcessedMaterialBlueprint?)_factionDataStore.CargoGoods.GetAny((string)args.EvaluateParameters()[0]);
                     Expression dataExpression = new Expression(cargo.Formulas["ExhaustVelocity"]);
                     args.Result = dataExpression.Evaluate();
+                    break;
+                // FUEL GRADE (2026-07-29) — how hard a refined fuel drives the engine, the developer's
+                // "make the level of refined options for fuel affect the engine" (docs/economy/DESIGNER-NORTH-STAR.md §26).
+                // A fuel's REFINEMENT LEVEL multiplies the engine's mass flow, so grade × exhaust velocity is roughly the
+                // engine's power budget (§20's T·v = 2P): a dense low-Isp fuel like RP-1 pushes HARDER, a high-Isp one
+                // like Hydrolox pushes SOFTER but goes further per kg. Without this a better fuel raised exhaust velocity
+                // AND thrust at once — a pure dominance ladder with no trade (§26.3).
+                // DEFENSIVE: a fuel material with no FuelGrade formula (any mod's fuel, or an old save's) reads 1.0,
+                // which reproduces the pre-grade arithmetic exactly.
+                case "FuelGradeLookup":
+                    args.Result = 1.0;
+                    var fuelMat = _factionDataStore.CargoGoods.GetAny((string)args.EvaluateParameters()[0]) as ProcessedMaterialBlueprint;
+                    if (fuelMat?.Formulas != null && fuelMat.Formulas.TryGetValue("FuelGrade", out var gradeFormula)
+                        && !string.IsNullOrWhiteSpace(gradeFormula))
+                    {
+                        var gradeResult = new Expression(gradeFormula).Evaluate();
+                        double grade = Convert.ToDouble(gradeResult);
+                        if (grade > 0) args.Result = grade;   // a non-positive grade would zero the engine — ignore it
+                    }
                     break;
             }
         }

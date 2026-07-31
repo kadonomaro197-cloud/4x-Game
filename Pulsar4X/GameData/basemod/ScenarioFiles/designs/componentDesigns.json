@@ -39,6 +39,18 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-alcubierre-2k-endurance",
+      "Name": "Alcuberi-White 2k (Endurance)",
+      "TemplateId": "alcubierre-warp-drive",
+      "Properties": [
+        { "Key": "Mass", "Value": 2000 },
+        { "Key": "Startup vs Endurance", "Value": 2.0 }
+      ]
+    }
+  },
+{
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-alcubierre-500",
       "Name": "Alcuberi-White 500",
       "TemplateId": "alcubierre-warp-drive",
@@ -61,6 +73,50 @@
       "UniqueId": "default-design-factory",
       "Name": "Factory",
       "TemplateId": "factory"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-fission-reactor",
+      "Name": "Fission Reactor",
+      "TemplateId": "reactor",
+      "Properties": [
+        {
+          "Key": "Mass",
+          "Value": 1500
+        },
+        {
+          "Key": "Output vs Economy",
+          "Value": 1
+        },
+        {
+          "Key": "Lifetime",
+          "Value": 8760
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-fission-reactor-derated",
+      "Name": "De-rated Fission Reactor",
+      "TemplateId": "reactor",
+      "Properties": [
+        {
+          "Key": "Mass",
+          "Value": 1500
+        },
+        {
+          "Key": "Output vs Economy",
+          "Value": 0.5
+        },
+        {
+          "Key": "Lifetime",
+          "Value": 8760
+        }
+      ]
     }
   },
   {
@@ -93,8 +149,7 @@
       "TemplateId": "beam-fire-control",
       "Properties": [
         { "Key": "Range", "Value": 100 },
-        { "Key": "Tracking Speed", "Value": 5000 },
-        { "Key": "Size vs Range", "Value": 1 }
+        { "Key": "Tracking Speed", "Value": 5000 }
       ]
     }
   },
@@ -275,7 +330,7 @@
       "Name": "Geo Surveyor Mk1",
       "TemplateId": "geo-surveyor",
       "Properties": [
-        { "Key": "Survey Speed", "Value": 1 }
+        { "Key": "Survey Speed", "Value": 10 }
       ]
     }
   },
@@ -647,6 +702,17 @@
       "UniqueId": "default-design-space-habitat",
       "Name": "Space Habitat",
       "TemplateId": "space-habitat"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-kithrin-hive-habitat",
+      "Name": "Kithrin Hive Habitat",
+      "TemplateId": "space-habitat",
+      "Properties": [
+        { "Key": "Support Colonists", "Value": 200000 }
+      ]
     }
   },
   {
@@ -1263,6 +1329,107 @@
         { "Key": "Soak vs Energy", "Value": 0.8 },
         { "Key": "Soak vs Explosive", "Value": 0.0 },
         { "Key": "Soak vs Exotic", "Value": 0.0 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-passenger-cabin",
+      "Name": "Passenger Cabin",
+      "TemplateId": "passenger-cabin",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-cryo-bay",
+      "Name": "Cryogenic Bay",
+      "TemplateId": "cryo-bay",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-refrigerated-hold",
+      "Name": "Refrigerated Hold",
+      "TemplateId": "refrigerated-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-containment-hold",
+      "Name": "Containment Hold",
+      "TemplateId": "containment-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 500 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-docking-bay",
+      "Name": "Docking Bay",
+      "TemplateId": "docking-bay",
+      "Properties": [
+        { "Key": "Berth Tonnage", "Value": 60000 },
+        { "Key": "Berths", "Value": 4 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-heavy-berth",
+      "Name": "Heavy Berth",
+      "TemplateId": "docking-bay",
+      "Properties": [
+        { "Key": "Berth Tonnage", "Value": 60000 },
+        { "Key": "Berths", "Value": 1 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-containment-vault",
+      "Name": "Containment Vault",
+      "TemplateId": "containment-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 10000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-cold-store",
+      "Name": "Cold Store",
+      "TemplateId": "refrigerated-hold",
+      "Properties": [
+        { "Key": "Storage Volume", "Value": 10000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-antimatter-drive",
+      "Name": "Annihilation Drive",
+      "TemplateId": "antimatter-engine",
+      "Properties": [
+        { "Key": "Mass", "Value": 3000 }
       ]
     }
   }

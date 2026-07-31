@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C3c gauge (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the covert-action catalog is complete and sane —
+    /// F-C3c gauge (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the covert-action catalog is complete and sane —
     /// every action has exactly one definition, every detection risk is a valid probability, and each carries a
     /// description. Pure data → byte-identical.
     /// </summary>

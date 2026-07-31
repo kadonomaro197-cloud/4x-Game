@@ -38,7 +38,7 @@ namespace Pulsar4X.Combat
     }
 
     /// <summary>
-    /// The salvo-exchange resolver — the heart of the auto-resolve combat engine (docs/COMBAT-DESIGN.md).
+    /// The salvo-exchange resolver — the heart of the auto-resolve combat engine (docs/combat/COMBAT-DESIGN.md).
     ///
     /// Each round both sides pour their total <see cref="ShipCombatValueDB.Firepower"/> x round-time (joules)
     /// into the other side's damage pool; the pool removes WHOLE ships (combatants before utility hulls), with

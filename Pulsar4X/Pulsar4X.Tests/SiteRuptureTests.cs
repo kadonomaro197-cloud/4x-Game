@@ -6,7 +6,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-5d — the RUPTURED edge (docs/SITE-ENGINE-DESIGN.md §4): a resolved PERSISTENT site (a standing
+    /// Site Engine SE-5d — the RUPTURED edge (docs/explore/SITE-ENGINE-DESIGN.md §4): a resolved PERSISTENT site (a standing
     /// faucet) carrying a rupture chance can blow into a fresh CRISIS — "the reward carried the risk." Proves the whole
     /// escalation: a persistent site with a rupture dial ruptures on a tick (Status → Ruptured, the faucet stops) and
     /// births a live Shape.Incident crisis (a menace + pressure) at its own body/region, while a persistent site with

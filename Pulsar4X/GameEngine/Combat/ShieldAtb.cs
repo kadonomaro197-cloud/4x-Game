@@ -6,14 +6,14 @@ using Pulsar4X.Components;
 namespace Pulsar4X.Combat
 {
     /// <summary>
-    /// A SHIELD GENERATOR — the space "shield" mechanism on the defence axis (docs/UNIVERSAL-ASSEMBLY-DESIGN.md §2b),
+    /// A SHIELD GENERATOR — the space "shield" mechanism on the defence axis (docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md §2b),
     /// the space twin of the ground <c>GroundDamageMatrix</c> shield (developer's call 2026-07-06: space wants a real
     /// shield layer). A depleting + regenerating energy POOL that absorbs incoming fire BEFORE the hull's toughness,
     /// with the weapon-NATURE matchup (soaks Kinetic, Energy bleeds through, Exotic anti-shield bypasses). Read by
     /// <see cref="ShipCombatValueDB"/> into the ship's shield pool; the resolve depletes/regens it (a later slice —
     /// "shields at 40%!"). A component (CONVENTIONS §6): researched → built → installed → LOST (a shot-off generator
     /// drops the ship's shield — the grave rung). **Additive:** a ship with no shield generator has a 0 pool, so combat
-    /// is byte-identical until a shield is actually fitted. Design: docs/WEAPON-TAXONOMY-DESIGN.md §6.
+    /// is byte-identical until a shield is actually fitted. Design: docs/combat/WEAPONS-DESIGN.md §6.
     /// </summary>
     public class ShieldAtb : IComponentDesignAttribute
     {

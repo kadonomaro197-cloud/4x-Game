@@ -5,7 +5,7 @@ using Pulsar4X.Colonies;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the per-province LEGITIMACY substrate (docs/GOVERNMENT-AND-POLITICS-DESIGN.md, task #31):
+    /// Gauge for the per-province LEGITIMACY substrate (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md, task #31):
     /// legitimacy is DERIVED each cycle — its v1 baseline is the local hosts' morale, adjusted by the demand
     /// track-record, war outcomes, governor competence, and connectivity to the capital, each of which is neutral
     /// when unwired. Below the collapse threshold the province is rebelling (the #38 grave-rung hook). Pure math —

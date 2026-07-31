@@ -13,8 +13,17 @@ phase is marked:
   can't reach it.
 
 The point: **the two ENDS of the chain are playable (build an economy/army/fleet; fight and capture on the
-surface), but the space-to-ground BRIDGE in the middle — bombard, load, land — is where a normal playthrough
-breaks.** Three gaps block a hands-on invasion; the rest is polish.
+surface), but the space-to-ground BRIDGE in the middle is where a normal playthrough breaks.**
+
+> **⚠ COUNT CORRECTED 2026-07-27 (OPERATION GROUND TRUTH Phase B).** This line used to say *"Three gaps block
+> a hands-on invasion,"* and the bridge used to read *"bombard, load, land."* **`load` and `land` are BUILT** —
+> §L was rewritten to say so, but this header sentence and **table row L** were not updated in the same pass,
+> so the doc contradicted itself 95 lines apart. **TWO gaps remain**, and only one is about the bridge:
+> - **K — bombardment** has no first-class order (the plan's slice **S9**). This is the real remaining bridge gap.
+> - **I — no enemy on Mars** in a *normal* New Game. Note the qualifier: an **ungated "DevTest" main-menu
+>   button** already boots a three-faction at-war scenario (`MainMenuItems.cs:51-53`), so an enemy *is* reachable
+>   today — just not from the normal start. Promoting the scenario start is **ruling #27b** and is gated on the
+>   developer's answer to Q2, so this row stays honest as written for the normal path.
 
 > This is a *verification* artifact, not a build order committed to. What gets built and when is the developer's
 > call (the near-term milestone is `docs/MVP.md`'s "you can take a planet"). See the fix list at the bottom.
@@ -36,7 +45,7 @@ breaks.** Three gaps block a hands-on invasion; the rest is polish.
 | I | **Have an enemy on Mars to fight** | ❌ gated off (the paused Earth-Mars war) |
 | J | Win the orbit (space combat) | ✅ |
 | K | **Bombard Mars to soften the garrison** | ⚠️ no first-class order; incidental only |
-| L | **Load troops → land them on Mars** | ❌ the invasion bridge — no button, no order |
+| L | **Load troops → land them on Mars** | ✅ **BUILT — blocker CLOSED** (Earthfall C5.1, 2026-07-19; see §L) |
 | M | Fight & capture the surface | ✅ (fight + capture are automatic) |
 
 ---
@@ -131,15 +140,35 @@ breaks.** Three gaps block a hands-on invasion; the rest is polish.
   out); the colony is targetable only incidentally, with no cue it's a bombardment; base beam range is tiny (~km,
   so point-blank orbit), and missile delivery/energy-scaling is only partially wired.
 
-### L. Load troops → land them on Mars ❌ **(the invasion bridge — no button, no order)**
-- You *can* build a **"Troop Bay"** onto a ship (base-mod `troop-bay`, start-unlocked, mounts as a ship component).
-- But there is **no button and no order** to **load** a ground unit onto that bay, and **none** to **land** it on
-  Mars. The engine primitives exist and pass tests — `GroundTransport.TryLoadUnit` / `TryLandUnit` /
-  `HasOrbitalControl` (`GroundCombat/GroundTransport.cs:82,104,120`) — but their **only callers are the unit
-  tests**. Nothing in the game (order class or client button) calls them.
-- **This is the single hardest blocker:** you can build the troops and fly an empty transport to Mars, but you can
-  never put troops on it or off it in a normal game. (Even a DevTools-assembled test sidesteps this by *raising*
-  your units directly on Mars.)
+### L. Load troops → land them on Mars ✅ **BUILT — this blocker is CLOSED (corrected 2026-07-27)**
+
+> **⚠ This section was badly stale and was the single most misleading passage in the doc.** It used to read
+> *"no button, no order… their only callers are the unit tests."* **All of that is false at HEAD.** Verified:
+> - **`LoadTroopsOrder`** and **`LandTroopsOrder`** exist as real order classes riding the normal order rail.
+> - The **player** issues both from the **FleetWindow** embark/land surface —
+>   `Pulsar4X.Client/Interface/Windows/FleetWindow.cs:1756` (Load) and **`:1814`** (Land, with a region picker).
+> - The **AI** issues the landing too, from `ConquerResolver.cs:63` (its LAND rung).
+> - Landing is gated on orbital control, so you still have to win the space first.
+>
+> Built by Operation Earthfall C5.1 (2026-07-19). The old text stayed here for ~8 days and steered readers at a
+> gap that no longer existed.
+
+- You build a **"Troop Bay"** onto a ship (base-mod `troop-bay`, start-unlocked, mounts as a ship component).
+- Then: **Fleet window → the ship → Load** (greyed when the bay has no room for that class), fly to the target,
+  and **Land** with a region picker.
+- **The engine primitives underneath** are `GroundTransport.TryLoadUnit` / `TryLandUnit` / `HasOrbitalControl`
+  (`GroundCombat/GroundTransport.cs:82,104,120`) — the orders wrap them, so the same checks apply to the player
+  and the AI.
+- **⚠ Never run live.** CI compiles the client but cannot run it, so this whole chain is
+  **built-but-runtime-unverified** — it is exactly what the plan's milestone **M1** (one recorded
+  cradle-to-grave sitting) exists to prove. See `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`.
+
+**So what IS the live remaining gap?** Not this. As of 2026-07-27: **(1)** a *supported* way to meet an enemy
+from the front door — a stock New Game raises no garrison and places no enemy by ruling #27b, and the start
+that does (the ungated **"DevTest"** main-menu button, `MainMenuItems.cs:51`) is only *named* like a debug toy;
+**(2)** the **live runtime pass** (nothing here has been watched run); and **(3)** two client walls — a saved
+ground design can never be reopened, and the ground panels are gated behind first making a ship design
+(`ShipDesignWindow.cs:166,223,592`).
 
 ### M. Fight & capture the surface ✅ (automatic)
 - Right-click Mars → **"Planet view (regions)"** → **"March to Region N"** / **"Form up"** / **"Set stance"** /

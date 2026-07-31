@@ -4,7 +4,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.2 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the NEEDS-LADDER READ. Given a
+    /// Phase-2.2 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the NEEDS-LADDER READ. Given a
     /// faction's own gauges (war standing, morale, legitimacy, treasury, rebellion) it settles on the LOWEST unmet
     /// <see cref="NeedTier"/> — the Maslow rung the brain must attend before reaching higher. You don't chase a grand
     /// ambition while a colony starves; you don't grow the economy while the capital rebels.

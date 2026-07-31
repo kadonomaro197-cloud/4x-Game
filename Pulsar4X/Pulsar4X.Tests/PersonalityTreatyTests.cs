@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M2-1a gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the FIRST personality→behaviour wire. A faction's
+    /// M2-1a gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the FIRST personality→behaviour wire. A faction's
     /// Xenophobia/Zealotry raises the trust it demands to sign a treaty. Proves a neutral (or absent) personality is
     /// byte-identical to the historic threshold, a xenophobe REFUSES a deal a neutral would sign, and a xenophile
     /// signs one a neutral would refuse — personality now decides diplomacy.

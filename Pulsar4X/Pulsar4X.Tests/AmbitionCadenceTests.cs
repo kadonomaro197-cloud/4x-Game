@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.5 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the AMBITION CADENCE.
+    /// Phase-2.5 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the AMBITION CADENCE.
     /// Ambition already steers WHICH objective a faction picks; this proves it now also drives HOW OFTEN a faction
     /// renews an expansion push. <see cref="ObjectiveTransition.CommitFor"/> shortens the commit dwell for a
     /// high-Ambition faction (it re-commits to Expand/Conquer more often) and lengthens it for a low-Ambition one —

@@ -53,7 +53,7 @@ The headline findings a new session must not re-litigate:
 | **GROUND** | `claude/earthfall-ground` | G1 → G2 → G3 → G4 | `GameEngine/GroundCombat/**`, `GameEngine/Galaxy/GroundHex.cs`, `PlanetRegionsDB.cs` (ground fields), `GameData/.../installations.json`, `componentDesigns.json`, `earth.json` (six-point registrations) |
 | **CLIENT** | `claude/earthfall-client` | C1 → C2 → C3 → C4 → C5 | `Pulsar4X.Client/**` (all windows/rendering/SessionLog), `docs/CLIENT-TEST-CHECKLIST.md`, `docs/combat/HOMEWORLD-SENSOR-HORIZON-MEMO.md` |
 | **DEV** | `claude/earthfall-dev` | D1 → D2 → D3 | `GameEngine/Factions/ExpandResolver.cs`, `ConsolidateResolver.cs`, `GameEngine/Stations/**`, `GameData/.../kithrin.json` |
-| **TWOD** | `claude/earthfall-2d` | T0 → T1 → T2 → T3 | `GameEngine/Combat/GroupPlane.cs` (new), `FleetCombatStateDB.cs`, `CombatEngagement.cs` (flag-gated blocks only), `docs/combat/RESOLVER-2D-JOINTS.md` |
+| **TWOD** | `claude/earthfall-2d` | T0 → T1 → T2 → T3 | `GameEngine/Combat/GroupPlane.cs` (new), `FleetCombatStateDB.cs`, `CombatEngagement.cs` (flag-gated blocks only), `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8` |
 
 Shared-but-safe: every lane creates NEW test files with lane-distinct fixture names (prefix suggestion: `Ef<Lane>...Tests.cs` or descriptive unique names) — the Tests folder never conflicts at file level. `GameEngine/Engine/DataStructures/SafeDictionary.cs` + `EntityManager.cs` (the latent concurrency fixes) are CORE-owned (they ride P0/P3-adjacent slices? NO — they are in phase C1's engine portion? They are ENGINE files; assign them to CORE as slice P0.5 to keep CLIENT purely client).
 

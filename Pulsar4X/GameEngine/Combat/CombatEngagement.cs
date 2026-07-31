@@ -47,14 +47,14 @@ namespace Pulsar4X.Combat
         /// per-doctrine thresholds are wired.</summary>
         public const double RetreatCasualtyThreshold = 0.5;
 
-        /// <summary>M2-1b (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
+        /// <summary>M2-1b (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): how far the faction's Collectivism trait
         /// swings the retreat threshold off <see cref="RetreatCasualtyThreshold"/>. A collectivist force
         /// ("fights to the last for the whole") holds on through heavier losses; an individualist one
         /// ("flees to save the unit") breaks off early. Centered on the trait's neutral, so a neutral/absent
         /// personality changes nothing — byte-identical.</summary>
         public const double CollectivismRetreatSwing = 0.4;
 
-        // --- dodge model tuning (docs/WEAPONS-AND-DODGE-DESIGN.md), all v1 stubs ----------------------------
+        // --- dodge model tuning (docs/combat/WEAPONS-DESIGN.md), all v1 stubs ----------------------------
 
         /// <summary>Shot velocity (m/s) at which a weapon half-defeats evasion. A light-speed beam is far above
         /// this (≈always hits); a finite-velocity slug is far below (its shots can be dodged).</summary>
@@ -119,7 +119,7 @@ namespace Pulsar4X.Combat
         /// Flagged BALANCE value.</summary>
         public static double HeatThrottleFloor = 0.1;
 
-        // --- SHIELD layer (option B, docs/WEAPON-TAXONOMY-DESIGN.md §6) ----------------------------------------
+        // --- SHIELD layer (option B, docs/combat/WEAPONS-DESIGN.md §6) ----------------------------------------
         //
         // A depleting/regenerating energy POOL that soaks incoming fire BEFORE the hull's toughness. The
         // weapon-NATURE matchup is mirrored from the ground GroundDamageMatrix (kinetic soaked best, energy
@@ -372,7 +372,7 @@ namespace Pulsar4X.Combat
         public static bool RequireDetectionToEngage = false;
 
         /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
-        /// docs/FLEET-COMBAT-CLOSING-DESIGN.md). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
+        /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
         /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
         /// fleet (the default posture) starts it. Default FALSE so existing fixtures (no posture set = WeaponsFree
         /// anyway) are unchanged; the client turns it on when ROE is live.</summary>
@@ -390,7 +390,7 @@ namespace Pulsar4X.Combat
         /// and combat disagree (the same rule fog-of-war learned — see NewEngagementImminent).</summary>
         public static bool RequireWeaponRangeToEngage = false;
 
-        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/FLEET-COMBAT-CLOSING-DESIGN.md): a weapon only
+        /// <summary>When true, combat is a CLOSING fight (Phase 1, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4): a weapon only
         /// fires if its <see cref="WeaponProfile.Range_m"/> reaches the current gap, and the gap CLOSES each step toward
         /// the FASTER (more maneuverable) side's preferred range — so a faster long-range fleet kites a slower
         /// short-range one, and a faster brawler forces the merge. Default FALSE so every existing combat fixture is
@@ -398,7 +398,7 @@ namespace Pulsar4X.Combat
         /// weapon always fires). v1: ONE shared range per engagement group (per-sub-fleet ranges are Phase 4).</summary>
         public static bool EnableClosingRange = false;
 
-        /// <summary>When true, the closing fight runs on the 2D GROUP PLANE (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md,
+        /// <summary>When true, the closing fight runs on the 2D GROUP PLANE (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13,
         /// slice S1): at engagement start a battle-local plane is seeded from the fleets' real 3D positions
         /// (<see cref="GroupPlane.SeedFrame"/>) and FROZEN, each fleet's ANCHOR is its projected 2D point (a joiner is
         /// placed with the SAME stored frame, so gaps don't jump as ships die), and <see cref="AdvanceClosing"/> slides
@@ -635,8 +635,8 @@ namespace Pulsar4X.Combat
         /// <summary>Advance one MULTI-PARTY engagement by dt game-seconds: every in-combat member fleet trades
         /// fire with the fleets hostile to it, casualties land, and fleets that are wiped / break off / have no
         /// enemy left drop out; when fewer than two hostile sides remain (or the fight is frozen / timed out) the
-        /// engagement ends. Reduces exactly to the old two-fleet exchange for n=2. docs/COMBAT-DESIGN.md System 4,
-        /// docs/WEAPONS-AND-DODGE-DESIGN.md.</summary>
+        /// engagement ends. Reduces exactly to the old two-fleet exchange for n=2. docs/combat/COMBAT-DESIGN.md System 4,
+        /// docs/combat/WEAPONS-DESIGN.md.</summary>
         public static void StepEngagementGroup(List<Entity> members, double dt)
         {
             // Only valid, in-combat fleets take part. (A caller may hand us a fleet that just lost its state.)
@@ -872,7 +872,7 @@ namespace Pulsar4X.Combat
         // makes the costly part O(buckets), independent of ship count (500 identical fighters cost the same as
         // 5). The bucket key is everything that decides HOW a ship dies, which is ALSO the seam for future
         // "degraded" condition tiers — a damaged ship gets a different combat value => a different bucket, with
-        // no new code here (docs/WEAPONS-AND-DODGE-DESIGN.md "aggregate force condition"). Behaviour matches the
+        // no new code here (docs/combat/WEAPONS-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
         private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null)
@@ -989,7 +989,7 @@ namespace Pulsar4X.Combat
         // ─── Phase 1 — closing distance ────────────────────────────────────────────────────────────────────────
 
         /// <summary>This fleet's current gap to the opposing side — 0 when closing is off or it has no state (which
-        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13):
+        /// makes the range-gate a no-op). Slice S2 (2D group plane, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5):
         /// when <see cref="EnableGroupPlane"/> is on and the plane is live for BOTH this fleet and its representative
         /// opponent, the gap is the straight-line 2D pair-distance between their group anchors — the REAL per-fleet-pair
         /// gap (per-sub-fleet gaps become real, the substrate's deferred "Phase 4"), no longer one shared scalar. It
@@ -1342,9 +1342,11 @@ namespace Pulsar4X.Combat
                     foreach (var w in cv.Weapons)
                     {
                         // RANGE GATE (Phase 1): a FINITE-range weapon only fires if it reaches the current gap.
-                        // separation 0 (flag off / point blank) or a 0/unbounded weapon range => always fires, so
-                        // this is a no-op in the pre-closing path (every existing fixture is unchanged).
-                        if (separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m) continue;
+                        // Routed through the SHARED CombatKernel.WeaponReaches so the ship and ground resolvers decide
+                        // "can this weapon reach" in ONE place (the resolver-merge range gate). Byte-identical to the old
+                        // inline `separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m`: separation 0 (flag off /
+                        // point blank) or a 0/unbounded weapon range => reaches => always fires (every fixture unchanged).
+                        if (!CombatKernel.WeaponReaches(w, separation_m)) continue;
                         Add(w.Class, w.Nature, w.Delivery, w.DamagePerSecond * cs.FirepowerMult, w.Velocity, w.Tracking, w.Saturation, w.HeatPerSecond);
                     }
                 }

@@ -7,7 +7,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Combat
 {
     /// <summary>
-    /// Fleet capability aggregation — Root B of the closing-fight model (docs/FLEET-COMBAT-CLOSING-DESIGN.md). Pure
+    /// Fleet capability aggregation — Root B of the closing-fight model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Pure
     /// read-models over data that already exists; NO behaviour change. These are the numbers the closing resolve
     /// (Phase 1+) and the battle readout will read:
     ///   • a fleet moves as one icon → it's bound by its SLOWEST, shortest-legged ship (the floors);
@@ -121,7 +121,7 @@ namespace Pulsar4X.Combat
 
         /// <summary>
         /// The fleet's total SHIELD pool (joules) — the SUM of every ship's installed shield-generator capacity
-        /// (docs/WEAPON-TAXONOMY-DESIGN.md §6). The defensive twin of <see cref="FirepowerAtRange"/>: firepower is
+        /// (docs/combat/WEAPONS-DESIGN.md §6). The defensive twin of <see cref="FirepowerAtRange"/>: firepower is
         /// what the fleet dishes out, this is the buffer it soaks before its hulls take hits. Summing (not max) is
         /// correct here — the resolver pools shields per fleet, so this read-model matches how combat actually spends
         /// them. 0 = an unshielded fleet. What the Fleet Combat tab shows as "Shields". Reads cached

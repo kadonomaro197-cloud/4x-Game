@@ -8,7 +8,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-B1b gauge (docs/AI-BRAIN-BUILD-TRACKER.md, the "eyes"): the fog-limited enemy-strength read. Proves the
+    /// F-B1b gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, the "eyes"): the fog-limited enemy-strength read. Proves the
     /// estimate (a) sums only the observer's LIVE contacts belonging to the queried rival, (b) EXCLUDES a stale
     /// "memory" contact (current strength ≠ what you last saw), a DIFFERENT rival's contacts, and the observer's OWN
     /// ships, and (c) reads 0 for a rival the observer can't see — the fog (you under-read a hidden enemy).

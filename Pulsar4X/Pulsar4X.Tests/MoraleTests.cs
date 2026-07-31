@@ -9,7 +9,7 @@ using Pulsar4X.Extensions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M1 gauge for the morale/population loop (docs/MORALE-AND-POPULATION-DESIGN.md): morale is the
+    /// M1 gauge for the morale/population loop (docs/society/MORALE-AND-POPULATION-DESIGN.md): morale is the
     /// level-control valve on the population "tank". These prove the pure morale math (deterministic) and
     /// that the real starting colony is born with a MoraleDB that sits at neutral on a hospitable world.
     /// </summary>

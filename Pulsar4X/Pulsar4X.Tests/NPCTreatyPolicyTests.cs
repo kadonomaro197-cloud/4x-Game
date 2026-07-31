@@ -6,7 +6,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-3.3 gauge (docs/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): the NPC treaty POLICY — the first step of
+    /// Phase-3.3 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the Ecosystem): the NPC treaty POLICY — the first step of
     /// the living galaxy (NPCs act on each other, not just drift). Proves the proposal gate defaults OFF
     /// (byte-identical), that `RunTreatyPolicy` proposes a NonAggression pact to a qualifying met rival and it signs
     /// on BOTH ledgers (two-sided), and that an already-signed pair is left alone (the skip-if-already guard — no

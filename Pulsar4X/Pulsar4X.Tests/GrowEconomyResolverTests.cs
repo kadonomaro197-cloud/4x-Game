@@ -8,7 +8,7 @@ using Pulsar4X.Industry;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 P0-b gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the GrowEconomy resolver
+    /// Phase-2.8 P0-b gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the GrowEconomy resolver
     /// (Rung C) + the registry. Proves the resolver names a QueueBuild step for a colony with a free line, that
     /// executing it queues the build (routed through AutoAddSubJobs, the fix the blind 2.4c emitter lacked), and that
     /// the registry only knows GrowEconomy so far. Resolve is a pure decision (no side effect until Execute).

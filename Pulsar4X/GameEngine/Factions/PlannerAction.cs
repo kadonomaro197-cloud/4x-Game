@@ -3,7 +3,7 @@ using System;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P0-b (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the ONE step a resolver picks this cycle toward its
+    /// Phase-2.8 P0-b (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the ONE step a resolver picks this cycle toward its
     /// goal. A pure RESULT — it CARRIES the step as a closure (<see cref="Execute"/>) but the processor runs it, so a
     /// resolver stays testable without mutating the sim. <see cref="Detail"/> is the human-readable line the (later)
     /// plan/queue visibility readout records — every planner failure is otherwise silent (the Visibility Gate).

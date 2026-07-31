@@ -1,4 +1,33 @@
-# Pulsar4X — Systems Status & Test Plan (Living Map)
+# Pulsar4X — Systems Status & Test Plan  🗄 **SUPERSEDED / RETIRED 2026-07-27**
+
+> ### ⛔ DO NOT USE THIS AS A LIVE STATUS MAP. DO NOT ADD TO IT.
+>
+> **Retirement completed 2026-07-27** (OPERATION GROUND TRUTH Phase C — `docs/DOCS-AUDIT-2026-07-27.md`).
+> Its three jobs were split to three single-owner dashboards, and root `CLAUDE.md` no longer sends you here:
+>
+> | If you want… | Go to |
+> |---|---|
+> | **system-to-system connections** (the Prime-Directive "map the blast radius" tool) | **`docs/SYSTEM-CONNECTION-MAP.md`** |
+> | **test / gauge state** (what is tested, what is owed, live-run results) | **`docs/TESTING-TRACKER.md`** |
+> | **doc currency + build state** per doc | **`docs/DOCS-INDEX.md`** |
+> | **planetary/ground build state + what to do next** | **`docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md`** |
+>
+> **Why the retirement is clean — nothing live was lost (verified, not assumed):**
+> - **§5 "Play-by-play: how to test"** duplicates the build/run/test commands already in root `CLAUDE.md`
+>   (*Build / Run / Test Commands*), which is the maintained copy.
+> - **§6 "Known open issues"** is entirely **resolved or stale**: the spawned-ships and starting-fleet rows
+>   already read ✅ CI-proven; the colony-economy row reads ✅ verified live 2026-06-24; and the last
+>   apparently-live row — *"Planetary Installations tab never appears (gated on dead `InstallationsDB`)"* — is
+>   **REFUTED at HEAD**: `Pulsar4X.Client/.../PlanetaryWindow.cs:102` and `:218` gate on
+>   **`ComponentInstancesDB`**, so that fix landed (root `CLAUDE.md` gotcha #4 records it).
+> - The **status columns** in §3 were the stale part that motivated the retirement in the first place.
+>
+> Kept in place (not moved to `docs/archive/`) only so the historical §3/§4 narrative and the old line
+> references stay resolvable. **Everything below is history.**
+
+---
+
+# (historical) Pulsar4X — Systems Status & Test Plan (Living Map)
 
 > ⚠ **STALE since 2026-06-29 (flagged 2026-07-02).** This map doesn't yet reflect the `claude/space-economy-morale` landings — morale/population (M1–M5), government-as-modulator, diplomacy substrate+teeth+drift, crew/manpower enforcement, legitimacy/rebellion, and stations are all built + CI-green but their rows here show earlier states. **For current status use `docs/TESTING-TRACKER.md` (tests) + `docs/DOCS-INDEX.md` (overview) until these rows are refreshed** (doc-debt #1 in DOCS-INDEX).
 
@@ -17,7 +46,7 @@ thing to the next. Pick the next job off this map, not off whatever we happened 
 tells you which of them are on the critical path to v1 and which are deferred. Use them together: pick the
 next MVP stage, then use this map to work it *and* its connected systems.
 
-**Last updated:** 2026-07-11 — **COMPONENT-DESIGNER DIALS wired to the engine + a five-agent verification pass** (branch `claude/sol-playtest-earth-map-8r59j6`, 83 commits ahead of `main`, CI-green). The §1 status block, the §3e auto-resolve row (designer-dial fixtures + the fire-control-RANGE gap closed), the §3f fire-control row, and the C5 ground-combat status were refreshed this pass. The component-designer knobs (⚙1–⚙11: caliber, automation, fire-control range, ship+ground armour-nature, shield-recharge, penetration, per-shot-energy) are now wired one **byte-identical** CI-gated slice at a time onto the **shared `CombatKernel`**; the audit confirmed every new base-mod component is six-point-registered and `BaseModIntegrityTests` is green. *Prev: 2026-07-06 — **WEAPON UNIFICATION + the planetary-unit designer wired to the battlefield** (branch `claude/4x-hex-movement-pathfinding-o7qeaa`, CLOSED + CI-green). The ONE shared weapon designer now offers its weapons AND reactors AND magazines on a planetary chassis, gated by a **power SUPPLY gate** (guns can't out-draw reactors — the two gates compose, so "infantry can't power the big laser" falls out of the carry gate) and an **AMMO gate** (an ammo weapon needs a magazine). Planetary units are now **assembled (frame+parts) → built through industry → FIELDED on the planet** (slice A), and carry a **mass-based ammo pool** with **manual resupply** on friendly ground (slice B). **DECISION LOCKED:** there is ONE combat resolver — the next branch MERGES the duplicated ground damage-math onto a shared kernel both ships and planetary units call (absolute metric range; planetary = terrain + air modifiers; the Armor/Infantry/Artillery type-triangle dissolves into weapon×armour matchups). Full narrative + the 3 reds-and-fixes + lessons in `SESSION_STATE.md` ⏩ 2026-07-06; merge plan in `docs/WEAPON-UNIFICATION-DESIGN.md` §0. *Prev: 2026-07-05 — GROUND COMBAT is no longer ABSENT (§3f row): the surface-war layer is built and CI-gauged — units built through the **shared component designer** (`GroundUnitAtb` on a `ComponentDesign`; infantry/armor/artillery base-mod designs), hex movement (A\* terrain-weighted), a strength-math region resolver (triangle × terrain × fortification × range), fleet-echo formations (doctrine/ROE/order queue), design-driven fortification (the Bunker), environmental attrition, capture→colony-flip, and a two-zoom globe/mini-hex map with build-on-a-tile wired to real production. Client tactical map compiles; runtime is the dev's local build.* *Prev: 2026-06-25 — MVP Stage 1 (space combat) RESOLVED: the v1 auto-resolve combat engine built and CI-green end-to-end (see §3e, `GameEngine/Combat/CLAUDE.md`). 2026-06-24 — economy substrate proven, MVP scope firewall set, first damage gauge added.*
+**Last updated:** 2026-07-11 — **COMPONENT-DESIGNER DIALS wired to the engine + a five-agent verification pass** (branch `claude/sol-playtest-earth-map-8r59j6`, 83 commits ahead of `main`, CI-green). The §1 status block, the §3e auto-resolve row (designer-dial fixtures + the fire-control-RANGE gap closed), the §3f fire-control row, and the C5 ground-combat status were refreshed this pass. The component-designer knobs (⚙1–⚙11: caliber, automation, fire-control range, ship+ground armour-nature, shield-recharge, penetration, per-shot-energy) are now wired one **byte-identical** CI-gated slice at a time onto the **shared `CombatKernel`**; the audit confirmed every new base-mod component is six-point-registered and `BaseModIntegrityTests` is green. *Prev: 2026-07-06 — **WEAPON UNIFICATION + the planetary-unit designer wired to the battlefield** (branch `claude/4x-hex-movement-pathfinding-o7qeaa`, CLOSED + CI-green). The ONE shared weapon designer now offers its weapons AND reactors AND magazines on a planetary chassis, gated by a **power SUPPLY gate** (guns can't out-draw reactors — the two gates compose, so "infantry can't power the big laser" falls out of the carry gate) and an **AMMO gate** (an ammo weapon needs a magazine). Planetary units are now **assembled (frame+parts) → built through industry → FIELDED on the planet** (slice A), and carry a **mass-based ammo pool** with **manual resupply** on friendly ground (slice B). **DECISION LOCKED:** there is ONE combat resolver — the next branch MERGES the duplicated ground damage-math onto a shared kernel both ships and planetary units call (absolute metric range; planetary = terrain + air modifiers; the Armor/Infantry/Artillery type-triangle dissolves into weapon×armour matchups). Full narrative + the 3 reds-and-fixes + lessons in `SESSION_STATE.md` ⏩ 2026-07-06; merge plan in `docs/combat/WEAPONS-DESIGN.md` §0. *Prev: 2026-07-05 — GROUND COMBAT is no longer ABSENT (§3f row): the surface-war layer is built and CI-gauged — units built through the **shared component designer** (`GroundUnitAtb` on a `ComponentDesign`; infantry/armor/artillery base-mod designs), hex movement (A\* terrain-weighted), a strength-math region resolver (triangle × terrain × fortification × range), fleet-echo formations (doctrine/ROE/order queue), design-driven fortification (the Bunker), environmental attrition, capture→colony-flip, and a two-zoom globe/mini-hex map with build-on-a-tile wired to real production. Client tactical map compiles; runtime is the dev's local build.* *Prev: 2026-06-25 — MVP Stage 1 (space combat) RESOLVED: the v1 auto-resolve combat engine built and CI-green end-to-end (see §3e, `GameEngine/Combat/CLAUDE.md`). 2026-06-24 — economy substrate proven, MVP scope firewall set, first damage gauge added.*
 
 ---
 

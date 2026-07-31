@@ -13,7 +13,7 @@ namespace Pulsar4X.Tests
 {
     /// <summary>
     /// Site Engine SE-1b — the anomaly factory + presence detection + the site work processor
-    /// (docs/SITE-ENGINE-DESIGN.md, the anomaly-first build). Proves the located half of the spine:
+    /// (docs/explore/SITE-ENGINE-DESIGN.md, the anomaly-first build). Proves the located half of the spine:
     /// <see cref="FieldSiteFactory"/> drops a neutral anomaly into a real star system, and
     /// <see cref="SiteWorkProcessor"/> banks progress ONLY while a worker ship is parked on it — no worker, no
     /// advance (agency-preserving, no timer). Drives the processor directly (the colony harness doesn't reliably

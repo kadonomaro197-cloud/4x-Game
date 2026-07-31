@@ -10,7 +10,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// P-3 military-reach gauge, slice 2 (docs/AI-BRAIN-BUILD-TRACKER.md — "make the AI project force, not just build
+    /// P-3 military-reach gauge, slice 2 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — "make the AI project force, not just build
     /// it"). Proves (a) <see cref="MilitaryComposition.ReadyStrikeFleet"/> recognises a MASSED strike group (≥ the
     /// threshold of armed hulls) — the developer's "move as a mass fleet"; and (b) the CONQUER resolver, given a
     /// scored enemy target (a war-declared rival's colony) AND a ready strike fleet, DECIDES to sail it — the "do"

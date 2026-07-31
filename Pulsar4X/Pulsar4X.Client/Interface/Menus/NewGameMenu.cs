@@ -548,6 +548,12 @@ public class NewGameMenu : PulsarGuiWindow
         Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
         Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+        // Audit M1 (2026-07-22): activate the P3 legitimacy fixes in a live menu game. They ship gated OFF so the
+        // ENGINE test suite stays byte-identical (a factory-built game never runs this menu); a game the player
+        // actually starts should run the FRESH-morale legitimacy read (kills the stale-morale echo) and the rebellion
+        // debounce (one bad sample can't trigger a revolt) — the A3 objective-flip fix, live. One line each to revert.
+        Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
+        Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -559,6 +565,20 @@ public class NewGameMenu : PulsarGuiWindow
         // kites to standoff, support stays back (the ground echo of space sub-fleet roles). OFF in the engine suite
         // (byte-identical), ON here so a menu game's closing ground fights show the role differentiation.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;
+        // REAL-DISTANCE GROUND COMBAT (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12, K-track): a ground weapon carries a REAL
+        // range in metres (rifle 500 m, tank cannon 4 km, tube artillery 30 km, sci-fi laser 20 km — K1) and a unit carries
+        // a CONTINUOUS real position; combat resolves on real distance vs real range. We run BOTH gates on the menu path:
+        //   • EnableMiniHexCombat — the resolver's range gate reads the REAL metre gap on the continuous mini-hex field
+        //     (GroundMiniHex.RealGapMetres ≤ the weapon's real Range_m), the developer's "the km on the gun is the truth,
+        //     the hex is only the ruler."
+        //   • EnableInitialEngagementSpread — the spread now OPENS on that continuous field: the first tick a region is
+        //     contested it pushes the sides the HOLDER's real range apart (Global/Mini/offset), and the closing maneuver
+        //     steps the mini/continuous grid at the unit's real march speed, so a longer-ranged unit thins the closing
+        //     force during the approach on REAL distances (the "mobile artillery eliminates 50% before they close" fight).
+        // Both default OFF so the CI suite stays byte-identical (the hex-calibrated gauges run flag-off); the menu turns
+        // both ON so a real game gets real distances on-by-default. One-line revert each. Runtime feel is the PC live-test.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -950,11 +970,20 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.Factions.NPCDecisionProcessor.EnableDiplomaticProposals = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableEspionageMirror = true;
             Pulsar4X.Factions.NPCDecisionProcessor.EnableIntelLedger = true;
+            // Audit M1 (2026-07-22): activate the P3 legitimacy fixes (fresh-morale read + rebellion debounce) in a
+            // menu game, same as CreateGameCore. Default OFF (engine byte-identical); one line each to revert.
+            Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
+            Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
             Pulsar4X.GroundCombat.GroundAssembly.AutoFormUp = true;
-            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;   // W3 role-based maneuver
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundRoleManeuver = true;         // W3 role-based maneuver
+            // K-track real-distance ground combat: the resolver gates on the REAL metre gap vs the weapon's real Range_m,
+            // and the spread + closing maneuver play out on the continuous mini-hex field (see CreateGameCore). Both OFF
+            // in the engine suite (byte-identical); ON here so the DevTest sandbox fights on real distances.
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;               // real-metre range gate (K3)
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // spread + close on the continuous field
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)

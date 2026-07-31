@@ -8,7 +8,7 @@ using Pulsar4X.GroundCombat;  // GroundForces, GroundUnitDesign, GroundUnitAssem
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// W-TRACK W2 — PER-WEAPON RANGE BANDING (docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md §W2). The payoff of W1's
+    /// W-TRACK W2 — PER-WEAPON RANGE BANDING (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.4, W2). The payoff of W1's
     /// per-weapon loadout: the resolver now fires EACH weapon in ITS OWN hex range band, so a long-range cannon
     /// (range 3, undodgeable Artillery) reaches a CLOSING enemy while a short-range rifle (range 1, Ballistic) is still
     /// silent — then the rifle bands in once the enemy is close. The ground echo of a ship's per-weapon range bands

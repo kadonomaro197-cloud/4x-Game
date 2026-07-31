@@ -22,7 +22,7 @@ namespace Pulsar4X.GroundCombat
     /// Combat model (mirrors the space <c>AutoResolve</c> salvo loop, but over <see cref="GroundUnit"/> data
     /// objects, not entities): each tick is ONE salvo — every faction in a contested region takes the COMBINED
     /// attack of all other factions there, focus-fired across its units; units at 0 health are removed. Simple,
-    /// deterministic (no RNG), and cheap. Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slices 5b–5d).
+    /// deterministic (no RNG), and cheap. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slices 5b–5d).
     /// </summary>
     public class GroundForcesProcessor : IHotloopProcessor
     {
@@ -70,6 +70,34 @@ namespace Pulsar4X.GroundCombat
         /// uniform ROE close/stand-off path runs unchanged); CORE flips it ON alongside the other AI gates on the
         /// New-Game / menu path. A HoldGround formation still never auto-maneuvers, and a player queued order still wins.</summary>
         public static bool EnableGroundRoleManeuver = false;
+
+        /// <summary>MINI-HEX real-distance combat gate (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M2). When true, the
+        /// resolver's range gate fires a weapon when the REAL metre gap between two units
+        /// (<see cref="GroundMiniHex.RealGapMetres(GroundUnit,GroundUnit,Pulsar4X.Engine.Entity)"/>, measured on the
+        /// continuous coarse-global-hex + mini-hex field) is within the weapon's real <c>Range_m</c> — the developer's
+        /// "the km on the gun is the truth, the hex is only the ruler." Two units in the SAME coarse global hex read gap 0
+        /// → they fight ("same hex = combat"); different coarse hexes are a real (large) distance apart → no fight until
+        /// they close (mini-hex movement is M3). Default FALSE so the engine test suite is byte-identical (the resolver
+        /// keeps the legacy local-patch HEX gate <c>HexDist ≤ Range</c>, on which every existing ClosingFight/RangeCombat/
+        /// ROE gauge is calibrated); CORE flips it ON on the New-Game / menu path so a real game gets real distances
+        /// on-by-default (the developer's "keep the real gate on, no flag" — the flag exists only to keep the hex-
+        /// calibrated CI gauges valid, not to hide the feature from players).</summary>
+        public static bool EnableMiniHexCombat = false;
+
+        /// <summary>INITIAL ENGAGEMENT SPREAD (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M3 — the ground twin of space's
+        /// <see cref="Pulsar4X.Combat.CombatEngagement"/> seeding <c>Separation_m</c> at battle start). When true, the FIRST
+        /// tick a region becomes newly contested the processor pushes the two sides APART on the region's hex patch — the
+        /// holder (the region's owner, or the longest-ranged faction on neutral ground) stays at its muster hex, every other
+        /// faction's units are placed the holder's longest weapon-range away — so a fight OPENS at range and CLOSES over
+        /// ticks (the existing <see cref="ApplyEngagementManeuvers"/> machinery does the closing), letting a longer-ranged
+        /// unit thin the closing force during the approach (the "mobile artillery eliminates 50% before they close" fight).
+        /// Without it, both sides muster at the same region-centre hex → gap 0 → point-blank, no approach.
+        /// Operates on the per-region HEX grid (<c>HexQ/HexR</c>) — the ONE space where the range gate, the closing
+        /// maneuver, AND differentiated weapon ranges (1 vs 3 hexes) already work together; the mini-hex metre grid needs
+        /// real-km weapon ranges + mini-hex movement (M3b/S4) before it can host the same fight. Default FALSE so every CI
+        /// gauge (which musters co-located and asserts point-blank fire) stays byte-identical; the menu turns it on. Pure /
+        /// deterministic (no RNG) so fast-forward == watch.</summary>
+        public static bool EnableInitialEngagementSpread = false;
 
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
@@ -232,7 +260,7 @@ namespace Pulsar4X.GroundCombat
             //     range advantage is used without micro (the clone auto-kites the zerg). The ground echo of the space
             //     closing model. Only issues to units not already moving; a hex-marching unit still FIGHTS this tick
             //     (below), so a kiting unit fires WHILE it repositions.
-            ApplyEngagementManeuvers(forces, regionsDB, body);
+            ApplyEngagementManeuvers(forces, regionsDB, body, deltaSeconds);
 
             // Group the units that are STANDING FOR BATTLE — alive and not on a strategic REGION hop. A fine HEX march
             // (a battlefield reposition) still fights: a unit fires from its current hex as it moves (H3 range + the
@@ -253,6 +281,13 @@ namespace Pulsar4X.GroundCombat
             // colonies) — so a Bunker in a region hardens its defender (and shields adjacent friendly regions).
             var allRegions = regionsDB?.Regions;
             var fortResolve = GroundFortification.BuildResolver(body);
+
+            // 1e) INITIAL ENGAGEMENT SPREAD (M3): the FIRST tick a region becomes contested, open a real gap between the
+            // sides so the closing fight has an approach (the ground twin of space seeding Separation_m at StartEngagement).
+            // Detected HERE — before the combat loop below — so the OPENING salvo already respects the gap (the :307
+            // WasInBattle edge fires AFTER this loop, too late for the first salvo). Flag-gated → byte-identical when off.
+            if (EnableInitialEngagementSpread)
+                SpreadNewlyContestedRegions(forces, regionsDB, byRegion);
 
             // 2) COMBAT (5c) + 3) REGION CAPTURE (5d), per region.
             bool anyFightThisTick = false;
@@ -280,7 +315,7 @@ namespace Pulsar4X.GroundCombat
                     {
                         reg.OwnerFactionID = captor;
                         // War-map layer (W1): taking the region takes the strategic buildings on its hexes —
-                        // "capturing the hex captures what's on it" (docs/GROUND-CITY-AND-WARMAP-DESIGN.md).
+                        // "capturing the hex captures what's on it" (docs/ground/GROUND-SURFACE-MAP-DESIGN.md).
                         GroundBuildings.CaptureRegionHexContents(regionsDB, kv.Key, captor);
                     }
                 }
@@ -368,7 +403,7 @@ namespace Pulsar4X.GroundCombat
             // can reach, health-weighted, through the shared kernel — dodge (HitFraction) → depleting shield pool →
             // flat-per-source armour (penetration + shot-count + nature). Accumulates into `incoming` (pre-salvo state →
             // simultaneous). Arithmetic per target is byte-identical to the pre-W2 resolver.
-            void FireWeaponAtReachable(List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
+            void FireWeaponAtReachable(GroundUnit attacker, List<GroundUnit> reachable, double pool, Pulsar4X.Combat.WeaponProfile profile)
             {
                 double totalH = 0.0;
                 foreach (var t in reachable) totalH += t.Health;
@@ -377,8 +412,15 @@ namespace Pulsar4X.GroundCombat
                 foreach (var t in reachable)
                 {
                     // DODGE (kernel HitFraction): an aimed slug is dodged ~(1−evasion); an area/beam shot lands ~fully.
+                    // RANGE-AWARE (mini-hex M3a): pass the REAL metre gap to the SAME kernel the space closing fight uses,
+                    // so a shot that must cross a real distance loses accuracy exactly as it does in space (a long-range
+                    // artillery round harasses inaccurately from afar; a beam/guided shot barely cares) — the ground half
+                    // of "the mobile artillery thins the enemy before they close." Off (or at gap 0, the co-located common
+                    // case) → separation 0 → the range term is inert → byte-identical to the pre-M3a resolver. Its full
+                    // payoff awaits closing MOVEMENT (units spread on the 2D plane + close over time — the S4 slice).
+                    double sep_m = EnableMiniHexCombat ? GroundMiniHex.RealGapMetres(attacker, t, forces?.OwningEntity) : 0.0;
                     double contribution = pool * (t.Health / totalH)
-                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion);
+                        * Pulsar4X.Combat.CombatKernel.HitFraction(profile, t.Evasion, sep_m);
                     // SHIELD POOL (3c): the target's depleting shield soaks the soakable fraction (by weapon nature —
                     // kinetic fully, energy half-bleeds, exotic bypasses) up to its CURRENT charge, BEFORE armour.
                     if (t.CurrentShield > 0 && shieldSoakFrac > 0 && contribution > 0)
@@ -434,7 +476,7 @@ namespace Pulsar4X.GroundCombat
                                 foreach (var t in byFaction[g])
                                 {
                                     if (t.Health <= 0) continue;
-                                    if (HexDist(u, t) > m.RangeHexes) continue;   // out of THIS weapon's band this salvo
+                                    if (!WeaponReaches(u, t, m.RangeHexes, m.Range_m, forces)) continue;   // out of THIS weapon's band this salvo
                                     (reachable ??= new List<GroundUnit>()).Add(t);
                                 }
                                 if (reachable == null) continue;                   // this weapon reaches nothing this salvo
@@ -448,7 +490,7 @@ namespace Pulsar4X.GroundCombat
                                     * GroundFormationDoctrine.AttackMult(forces, u);
                                 double pool = atk * SalvoScale;
                                 if (gIsDefender && coverFort > 0) pool /= coverFort;
-                                FireWeaponAtReachable(reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
+                                FireWeaponAtReachable(u, reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
                             }
                             // Burn one salvo of ammo iff the unit fired at least one weapon (a magazine-fed unit only).
                             if (firedAny && deltaSeconds > 0 && GroundAmmo.CarriesAmmo(u)) GroundAmmo.Consume(u, AmmoPerSalvo_kg);
@@ -461,7 +503,7 @@ namespace Pulsar4X.GroundCombat
                         foreach (var t in byFaction[g])
                         {
                             if (t.Health <= 0) continue;
-                            if (HexDist(u, t) > u.Range) continue;   // out of this attacker's reach → it can't hit t
+                            if (!WeaponReaches(u, t, u.Range, u.Range_m, forces)) continue;   // out of this attacker's reach → it can't hit t
                             (reachableC ??= new List<GroundUnit>()).Add(t);
                         }
                         if (reachableC == null) continue;            // nothing in range → this unit fires nothing this salvo
@@ -484,7 +526,7 @@ namespace Pulsar4X.GroundCombat
 
                         // Route the collapsed weapon through the SHARED KERNEL (resolver merge 3c) — dodge + shield +
                         // armour, exactly as before.
-                        FireWeaponAtReachable(reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
+                        FireWeaponAtReachable(u, reachableC, poolC, GroundCombatant.ToWeaponProfile(u));
                     }
                 }
             }
@@ -508,6 +550,177 @@ namespace Pulsar4X.GroundCombat
         private static int HexDist(GroundUnit a, GroundUnit b)
             => new HexCoordinate(a.HexQ, a.HexR).DistanceTo(new HexCoordinate(b.HexQ, b.HexR));
 
+        /// <summary>Whether attacker <paramref name="u"/>'s weapon (hex reach <paramref name="rangeHexes"/> / real reach
+        /// <paramref name="range_m"/> metres) can hit target <paramref name="t"/> this salvo — THE range gate, in one
+        /// place so the two fire paths (collapsed + per-weapon-band) can't diverge. Default
+        /// (<see cref="EnableMiniHexCombat"/> off): the legacy local-patch HEX gate <c>HexDist ≤ rangeHexes</c>, on which
+        /// every existing combat gauge is calibrated → byte-identical. On (M2): the REAL metre gap on the continuous
+        /// mini-hex field (<see cref="GroundMiniHex.RealGapMetres(GroundUnit,GroundUnit,Pulsar4X.Engine.Entity)"/>) ≤ the
+        /// weapon's real <c>Range_m</c> — two units in the same coarse global hex read gap 0 (fight), different coarse
+        /// hexes are a real distance apart (no fight until they close, M3). Never throws.</summary>
+        private static bool WeaponReaches(GroundUnit u, GroundUnit t, int rangeHexes, double range_m, GroundForcesDB forces)
+        {
+            // Both branches route the reach decision through the SHARED CombatKernel.WithinReach (the resolver-merge
+            // range gate — "can this weapon hit that target" now lives in ONE place for space AND ground). WithinReach is
+            // the plain `gap <= reach` compare, so a reach-0 melee weapon stays CONTACT-ONLY (not unbounded — the ground
+            // convention, unlike space's beam). Byte-identical to the old `RealGapMetres <= range_m` / `HexDist <= rangeHexes`.
+            if (EnableMiniHexCombat)
+                return Pulsar4X.Combat.CombatKernel.WithinReach(range_m, GroundMiniHex.RealGapMetres(u, t, forces?.OwningEntity));
+            return Pulsar4X.Combat.CombatKernel.WithinReach(rangeHexes, HexDist(u, t));
+        }
+
+        /// <summary>INITIAL ENGAGEMENT SPREAD (M3): the first tick a region becomes contested, place the sides a real hex
+        /// gap apart so the closing fight has an approach — the ground twin of space seeding <c>Separation_m</c> at
+        /// StartEngagement. The HOLDER (the region's owner, or the longest-ranged faction on neutral ground) stays at its
+        /// muster hex; every other faction's units are pushed the holder's longest weapon-range (<c>unit.Range</c> hexes)
+        /// away along +Q, snapped to the nearest in-patch passable hex. So the holder's longest gun opens fire immediately
+        /// and the shorter-ranged sides must CLOSE (<see cref="ApplyEngagementManeuvers"/> does the closing from the next
+        /// tick — a longer-ranged unit thins the closer during the approach). Pure/deterministic — holder + gap are integer
+        /// functions of unit ranges + faction ids, the snap is a fixed inward search, NO RNG (fast-forward == watch). A
+        /// region is spread ONCE per contest (the save-safe <see cref="GroundForcesDB.SpreadRegions"/> guard); a fight that
+        /// ends clears the guard so a fresh one re-spreads. Never throws (L4).</summary>
+        private static void SpreadNewlyContestedRegions(GroundForcesDB forces, PlanetRegionsDB regionsDB,
+            Dictionary<int, List<GroundUnit>> byRegion)
+        {
+            if (regionsDB == null || forces?.SpreadRegions == null) return;
+            var spread = forces.SpreadRegions;   // save-safe per-region "already opened this contest" guard
+
+            // Prune the guard: a region no longer contested (fight ended / one side wiped) clears, so a fresh battle
+            // there re-spreads next time it forms.
+            if (spread.Count > 0)
+            {
+                var stillContested = new HashSet<int>();
+                foreach (var kv in byRegion)
+                {
+                    var fset = new HashSet<int>();
+                    foreach (var u in kv.Value) if (u.Health > 0) fset.Add(u.FactionOwnerID);
+                    if (fset.Count >= 2) stillContested.Add(kv.Key);
+                }
+                spread.RemoveWhere(ri => !stillContested.Contains(ri));
+            }
+
+            // K3 — when the metre gate is on (EnableMiniHexCombat), the spread OPENS on the CONTINUOUS mini-hex field
+            // (Global/Mini/offset) so RealGapMetres ≈ the holder's real range; when off (the CI default) it opens on the
+            // per-region HEX grid (HexQ/HexR) exactly as before → byte-identical. Both share the region iteration + guard.
+            bool mini = EnableMiniHexCombat;
+            Entity body = forces.OwningEntity;
+            double coarsePitchKm = 0, miniPitchKm = 0;
+            if (mini)
+            {
+                coarsePitchKm = GroundMiniHex.CoarseHexPitchKmForBody(body);
+                if (coarsePitchKm <= 0) coarsePitchKm = 477.0;   // ~Earth fallback — never 0-divide
+                miniPitchKm = GroundMiniHex.MiniPitchKm(coarsePitchKm, CityGridFactory.CityPatchRadius);
+            }
+
+            foreach (var kv in byRegion)
+            {
+                int ri = kv.Key;
+                if (spread.Contains(ri)) continue;                       // already opened this contest
+                if (ri < 0 || ri >= regionsDB.Regions.Count) continue;
+
+                // Each present faction's max HEX range (unit.Range == Max(mount.RangeHexes) by the W1 invariant) AND max
+                // REAL range in metres (the K1 truth the mini gate reads).
+                var factionMaxRange = new Dictionary<int, int>();
+                var factionMaxRange_m = new Dictionary<int, double>();
+                foreach (var u in kv.Value)
+                {
+                    if (u.Health <= 0) continue;
+                    int r = u.Range > 0 ? u.Range : 1;
+                    if (!factionMaxRange.TryGetValue(u.FactionOwnerID, out var cur) || r > cur)
+                        factionMaxRange[u.FactionOwnerID] = r;
+                    if (!factionMaxRange_m.TryGetValue(u.FactionOwnerID, out var curm) || u.Range_m > curm)
+                        factionMaxRange_m[u.FactionOwnerID] = u.Range_m;
+                }
+                if (factionMaxRange.Count < 2) continue;                 // not a two-sided fight
+
+                var region = regionsDB.Regions[ri];
+
+                if (mini)
+                {
+                    // The HOLDER: the region owner if present, else the longest REAL-ranged faction (lowest id tie-break).
+                    int holder;
+                    if (factionMaxRange_m.ContainsKey(region.OwnerFactionID)) holder = region.OwnerFactionID;
+                    else
+                    {
+                        var fids = new List<int>(factionMaxRange_m.Keys); fids.Sort();
+                        holder = fids[0]; double bestR = factionMaxRange_m[holder];
+                        foreach (var fid in fids) if (factionMaxRange_m[fid] > bestR) { bestR = factionMaxRange_m[fid]; holder = fid; }
+                    }
+                    double gap_m = factionMaxRange_m[holder];            // the holder's longest REAL gun opens the fight
+                    double gapKm = gap_m / 1000.0;
+
+                    // A reference holder unit stays at its muster; every non-holder unit opens gapKm EAST of it on the
+                    // continuous field (same coarse hex + row → a 1-D closing line, the ground echo of space's Separation_m).
+                    // The eastward km decomposes into whole mini-hexes (MiniQ) + a sub-tile remainder (MiniOffX_km) so
+                    // RealGapMetres(holderRef, u) == gap_m EXACTLY (the offset is a real km value with no bound).
+                    GroundUnit holderRef = null;
+                    foreach (var u in kv.Value) if (u.Health > 0 && u.FactionOwnerID == holder) { holderRef = u; break; }
+                    if (holderRef == null) { spread.Add(ri); continue; }
+                    double baseX = miniPitchKm > 0 ? (miniPitchKm * holderRef.MiniQ + holderRef.MiniOffX_km) : holderRef.MiniOffX_km;
+                    double targetX = baseX + gapKm;
+                    foreach (var u in kv.Value)
+                    {
+                        if (u.Health <= 0 || u.FactionOwnerID == holder) continue;
+                        u.GlobalQ = holderRef.GlobalQ; u.GlobalR = holderRef.GlobalR;
+                        u.MiniR = holderRef.MiniR; u.MiniOffY_km = holderRef.MiniOffY_km;
+                        if (miniPitchKm > 0)
+                        {
+                            int wholeMini = (int)Math.Floor(targetX / miniPitchKm);
+                            u.MiniQ = wholeMini;
+                            u.MiniOffX_km = targetX - wholeMini * miniPitchKm;
+                        }
+                        else { u.MiniQ = holderRef.MiniQ; u.MiniOffX_km = targetX; }
+                    }
+                    spread.Add(ri);
+                }
+                else
+                {
+                    // The HOLDER: the region owner if it's present, else the longest-ranged faction. Iterate a SORTED id
+                    // list (not dict order) so the tie-break — lowest faction id on equal range — is deterministic.
+                    int holder;
+                    if (factionMaxRange.ContainsKey(region.OwnerFactionID)) holder = region.OwnerFactionID;
+                    else
+                    {
+                        var fids = new List<int>(factionMaxRange.Keys);
+                        fids.Sort();
+                        holder = fids[0];
+                        int bestR = factionMaxRange[holder];
+                        foreach (var fid in fids)
+                            if (factionMaxRange[fid] > bestR) { bestR = factionMaxRange[fid]; holder = fid; }
+                    }
+
+                    int gap = factionMaxRange[holder];                   // the holder's longest gun sets the opening range
+
+                    // Holder units stay at their muster hex; push every non-holder unit `gap` hexes along +Q, snapped in-patch.
+                    foreach (var u in kv.Value)
+                    {
+                        if (u.Health <= 0 || u.FactionOwnerID == holder) continue;
+                        var placed = SnapSpreadHex(region, u.HexQ + gap, u.HexR);
+                        if (placed != null) { u.HexQ = placed.Value.q; u.HexR = placed.Value.r; }
+                    }
+                    spread.Add(ri);
+                }
+            }
+        }
+
+        /// <summary>Deterministically snap a spread target (<paramref name="q"/>,<paramref name="r"/>) to the nearest
+        /// in-patch PASSABLE hex, stepping the column inward toward the muster origin until one is found — so an
+        /// off-patch or ocean target never strands a unit. Null if no passable hex exists on that row (defensive → the
+        /// caller leaves the unit co-located). Same passability predicate as <see cref="PickStepHex"/>/SnapToPassable.</summary>
+        private static (int q, int r)? SnapSpreadHex(Region region, int q, int r)
+        {
+            if (region?.Hexes == null || region.Hexes.Count == 0) return null;
+            var byCoord = new Dictionary<(int, int), GroundHex>();
+            foreach (var h in region.Hexes) byCoord[(h.Q, h.R)] = h;
+            int step = q >= 0 ? 1 : -1;                                  // walk the offset back toward the muster column (0)
+            for (int x = q; step > 0 ? x >= 0 : x <= 0; x -= step)
+            {
+                if (byCoord.TryGetValue((x, r), out var hx) && !HexPathfinder.IsImpassable(hx.Terrain))
+                    return (x, r);
+            }
+            return null;
+        }
+
         /// <summary>
         /// RULES OF ENGAGEMENT maneuver (the ground echo of the space closing model): for each formation whose
         /// <see cref="GroundEngagementStance"/> isn't HoldGround, order each of its IDLE units one hex toward
@@ -516,7 +729,7 @@ namespace Pulsar4X.GroundCombat
         /// step-back-and-fire, not thrash. Issues through <see cref="GroundForces.OrderMoveToHex"/> (which enforces
         /// patch bounds + ocean-impassability), so it never places a unit somewhere illegal.
         /// </summary>
-        private static void ApplyEngagementManeuvers(GroundForcesDB forces, PlanetRegionsDB regionsDB, Entity body)
+        private static void ApplyEngagementManeuvers(GroundForcesDB forces, PlanetRegionsDB regionsDB, Entity body, int deltaSeconds)
         {
             if (regionsDB == null || forces.Formations == null || forces.Formations.Count == 0) return;
             bool anyRoe = false;
@@ -524,26 +737,59 @@ namespace Pulsar4X.GroundCombat
                 if (f.Engagement != GroundEngagementStance.HoldGround) { anyRoe = true; break; }
             if (!anyRoe) return;
 
+            // K3 — when the metre gate is on, the closing maneuver steps the CONTINUOUS mini-hex field the gate measures
+            // (move MiniQ/offset toward/away by the unit's real march speed), NOT the per-region hex grid. Off (CI default)
+            // → the legacy hex step, byte-identical.
+            bool mini = EnableMiniHexCombat;
+            double coarsePitchKm = 0, miniPitchKm = 0;
+            if (mini)
+            {
+                coarsePitchKm = GroundMiniHex.CoarseHexPitchKmForBody(body);
+                if (coarsePitchKm <= 0) coarsePitchKm = 477.0;
+                miniPitchKm = GroundMiniHex.MiniPitchKm(coarsePitchKm, CityGridFactory.CityPatchRadius);
+            }
+
             foreach (var unit in forces.Units)
             {
                 if (unit.Health <= 0 || unit.MovingToRegion >= 0) continue;
                 if (unit.HexPath != null && unit.HexPath.Count > 0) continue;   // already repositioning — let it arrive
+                if (unit.GlobalPath != null && unit.GlobalPath.Count > 0) continue;   // on a global march — leave it
                 if (FormationHasOrders(forces, unit)) continue;                 // an explicit queued plan overrides auto-ROE
                 var stance = GroundFormationDoctrine.EngagementOf(forces, unit);
                 if (stance == GroundEngagementStance.HoldGround) continue;
                 if (unit.RegionIndex < 0 || unit.RegionIndex >= regionsDB.Regions.Count) continue;
                 var region = regionsDB.Regions[unit.RegionIndex];
+
+                if (mini)
+                {
+                    // ── MINI/CONTINUOUS maneuver (K3): nearest enemy by REAL gap, decide close/kite/hold on real metres,
+                    //    then step the unit's continuous position toward/away along the 1-D closing line the spread opened.
+                    GroundUnit enemy = null; double bestGap = double.MaxValue;
+                    foreach (var e in forces.Units)
+                    {
+                        if (e.Health <= 0 || e.FactionOwnerID == unit.FactionOwnerID || e.RegionIndex != unit.RegionIndex) continue;
+                        double g = GroundMiniHex.RealGapMetres(unit, e, body);
+                        if (g < bestGap) { bestGap = g; enemy = e; }
+                    }
+                    if (enemy == null) continue;
+                    bool? mv = MiniMoveAway(unit, enemy, bestGap, stance);
+                    if (mv == null) continue;                                    // at its ideal real-distance band → hold + fire
+                    StepMiniToward(unit, enemy, body, coarsePitchKm, miniPitchKm, deltaSeconds, mv.Value);
+                    continue;
+                }
+
+                // ── HEX maneuver (flag off — byte-identical) ──────────────────────────────────────────────────────────
                 if (region.Hexes == null || region.Hexes.Count == 0) continue;
 
                 // Nearest enemy in the same region.
-                GroundUnit enemy = null; int best = int.MaxValue;
+                GroundUnit enemyH = null; int best = int.MaxValue;
                 foreach (var e in forces.Units)
                 {
                     if (e.Health <= 0 || e.FactionOwnerID == unit.FactionOwnerID || e.RegionIndex != unit.RegionIndex) continue;
                     int d = HexDist(unit, e);
-                    if (d < best) { best = d; enemy = e; }
+                    if (d < best) { best = d; enemyH = e; }
                 }
-                if (enemy == null) continue;
+                if (enemyH == null) continue;
 
                 bool moveAway;
                 if (EnableGroundRoleManeuver)
@@ -554,7 +800,7 @@ namespace Pulsar4X.GroundCombat
                     // still gates WHETHER it auto-maneuvers (a HoldGround formation was already skipped above); the ROLE
                     // decides the target band. Byte-identical when the flag is off.
                     var role = GroundRoleComposer.ClassifyRole(unit);
-                    bool? mv = GroundRoleComposer.RoleMoveAway(role, best, unit.Range, enemy.Range);
+                    bool? mv = GroundRoleComposer.RoleMoveAway(role, best, unit.Range, enemyH.Range);
                     if (mv == null) continue;                    // already at its ideal band → hold and fire
                     moveAway = mv.Value;
                 }
@@ -565,14 +811,58 @@ namespace Pulsar4X.GroundCombat
                 }
                 else // StandOff — keep the enemy beyond ITS reach
                 {
-                    if (best <= enemy.Range) moveAway = true;    // enemy can hit me → open the gap (kite)
+                    if (best <= enemyH.Range) moveAway = true;   // enemy can hit me → open the gap (kite)
                     else if (best > unit.Range) moveAway = false;// I can't hit them → close into my range
                     else continue;                               // in my range, out of theirs → hold + fire (the sweet spot)
                 }
 
-                var step = PickStepHex(region, unit.HexQ, unit.HexR, enemy.HexQ, enemy.HexR, moveAway);
+                var step = PickStepHex(region, unit.HexQ, unit.HexR, enemyH.HexQ, enemyH.HexR, moveAway);
                 if (step != null) GroundForces.OrderMoveToHex(body, unit, step.Value.q, step.Value.r);
             }
+        }
+
+        /// <summary>K3 — the close/kite/hold decision on the CONTINUOUS field (real metres): the ROLE maneuver (W3) if
+        /// <see cref="EnableGroundRoleManeuver"/> is on, else the stance (CloseToEngage / StandOff). <c>false</c> = close,
+        /// <c>true</c> = kite, <c>null</c> = hold + fire. Reads the units' real <c>Range_m</c> (K1), the mirror of the hex
+        /// decision above but on the metre gate the mini resolver reads. Pure.</summary>
+        private static bool? MiniMoveAway(GroundUnit unit, GroundUnit enemy, double gap_m, GroundEngagementStance stance)
+        {
+            double myR = unit.Range_m, enR = enemy.Range_m;
+            if (EnableGroundRoleManeuver)
+                return GroundRoleComposer.RoleMoveAway(GroundRoleComposer.ClassifyRole(unit), gap_m, myR, enR);
+            if (stance == GroundEngagementStance.CloseToEngage)
+                return gap_m <= myR ? (bool?)null : false;       // in my range → hold; else close
+            // StandOff — keep the enemy beyond ITS reach
+            if (gap_m <= enR) return true;                       // enemy can hit me → kite
+            if (gap_m > myR) return false;                       // I can't hit them → close
+            return null;                                         // sweet spot (I reach, they don't) → hold + fire
+        }
+
+        /// <summary>K3 — step a maneuvering unit along the 1-D closing line toward (or away from, <paramref name="away"/>)
+        /// its enemy by the unit's real march distance this tick (<c>Speed_kmh × dt</c>). The move is applied entirely to
+        /// the unit's along-X mini scalar (whole mini-hexes <c>MiniQ</c> + sub-tile <c>MiniOffX_km</c>), leaving its
+        /// coarse hex + row fixed — so the real metre gap the gate reads changes by exactly the step (the ground echo of
+        /// space's <c>AdvanceClosing</c> sliding <c>Separation_m</c>). Closing never overshoots the enemy. Deterministic
+        /// (no RNG). Defensive: a degenerate pitch / zero tick → no move.</summary>
+        private static void StepMiniToward(GroundUnit unit, GroundUnit enemy, Entity body,
+            double coarsePitchKm, double miniPitchKm, int deltaSeconds, bool away)
+        {
+            if (miniPitchKm <= 0 || deltaSeconds <= 0) return;
+            int cityR = CityGridFactory.CityPatchRadius;
+            var (ux, _) = GroundMiniHex.ContinuousPosKm(unit.GlobalQ, unit.GlobalR, unit.MiniQ, unit.MiniR, unit.MiniOffX_km, unit.MiniOffY_km, coarsePitchKm, cityR);
+            var (ex, _) = GroundMiniHex.ContinuousPosKm(enemy.GlobalQ, enemy.GlobalR, enemy.MiniQ, enemy.MiniR, enemy.MiniOffX_km, enemy.MiniOffY_km, coarsePitchKm, cityR);
+            double gapKm = Math.Abs(ex - ux);
+            double stepKm = (unit.Speed_kmh > 0 ? unit.Speed_kmh : GroundMobility.BaseMarchSpeed_kmh) * (deltaSeconds / 3600.0);
+            if (stepKm <= 0) return;
+            double dirToEnemy = ex >= ux ? 1.0 : -1.0;           // +1 if the enemy is EAST of me on the closing line
+            if (!away && stepKm > gapKm) stepKm = gapKm;         // closing: don't step through the enemy
+            double deltaX = (away ? -dirToEnemy : dirToEnemy) * stepKm;
+            // Apply deltaX to the unit's along-X mini scalar (MiniQ whole tiles + MiniOffX_km remainder), coarse hex + row
+            // fixed → the continuous X moves by exactly deltaX, so the real gap changes by the step.
+            double s = miniPitchKm * unit.MiniQ + unit.MiniOffX_km + deltaX;
+            int newMiniQ = (int)Math.Floor(s / miniPitchKm);
+            unit.MiniQ = newMiniQ;
+            unit.MiniOffX_km = s - newMiniQ * miniPitchKm;
         }
 
         /// <summary>The adjacent in-patch, PASSABLE hex that most decreases (toward) / increases (away) the hex distance

@@ -11,7 +11,7 @@ namespace Pulsar4X.Combat
     /// soak it, does armour bounce it, how much health is left — but with two separate copies of the arithmetic. This
     /// class is the shared home for that arithmetic, written to a **neutral view** (<see cref="Combatant"/>) that a
     /// ship OR a ground unit can present, so neither the hex board nor the ship <c>Entity</c> leaks into the math. It
-    /// is the seam the resolver-merge (docs/RESOLVER-MERGE-DESIGN.md) is built on.
+    /// is the seam the resolver-merge (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1) is built on.
     ///
     /// **Purity is the load-bearing property.** Every function here is pure arithmetic — no entity mutation, no RNG,
     /// no clock. That is what keeps combat DETERMINISTIC (the locked rule: fast-forward must equal watch). The caller
@@ -27,7 +27,7 @@ namespace Pulsar4X.Combat
     /// its two armour constants now delegate/forward here, so the kernel is the single source of truth for the flat
     /// armour math on BOTH domains. The rest of the planetary resolver (weapon profiles, the dodge/shield reconcile,
     /// the closing model on the hex board) adopts this kernel in slice 3b+. <see cref="CombatKernelTests"/> pins these
-    /// outputs. See docs/RESOLVER-MERGE-DESIGN.md §5.
+    /// outputs. See docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §6.3.
     /// </summary>
     public static class CombatKernel
     {
@@ -42,8 +42,33 @@ namespace Pulsar4X.Combat
         public const double SaturationReference = 50.0;
 
         /// <summary>Floor on the fraction of fire that lands, so enough volume kills even a perfect dodger.
-        /// Mirror of <see cref="CombatEngagement.MinLandedFraction"/>.</summary>
-        public const double MinLandedFraction = 0.02;
+        /// Mirror of <see cref="CombatEngagement.MinLandedFraction"/>.
+        /// <para>
+        /// <b>0.02 → 0.05 (2026-07-29, developer's call — option (c) of docs/economy/DESIGNER-NORTH-STAR.md §1c).</b>
+        /// This value and <see cref="ShipCombatValueDB.EvasionCap"/> are TWO ceilings on the same thing — how tough
+        /// evasion can make a hull — and they used to DISAGREE, each biting in a different situation:
+        /// <list type="bullet">
+        /// <item>POINT BLANK the cap bound: <c>dodge = evasion × (1 − tracking)</c> maxes at 0.95, so 5% landed
+        ///   ⇒ <b>×20</b> effective health (evasion is a multiplier — <c>EffToughness = Toughness ÷ landed</c>,
+        ///   CombatEngagement ApplyCasualties; there is no to-hit roll).</item>
+        /// <item>AT RANGE the floor bound: the range term ADDS dodge on top, clamping at 1.0, so this floor was all
+        ///   that stopped 0% landing ⇒ <b>×50</b> effective health.</item>
+        /// </list>
+        /// Tuning "how tough can a dodgy hull get" therefore needed BOTH dials plus knowing which was active — and the
+        /// one named "cap" only governed half the cases. Setting this to <c>1 − EvasionCap</c> makes them AGREE at a
+        /// single <b>×20</b> ceiling everywhere, so one number means one thing. It also LOWERS the largest multiplier
+        /// in the game (evasion's ×20/×50 against armour's ×10 <c>1/ArmourMinPassFraction</c>).
+        /// </para>
+        /// <para>
+        /// <b>Narrow by construction:</b> the effective floor is
+        /// <c>saturationFloor = max(Saturation/(Saturation+SaturationReference), MinLandedFraction)</c>, so this only
+        /// binds for weapons whose own saturation floor is below it — i.e. <c>Saturation &lt; ~2.6</c> (low
+        /// rate-of-fire ballistics). A flak gun floors itself far higher and never sees this number. So the change
+        /// bites exactly the case it was meant to: a slow slug at long range against a nimble target.
+        /// </para>
+        /// <b>⚠ BALANCE DIAL — this MOVES live combat numbers</b> (it is not additive/byte-identical like the flag-gated
+        /// slices). Keep it equal to <c>1 − ShipCombatValueDB.EvasionCap</c> if either is retuned.</summary>
+        public const double MinLandedFraction = 0.05;
 
         /// <summary>Flight time (s) at which a ballistic shot's RANGE penalty reaches half its max — the
         /// "accuracy falls off with distance" knob. Inert at separation 0. Mirror of
@@ -82,7 +107,7 @@ namespace Pulsar4X.Combat
         /// the kernel sees only these value fields plus <see cref="Weapons"/> (the SAME <see cref="WeaponProfile"/>
         /// type both domains carry) and a 1-D <see cref="Position_m"/> (fleet separation in space; hex-distance ×
         /// metres-per-hex on a planet). The caller keeps its own back-reference (ship id / GroundUnit ref) to apply
-        /// the results the kernel returns. See docs/RESOLVER-MERGE-DESIGN.md §2.
+        /// the results the kernel returns. See docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §2 (and §16 O-1: this view has no production consumer).
         /// </summary>
         public sealed class Combatant
         {
@@ -124,6 +149,30 @@ namespace Pulsar4X.Combat
             /// stays in the planetary caller.</summary>
             public double Position_m;
         }
+
+        // ── The RANGE gate — the ONE reach test both resolvers route through ─────────────────────────────────────────
+
+        /// <summary>
+        /// THE shared range predicate: does a weapon of reach <paramref name="reach"/> reach across a gap of
+        /// <paramref name="gap"/>? Both must be in the SAME units — metres on the space fleet axis (`Separation_m`), or
+        /// hexes on the planetary board (`HexDist`). It is deliberately the plain bounded comparison "the gap is within
+        /// reach," with NO unbounded convention baked in — because the two domains DISAGREE on what reach 0 means: a
+        /// ground melee weapon (reach 0) hits only at contact (gap 0), while a space beam (Range_m 0) is UNBOUNDED. Each
+        /// caller layers its own reach-0 rule on top (space via <see cref="WeaponReaches(WeaponProfile,double)"/>), so
+        /// this core stays the single, convention-free arithmetic the ship resolver's <c>BuildFireMix</c> gate and the
+        /// ground resolver's <c>WeaponReaches</c> both compute. Pure; never throws. (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.2 slice 1.)
+        /// </summary>
+        public static bool WithinReach(double reach, double gap) => gap <= reach;
+
+        /// <summary>Does weapon <paramref name="w"/> reach the current fleet engagement separation (metres)? The space
+        /// per-weapon range gate as a shared predicate: a weapon with <see cref="WeaponProfile.Range_m"/> ≤ 0 is
+        /// UNBOUNDED (the beam `IsInRange` convention — always reaches), else it reaches when the gap is within its range
+        /// (<see cref="WithinReach"/>). Byte-for-byte the old inline gate
+        /// <c>!(separation_m &gt; 0 &amp;&amp; w.Range_m &gt; 0 &amp;&amp; w.Range_m &lt; separation_m)</c>: a 0-range
+        /// weapon or a non-positive gap always fires, a finite-range weapon fires only once the gap is inside its reach.
+        /// Pure; never throws.</summary>
+        public static bool WeaponReaches(WeaponProfile w, double separation_m)
+            => w.Range_m <= 0.0 || WithinReach(w.Range_m, separation_m);
 
         // ── Pure salvo math ───────────────────────────────────────────────────────────────────────────────────────
 
@@ -224,7 +273,7 @@ namespace Pulsar4X.Combat
         public static double ArmourSoak(double armour, double sourceDamage) => ArmourSoak(armour, sourceDamage, 0.0, 1.0);
 
         /// <summary>Flat ARMOUR soak WITH weapon PENETRATION — the armour half of the matchup
-        /// (docs/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
+        /// (docs/economy/COMPONENT-DESIGNER-DIALS.md ⚙1 backlog #1). Penetration cancels armour point-for-point BEFORE the flat
         /// soak: an AP/sabot/lance round with <paramref name="penetration"/> ≥ the target's armour meets no effective
         /// plating and lands in full (like an unarmoured target), while a normal round (penetration 0) is byte-for-byte
         /// the flat soak above — so this reduces to the old <see cref="ArmourSoak(double,double)"/> when penetration is

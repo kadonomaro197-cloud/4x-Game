@@ -15,7 +15,7 @@ namespace Pulsar4X.Combat
     /// coupling — it maneuvers without inertia, so it sets a FLOOR on the hull's evasion decoupled from its mass. A
     /// dreadnought with one dodges like a corvette.
     ///
-    /// The lever is the physics-breaker slot's whole point (`docs/COMPONENT-DESIGNER-DIALS.md` §2.5 / ⚙2): a big
+    /// The lever is the physics-breaker slot's whole point (`docs/economy/COMPONENT-DESIGNER-DIALS.md` §2.5 / ⚙2): a big
     /// power/tech cost buys evasion a normal drive can't. It's a FLOOR, not a set: a ship whose mass-bound evasion is
     /// already higher keeps its own (the max wins), and the hard <see cref="ShipCombatValueDB.EvasionCap"/> still
     /// applies — nothing is ever fully untouchable.

@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the TREATY LEVERS (docs/DIPLOMACY-DESIGN.md "Treaties — the levers", task #33): a treaty is
+    /// Gauge for the TREATY LEVERS (docs/society/DIPLOMACY-DESIGN.md "Treaties — the levers", task #33): a treaty is
     /// proposed → considered → accepted/refused by the target's own view of the proposer (relation score vs. a
     /// per-treaty trust threshold), and on acceptance the flag is set on BOTH sides + both scores warm. Proves:
     /// the trust ladder (deeper treaty needs a higher score), mutual application, the score warm-up, and the

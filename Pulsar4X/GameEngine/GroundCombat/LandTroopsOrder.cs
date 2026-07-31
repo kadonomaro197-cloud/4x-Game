@@ -14,8 +14,10 @@ namespace Pulsar4X.GroundCombat
     /// ship being at the body AND holding the orbit (no foreign ship present) — you win the space over a world before
     /// you put boots on it. Mirrors <see cref="Pulsar4X.Galaxy.PlaceInstallationOnHexOrder"/>.
     ///
-    /// Additive: nothing issues this yet (a client button is the UI slice), and it only wraps an existing helper, so the
-    /// engine is byte-identical.
+    /// ISSUED BY (was "nothing issues this yet" — stale since Earthfall C5.1, 2026-07-19): the PLAYER via the
+    /// FleetWindow land surface (<c>Pulsar4X.Client/Interface/Windows/FleetWindow.cs</c> Land button, with a region
+    /// picker) AND the AI via <see cref="Pulsar4X.Factions.ConquerResolver"/>'s LAND rung — both through
+    /// <see cref="CreateCommand"/>. It wraps an existing helper, so the engine remains byte-identical.
     /// </summary>
     public class LandTroopsOrder : EntityCommand
     {

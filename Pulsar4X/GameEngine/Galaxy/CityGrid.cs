@@ -5,7 +5,7 @@ namespace Pulsar4X.Galaxy
 {
     /// <summary>
     /// The FINE hex grid of ONE developed operational hex — the "city" you zoom into (the compartment diagram to the
-    /// operational hex's ship icon; docs/GROUND-CITY-AND-WARMAP-DESIGN.md). Hangs off <see cref="GroundHex.CityGrid"/>,
+    /// operational hex's ship icon; docs/ground/GROUND-SURFACE-MAP-DESIGN.md). Hangs off <see cref="GroundHex.CityGrid"/>,
     /// null until the hex is DEVELOPED (so an undeveloped hex costs nothing), generated lazily by
     /// <see cref="CityGridFactory"/> — the <see cref="PlanetHexFactory"/> pattern one zoom down. Save-safe (deep-copied
     /// by <see cref="GroundHex"/>'s clone; <c>[JsonProperty]</c>) — the persistence the old <c>ColonyHexMapDB</c> lacked.

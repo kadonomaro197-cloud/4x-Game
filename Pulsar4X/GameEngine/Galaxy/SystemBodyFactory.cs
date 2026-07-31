@@ -213,6 +213,18 @@ namespace Pulsar4X.Galaxy
                 }
                 blobsToAdd.Add(MineralDepositFactory.Generate(game, mineralList, systemBodyInfoDB.BodyType));
             }
+            else
+            {
+                // SAFETY NET: an AUTHORED mineable body that specified no minerals (no GenerateMinerals preset,
+                // no explicit Minerals array) still gets a deterministic body-type-abundance deposit, so no
+                // authored world is ever accidentally barren. This rescues the whole outer Solar System — the
+                // Jovian/Saturnian moons + the dwarf planets carry a TYPO'd "MineralGeneration" key the loader
+                // silently ignores, so they were mineral-dead. GenerateBodyTypeFallback is RNG-FREE (it routes
+                // through the same path Luna's explicit array uses) so it can't perturb galaxy-gen determinism,
+                // and returns null for a body with no surface to mine (gas/ice giants) → they stay barren.
+                var fallbackDB = MineralDepositFactory.GenerateBodyTypeFallback(game, systemBodyInfoDB.BodyType);
+                if(fallbackDB != null) blobsToAdd.Add(fallbackDB);
+            }
 
             if(systemBodyBlueprint.GeoSurveyPointsRequired != null)
             {
@@ -1410,7 +1422,7 @@ namespace Pulsar4X.Galaxy
         /// check was <c>bodyType != Terrestrial || bodyType != Moon</c>, which is ALWAYS true — a body can't be both
         /// types at once — so every body bailed and ruins never generated. The correct test is AND: reject only a
         /// body that is NEITHER.) No atmosphere requirement: ancient ruins don't need breathable air — Mars is thin
-        /// and Luna airless, and both are canonical ruin worlds (Exploration content vision, docs/EXPLORATION-CONTENT-DESIGN.md).
+        /// and Luna airless, and both are canonical ruin worlds (Exploration content vision, docs/explore/EXPLORATION-CONTENT-DESIGN.md).
         /// </summary>
         internal static bool CanBodyHaveRuins(BodyType bodyType)
         {

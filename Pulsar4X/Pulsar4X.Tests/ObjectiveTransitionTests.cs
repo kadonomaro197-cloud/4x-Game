@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.3 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the transition engine's
+    /// Phase-2.3 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the transition engine's
     /// hysteresis. Proves the brain holds a committed objective under noise (no thrash), re-plans once the commitment
     /// expires, and drops everything to preempt a more urgent need (an emergency doesn't wait for the clock).
     /// </summary>

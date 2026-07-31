@@ -15,7 +15,7 @@ namespace Pulsar4X.Tests
     /// units off-world so an army built at home can reach an enemy world. T1a (this file, for now) proves the base-mod
     /// **troop bay** loads from JSON and binds its <see cref="GroundBayAtb"/> — the gotcha-10 sensor for the new ship
     /// component (the <see cref="RailgunWeaponTests"/> equivalent). T1b adds the load→fly→land round-trip on top.
-    /// Engine-only → runs in CI. Design: docs/GROUND-COMBAT-MAP-DESIGN.md → transport.
+    /// Engine-only → runs in CI. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md → transport.
     /// </summary>
     [TestFixture]
     public class GroundTransportTests

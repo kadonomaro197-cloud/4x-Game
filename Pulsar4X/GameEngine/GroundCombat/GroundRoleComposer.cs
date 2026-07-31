@@ -77,5 +77,28 @@ namespace Pulsar4X.GroundCombat
                     return best > myRange ? (bool?)false : null;           // close to firing range, then hold
             }
         }
+
+        /// <summary>K3 — the REAL-DISTANCE (metres) twin of <see cref="RoleMoveAway(GroundRole,int,int,int)"/>, read by the
+        /// mini/continuous maneuver (<c>GroundForcesProcessor.MiniMoveAway</c>). Same role behaviours on a continuous gap:
+        /// Screen leads to contact; Line closes to its firing range then HOLDS; Artillery keeps the SWEET SPOT (close if
+        /// the enemy is beyond my reach, kite if the enemy can reach me, else hold — a reachable hold BAND, unlike the
+        /// int version's knife-edge, so it doesn't thrash on a continuous field); Support stays beyond the enemy's reach.
+        /// <paramref name="gap_m"/>/<paramref name="myRange_m"/>/<paramref name="enemyRange_m"/> are real metres.</summary>
+        public static bool? RoleMoveAway(GroundRole role, double gap_m, double myRange_m, double enemyRange_m)
+        {
+            switch (role)
+            {
+                case GroundRole.Screen:
+                    return gap_m > 0 ? (bool?)false : null;                // push to contact
+                case GroundRole.Artillery:
+                    if (gap_m > myRange_m) return false;                   // out of my reach → close into it
+                    if (gap_m <= enemyRange_m) return true;                // enemy can hit me → kite to keep standoff
+                    return null;                                           // I reach, they don't → hold and whittle (sweet spot)
+                case GroundRole.Support:
+                    return gap_m <= enemyRange_m ? (bool?)true : null;     // enemy can hit me → back off, else hold
+                default: // Line
+                    return gap_m > myRange_m ? (bool?)false : null;        // close to firing range, then hold
+            }
+        }
     }
 }

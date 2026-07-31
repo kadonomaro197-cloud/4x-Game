@@ -6,7 +6,7 @@ using Pulsar4X.Orbital;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Slice S0 of the 2D group-plane resolver (docs/combat/RESOLVER-2D-GROUP-PLANE-DESIGN.md §13).
+    /// Slice S0 of the 2D group-plane resolver (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.5).
     ///
     /// PLAIN ENGLISH: these prove the invisible "battle graph paper" math behaves. The sheet is laid down ONCE from
     /// the real 3D positions and frozen; a group's point is its fleet's spot plus a doctrine nudge; the gap between

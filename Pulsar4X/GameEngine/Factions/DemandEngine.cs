@@ -32,7 +32,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// F-C2b (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands): the demand engine. Emergent, not scripted — it reads
+    /// F-C2b (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands): the demand engine. Emergent, not scripted — it reads
     /// the SAME per-factor breakdown the morale system already computes (<see cref="Pulsar4X.Colonies.ColonyMoraleDB"/>
     /// <c>Factors</c>: tax/employment/conditions/crowding/…) and surfaces a demand wherever a factor is bad enough
     /// that a bloc organises around it. "A demand is essentially a morale factor bad enough that a bloc forms." War

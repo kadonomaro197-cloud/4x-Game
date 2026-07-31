@@ -30,7 +30,7 @@ Production, mining, and material processing. Lives in `GameEngine/Industry/`.
 | `MineralsDB.cs` | DataBlob on a planet: mineral deposits (type → `MineralDeposit { Amount, Accessibility }`). |
 | `MiningDB.cs` | DataBlob on a colony: active mining configuration. |
 | `MiningHelper.cs` | `CalculateActualMiningRates()` — determines effective mining rate per mineral per host. `TryGetMiningBody(entity, out body)` — the host-agnostic resource-body resolver (colony→`PlanetEntity`, station→`StationInfoDB.HostingBodyEntity`); used by `MineResourcesProcessor` so a **station mines its hosting body exactly like a colony** (no host-type branch). |
-| `MineralDepositFactory.cs` | Creates mineral deposits during system generation. |
+| `MineralDepositFactory.cs` | Creates mineral deposits during system generation. `GenerateRandom`/`GenerateRandomHW` draw the shared system RNG (procedural bodies); `Generate` is RNG-FREE (an explicit `(id, abundance, accessibility)` list — the authored `Minerals` array path). **`GenerateBodyTypeFallback(game, bodyType)` (2026-07-23) is the RNG-FREE "no mineable body is accidentally barren" safety net** — builds a deterministic body-type-abundance deposit (accessibility 1.0), returns null for a no-surface type (gas/ice giant). Two callers share it: `SystemBodyFactory.CreateFromBlueprint` (authored bodies with no mineral spec — rescues the outer-Solar-System moons/dwarfs whose TYPO'd `"MineralGeneration"` key the loader ignores) and `StarSystemFactory.GenerateAsteroidBelt` (every scattered main/Kuiper belt rock — they were born mineral-dead). RNG-free keeps galaxy-gen determinism + the belt scatter byte-identical. Gauge: `MineralGenFallbackTests`. |
 | `Mineral.cs` | Mineral type definition (name, ID). |
 | `ProcessedMaterial.cs` | Processed material definition (refined output from raw minerals). |
 
@@ -108,7 +108,7 @@ Mineral `Accessibility` ranges 0.0–1.0. Low accessibility deposits are harder 
 
 `InstallationsDB` (this directory) looks like an installation registry — `Dictionary<string,float> Installations`, `WorkingInstallations`, `EmploymentList`, plus commented-out `ConstructJob` lists — but it is **abandoned**: never attached to a colony, no `[JsonProperty]` fields. It is an earlier design superseded by the component approach. **Do not** use it, extend it, or render it.
 
-**The installations UI gap:** `PlanetaryWindow.RenderInstallations()` is empty *and* its tab is gated on `HasDataBlob<InstallationsDB>()` (always false), so the tab never even shows. Phase 2a fix = render from `ComponentInstancesDB` (reuse `ComponentInstancesDBDisplay`). See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6 and `CONVENTIONS.md` §6.
+**~~The installations UI gap~~ — ⛔ RETIRED CLAIM, corrected 2026-07-27.** This said `PlanetaryWindow.RenderInstallations()` was empty and its tab gated on the dead `HasDataBlob<InstallationsDB>()` so it never showed. **Fixed in the code and stale here:** `PlanetaryWindow.cs:102` gates the tab on **`ComponentInstancesDB`** (which every colony has) and `:218` renders through it. Root `CLAUDE.md` gotcha #4 already retired this exact claim — it simply never got swept out of this file. *(The `InstallationsDB` blob itself does remain dead/vestigial — don't use it — but the UI gap it implied is closed.)* Phase 2a fix = render from `ComponentInstancesDB` (reuse `ComponentInstancesDBDisplay`). See `docs/aurora/PLANETARY-INFRASTRUCTURE.md` §6 and `CONVENTIONS.md` §6.
 
 ---
 

@@ -13,7 +13,7 @@ namespace Pulsar4X.GroundCombat
     /// `SpaceHazardTools` — read a region, get how its environment bends a fight.
     ///
     /// It **shares the hazard EFFECT VOCABULARY where the concepts overlap**, but stays INDEPENDENT of the (green,
-    /// CI-tested) hazard engine — the locked decision (`docs/GROUND-COMBAT-MAP-DESIGN.md` → "terrain mirrors space
+    /// CI-tested) hazard engine — the locked decision (`docs/ground/GROUND-SURFACE-MAP-DESIGN.md` → "terrain mirrors space
     /// environments"): mirror the pattern, don't refactor. The vocabulary map:
     ///   • **MovementDrag** ↔ the region's `CrossingTimeSeconds` (already the "terrain slows a march" effect, 5b).
     ///   • **Concealment** ↔ hazard `SensorJam` (forest/jungle hides units — ground fog of war; a later slice).

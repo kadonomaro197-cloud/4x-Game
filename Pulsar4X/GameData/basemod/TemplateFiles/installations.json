@@ -1004,7 +1004,7 @@
           "Name": "DBargsTransfer",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs(PropertyValue('Cargo Transfer Rate'), PropertyValue('Transfer Range'))",
-          "AttributeType": "Pulsar4X.Datablobs.CargoTransferAtbDB"
+          "AttributeType": "Pulsar4X.Storage.CargoTransferAtb"
         },
         {
           "Name": "DBargsStorage",
@@ -1188,7 +1188,7 @@
           "Name": "Support Colonists",
           "DescriptionFormula": "'Population this sealed habitat supports — anywhere, since it provides its own environment (no gravity or atmosphere tolerance applies).'",
           "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "5000",
+          "MaxFormula": "1000000",
           "MinFormula": "0",
           "StepFormula": "1",
           "PropertyFormula": "500"
@@ -2041,21 +2041,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "humanframeArgs",
@@ -2111,8 +2113,8 @@
         },
         {
           "Name": "Range",
-          "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
+          "DescriptionFormula": "'Reach in hexes (derived display ruler — set the real reach in metres below).'",
+          "GuiHint": "None",
           "MaxFormula": "10",
           "MinFormula": "1",
           "StepFormula": "1",
@@ -2128,10 +2130,20 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "500"
+        },
+        {
           "Name": "groundrifleArgs",
           "DescriptionFormula": "'atb ctor args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2515,8 +2527,8 @@
         },
         {
           "Name": "Range",
-          "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
+          "DescriptionFormula": "'Reach in hexes (derived display ruler — set the real reach in metres below).'",
+          "GuiHint": "None",
           "MaxFormula": "10",
           "MinFormula": "1",
           "StepFormula": "1",
@@ -2532,10 +2544,20 @@
           "PropertyFormula": "1"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "2000"
+        },
+        {
           "Name": "autocannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2594,21 +2616,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "vehicleframeArgs",
@@ -2664,8 +2688,8 @@
         },
         {
           "Name": "Range",
-          "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
+          "DescriptionFormula": "'Reach in hexes (derived display ruler — set the real reach in metres below).'",
+          "GuiHint": "None",
           "MaxFormula": "10",
           "MinFormula": "1",
           "StepFormula": "1",
@@ -2681,10 +2705,20 @@
           "PropertyFormula": "3"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "4000"
+        },
+        {
           "Name": "groundcannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2743,21 +2777,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "2"
+          "PropertyFormula": "2",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "1"
+          "PropertyFormula": "1",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "walkerframeArgs",
@@ -2813,8 +2849,8 @@
         },
         {
           "Name": "Range",
-          "DescriptionFormula": "'Reach in hexes.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
+          "DescriptionFormula": "'Reach in hexes (derived display ruler — set the real reach in metres below).'",
+          "GuiHint": "None",
           "MaxFormula": "10",
           "MinFormula": "1",
           "StepFormula": "1",
@@ -2830,10 +2866,20 @@
           "PropertyFormula": "2"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — the TRUTH; the hex range is only the display ruler.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "20000"
+        },
+        {
           "Name": "energyweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -3224,21 +3270,23 @@
         },
         {
           "Name": "Locomotion",
-          "DescriptionFormula": "'0=Foot 1=Tracked 2=Walker 3=Hover.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "3",
+          "DescriptionFormula": "'How this frame gets around. Legs go anywhere slowly; tracks are fast on open ground and bog down off it; a walker keeps most of the legs advantage at speed; hover is fastest but has nothing to grip.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "4",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundLocomotion"
         },
         {
           "Name": "CarryClass",
-          "DescriptionFormula": "'0=Personnel 1=Vehicle.'",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1",
+          "DescriptionFormula": "'Which transport bay hauls a unit on this frame: Personnel rides a troop bay, Vehicle a cargo bay.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "MaxFormula": "2",
           "MinFormula": "0",
           "StepFormula": "1",
-          "PropertyFormula": "0"
+          "PropertyFormula": "0",
+          "EnumTypeName": "Pulsar4X.GroundCombat.GroundCarryClass"
         },
         {
           "Name": "swarmframeArgs",
@@ -3294,8 +3342,8 @@
         },
         {
           "Name": "Range",
-          "DescriptionFormula": "'Reach in hexes (0 = melee).'",
-          "GuiHint": "GuiSelectionMaxMinInt",
+          "DescriptionFormula": "'Reach in hexes (derived display ruler — set the real reach in metres below; 0 = melee).'",
+          "GuiHint": "None",
           "MaxFormula": "10",
           "MinFormula": "1",
           "StepFormula": "1",
@@ -3311,10 +3359,20 @@
           "PropertyFormula": "0"
         },
         {
+          "Name": "Range_m",
+          "Units": "m",
+          "DescriptionFormula": "'Real reach in metres — 0 = melee/contact (the claw reaches only the same hex).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "100",
+          "PropertyFormula": "0"
+        },
+        {
           "Name": "clawweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]

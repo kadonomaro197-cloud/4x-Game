@@ -6,7 +6,7 @@ using Pulsar4X.Technology;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the ADVANCE-TECH resolver — the Thrive-tier "push research"
+    /// Phase-2.8 (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the ADVANCE-TECH resolver — the Thrive-tier "push research"
     /// brain (chosen when the faction's doctrine is tech-led). It had NO resolver and no-oped; now it BUILDS research
     /// capacity — a design carrying <see cref="ResearchPointsAtbDB"/> (a research lab: more labs → more research points
     /// per cycle, the same lever a player pulls). Queued through the shared build machinery (oracle-gated, routed

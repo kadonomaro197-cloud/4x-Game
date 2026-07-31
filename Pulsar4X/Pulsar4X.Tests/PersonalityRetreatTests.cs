@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M2-1b gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the second personality→behaviour wire. A faction's
+    /// M2-1b gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the second personality→behaviour wire. A faction's
     /// Collectivism tilts how much of its fleet it will spend before breaking off. Proves a neutral (or absent)
     /// personality is byte-identical to the flat 0.5 threshold, a collectivist force fights on through heavier losses,
     /// and an individualist one flees early — personality now shapes the retreat decision.

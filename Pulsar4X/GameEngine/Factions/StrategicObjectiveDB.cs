@@ -5,7 +5,7 @@ using Pulsar4X.Datablobs;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// The faction's NEEDS LADDER (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2 — the Organism engine).
+    /// The faction's NEEDS LADDER (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II Phase 2 — the Organism engine).
     /// A Maslow-style hierarchy: a faction attends to a lower rung before it reaches for a higher one. The brain
     /// reads its own gauges (war standing, morale/legitimacy, money, strength) each cycle and settles on the
     /// LOWEST unmet tier — you don't chase a grand ambition while a colony starves.
@@ -46,7 +46,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// Phase-2.1 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the faction's GOAL SLOT — the single objective its
+    /// Phase-2.1 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the faction's GOAL SLOT — the single objective its
     /// brain is committed to this cycle, plus the needs-tier it came from and a commitment clock (so the plan
     /// doesn't thrash every month — Phase 2.3 reads <see cref="CommittedUntil"/> for hysteresis). This slice is the
     /// DATA MODEL only: a new blob NOT yet attached to any faction or written by anything → byte-identical. The

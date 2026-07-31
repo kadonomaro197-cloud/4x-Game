@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// <summary>
     /// Units-as-entities (Option A) — SLICE 2 gauge: a raised unit gets a BACKING ENTITY carrying its design's
     /// components (the same ComponentInstancesDB a ship has), so abilities fall out via TryGetComponentsByAttribute —
-    /// exactly like a ship, with no per-ability special-casing (docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md). This is the
+    /// exactly like a ship, with no per-ability special-casing (docs/economy/COMPONENT-DESIGNER-CATEGORIES.md). This is the
     /// fix for "why doesn't the ability just fall out": the flat snapshot threw the components away; now they're kept.
     /// </summary>
     [TestFixture]

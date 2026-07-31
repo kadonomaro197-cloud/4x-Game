@@ -4,7 +4,7 @@ using Pulsar4X.People;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.7 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): officer character,
+    /// Phase-2.7 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): officer character,
     /// tenure-blended. Proves a green officer executes the faction's doctrine, a seasoned one runs on their own
     /// character, tenure scales between them, and drift nudges a trait toward a target (clamped).
     /// </summary>

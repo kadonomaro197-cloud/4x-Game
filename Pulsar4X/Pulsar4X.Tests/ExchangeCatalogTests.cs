@@ -6,7 +6,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the EXCHANGE CATALOG data model (docs/DIPLOMACY-DESIGN.md exchange catalog, task #35): everything
+    /// Gauge for the EXCHANGE CATALOG data model (docs/society/DIPLOMACY-DESIGN.md exchange catalog, task #35): everything
     /// two factions can trade, tagged with its family, instant-vs-standing, and which existing system it routes
     /// into — so the catalog IS the connection map. This tests the DATA integrity (broad coverage, unique keys,
     /// every row wired to a route), not behavior; the commitment model that executes a chosen exchange is the next

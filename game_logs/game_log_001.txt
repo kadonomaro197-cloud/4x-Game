@@ -1,0 +1,892 @@
+[AI] 2050-04-18 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-18 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-21 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 113763 (+1290), battle-trigger passes 3809416 (+43194) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407332.15kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.9Gm fogLag=91905km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=129.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=129.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=129.6Gm fogLag=63636km sig=0kW
+[AI] 2050-04-19 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-20 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-19 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-22 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 115053 (+1290), battle-trigger passes 3852634 (+43218) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407237.78kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=146.9Gm fogLag=90453km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=130.1Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=130.1Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=130.1Gm fogLag=63636km sig=0kW
+[AI] 2050-04-21 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-21 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-23 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 116343 (+1290), battle-trigger passes 3895826 (+43192) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1407120.65kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=88645km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=130.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=130.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=130.6Gm fogLag=63636km sig=0kW
+[AI] 2050-04-22 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-22 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-24 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 117633 (+1290), battle-trigger passes 3939024 (+43198) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406980.84kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=88011km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=131.1Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=131.1Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=131.1Gm fogLag=63636km sig=0kW
+[AI] 2050-04-23 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-23 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-26 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 118923 (+1290), battle-trigger passes 3982233 (+43209) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406818.44kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=89456km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=131.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=131.6Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=131.6Gm fogLag=63636km sig=0kW
+[AI] 2050-04-24 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-25 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-25 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-27 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 120213 (+1290), battle-trigger passes 4025425 (+43192) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406633.53kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=92523km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=132.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=132.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=132.2Gm fogLag=63636km sig=0kW
+[AI] 2050-04-26 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-26 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-28 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 121503 (+1290), battle-trigger passes 4068628 (+43203) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406426.23kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=95675km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=132.9Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=132.9Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=132.9Gm fogLag=63636km sig=0kW
+[AI] 2050-04-27 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-27 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-04-29 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 122793 (+1290), battle-trigger passes 4111801 (+43173) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1406196.65kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=97012km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=133.5Gm fogLag=57272km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=133.5Gm fogLag=57272km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=133.5Gm fogLag=57272km sig=0kW
+[AI] 2050-04-28 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-28 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-01 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 124083 (+1290), battle-trigger passes 4155029 (+43228) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405944.92kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=96668km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=134.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=134.2Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=134.2Gm fogLag=63636km sig=0kW
+[AI] 2050-04-29 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-30 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502824, colonies 4, stations 0, contacts 1
+[AI] 2050-04-29 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -2378, colonies 0, stations 1, contacts 0
+[AI] 2050-04-30 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-05-02 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 125373 (+1290), battle-trigger passes 4198221 (+43192) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405671.21kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=94172km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=135Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=135Gm fogLag=63636km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=135Gm fogLag=63636km sig=0kW
+[AI] 2050-05-01 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-01 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-03 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 126663 (+1290), battle-trigger passes 4241507 (+43286) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405375.65kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=100543km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=135.7Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=135.7Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=135.7Gm fogLag=70000km sig=0kW
+[AI] 2050-05-02 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-02 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-04 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 127953 (+1290), battle-trigger passes 4284702 (+43195) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1405058.43kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=98549km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=136.6Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=136.6Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=136.6Gm fogLag=70000km sig=0kW
+[AI] 2050-05-03 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-03 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-06 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 129286 (+1333), battle-trigger passes 4328194 (+43492) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404708.06kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=137.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=137.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=137.4Gm fogLag=0km sig=0kW
+[AI] 2050-05-04 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-05 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-04 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[AI] 2050-05-05 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-07 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 130576 (+1290), battle-trigger passes 4371438 (+43244) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1404347.36kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=138.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=138.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=138.3Gm fogLag=0km sig=0kW
+[AI] 2050-05-06 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-06 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-08 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 131866 (+1290), battle-trigger passes 4414594 (+43156) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403965.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=139.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=139.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=139.2Gm fogLag=0km sig=0kW
+[AI] 2050-05-07 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-07 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-09 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 133156 (+1290), battle-trigger passes 4457816 (+43222) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403562.95kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=140.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=140.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=140.1Gm fogLag=0km sig=0kW
+[AI] 2050-05-08 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-08 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-11 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 134446 (+1290), battle-trigger passes 4500774 (+42958) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1403139.7kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=141.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=141.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=141.1Gm fogLag=0km sig=0kW
+[AI] 2050-05-09 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-10 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-09 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[AI] 2050-05-10 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-12 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 135736 (+1290), battle-trigger passes 4544162 (+43388) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1402696.07kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=142.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=142.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=142.1Gm fogLag=0km sig=0kW
+[AI] 2050-05-11 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-11 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-13 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 136983 (+1247), battle-trigger passes 4587112 (+42950) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1402248.08kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=94456km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=143.1Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=143.1Gm fogLag=70000km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=143.1Gm fogLag=70000km sig=0kW
+[AI] 2050-05-12 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-12 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-14 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 138316 (+1333), battle-trigger passes 4630570 (+43458) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1401748.68kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=144.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=144.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=144.2Gm fogLag=0km sig=0kW
+[AI] 2050-05-13 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-13 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-16 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 139606 (+1290), battle-trigger passes 4673823 (+43253) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1401245.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=145.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=145.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=145.3Gm fogLag=0km sig=0kW
+[AI] 2050-05-14 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-15 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-14 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[AI] 2050-05-15 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-17 11:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 140896 (+1290), battle-trigger passes 4717016 (+43193) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1400722.94kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=146.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=146.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=146.4Gm fogLag=0km sig=0kW
+[AI] 2050-05-16 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-16 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[WARP] ship #293 'MFS Ares' arrived at Earth
+[WARP] ship #295 'MFS Olympus' arrived at Earth
+[WARP] ship #297 'MFS Tharsis' arrived at Earth
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-05-18 17:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 142186 (+1290), battle-trigger passes 4759962 (+42946) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1400181.42kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.1Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0.17kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0.17kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0.17kW
+[AI] 2050-05-17 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-17 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[WARP] ship #293 'MFS Ares' departing → Earth (7.2 Gm, ETA 2050-05-22 22:25)
+[WARP] ship #295 'MFS Olympus' departing → Earth (7.2 Gm, ETA 2050-05-22 22:25)
+[WARP] ship #297 'MFS Tharsis' departing → Earth (7.2 Gm, ETA 2050-05-22 22:25)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-05-19 23:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 143476 (+1290), battle-trigger passes 4803414 (+43452) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1399621.19kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.2Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[AI] 2050-05-18 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: StrikeFleet: sail strike fleet 292 at enemy world 4 (target score 595469224) | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-18 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-21 05:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 144766 (+1290), battle-trigger passes 4846624 (+43210) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1399042.58kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.3Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[AI] 2050-05-19 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-20 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-19 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[AI] 2050-05-20 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[TIME] paused
+[SELECT] Alt click on 'Earth' (entity #4, faction -99)
+[STATE] heartbeat t=2050-05-21 15:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 145153 (+387), battle-trigger passes 4860002 (+13378) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398865.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-05-21 15:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 145153 (+0), battle-trigger passes 4860002 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398865.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[STATE] heartbeat t=2050-05-21 15:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 145153 (+0), battle-trigger passes 4860002 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398865.46kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.4Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[TIME] play (step 3600s)
+[STATE] heartbeat t=2050-05-22 20:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 146443 (+1290), battle-trigger passes 4902757 (+42755) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1398263.43kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.5Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[AI] 2050-05-21 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: None: goal met or no legal step | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-21 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[WARP] ship #297 'MFS Tharsis' arrived at Earth
+[WARP] ship #295 'MFS Olympus' arrived at Earth
+[WARP] ship #293 'MFS Ares' arrived at Earth
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[WARP] ship #293 'MFS Ares' departing → Earth (0 Gm, ETA 2050-05-23 00:03)
+[WARP] ship #295 'MFS Olympus' departing → Earth (0 Gm, ETA 2050-05-23 00:03)
+[WARP] ship #297 'MFS Tharsis' departing → Earth (0 Gm, ETA 2050-05-23 00:03)
+[WARP] ship #297 'MFS Tharsis' arrived at Earth
+[WARP] ship #295 'MFS Olympus' arrived at Earth
+[WARP] ship #293 'MFS Ares' arrived at Earth
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[WARP] ship #293 'MFS Ares' departing → Earth (0.5 Gm, ETA 2050-05-24 06:52)
+[WARP] ship #295 'MFS Olympus' departing → Earth (0.5 Gm, ETA 2050-05-24 06:52)
+[WARP] ship #297 'MFS Tharsis' departing → Earth (0.5 Gm, ETA 2050-05-24 06:52)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[STATE] heartbeat t=2050-05-24 02:00 RUNNING step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 147733 (+1290), battle-trigger passes 4945940 (+43183) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397643.77kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.6Gm fogLag=0km sig=0kW
+[AI] 2050-05-22 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: StrikeFleet: sail strike fleet 292 at enemy world 4 (target score 595469224) | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-23 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: StrikeFleet: sail strike fleet 292 at enemy world 4 (target score 595469224) | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-22 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[AI] 2050-05-23 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[WARP] ship #297 'MFS Tharsis' arrived at Earth
+[WARP] ship #295 'MFS Olympus' arrived at Earth
+[WARP] ship #293 'MFS Ares' arrived at Earth
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[WARP] ship #293 'MFS Ares' departing → Earth (0.5 Gm, ETA 2050-05-25 06:41)
+[WARP] ship #295 'MFS Olympus' departing → Earth (0.5 Gm, ETA 2050-05-25 06:41)
+[WARP] ship #297 'MFS Tharsis' departing → Earth (0.5 Gm, ETA 2050-05-25 06:41)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[WARP] ship #297 'MFS Tharsis' arrived at Earth
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+1161), battle-trigger passes 4985821 (+39881) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[AI] 2050-05-24 United Martian Federation: Conquer/Stabilize — why: Stabilize tier + at war and winning: Military-led doctrine (0.35) → press the offensive (Conquer) | act: StrikeFleet: sail strike fleet 292 at enemy world 4 (target score 595469224) | saw: str 46200000 vs no threat, morale 55, legit 65, bal 502432, colonies 4, stations 0, contacts 1
+[AI] 2050-05-24 Kithrin Collective: Consolidate/Stabilize — why: Stabilize tier (internal health — unrest / low legitimacy / debt) → Consolidate | act: None: goal met or no legal step | saw: str 8181420.1 vs no threat, morale 50, legit 50, bal -3239, colonies 0, stations 1, contacts 0
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[TIME] play (step 3600s)
+[WARP] ship #295 'MFS Olympus' arrived at Earth
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessEntity(Entity entity, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 34
+   at Pulsar4X.Movement.WarpMoveProcessor.SetOrbitHereSimpleNewt(Entity entity, WarpMovingDB moveDB, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 362
+   at Pulsar4X.Movement.WarpMoveProcessor.EndWarpMove(Entity entity, WarpAbilityDB warpDB, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 284
+   at Pulsar4X.Movement.WarpMoveProcessor.WarpMove(Entity entity, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 171
+   at Pulsar4X.Movement.WarpMoveProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 113
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[TIME] play (step 3600s)
+[WARP] ship #293 'MFS Ares' arrived at Earth
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessEntity(Entity entity, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 34
+   at Pulsar4X.Movement.WarpMoveProcessor.SetOrbitHereSimpleNewt(Entity entity, WarpMovingDB moveDB, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 362
+   at Pulsar4X.Movement.WarpMoveProcessor.EndWarpMove(Entity entity, WarpAbilityDB warpDB, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 284
+   at Pulsar4X.Movement.WarpMoveProcessor.WarpMove(Entity entity, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 171
+   at Pulsar4X.Movement.WarpMoveProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 113
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985821 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[TIME] play (step 3600s)
+[ACTION] [range-ring] all-ranges rebuilt: 0 unit(s) + 1 place(s) = 2 ring(s)
+[TIME] play (step 3600s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessEntity(Entity entity, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 34
+   at Pulsar4X.Movement.WarpMoveProcessor.SetOrbitHereSimpleNewt(Entity entity, WarpMovingDB moveDB, DateTime atDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 362
+   at Pulsar4X.Movement.WarpMoveProcessor.EndWarpMove(Entity entity, WarpAbilityDB warpDB, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 284
+   at Pulsar4X.Movement.WarpMoveProcessor.WarpMove(Entity entity, WarpMovingDB moveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 171
+   at Pulsar4X.Movement.WarpMoveProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\WarpMove\WarpMoveProcessor.cs:line 113
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+6) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[TIME] play (step 3600s)
+[TIME] play (step 3600s)
+[TIME] play (step 3600s)
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] heartbeat t=2050-05-25 06:00 paused step=3600s selected=Earth ships-in-view=8
+[ENGINE] sensor scans 148894 (+0), battle-trigger passes 4985827 (+0) since last beat
+[DETECT] UEF holds 5 contact(s); 8 other-faction ship(s) in-system, detects 4 (4 hidden from you)
+[DETECT-CONTACT] 'Sol A G0V' src=LAGGED blipDistFromStar=0Gm fogLag=0km sig=1397071.3kW
+[DETECT-CONTACT] 'MFS Deimos' src=LAGGED blipDistFromStar=147.8Gm fogLag=84297km sig=0kW
+[DETECT-CONTACT] 'MFS Ares' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Olympus' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[DETECT-CONTACT] 'MFS Tharsis' src=LAGGED blipDistFromStar=147.7Gm fogLag=50909km sig=0kW
+[FATAL] unobserved background-task exception: System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (Speed Result is NaN)
+ ---> System.Exception: Speed Result is NaN
+   at Pulsar4X.Orbital.OrbitalMath.InstantaneousOrbitalSpeed(Double standardGravParameter, Double distance, Double semiMajAxis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 944
+   at Pulsar4X.Orbital.OrbitalMath.ObjectLocalVelocityPolar(Double sgp, Vector3 position, Double semiMajorAxis, Double eccentricity, Double trueAnomaly, Double argumentOfPeriapsis) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 894
+   at Pulsar4X.Orbital.OrbitalMath.GetStateVectors(KeplerElements ke, DateTime dateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\Pulsar4X.OrbitalMath\OrbitalMath.cs:line 861
+   at Pulsar4X.Movement.NewtonSimpleProcessor.NewtonMove(NewtonSimpleMoveDB newtonSimplelMoveDB, DateTime toDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 79
+   at Pulsar4X.Movement.NewtonSimpleProcessor.ProcessManager(EntityManager manager, Int32 deltaSeconds) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Movement\NewtonMove\NewtonSimpleProcessor.cs:line 44
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessToNextInterupt() in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 361
+   at Pulsar4X.Engine.ManagerSubPulse.ProcessSystem(DateTime targetDateTime) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\ManagerSubPulse.cs:line 305
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeUntil(DateTime targetDateTime, CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 389
+   at Pulsar4X.Engine.MasterTimePulse.SimulateTimeAsync(CancellationToken ct) in C:\Users\DeeDiebS\Desktop\Pulsar 4X\4x-Game\Pulsar4X\GameEngine\Engine\MasterTimePulse.cs:line 287
+   --- End of inner exception stack trace ---
+[STATE] session summary — faults=0, game-time=2050-05-25 06:00
+=== Session ended 2026-07-23 16:35:20 ===

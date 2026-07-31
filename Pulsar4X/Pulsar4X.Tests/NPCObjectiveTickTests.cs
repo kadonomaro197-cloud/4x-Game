@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.4b gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the Tick now SETTLES an
+    /// Phase-2.4b gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the Tick now SETTLES an
     /// objective. Proves an NPC faction, after a decision cycle, holds a `StrategicObjectiveDB` whose tier + objective
     /// match its gauges and doctrine (a healthy Economic-led NPC → Thrive / GrowEconomy), that a player faction gets
     /// none (the IsNPC guard), and that re-running the cycle HOLDS the committed plan (hysteresis, no thrash). The

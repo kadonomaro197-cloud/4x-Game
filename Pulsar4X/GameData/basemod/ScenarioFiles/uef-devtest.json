@@ -54,6 +54,7 @@
     "copper",
     "titanium",
     "lithium",
+    "lithium-battery",
     "chromium",
     "fissionables",
     "silicon",
@@ -134,7 +135,13 @@
     "space-port",
     "naval-academy",
     "intelligence-directorate",
-    "food-production"
+    "food-production",
+    "ground-training-cadre",
+    "sealed-systems",
+    "ground-constructor",
+    "constructor",
+    "building-foundation",
+    "station-chassis"
   ],
   "componentDesigns": [
     "default-design-mine",
@@ -147,7 +154,10 @@
     "default-design-research-lab",
     "default-design-warehouse",
     "default-design-agri-complex",
-    "default-design-hydroponics-arcology"
+    "default-design-hydroponics-arcology",
+    "default-design-shipyard",
+    "default-design-launch-complex",
+    "default-design-fuel-farm-5000k"
   ],
   "ordnanceDesigns": [],
   "shipDesigns": [],
@@ -202,6 +212,18 @@
         {
           "id": "default-design-agri-complex",
           "amount": 2
+        },
+        {
+          "id": "default-design-shipyard",
+          "amount": 1
+        },
+        {
+          "id": "default-design-launch-complex",
+          "amount": 1
+        },
+        {
+          "id": "default-design-fuel-farm-5000k",
+          "amount": 1
         }
       ],
       "cargo": [
@@ -224,6 +246,10 @@
         {
           "id": "copper",
           "amount": 20000
+        },
+        {
+          "id": "methalox",
+          "amount": 2000000
         }
       ]
     }

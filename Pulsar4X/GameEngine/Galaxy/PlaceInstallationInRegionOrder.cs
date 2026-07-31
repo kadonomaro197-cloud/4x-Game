@@ -25,7 +25,7 @@ namespace Pulsar4X.Galaxy
     /// v1 is DIRECT placement (like the station's starter modules). Routing it through the industry queue so it
     /// consumes materials and takes build-time (a region-targeted <c>IndustryJob</c>), and building on an
     /// UNcolonised region via a ground construction unit, are documented refinements. Design:
-    /// docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class PlaceInstallationInRegionOrder : EntityCommand
     {

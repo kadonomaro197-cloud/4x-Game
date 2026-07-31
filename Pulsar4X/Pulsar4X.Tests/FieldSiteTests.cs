@@ -4,7 +4,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-1a — the site record + pure state machine (docs/SITE-ENGINE-DESIGN.md §4). Proves the
+    /// Site Engine SE-1a — the site record + pure state machine (docs/explore/SITE-ENGINE-DESIGN.md §4). Proves the
     /// agency-preserving core end to end at the data level: a discovered site is begun by the first work
     /// (DISCOVERED→WORKED), progress + understanding accrue, understanding UNLOCKS the resolve branch (never a timer),
     /// resolving transitions to the terminal state its Shape dictates, and a resolved site stops accruing. The whole

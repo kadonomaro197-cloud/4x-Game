@@ -13,7 +13,7 @@ namespace Pulsar4X.GroundCombat
     /// <see cref="Mass"/> the frame must bear — the classic trade of protection for weight.
     ///
     /// A component attribute (CONVENTIONS §6), general (one attribute for ceramite, reactive plating, carapace — knobs,
-    /// not new types). Inert on install (the assembler reads it — G-D3). Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// not new types). Inert on install (the assembler reads it — G-D3). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class GroundArmorAtb : BaseDataBlob, IComponentDesignAttribute
     {

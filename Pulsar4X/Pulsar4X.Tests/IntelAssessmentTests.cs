@@ -8,7 +8,7 @@ using Pulsar4X.Sensors;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C3b gauge (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the intel↔eyes bridge — what confirming intel buys.
+    /// F-C3b gauge (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md): the intel↔eyes bridge — what confirming intel buys.
     /// With only Inferred Military intel (or no ledger) the observer reads a rival's strength through the FOG
     /// (ThreatAssessment.DetectedStrengthOf); once the Military facet is Confirmed it reads the TRUE strength
     /// (FactionRollup.MilitaryStrength). Pure/read-only → byte-identical.

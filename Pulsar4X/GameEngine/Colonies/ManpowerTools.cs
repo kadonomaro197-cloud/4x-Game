@@ -4,7 +4,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Colonies
 {
     /// <summary>
-    /// The M3-2b crew ENFORCEMENT bridge (docs/MORALE-AND-POPULATION-DESIGN.md): the small set of calls that
+    /// The M3-2b crew ENFORCEMENT bridge (docs/society/MORALE-AND-POPULATION-DESIGN.md): the small set of calls that
     /// turn the <see cref="ColonyManpowerDB"/> pool math into a real gate on ship construction — "you cannot
     /// build a ship you can't crew." Kept in one place so the three wiring sites (the build gate in
     /// <c>IndustryTools.ConstructStuff</c>, the commit in <c>ShipDesign.OnConstructionComplete</c>, and the
@@ -18,9 +18,17 @@ namespace Pulsar4X.Colonies
     /// </summary>
     public static class ManpowerTools
     {
-        /// <summary>Total population on a host colony (0 if it isn't a population host).</summary>
+        /// <summary>Total population on a host — a planet COLONY or a manned STATION (0 if it isn't a population host).</summary>
         private static long PopulationOf(Entity host)
-            => host.TryGetDataBlob<ColonyInfoDB>(out var info) ? info.Population.Values.Sum() : 0L;
+        {
+            if (host.TryGetDataBlob<ColonyInfoDB>(out var info)) return info.Population.Values.Sum();
+            // A station is a population host too: a station-dwelling faction (the Kithrin live on Titan, not a
+            // planet) crews its builds from the residents ON the station. ManpowerTools is otherwise fully
+            // host-agnostic, so reading StationInfoDB.Population here is all it takes for the crew gate to work
+            // off-world exactly as it does on a colony.
+            if (host.TryGetDataBlob<Pulsar4X.Stations.StationInfoDB>(out var station)) return station.Population.Values.Sum();
+            return 0L;
+        }
 
         /// <summary>
         /// Decide whether <paramref name="host"/> may build a unit needing <paramref name="crewRequired"/> bulk

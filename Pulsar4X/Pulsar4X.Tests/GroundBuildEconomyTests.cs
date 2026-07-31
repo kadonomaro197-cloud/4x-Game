@@ -17,7 +17,7 @@ namespace Pulsar4X.Tests
     /// onto its reserved tile and clears the reservation (the reconcile→place logic, no industry dependency), and
     /// (B) `GroundBuild.QueueBuildOnTile` queues a GENUINE industry job (installed on the colony) AND reserves the tile
     /// (the economy wiring). Composed with `ProductionBuildTests` (a queued job completes + installs), these cover the
-    /// whole chain without a slow, fragile clock-advance. Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.
+    /// whole chain without a slow, fragile clock-advance. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class GroundBuildEconomyTests

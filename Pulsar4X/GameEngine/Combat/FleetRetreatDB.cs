@@ -11,7 +11,7 @@ namespace Pulsar4X.Combat
     ///
     /// v1 is a MATH OUTCOME only: it flags the retreat and records the direction the fleet WOULD flee (away from
     /// the enemy). It does NOT issue a movement order — wiring the withdraw vector into the movement system so
-    /// ships actually run is a v2 layer (docs/COMBAT-DESIGN.md System 5, "Tier 1/2"). This blob is the hook that
+    /// ships actually run is a v2 layer (docs/combat/COMBAT-DESIGN.md System 5, "Tier 1/2"). This blob is the hook that
     /// layer will read. It persists after the engagement ends (unlike <see cref="FleetCombatStateDB"/>, which is
     /// removed on break-off), so the outcome is still visible once the fight is over.
     /// </summary>

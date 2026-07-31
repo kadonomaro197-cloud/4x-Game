@@ -7,12 +7,44 @@ namespace Pulsar4X.Energy
 {
     public class EnergyGenProcessor : IInstanceProcessor
     {
+        /// <summary>
+        /// FUEL EXHAUSTION — the missing rung of the power cradle-to-grave chain (developer, 2026-07-30;
+        /// docs/economy/DESIGNER-NORTH-STAR.md §39.7).
+        ///
+        /// <para>Every fuel-burning generator is charged <c>fissile-fuels</c> at build time, is given a fuel load
+        /// (<c>EnergyGenerationAtb</c> → <c>LocalFuel = maxUse × Lifetime</c>), and burns that load down every tick
+        /// (below). But <c>LocalFuel</c> was <b>never read as a gate anywhere</b> — five references in the whole
+        /// repository and not one a condition — so it ran negative and output never stopped. <b>Every reactor in the
+        /// game ran forever on nothing</b>, while the reactor's own description reads <i>"A non refuelable
+        /// reactor"</i>. The counter and the drain were built; the consequence was not.</para>
+        ///
+        /// <para>With this on, a dry generator produces <b>nothing</b>, and every downstream consumer already handles
+        /// that correctly with no change: the warp departure gate refuses (<c>WarpMoveCommand</c> checks stored energy
+        /// against the bubble creation cost), the ground energy-weapon supply gate refuses
+        /// (<c>WeaponSupply</c>/<c>GroundUnitAssembly</c>), and the AI stops planning attacks it cannot power
+        /// (<c>MilitaryReach</c>). <b>The consequence system was already there; only the trigger was missing.</b></para>
+        ///
+        /// <para><b>Default OFF</b>, the same discipline as <c>CombatEngagement.RequireDetectionToEngage</c> and
+        /// <c>JammerAtb.EnableJamming</c>: it changes behaviour, so the client arms it rather than CI inheriting it.
+        /// Off ⇒ byte-identical (the only other change here is that <c>LocalFuel</c> now floors at 0 instead of
+        /// running negative, and nothing reads it either way).</para>
+        /// </summary>
+        public static bool EnableFuelExhaustion = false;
 
         public static void EnergyGen(Entity entity, DateTime atDateTime)
         {
             EnergyGenAbilityDB _energyGenDB = entity.GetDataBlob<EnergyGenAbilityDB>();
 
             TimeSpan t = atDateTime - _energyGenDB.dateTimeLastProcess;
+
+            // A generator that burns fuel and has none left produces nothing. Solar (maxUse == 0) is never starved —
+            // it has no fuel to run out of — so a panel-only entity is unaffected in either flag state.
+            bool starved = EnableFuelExhaustion
+                        && _energyGenDB.TotalFuelUseAtMax.maxUse > 0
+                        && _energyGenDB.LocalFuel <= 0;
+            // TotalOutputMax is a computed read (installed capacity) — take a local so the INSTALLED figure the
+            // colony/UI readouts show is untouched, while generation this tick is what actually stops.
+            double capacity = starved ? 0 : _energyGenDB.TotalOutputMax;
 
             string energyType = _energyGenDB.EnergyType.UniqueID;
             // Defensive (the mining time-stall class): a SOLAR-ONLY entity has EnergyType set but NO EnergyStored/
@@ -26,7 +58,7 @@ namespace Pulsar4X.Energy
 
             double totaldemand = _energyGenDB.Demand + freestore;
 
-            var output = _energyGenDB.TotalOutputMax - _energyGenDB.Demand;
+            var output = capacity - _energyGenDB.Demand;
 
             output = GeneralMath.Clamp(output, -stored, freestore);
             _energyGenDB.EnergyStored[energyType] = stored + output;   // set-indexer: seeds the key for a store-less generator
@@ -45,11 +77,13 @@ namespace Pulsar4X.Energy
             }
 
 
-            double load = CalcLoad(_energyGenDB.Demand, _energyGenDB.TotalOutputMax);
+            double load = CalcLoad(_energyGenDB.Demand, capacity);
             _energyGenDB.Load = load;
             _energyGenDB.Output = output;
             double fueluse = _energyGenDB.TotalFuelUseAtMax.maxUse * load;
-            _energyGenDB.LocalFuel -= fueluse * t.TotalSeconds;
+            // Floor at 0 rather than running negative — a tank cannot hold less than nothing, and the gate above
+            // reads this value. (Flag off, nothing reads it, so this is byte-identical.)
+            _energyGenDB.LocalFuel = Math.Max(0, _energyGenDB.LocalFuel - fueluse * t.TotalSeconds);
 
             _energyGenDB.dateTimeLastProcess = atDateTime;
 

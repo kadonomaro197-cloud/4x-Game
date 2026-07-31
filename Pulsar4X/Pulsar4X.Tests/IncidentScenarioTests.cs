@@ -8,7 +8,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-4e — the discovery/authoring wire (docs/SITE-ENGINE-DESIGN.md §4). The first slice that can put a
+    /// Site Engine SE-4e — the discovery/authoring wire (docs/explore/SITE-ENGINE-DESIGN.md §4). The first slice that can put a
     /// LIVE incident into a game: SpawnIncidentAt composes the SE-4 parts (site + menace + dials + armed spread), and
     /// the New-Game hook is behind the default-OFF AutoSpawnIncident flag. Proves the composed incident is live and
     /// bleeds, the flag defaults off (New Game byte-identical), and flipping it on seeds a home-world incident.

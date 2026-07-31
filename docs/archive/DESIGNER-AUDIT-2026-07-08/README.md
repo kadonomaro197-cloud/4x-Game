@@ -1,3 +1,18 @@
+> # 🗄 ARCHIVED 2026-07-08 SURVEY — DO NOT FOLLOW AS LIVE
+>
+> **This file is a point-in-time snapshot from 2026-07-08 and its NUMBERS ARE STALE.** It was written when the base mod
+> held **67** component templates; there are now **96**. Its per-template tables, its mount-flag coverage (it omits the
+> `Station` flag entirely) and its *"~1.5 of 4"* enforcement figure are all superseded. **Do not size any work off this
+> folder.**
+>
+> **Its DIAGNOSIS did not go stale, and it is preserved — with every figure corrected inline — in
+> [`docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`](../../COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md) §16:** the
+> *"universality is real in the basement and lost on the main floor"* verdict · the **two locks** (mount flag vs
+> processor reader) · the **nine duplicated ability pairs** · and the **three proof-of-pattern** parts of the tree that
+> already do universality correctly. **Read §16, not this folder.**
+>
+> Kept only as the historical record of how that diagnosis was reached.
+
 # Designer Audit — index
 
 A complete, file:line-cited survey of **everything a player can design, make, or build in Pulsar4X**, produced to fix the developer's finding that *the in-game designers are not universal* (a part designed for one host — ship / station / colony installation / ground unit — can't be freely reused on another). Produced 2026-07-08 by a 7-way parallel code audit on branch `claude/sol-playtest-earth-map-8r59j6`.

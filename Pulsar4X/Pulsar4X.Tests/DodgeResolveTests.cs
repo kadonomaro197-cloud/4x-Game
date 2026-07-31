@@ -9,7 +9,7 @@ using System.Linq;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Combat depth — the DODGE model in the auto-resolver (docs/WEAPONS-AND-DODGE-DESIGN.md). A weapon's flavor
+    /// Combat depth — the DODGE model in the auto-resolver (docs/combat/WEAPONS-DESIGN.md). A weapon's flavor
     /// (velocity/tracking/saturation) decides what fraction of its fire LANDS on a target, given the target's
     /// evasion: you can't dodge a beam, you dodge ballistic slugs, flak floors it. The payoff is the developer's
     /// acceptance test — under slug fire the battleship dies while the nimble fighter holds. Engine-only -> CI.

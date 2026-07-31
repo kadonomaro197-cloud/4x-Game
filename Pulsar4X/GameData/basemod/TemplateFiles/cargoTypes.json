@@ -4,7 +4,7 @@
     "Payload": {
       "UniqueID": "general-storage",
       "Name": "General",
-      "Description": "Storage for general cargo items"
+      "Description": "Storage for general cargo: ore, refined materials, machinery, parts, anything that does not care where it is. Cheapest capacity per cubic metre and needs no power \u2014 the baseline every other hold is measured against."
     }
   },
   {
@@ -12,7 +12,7 @@
     "Payload": {
       "UniqueID": "fuel-storage",
       "Name": "Fuel",
-      "Description": "Storage for fuel"
+      "Description": "A sealed pressure vessel for things with no shape of their own: fuels, reaction mass, water, atmospheric gases. The only hold rated to carry a liquid or a gas."
     }
   },
   {
@@ -20,7 +20,7 @@
     "Payload": {
       "UniqueID": "battery-storage",
       "Name": "Battery",
-      "Description": "Storage for energy"
+      "Description": "Stored charge rather than stored mass \u2014 measured in kilojoules, not cubic metres. NOTE: energy is currently held by EnergyStoreAtb, a separate system, so nothing provides this cargo type."
     }
   },
   {
@@ -28,7 +28,7 @@
     "Payload": {
       "UniqueID": "cryogenic-storage",
       "Name": "Cryogenic Storage",
-      "Description": "Storage for frozen people"
+      "Description": "Frozen people and frozen biology, held at temperature. The cheapest way to move a population, because a pod needs no air, no food and almost no crew \u2014 paid for in the two things a cabin gives you: the occupants cannot act, and they die if the plant stops."
     }
   },
   {
@@ -36,7 +36,7 @@
     "Payload": {
       "UniqueID": "passenger-storage",
       "Name": "Passengers",
-      "Description": "Storage for people"
+      "Description": "Living people, breathing: passengers, colonists, a drafted workforce, a research team, prisoners, refugees. The only hold whose contents can walk out and go to work, which is why it carries a pressure hull, air, water and stewards."
     }
   },
   {
@@ -44,7 +44,23 @@
     "Payload": {
       "UniqueID": "ordnance-storage",
       "Name": "Ordnance Storage",
-      "Description": "Storage for ammo, missiles etc"
+      "Description": "Munitions, behind blast isolation and handling gear: missiles, shells, ground ammunition. The only hold rated for cargo that can detonate."
+    }
+  },
+  {
+    "Type": "CargoType",
+    "Payload": {
+      "UniqueID": "perishable-storage",
+      "Name": "Refrigerated",
+      "Description": "Cooled and controlled: food, biomass, medical stock, anything alive. The only hold whose contents are still worth having when they arrive \u2014 everywhere else they spoil. Its cost is TIME: it must keep working for the whole voyage."
+    }
+  },
+  {
+    "Type": "CargoType",
+    "Payload": {
+      "UniqueID": "contained-storage",
+      "Name": "Containment",
+      "Description": "Shielded and isolated, for cargo that is dangerous to the ship carrying it: volatiles, radioactives, antimatter, biohazard, a live specimen. The only hold rated for cargo whose escape damages the carrier, and the heaviest capacity in the game because the shielding IS the capability."
     }
   }
 ]

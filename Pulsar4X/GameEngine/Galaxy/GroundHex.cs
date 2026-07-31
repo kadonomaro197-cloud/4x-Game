@@ -12,7 +12,7 @@ namespace Pulsar4X.Galaxy
     /// <c>ColonyHexMapDB</c> lacked. Reuse <c>Colonies.HexCoordinate</c> for neighbour/distance MATH (movement, H2).
     ///
     /// Generated LAZILY per body (<see cref="PlanetHexFactory"/>) — only worlds that become a theatre carry hexes, so a
-    /// galaxy isn't bloated with millions. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+    /// galaxy isn't bloated with millions. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class GroundHex
     {
@@ -54,12 +54,12 @@ namespace Pulsar4X.Galaxy
         /// map fights over: capturing the hex captures what's on it, bombing it damages what's on it. Only buildings
         /// whose design carries a <c>GroundCombat.GroundFootprintAtb</c> land here (a solar panel doesn't); the region
         /// keeps its full <c>Region.InstallationIds</c> for the economy + fortification. Save-safe (deep-copied).
-        /// Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
+        /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.</summary>
         [JsonProperty] public List<int> InstallationIds { get; internal set; } = new List<int>();
 
         /// <summary>The FINE city grid you zoom into (C-track) — null until this operational hex is DEVELOPED by a
         /// colony (lazy, so an undeveloped hex costs nothing). Its tiles' buildings roll up to
-        /// <see cref="InstallationIds"/>. Deep-copied below. Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.</summary>
+        /// <see cref="InstallationIds"/>. Deep-copied below. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.</summary>
         [JsonProperty] public CityGrid CityGrid { get; internal set; }
 
         public GroundHex() { }

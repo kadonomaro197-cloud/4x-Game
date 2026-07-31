@@ -89,7 +89,7 @@ docs/ai/         AI-BUILD-STATUS-AND-WIRING-MAP (hub) · AI-DECISION-ENGINE · A
 docs/environment/  ENVIRONMENTS-DESIGN · STELLAR-ENVIRONMENTS-CATALOG
 docs/explore/    SITE-ENGINE-DESIGN · EXPLORATION-CONTENT-DESIGN
 docs/aurora/     (external spec — keep the whole 14-file family intact; only strip the per-doc "Maps to Pulsar" status columns)
-docs/DESIGNER-AUDIT/  (keep intact as one 8-file point-in-time deliverable)
+docs/archive/DESIGNER-AUDIT-2026-07-08/  (keep intact as one 8-file point-in-time deliverable)
 docs/archive/    (new — superseded but kept for provenance, each with a HISTORICAL/SUPERSEDED banner)
 ```
 
@@ -126,7 +126,7 @@ Three docs all try to be the status board and all three rot: `DOCS-INDEX` (69 KB
 
 ## 4. The healthy core (keep as-is)
 
-The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/DESIGNER-AUDIT/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
+The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/archive/DESIGNER-AUDIT-2026-07-08/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
 
 ---
 
@@ -161,37 +161,37 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | STATUS | `SESSION_STATE.md` | KEEP-TRIM | BLOATED | Trim to the latest 1-2 session blocks plus a permanent 'Durable Lessons' section; move all |
 | STATUS | `docs/CLIENT-TEST-CHECKLIST.md` | KEEP-TRIM | VERBOSE | Keep as the single live runtime punch-list but restructure: (1) delete or move all ✅ PASSE |
 | STATUS | `docs/DOCS-INDEX.md` | KEEP-TRIM | BLOATED | Keep as the canonical index but enforce a hard cap on the Notes column (~1 line / ~25 word |
-| STATUS | `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` | STALE-FIX | VERBOSE | Keep the doc for its unique value — the system×system 'Connected to' wiring map — but (1)  |
+| STATUS | `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` | STALE-FIX | VERBOSE | Keep the doc for its unique value — the system×system 'Connected to' wiring map — but (1)  |
 | STATUS | `docs/TESTING-TRACKER.md` | KEEP-TRIM | VERBOSE | Keep as the canonical test ledger but split concerns: (1) move the dated per-session live- |
-| COMBAT | `docs/AUTO-RESOLVER-ANATOMY.md` | STALE-FIX | VERBOSE | Do a status pass: flip §4 #1/#2/#3/#5/#6 and §7d #1/#2 from ➕/backlog to ✅ built (cite Wea |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §8` | STALE-FIX | VERBOSE | Do a status pass: flip §4 #1/#2/#3/#5/#6 and §7d #1/#2 from ➕/backlog to ✅ built (cite Wea |
 | COMBAT | `docs/combat/COMBAT-DESIGN.md` | STALE-FIX | VERBOSE | Keep as the combat design hub, but: (1) replace the stale 'What Already Exists' table with |
-| COMBAT | `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md` | KEEP-TRIM | OK | Keep in docs/ as the combat-range design spine. Add an 'as of' refresh stamp noting Phases |
-| COMBAT | `docs/RESOLVER-MERGE-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep in place as the combat-resolver-merge record. Once slice 5c (bucketing) lands, collap |
-| COMBAT | `docs/WEAPON-TAXONOMY-DESIGN.md` | KEEP-TRIM | OK | Keep in place. (1) Update the header status from 'design survey' to 'design LOCKED + built |
-| COMBAT | `docs/WEAPONS-AND-DODGE-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the canonical dodge/triangle/bucketing design doc but (1) add a one-line header no |
-| GROUND | `docs/GLOBAL-HEX-GRID-DESIGN.md` | KEEP-TRIM | OK | Keep as the active G6b-3 tracker now. On G6b-3 completion: (1) delete or archive docs/HEX- |
-| GROUND | `docs/GROUND-CITY-AND-WARMAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Refresh the As-of stamp and flip the status line to 'W-track built; C-track C1 substrate b |
-| GROUND | `docs/GROUND-COMBAT-MAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Split concerns: keep this as a pure DESIGN-LOCK (the model, schema, the two LOCKED princip |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4` | KEEP-TRIM | OK | Keep in docs/ as the combat-range design spine. Add an 'as of' refresh stamp noting Phases |
+| COMBAT | `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1` | KEEP-TRIM | VERBOSE | Keep in place as the combat-resolver-merge record. Once slice 5c (bucketing) lands, collap |
+| COMBAT | `docs/combat/WEAPONS-DESIGN.md` | KEEP-TRIM | OK | Keep in place. (1) Update the header status from 'design survey' to 'design LOCKED + built |
+| COMBAT | `docs/combat/WEAPONS-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the canonical dodge/triangle/bucketing design doc but (1) add a one-line header no |
+| GROUND | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` | KEEP-TRIM | OK | Keep as the active G6b-3 tracker now. On G6b-3 completion: (1) delete or archive docs/HEX- |
+| GROUND | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Refresh the As-of stamp and flip the status line to 'W-track built; C-track C1 substrate b |
+| GROUND | `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` | KEEP-TRIM | VERBOSE | Split concerns: keep this as a pure DESIGN-LOCK (the model, schema, the two LOCKED princip |
 | GROUND | `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` | STALE-FIX | VERBOSE | Keep in place as the ground-unit-designer SoT, but refresh the As-of stamp and flip the bu |
-| GROUND | `docs/HEX-GROUND-AND-ORDERS-DESIGN.md` | KEEP-TRIM | OK | Split by track. Fold the H (hex-ground) sections into docs/GLOBAL-HEX-GRID-DESIGN.md as th |
+| GROUND | `docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md` | KEEP-TRIM | OK | Split by track. Fold the H (hex-ground) sections into docs/ground/GROUND-SURFACE-MAP-DESIGN.md as th |
 | DESIGNER | `docs/economy/CAPABILITY-BUILD-PLAN.md` | STALE-FIX | OK | Keep as the build spine but do a reconciliation pass against reality: mark slice 4.6 (espi |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | KEEP-TRIM | OK | Keep as the map half of the two-doc designer reference, but add a short 'Build state as of |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` | KEEP | OK | Keep as the canonical 'what's actually wired' ledger for the component designer and cross- |
 | DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIALS.md` | KEEP-TRIM | BLOATED | Keep as the DESIGNER design authority but shrink it: (1) delete or archive the folded-in o |
-| DESIGNER | `docs/COMPONENT-DESIGNER-STRESS-TEST.md` | CONSOLIDATE | OK | Fold the Part 3 hole→plug ledger and the Part 2 'shared EFFECT bus / gear=designer vs bein |
-| DESIGNER | `docs/DESIGNER-AUDIT/00-EXECUTIVE-SUMMARY.md` | KEEP-TRIM | OK | Keep in place as the DESIGNER-AUDIT front page. Update line 136 to drop/repoint the non-ex |
-| DESIGNER | `docs/DESIGNER-AUDIT/01-DESIGNER-UIS.md` | KEEP-TRIM | OK | Keep in place as part 1 of the DESIGNER-AUDIT series. Add a dated staleness banner at top  |
-| DESIGNER | `docs/DESIGNER-AUDIT/02-DESIGNABLE-TYPES.md` | KEEP | OK | Keep in place within docs/DESIGNER-AUDIT/. Add a one-line cross-link from the Open-Questio |
-| DESIGNER | `docs/DESIGNER-AUDIT/03-ABILITIES-AND-MOUNTS.md` | STALE-FIX | OK | Keep in place as the crux section of docs/DESIGNER-AUDIT/. Do a reference-fix pass: replac |
-| DESIGNER | `docs/DESIGNER-AUDIT/04-BASEMOD-TEMPLATES.md` | STALE-FIX | OK | Re-run the per-file UniqueID enumeration against current TemplateFiles/*.json to rebuild a |
-| DESIGNER | `docs/DESIGNER-AUDIT/05-ASSEMBLIES.md` | KEEP | OK | Keep in place as part of the DESIGNER-AUDIT set. Add a one-line date/'as-of-SHA' stamp at  |
-| DESIGNER | `docs/DESIGNER-AUDIT/06-INDUSTRY-AND-MATERIALS.md` | KEEP | OK | Keep in place. Add one paragraph (or a §6 resolution) covering the LocalConstruction subsy |
-| DESIGNER | `docs/DESIGNER-AUDIT/07-RESEARCH-AND-UNLOCKS.md` | KEEP | OK | Keep in place within docs/DESIGNER-AUDIT/. Add a date/commit stamp at the top (all DESIGNE |
-| DESIGNER | `docs/DESIGNER-AUDIT/README.md` | KEEP | LEAN | Keep in place as the DESIGNER-AUDIT folder index. Add a one-line status/date-of-relevance  |
+| DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | CONSOLIDATE | OK | Fold the Part 3 hole→plug ledger and the Part 2 'shared EFFECT bus / gear=designer vs bein |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/00-EXECUTIVE-SUMMARY.md` | KEEP-TRIM | OK | Keep in place as the DESIGNER-AUDIT front page. Update line 136 to drop/repoint the non-ex |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/01-DESIGNER-UIS.md` | KEEP-TRIM | OK | Keep in place as part 1 of the DESIGNER-AUDIT series. Add a dated staleness banner at top  |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/02-DESIGNABLE-TYPES.md` | KEEP | OK | Keep in place within docs/archive/DESIGNER-AUDIT-2026-07-08/. Add a one-line cross-link from the Open-Questio |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/03-ABILITIES-AND-MOUNTS.md` | STALE-FIX | OK | Keep in place as the crux section of docs/archive/DESIGNER-AUDIT-2026-07-08/. Do a reference-fix pass: replac |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/04-BASEMOD-TEMPLATES.md` | STALE-FIX | OK | Re-run the per-file UniqueID enumeration against current TemplateFiles/*.json to rebuild a |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/05-ASSEMBLIES.md` | KEEP | OK | Keep in place as part of the DESIGNER-AUDIT set. Add a one-line date/'as-of-SHA' stamp at  |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/06-INDUSTRY-AND-MATERIALS.md` | KEEP | OK | Keep in place. Add one paragraph (or a §6 resolution) covering the LocalConstruction subsy |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/07-RESEARCH-AND-UNLOCKS.md` | KEEP | OK | Keep in place within docs/archive/DESIGNER-AUDIT-2026-07-08/. Add a date/commit stamp at the top (all DESIGNE |
+| DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/README.md` | KEEP | LEAN | Keep in place as the DESIGNER-AUDIT folder index. Add a one-line status/date-of-relevance  |
 | DESIGNER | `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` | KEEP-TRIM | OK | Keep in place as the parent principle of the DESIGNER cluster. Trim/restamp the §3 'Curren |
-| ECONOMY | `docs/COLONY-PROGRESSION-DESIGN.md` | KEEP-TRIM | OK | Keep as the canonical ladder-vision capture but fold it into the economy/off-world design  |
+| ECONOMY | `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` | KEEP-TRIM | OK | Keep as the canonical ladder-vision capture but fold it into the economy/off-world design  |
 | ECONOMY | `docs/economy/RESOURCES-AND-MATERIALS-DESIGN.md` | STALE-FIX | OK | Add a dated 'SUPERSEDED SINCE SURVEY' banner listing what has landed (NPCDecisionProcessor |
-| ECONOMY | `docs/SPACE-STATIONS-DESIGN.md` | KEEP-TRIM | VERBOSE | Rewrite the status banner to reflect reality: this is a DESIGN-LOCKED + build-state doc, m |
+| ECONOMY | `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md` | KEEP-TRIM | VERBOSE | Rewrite the status banner to reflect reality: this is a DESIGN-LOCKED + build-state doc, m |
 | SOCIETY | `docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md` | KEEP-TRIM | OK | Keep as parent/chassis doc, do a staleness pass: (1) flip the CommanderDB 'no skill fields |
 | SOCIETY | `docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md` | KEEP | OK | Add a short 'Build state as of' banner at the top mirroring the DOCS-INDEX row (dials done |
 | SOCIETY | `docs/society/INFLUENCE-PILLAR-DESIGN.md` | KEEP | OK | Keep as-is under docs/. It is the correctly-scoped parent for the parked 'religion 5th civ |
@@ -201,14 +201,14 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | AI | `docs/ai/AI-BRAIN-BUILD-TRACKER.md` | STALE-FIX | VERBOSE | Keep in place as the AI build authority. (1) Reconcile the top 'ladder' table to the detai |
 | AI | `docs/ai/AI-CAPABILITY-CATALOG.md` | STALE-FIX | OK | Keep the doc as the NEED→buildables reference but (1) demote ESPIONAGE from the GAP table  |
 | AI | `docs/ai/AI-COMMAND-AND-COMMUNICATION-DESIGN.md` | KEEP-TRIM | OK | Keep as the conceptual chapter of the AI suite but add a top banner: 'SUPERSEDED-BY-CODE a |
-| AI | `docs/AI-ECOSYSTEM-DESIGN.md` | KEEP | OK | Keep in place as part of the 8-doc AI suite (entered via AI-IMPLEMENTATION-AND-WIRING-MAP. |
-| AI | `docs/AI-GALAXY-AND-CRISIS-DESIGN.md` | KEEP-TRIM | OK | Promote the status banner from 'v0.2 DISCUSSION DRAFT' to a LOCKED-DESIGN + build-state st |
-| AI | `docs/AI-IMPLEMENTATION-AND-WIRING-MAP.md` | STALE-FIX | OK | Flip the status banner and DOCS-INDEX row from 'plan/not-built' to 'largely BUILT — see AI |
-| AI | `docs/AI-MEANS-ENDS-PLANNER-DESIGN.md` | KEEP-TRIM | OK | Add a top-of-file BUILT banner ('Implemented 2026-07-13 — see Pulsar4X/GameEngine/Factions |
-| AI | `docs/AI-OBJECTIVE-ENGINE-DESIGN.md` | KEEP-TRIM | OK | Flip the banner from 'v0.2 DISCUSSION DRAFT' to 'DESIGN-LOCKED — core BUILT (as-of 2026-07 |
+| AI | `docs/ai/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md` | KEEP | OK | Keep in place as part of the 8-doc AI suite (entered via AI-IMPLEMENTATION-AND-WIRING-MAP. |
+| AI | `docs/ai/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md` | KEEP-TRIM | OK | Promote the status banner from 'v0.2 DISCUSSION DRAFT' to a LOCKED-DESIGN + build-state st |
+| AI | `docs/ai/AI-BRAIN-BUILD-TRACKER.md` | STALE-FIX | OK | Flip the status banner and DOCS-INDEX row from 'plan/not-built' to 'largely BUILT — see AI |
+| AI | `docs/ai/AI-DECISION-ENGINE-DESIGN.md` | KEEP-TRIM | OK | Add a top-of-file BUILT banner ('Implemented 2026-07-13 — see Pulsar4X/GameEngine/Factions |
+| AI | `docs/ai/AI-DECISION-ENGINE-DESIGN.md` | KEEP-TRIM | OK | Flip the banner from 'v0.2 DISCUSSION DRAFT' to 'DESIGN-LOCKED — core BUILT (as-of 2026-07 |
 | AI | `docs/ai/AI-PERSONALITY-IMPLEMENTATION-SPEC.md` | STALE-FIX | OK | Keep the doc but retitle its status to reflect the M2-0a slice that landed: strike 'Nothin |
-| AI | `docs/AI-SELF-PLAY-DESIGN.md` | CONSOLIDATE | BLOATED | Reconcile the 'no code written / fill the stub / seat-durability prerequisite' framing aga |
-| AI | `docs/AI-SUPERCLUSTER-AND-AUTHORING-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the AI suite's capstone but cut it to ~half: strip the multiverse/brane rhetoric a |
+| AI | `docs/ai/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md` | CONSOLIDATE | BLOATED | Reconcile the 'no code written / fill the stub / seat-durability prerequisite' framing aga |
+| AI | `docs/ai/AI-EMERGENT-POLITICS-AND-CRISIS-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep as the AI suite's capstone but cut it to ~half: strip the multiverse/brane rhetoric a |
 | EXPLORE | `docs/explore/EXPLORATION-CONTENT-DESIGN.md` | KEEP-TRIM | OK | Keep as the catalog chapter of docs/explore/SITE-ENGINE-DESIGN.md but (1) delete the duplicate DOCS-IND |
 | EXPLORE | `docs/explore/SITE-ENGINE-DESIGN.md` | STALE-FIX | OK | **Reclassified after the 2026-07-13 Site-Engine merge — see Update note at top.** Its "no engine code yet" line is now false: SE-1→SE-6 shipped in `GameEngine/Sites/`. Flip its status to built-but-flag-gated; drop the stale ledger line. |
 | DETECT | `docs/combat/DETECTION-DESIGN.md` | KEEP-TRIM | VERBOSE | Keep the doc but do a staleness pass: rewrite the header from 'Draft/before we build' to a |

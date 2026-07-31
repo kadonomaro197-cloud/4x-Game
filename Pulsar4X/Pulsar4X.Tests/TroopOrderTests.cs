@@ -9,7 +9,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-3c — the player Load/Land orders (docs/SITE-ENGINE-DESIGN.md §6). These wrap the engine-only
+    /// Site Engine SE-3c — the player Load/Land orders (docs/explore/SITE-ENGINE-DESIGN.md §6). These wrap the engine-only
     /// GroundTransport helpers in real EntityCommands so a player (and, later, an NPC) can lift troops onto a transport
     /// and land them on a world's region — the way troops actually reach a surface site (SE-3b) or an invasion.
     /// Drives the orders' Execute directly (deterministic); the underlying transport mechanics are covered by

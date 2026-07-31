@@ -7,7 +7,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-4c — the steady PRESSURE of a live incident (docs/SITE-ENGINE-DESIGN.md §4, "stop-the-bleed").
+    /// Site Engine SE-4c — the steady PRESSURE of a live incident (docs/explore/SITE-ENGINE-DESIGN.md §4, "stop-the-bleed").
     /// While a Shape.Incident surface site is live, it bleeds every NON-menace unit in its region each tick (the menace
     /// is the source, so it's spared). Proves the bleed applies to your holding force, spares the menace, and never
     /// touches a non-incident site (byte-identical).

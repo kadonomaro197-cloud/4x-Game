@@ -1,3 +1,18 @@
+> # 🗄 ARCHIVED 2026-07-08 SURVEY — DO NOT FOLLOW AS LIVE
+>
+> **This file is a point-in-time snapshot from 2026-07-08 and its NUMBERS ARE STALE.** It was written when the base mod
+> held **67** component templates; there are now **96**. Its per-template tables, its mount-flag coverage (it omits the
+> `Station` flag entirely) and its *"~1.5 of 4"* enforcement figure are all superseded. **Do not size any work off this
+> folder.**
+>
+> **Its DIAGNOSIS did not go stale, and it is preserved — with every figure corrected inline — in
+> [`docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`](../../COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md) §16:** the
+> *"universality is real in the basement and lost on the main floor"* verdict · the **two locks** (mount flag vs
+> processor reader) · the **nine duplicated ability pairs** · and the **three proof-of-pattern** parts of the tree that
+> already do universality correctly. **Read §16, not this folder.**
+>
+> Kept only as the historical record of how that diagnosis was reached.
+
 # Designer Audit — Executive Summary
 
 **What this is:** a complete, cited survey of **everything a player can design, make, or build in Pulsar4X**, generalized and categorized, written so the developer's problem — *"the in-game designers are not universal"* — can be fixed system by system. Seven detail files (01–07) hold the file:line evidence; this file is the map and the plan.
@@ -133,4 +148,4 @@ For each pair: keep ONE attribute, make both host processors read it, retire the
 | `06-INDUSTRY-AND-MATERIALS.md` | industry is ALREADY host-uniform — the pattern to copy | designing the fix (the target shape) |
 | `07-RESEARCH-AND-UNLOCKS.md` | unlock/tech is ALREADY host-uniform; not the source of the bug | ruling the tech layer in/out |
 
-**Related existing design docs** (already circling this problem): `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/WEAPON-UNIFICATION-DESIGN.md`, `docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md`.
+**Related existing design docs** (already circling this problem): `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`, `docs/combat/WEAPONS-DESIGN.md`, `docs/ground/GROUND-SURFACE-MAP-DESIGN.md`.

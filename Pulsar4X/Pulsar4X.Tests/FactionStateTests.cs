@@ -7,7 +7,7 @@ using Pulsar4X.Industry;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 P0-a gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the "what I have"
+    /// Phase-2.8 P0-a gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the "what I have"
     /// snapshot. Proves it gathers the faction-wide gauges off the built `FactionRollup` readers and one slice per
     /// colony (industry / body minerals / free-line), and is null-safe on a null faction. Read-only → byte-identical.
     /// </summary>

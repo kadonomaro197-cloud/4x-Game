@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the LIVE CONSUMER of the popular-demands pillar (docs/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands).
+    /// Gauge for the LIVE CONSUMER of the popular-demands pillar (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md §Demands).
     /// The demand logic — <see cref="DemandEngine"/> / <see cref="DemandResolution"/> — was built as pure math with
     /// ZERO callers (a dark socket). This wires it into <see cref="LegitimacyProcessor"/>: each cycle a province's
     /// UNANSWERED demands (surfaced from its morale-factor breakdown) resolve to a legitimacy delta that is applied.

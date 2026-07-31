@@ -20,7 +20,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// v1 is a plain C# design (like the combat-test ship designs were, before their JSON registration) — a follow-up
     /// wires a base-mod JSON template so it's player-buildable in a New Game without the six-point registration
-    /// crashing the start (gotcha #10). Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5a).
+    /// crashing the start (gotcha #10). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5a).
     /// </summary>
     public class GroundUnitDesign : IConstructableDesign
     {
@@ -57,6 +57,13 @@ namespace Pulsar4X.GroundCombat
         /// readout. 0/unset → a per-type default (<see cref="GroundRangeTools.DefaultRangeFor"/>: Infantry 1, Armor 1,
         /// Artillery 3). Moddable per design.</summary>
         [JsonProperty] public int Range { get; set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this design's weapon reach in real METRES, the metric TRUTH
+        /// alongside the display <see cref="Range"/> (hexes). Built by <c>GroundUnitAssembly.Compute</c> from the weapons'
+        /// hex ranges × a fixed nominal reference pitch (a real per-body pitch is a later slice) and snapshotted onto
+        /// <see cref="GroundUnit.Range_m"/>. 0 = unset (a code-built / garrison design leaves it 0 → <c>RaiseUnit</c>
+        /// derives it from the hex range). <b>ADDITIVE + UNREAD by the resolver</b> → byte-identical.
+        /// Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
+        [JsonProperty] public double Range_m { get; set; }
         /// <summary>SYSTEM ① survivability-by-dodge (0..1) — Σ augment evasion; snapshotted onto each raised unit.</summary>
         [JsonProperty] public double Evasion { get; set; }
         /// <summary>SYSTEM ① survivability-by-shield — flat incoming-damage soak pool; Σ augment shield.</summary>
@@ -129,7 +136,7 @@ namespace Pulsar4X.GroundCombat
 
         /// <summary>The COMPONENTS this unit is built from — the mounted component-design ids → count (frame + parts).
         /// KEEPING these (instead of only the flattened combat stats above) is the foundation of units-as-entities
-        /// (Option A, docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md): once a raised unit carries these as real
+        /// (Option A, docs/economy/COMPONENT-DESIGNER-CATEGORIES.md): once a raised unit carries these as real
         /// <c>ComponentInstance</c>s, every ability (radar-reveal / speed / crew / weapons) falls out of the SAME
         /// component infrastructure a ship uses, with no per-ability special-casing. Populated by the assembler; the
         /// chassis is identified by its <see cref="GroundChassisAtb"/>, not a separate flag. Additive — the flat stats

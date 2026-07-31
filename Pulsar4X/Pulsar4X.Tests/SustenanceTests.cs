@@ -4,7 +4,7 @@ using Pulsar4X.Colonies;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the M5b power/food sustenance wiring (docs/MORALE-AND-POPULATION-DESIGN.md, task #29): the
+    /// Gauge for the M5b power/food sustenance wiring (docs/society/MORALE-AND-POPULATION-DESIGN.md, task #29): the
     /// shortage math, the starvation death rate, and the crucial NEUTRAL-WHEN-ABSENT property — a colony built by
     /// the factory carries a `ColonySustenanceDB` but computes ZERO shortage until per-capita demand is set (the
     /// guard against the "default deficit tanks every colony" trap). Once demand is set, the processor computes a

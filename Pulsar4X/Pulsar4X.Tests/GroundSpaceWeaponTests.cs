@@ -9,7 +9,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// W-TRACK W1b — a UNIFIED SPACE WEAPON gives GROUND firepower once mounted (docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md
+    /// W-TRACK W1b — a UNIFIED SPACE WEAPON gives GROUND firepower once mounted (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.4,
     /// §W1b). The developer's rule: "as long as a unit can provide power / ammo / hold the actual weapon, it gets to use
     /// it." The eligibility gates (carry + P2 power/ammo) already exist and are proven by GroundPowerGateTests /
     /// GroundAmmoGateTests; this proves the PAYOFF — a mounted, supported space weapon actually SHOOTS on the ground

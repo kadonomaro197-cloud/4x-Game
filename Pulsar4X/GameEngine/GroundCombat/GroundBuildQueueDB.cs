@@ -9,7 +9,7 @@ namespace Pulsar4X.GroundCombat
     /// mini-hex tile the player chose to build on. When the queued installation finishes construction (materials +
     /// build-time, through the normal production line), <see cref="GroundBuild.ReconcileBody"/> finds the freshly-built
     /// footprint building and drops it on (<see cref="GQ"/>,<see cref="GR"/>) tile (<see cref="TileQ"/>,<see cref="TileR"/>).
-    /// Save-safe (plain fields, deep-copied). Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md.
+    /// Save-safe (plain fields, deep-copied). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class GroundBuildReservation
     {

@@ -5,7 +5,7 @@ using Pulsar4X.Interfaces;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// F-C1b (docs/AI-BRAIN-BUILD-TRACKER.md, trade pillar): the monthly TRADE PAYOUT — the wire that turns the
+    /// F-C1b (docs/ai/AI-BRAIN-BUILD-TRACKER.md, trade pillar): the monthly TRADE PAYOUT — the wire that turns the
     /// F-C1a value (<see cref="TradeIncome.MonthlyIncomeFor"/>) into real money by booking it into each faction's
     /// ledger under <see cref="TransactionCategory.Trade"/>. This is what finally gives the Trade Minister role and
     /// commerce diplomacy something to manage.

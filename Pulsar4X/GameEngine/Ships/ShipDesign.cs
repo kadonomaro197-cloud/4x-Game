@@ -166,9 +166,9 @@ namespace Pulsar4X.Ships
 
                 // P4.2 (Operation Earthfall) — provision the freshly-built hull per the built-ship charge/fuel
                 // policy: an NPC-owned ship boots charged + fuelled so the AI's production sealift can warp the
-                // instant it exists (findings/A4-sealift.md cause 3); a player-owned ship is left to earn its
-                // charge/fuel at a colony over game-time (the developer's deliberate rule). No-op →
-                // byte-identical for the default player fleet (ChargeBuiltPlayerShips is OFF).
+                // instant it exists (findings/A4-sealift.md cause 3). Player ships ALSO boot charged + fuelled as of
+                // developer decision 2026-07-21 (ChargeBuiltPlayerShips flipped false→true — frictionless; flip back
+                // to restore "a production ship earns its charge over game-time"). See the policy doc above.
                 ProvisionBuiltShip(ship, faction);
             }
 

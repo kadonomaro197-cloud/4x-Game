@@ -1,7 +1,7 @@
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// M2-1d (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — Authoritarianism → tax-under-unrest): the pure decision
+    /// M2-1d (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — Authoritarianism → tax-under-unrest): the pure decision
     /// helper an NPC brain uses to set its tax rate when its people are restless. A restless population wants relief
     /// (lower taxes); the faction's <see cref="PersonalityTrait.Authoritarianism"/> decides whether it GIVES that
     /// relief or holds the line and suppresses. A high-Authoritarianism faction keeps taxes high under unrest (rule

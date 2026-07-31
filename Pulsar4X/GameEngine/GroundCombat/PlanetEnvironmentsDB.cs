@@ -45,7 +45,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// The INFRASTRUCTURE the developer asked for: the engine is a small generic core (this + the factory + the
     /// per-tick applier), so "more environments" is a data/rule change, never new engine code. Design:
-    /// docs/ENVIRONMENTS-DESIGN.md.
+    /// docs/environment/ENVIRONMENTS-DESIGN.md.
     /// </summary>
     public class PlanetEnvironmentsDB : BaseDataBlob
     {

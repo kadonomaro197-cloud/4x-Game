@@ -49,7 +49,7 @@ Plus: the NPC factions didn't develop (Kithrin structurally bankrupt; survey cha
 - **D3** — the AI expand-arc end-to-end gauge (survey → found → in `Colonies`).
 
 ### TWOD (`claude/earthfall-2d`) — the 2D group-plane resolver, first slices
-- **T0-T3 / S0-S2** — the joints memo (`RESOLVER-2D-JOINTS.md`), the pure `GroupPlane` battle-plane math, the anchor seeding in space combat, and the 2D range gate — **all behind `EnableGroupPlane`, default off** (byte-identical). S3-S6 (role geometry, ground-onto-plane, combined theater, multi-party) are a later campaign.
+- **T0-T3 / S0-S2** — the joints memo (`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8`), the pure `GroupPlane` battle-plane math, the anchor seeding in space combat, and the 2D range gate — **all behind `EnableGroupPlane`, default off** (byte-identical). S3-S6 (role geometry, ground-onto-plane, combined theater, multi-party) are a later campaign.
 
 ---
 
@@ -86,7 +86,7 @@ For a **real menu-started or DevTest game** you want the invasion to actually pl
 - **Orbital strike aimed at a specific hex's buildings** — you deferred this earlier (the "W-track" follow-on). Bombardment softens the *garrison* surface-wide; picking a single building from orbit is not built.
 - **Bombardment re-fire cadence + cap** — TABLED (decision #4). The one-shot softening stays as-is.
 - **Produce-for-captor** — a captured enemy building doesn't produce for you until the whole colony flips (findings R4 decision #4 — the biggest deferred ground piece).
-- **The 2D group-plane resolver S3-S6** — role geometry, ground-onto-plane, combined theater (Endor), multi-party FFA. A later campaign, gated by `RESOLVER-2D-JOINTS.md`.
+- **The 2D group-plane resolver S3-S6** — role geometry, ground-onto-plane, combined theater (Endor), multi-party FFA. A later campaign, gated by `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13.7/§13.8`.
 - **Ground cadre talent-scarcity** for elite/sealed units (touches `Factions/ManpowerTools`) — a high-risk balance decision, left for you.
 - **An AI-founded colony is born empty + untaxed** (DEV D3 finding) — whether a founded colony seeds population or a governor sets a tax rate is a design call you own. The D3 acceptance milestone for "pays tax" is `[Ignore]`d until then.
 - **Command-org 2-tier → 4-tier** expansion (task #22).

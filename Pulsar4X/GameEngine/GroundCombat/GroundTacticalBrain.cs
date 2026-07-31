@@ -57,7 +57,10 @@ namespace Pulsar4X.GroundCombat
 
                     var ctx = BuildContext(body, forces, regionsDB, formation, factionEntity, fi);
                     var posture = GroundTactics.DecidePosture(ctx);
-                    ApplyPosture(body, forces, formation, posture, catalog, now);
+                    // Audit M2 — the fog-honest own/enemy odds ratio the posture hysteresis is measured from (999 = no
+                    // detected enemy). Passed into ApplyStance so a stance holds against tick-to-tick jitter.
+                    double oddsRatio = ctx.EnemyStrength > 1e-6 ? ctx.OwnStrength / ctx.EnemyStrength : 999.0;
+                    ApplyPosture(body, forces, formation, posture, catalog, now, oddsRatio);
 
                     formation.TacticalReason = posture.Reason;   // the AI-tape explain (client reads it)
                     formation.TacticalIntent = posture.Intent;
@@ -167,9 +170,9 @@ namespace Pulsar4X.GroundCombat
         // ───────────────────────── applying the decision ─────────────────────────
 
         private static void ApplyPosture(Entity body, GroundForcesDB forces, GroundFormation formation,
-            GroundPosture posture, IReadOnlyDictionary<string, GroundStanceBlueprint> catalog, DateTime now)
+            GroundPosture posture, IReadOnlyDictionary<string, GroundStanceBlueprint> catalog, DateTime now, double oddsRatio)
         {
-            ApplyStance(formation, posture.StanceFamily, catalog, now, posture.BreakGlass);
+            ApplyStance(formation, posture.StanceFamily, catalog, now, posture.BreakGlass, oddsRatio);
             GroundFormationDoctrine.SetEngagementStance(formation, posture.Roe);
 
             switch (posture.Intent)
@@ -218,7 +221,7 @@ namespace Pulsar4X.GroundCombat
         /// pressure can dig in / retreat IMMEDIATELY — the design's "no time-lock without a release." No-op if already
         /// on that family or the catalog lacks it.</summary>
         private static void ApplyStance(GroundFormation formation, string family,
-            IReadOnlyDictionary<string, GroundStanceBlueprint> catalog, DateTime now, bool breakGlass)
+            IReadOnlyDictionary<string, GroundStanceBlueprint> catalog, DateTime now, bool breakGlass, double oddsRatio)
         {
             if (string.IsNullOrEmpty(family) || catalog == null) return;
             if (string.Equals(formation.StanceFamily, family, StringComparison.OrdinalIgnoreCase)) return;   // already there
@@ -227,16 +230,31 @@ namespace Pulsar4X.GroundCombat
 
             if (breakGlass)
             {
-                // Bypass the cooldown — a survival shift must never be time-locked (the P3.3 lesson at design time).
+                // Bypass BOTH the cooldown and the hysteresis hold — a survival shift must never be time-locked (the
+                // P3.3 lesson at design time). Stamp the hold clock so the next non-survival change respects the hold.
                 formation.StanceId = bp.UniqueID;
                 formation.StanceFamily = bp.Family;
                 formation.AttackMult = bp.AttackMult;
                 formation.DamageTakenMult = bp.DamageTakenMult;
                 formation.SwitchableAfter = now + TimeSpan.FromSeconds(bp.CooldownSeconds);
+                formation.LastStanceChange = now;
+                formation.LastStanceOdds = oddsRatio;
+                return;
             }
-            else
+
+            // Audit M2 — posture hysteresis: once a stance is set, HOLD it against tick-to-tick jitter. The stance
+            // catalog's 60-300s cooldown always expires before the hourly ground tick, so it never actually binds —
+            // THIS is the real hysteresis. A non-survival change is suppressed until MinHoldHours have elapsed OR the
+            // odds moved past the band (a genuine swing still turns the line). First assignment (empty family) always
+            // passes — there's no hold reference yet — and LastStanceChange=MinValue makes the first change pass too.
+            if (GroundTactics.ShouldHoldStance(!string.IsNullOrEmpty(formation.StanceFamily),
+                    formation.LastStanceChange, formation.LastStanceOdds, oddsRatio, now))
+                return;   // hold the current stance — don't flip on tick-to-tick jitter
+
+            if (GroundFormationDoctrine.TrySetStance(formation, bp, now))   // honours the switch cooldown; true = changed
             {
-                GroundFormationDoctrine.TrySetStance(formation, bp, now);   // honours the cooldown (hysteresis)
+                formation.LastStanceChange = now;
+                formation.LastStanceOdds = oddsRatio;
             }
         }
 

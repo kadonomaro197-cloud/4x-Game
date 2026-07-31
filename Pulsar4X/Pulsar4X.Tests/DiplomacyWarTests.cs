@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the faction-level war ACTS (docs/DIPLOMACY-DESIGN.md, task #33): `Diplomacy.DeclareWar` /
+    /// Gauge for the faction-level war ACTS (docs/society/DIPLOMACY-DESIGN.md, task #33): `Diplomacy.DeclareWar` /
     /// `MakePeace` latch and un-latch the war state on BOTH ledgers (a war is symmetric) and `IsAtWarWithAnyone`
     /// is the standing read that legitimacy/morale and NPC AI consult. This is the trigger that the casus-belli →
     /// legitimacy loop rides.

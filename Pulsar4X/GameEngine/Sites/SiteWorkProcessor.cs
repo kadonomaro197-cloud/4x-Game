@@ -10,7 +10,7 @@ namespace Pulsar4X.Sites
 {
     /// <summary>
     /// Site Engine SE-1b — the DRIVER that turns "a ship parked at the anomaly" into banked progress
-    /// (docs/SITE-ENGINE-DESIGN.md §4). A daily hotloop keyed to <see cref="FieldSiteDB"/>: for each site, if an
+    /// (docs/explore/SITE-ENGINE-DESIGN.md §4). A daily hotloop keyed to <see cref="FieldSiteDB"/>: for each site, if an
     /// eligible worker (SE-1b v1 = any faction ship) is present within <see cref="PresenceRadius_m"/>, it feeds one
     /// work step into the pure <see cref="SiteMachine"/> (which begins the study on first work and banks
     /// Progress + Understanding). No worker present → the site simply doesn't advance (no timer, agency-preserving).
@@ -58,7 +58,7 @@ namespace Pulsar4X.Sites
             double days = deltaSeconds / 86400.0;
 
             // SE-5d: a resolved PERSISTENT site (a standing faucet) can RUPTURE into a crisis if it carries a rupture
-            // chance — the reward carried the risk (docs/SITE-ENGINE-DESIGN.md §4). Handled BEFORE the no-work early
+            // chance — the reward carried the risk (docs/explore/SITE-ENGINE-DESIGN.md §4). Handled BEFORE the no-work early
             // return below. Default RuptureChancePerDay 0 → never rolls → byte-identical (a persistent site otherwise
             // just sits here, taking no work).
             if (site.Status == SiteStatus.Persistent)

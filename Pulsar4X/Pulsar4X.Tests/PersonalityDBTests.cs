@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M2-0a gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II): the personality data model. Proves an unset trait
+    /// M2-0a gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II): the personality data model. Proves an unset trait
     /// reads Neutral (0.5 — the byte-identical value), Set clamps to 0..1, there are exactly 12 traits, and the blob
     /// clones deeply (save/load, entity transfer).
     /// </summary>

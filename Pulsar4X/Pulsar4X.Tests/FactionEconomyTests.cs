@@ -7,7 +7,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// M4 gauge: the colony economy → faction money lever (docs/MORALE-AND-POPULATION-DESIGN.md). Proves the
+    /// M4 gauge: the colony economy → faction money lever (docs/society/MORALE-AND-POPULATION-DESIGN.md). Proves the
     /// pure tax math, the tax-as-morale penalty, and — the integration gauge the Prime-Directive pass flagged
     /// as missing — that colony tax actually reaches the faction Ledger over time.
     /// </summary>

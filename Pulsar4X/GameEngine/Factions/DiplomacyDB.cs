@@ -7,7 +7,7 @@ namespace Pulsar4X.Factions
     /// <summary>
     /// A faction's whole diplomatic standing toward every OTHER faction it knows about — its "ledger of
     /// relationships", one row per other faction. This is the substrate the entire external-politics layer hangs
-    /// on (docs/DIPLOMACY-DESIGN.md): treaties, first-contact, IFF/hostility, casus belli, and the reactive
+    /// on (docs/society/DIPLOMACY-DESIGN.md): treaties, first-contact, IFF/hostility, casus belli, and the reactive
     /// "Are we good?" engine all read and write the per-pair <see cref="RelationshipState"/> rows in here.
     ///
     /// Attached to every faction entity by <see cref="FactionFactory"/>. Each faction keeps its OWN view — the

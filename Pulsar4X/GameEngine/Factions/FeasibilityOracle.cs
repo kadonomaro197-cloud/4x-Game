@@ -6,7 +6,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P0-b (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the plan-time "will this SILENTLY stall?" predicate.
+    /// Phase-2.8 P0-b (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the plan-time "will this SILENTLY stall?" predicate.
     /// The engine checks money/crew/tech/capacity only at EXECUTION (inside <c>IndustryTools.ConstructStuff</c>) and
     /// fails quietly (a job parks at <c>MissingResources</c>); a resolver consults this BEFORE queuing so it doesn't
     /// emit a build that stalls unseen. It must MIRROR execution order, never be a superset — a stricter check would

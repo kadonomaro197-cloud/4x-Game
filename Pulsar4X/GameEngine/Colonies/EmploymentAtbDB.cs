@@ -10,7 +10,7 @@ namespace Pulsar4X.Colonies
     /// A component design attribute: this installation provides N jobs (worker slots). Total jobs on a host =
     /// sum across all installed components carrying this attribute (see ComponentInstancesDBExtensions.GetTotalJobs).
     ///
-    /// Morale input (M2, docs/MORALE-AND-POPULATION-DESIGN.md): jobs vs population is TWO-SIDED — population
+    /// Morale input (M2, docs/society/MORALE-AND-POPULATION-DESIGN.md): jobs vs population is TWO-SIDED — population
     /// above jobs is unemployment (morale debuff); jobs covered is full employment (buff). The hard people-draw
     /// (M3) will actually pull workers from the population tank to staff these.
     /// </summary>

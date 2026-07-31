@@ -3,7 +3,7 @@ using Pulsar4X.Engine;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.6 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the Risk trait meets THE EYES.
+    /// Phase-2.6 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the Risk trait meets THE EYES.
     /// A faction reads its own strength (<see cref="FactionRollup.MilitaryStrength"/>) against a fog-limited estimate
     /// of a rival's (<see cref="ThreatAssessment.DetectedStrengthOf"/>, sharpened by intel via
     /// <see cref="IntelAssessment"/>) and decides whether the odds are good enough to commit to a fight. Its

@@ -10,7 +10,7 @@ namespace Pulsar4X.Tests
     /// Units-as-entities (Option A) — PARAMETRIC LOCOMOTION: locomotion is a designable COMPONENT you tweak (speed /
     /// rough-terrain handling / amphibious), not a fixed menu — so a player can build any drive for any environment.
     /// Its stats fall out of the unit's component store (like the radar), and the designed drive overrides the chassis's
-    /// coarse Locomotion enum. Design: docs/GROUND-UNITS-AS-ENTITIES-DESIGN.md.
+    /// coarse Locomotion enum. Design: docs/economy/COMPONENT-DESIGNER-CATEGORIES.md.
     /// </summary>
     [TestFixture]
     public class GroundLocomotionTests

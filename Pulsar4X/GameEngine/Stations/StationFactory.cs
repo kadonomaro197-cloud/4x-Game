@@ -18,7 +18,7 @@ namespace Pulsar4X.Stations
     /// PARALLEL to <see cref="ColonyFactory"/>. A station carries the SAME equipment chassis a colony does
     /// (so the mining / industry / research processors, which discover work by component ability and not by
     /// host type, process a station for free), but it is registered as its own host on the faction so it can
-    /// later own its own cost curve, durability, and invasion math. See docs/SPACE-STATIONS-DESIGN.md.
+    /// later own its own cost curve, durability, and invasion math. See docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md.
     /// </summary>
     public static class StationFactory
     {
@@ -64,6 +64,13 @@ namespace Pulsar4X.Stations
             blobs.Add(new RebellionDB());           // and can break away on its own (rebellion state driven off legitimacy collapse)
             blobs.Add(new ColonySustenanceDB());    // power/food shortage gauges (M5b) — inert until demand is calibrated locally
             blobs.Add(new StationEconomyDB());       // operating-cost side (Slice C) — StationUpkeepProcessor bills the faction monthly
+
+            // A MANNED station draws crew from its OWN residents (crew works off-world) — attach the manpower pool
+            // so its builds are crew-gated exactly like a colony's (ManpowerTools reads StationInfoDB.Population).
+            // An UNMANNED automated platform gets NO pool → the crew gate stays inert (byte-identical; a crewless
+            // platform has no population to man a warship anyway). Condition mirrors the manned StationInfoDB above.
+            if (speciesEntity != null && initialPopulation > 0)
+                blobs.Add(new ColonyManpowerDB());   // people-as-a-resource pool (crew/talent) — the crew ENFORCEMENT source
 
             Entity stationEntity = Entity.Create();
             stationEntity.FactionOwnerID = factionEntity.Id;

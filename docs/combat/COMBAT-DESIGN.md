@@ -1,6 +1,6 @@
 # Combat System Design
 
-> **→ The range/closing build plan lives in `docs/combat/FLEET-COMBAT-CLOSING-DESIGN.md`.** That doc is the phased
+> **→ The range/closing build plan lives in `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4`.** That doc is the phased
 > blueprint for the next big evolution: turning this instant strength-compare into a **closing fight** where range,
 > speed, detection, and doctrine decide who can hit whom — fleet capability aggregation, per-sub-fleet ranges, the
 > first-shot trigger, and Rules of Engagement (the grown-up doctrine). Read it before touching combat distance,
@@ -580,7 +580,7 @@ Systems 7 and 8 can be built in parallel with Systems 4–6 because they are mod
 
 ## What Already Exists
 
-> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + `docs/SYSTEMS-STATUS-AND-TEST-PLAN.md` — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those two as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
+> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those two as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
 
 | Component | Status | Notes |
 |-----------|--------|-------|

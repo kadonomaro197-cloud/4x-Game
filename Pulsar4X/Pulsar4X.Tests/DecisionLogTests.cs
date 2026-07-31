@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase 5.2 gauge (docs/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, decision-log). Proves a run's decisions are
+    /// Phase 5.2 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md — 🪐 The Brane, decision-log). Proves a run's decisions are
     /// LEGIBLE and TRACE TO INPUTS: <see cref="ObjectiveSelector.SelectWithReason"/> returns not just the objective but
     /// a reason naming the driving input (the tier, and the winning doctrine axis / personality trait), and
     /// <see cref="PlanReadout"/> surfaces it. So an authored personality's fingerprint is checkable in what its brain

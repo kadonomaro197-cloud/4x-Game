@@ -4,7 +4,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// P1 Visibility-Gate gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the plan readout. Proves the readout surfaces a
+    /// P1 Visibility-Gate gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the plan readout. Proves the readout surfaces a
     /// faction's objective + its last planner step, and that `EmitOrders` records what the planner did into the
     /// objective — so a stuck NPC is never a silent black box.
     /// </summary>

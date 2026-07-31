@@ -13,7 +13,7 @@ namespace Pulsar4X.Colonies
     /// what makes designing a nicer housing complex worth it instead of just stamping minimal habitats.
     ///
     /// Total comfort on a host = sum across installed components (see
-    /// ComponentInstancesDBExtensions.GetHousingComfort). Morale input (M2, docs/MORALE-AND-POPULATION-DESIGN.md).
+    /// ComponentInstancesDBExtensions.GetHousingComfort). Morale input (M2, docs/society/MORALE-AND-POPULATION-DESIGN.md).
     /// </summary>
     public class HousingAtbDB : BaseDataBlob, IComponentDesignAttribute
     {

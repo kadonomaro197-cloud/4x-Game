@@ -13,7 +13,7 @@ namespace Pulsar4X.Stations
     /// A station is the CHEAP, FAST, FLEXIBLE, FRAGILE alternative to planetary colonization: it does the
     /// same off-world jobs (mine, refine, research, trade, house people) by carrying the SAME component
     /// equipment a colony does, but it is its own chassis so it can own its own cost curve, durability,
-    /// and invasion math (see docs/SPACE-STATIONS-DESIGN.md — "Why PARALLEL, not generalized").
+    /// and invasion math (see docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md — "Why PARALLEL, not generalized").
     ///
     /// Why this is its own DataBlob and not just a planet-less ColonyInfoDB: the two trade-offs that make
     /// stations interesting (cheap-while-focused / expensive-as-a-planet-replacement, and a fraction of the
@@ -49,7 +49,7 @@ namespace Pulsar4X.Stations
         /// PLACEHOLDER RATIO (Slice B — grave rung, 2026-07-03). The "cheap to kill" durability pool: a station is
         /// DESTROYED once this reaches zero (<see cref="StationFactory.DestroyStation"/>). This is the mechanical
         /// half of the design's durability asymmetry — "a station takes a FRACTION of the effort to destroy that a
-        /// planet does" (docs/SPACE-STATIONS-DESIGN.md, "Why PARALLEL"). A colony has NO kill trigger at all
+        /// planet does" (docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md, "Why PARALLEL"). A colony has NO kill trigger at all
         /// (<c>DamageProcessor.OnColonyDamage</c> never destroys the colony — a planet is effectively infinite on
         /// this scale), so the RATIO the design calls for ("blowing on a flower vs. pushing a Seawolf") is carried
         /// here: planet = ∞, station = this modest FLAT pool. It is deliberately NOT scaled by installed modules —

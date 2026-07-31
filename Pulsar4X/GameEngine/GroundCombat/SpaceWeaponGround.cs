@@ -103,6 +103,27 @@ namespace Pulsar4X.GroundCombat
             return BoltHexRange;   // railgun / plasma
         }
 
+        /// <summary>K1 real-distance: the REAL reach in metres a space weapon fires at on the ground — read from the
+        /// SAME per-type range constants <c>Combat.ShipCombatValueDB</c> uses for the ship closing fight, so a weapon
+        /// reaches the same real distance whether it's on a hull or a ground chassis (a beam its design MaxRange, a
+        /// railgun/plasma the mid railgun range 500 km, flak the short 50 km, a disruptor its 400 km). 0 for a
+        /// non-space-weapon, or for an UNBOUNDED beam (MaxRange ≤ 0) → the assembler then derives the mount's Range_m
+        /// from the hex band, so it's never 0-reach. Never throws.</summary>
+        public static double RealRange_m(ComponentDesign design)
+        {
+            if (design == null) return 0;
+            if (design.HasAttribute<GenericBeamWeaponAtb>())
+            {
+                var b = design.GetAttribute<GenericBeamWeaponAtb>();
+                return b.MaxRange > 0 ? b.MaxRange : 0;   // 0 = unbounded → assembler derives from the hex band
+            }
+            if (design.HasAttribute<RailgunWeaponAtb>())      return Pulsar4X.Combat.ShipCombatValueDB.RailgunRange_m;   // mid ~500 km
+            if (design.HasAttribute<FlakWeaponAtb>())          return Pulsar4X.Combat.ShipCombatValueDB.FlakRange_m;      // short ~50 km
+            if (design.HasAttribute<PlasmaBoltWeaponAtb>())    return Pulsar4X.Combat.ShipCombatValueDB.RailgunRange_m;   // a bolt reaches like a light gun (mid)
+            if (design.HasAttribute<DisruptorWeaponAtb>())     return Pulsar4X.Combat.ShipCombatValueDB.DisruptorRange_m; // mid ~400 km
+            return 0;
+        }
+
         /// <summary>The ground weapon MOUNT a space weapon contributes (Attack scaled to the ground band, hex range +
         /// mode by type), or null if the design isn't a space weapon. This is the one call
         /// <c>GroundUnitAssembly.Compute</c> makes so a space weapon joins the W1 loadout (→ W2 banding → W3 role)
@@ -113,7 +134,8 @@ namespace Pulsar4X.GroundCombat
             return new GroundWeaponMount
             {
                 Attack = Firepower_Jps(design) * AttackPerDps,
-                RangeHexes = RangeHexesFor(design),
+                RangeHexes = RangeHexesFor(design),   // the display ruler (kept for the hex fallback)
+                Range_m = RealRange_m(design),        // K1 — the real reach the resolver's distance gate reads
                 Mode = ModeFor(design),
             };
         }

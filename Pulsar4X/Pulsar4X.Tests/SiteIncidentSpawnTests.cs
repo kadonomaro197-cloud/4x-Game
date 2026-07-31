@@ -8,7 +8,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-4d — the incident SPAWN/SPREAD engine (docs/SITE-ENGINE-DESIGN.md §4). While a Shape.Incident site
+    /// Site Engine SE-4d — the incident SPAWN/SPREAD engine (docs/explore/SITE-ENGINE-DESIGN.md §4). While a Shape.Incident site
     /// is live, each interval its menace GROWS (a fresh unit at the region) and CREEPS (one unit into an adjacent
     /// region). Proves a fire grows the menace and spreads it, and that a CONTAINED incident stops growing (the grave
     /// rung). Drives the processor directly (deterministic); inert until a live incident is scheduled → byte-identical.

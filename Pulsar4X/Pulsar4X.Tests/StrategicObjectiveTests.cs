@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.1 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the faction goal-slot
+    /// Phase-2.1 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the faction goal-slot
     /// data model. Proves the defaults are the neutral "no plan settled" state (Thrive tier, no objective, no target,
     /// not committed) and that the blob clones deeply (save/load, entity transfer) with no shared state.
     /// </summary>

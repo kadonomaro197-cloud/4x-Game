@@ -6,7 +6,7 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// RESOLVER MERGE, slice 1 (docs/RESOLVER-MERGE-DESIGN.md §5) — the pinning gauge for the new shared
+    /// RESOLVER MERGE, slice 1 (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.1) — the pinning gauge for the new shared
     /// <see cref="CombatKernel"/>.
     ///
     /// Slice 1 is deliberately ADDITIVE and UNWIRED: the kernel copies the pure salvo math out of the live ship
@@ -47,6 +47,40 @@ namespace Pulsar4X.Tests
             Assert.That(floored, Is.EqualTo(CombatKernel.MinLandedFraction).Within(1e-9),
                 "enough volume lands even on a perfect dodger");
             Log($"beam=1.0  slug@0.5={CombatKernel.HitFraction(Slug(100), 0.5)}  slowShot@1.0={floored}");
+        }
+
+        [Test]
+        [Description("THE TWO CEILINGS AGREE (developer's call 2026-07-29, option (c) of DESIGNER-NORTH-STAR §1c): MinLandedFraction == 1 - EvasionCap, so evasion's effective-health multiplier is the SAME ×20 point-blank and at range. Two dials used to bound the same thing at different values (×20 vs ×50) and only one was named 'cap'.")]
+        public void TheTwoCeilings_Agree_SoEvasionCapsAtOneMultiplierEverywhere()
+        {
+            // Evasion is a MULTIPLIER, not a to-hit roll: CombatEngagement.ApplyCasualties computes
+            // EffToughness = Toughness / landedFraction. So a landed fraction of f is an effective-health ×(1/f).
+            Assert.That(CombatKernel.MinLandedFraction, Is.EqualTo(1.0 - ShipCombatValueDB.EvasionCap).Within(1e-9),
+                "the range floor and the point-blank cap must bound the SAME multiplier — keep them equal if either is retuned");
+
+            // POINT BLANK: a maximally-evasive hull vs a slow dumb shot. dodge = evasion × (1 − trackingEffectiveness),
+            // which tops out at EvasionCap, so the landed fraction bottoms out at 1 − EvasionCap.
+            var slowShot = new WeaponProfile(100, 1.0, 0.0, 1.0, 0, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            double pointBlank = CombatKernel.HitFraction(slowShot, evasion: ShipCombatValueDB.EvasionCap);
+
+            // AT RANGE: the range term ADDS dodge on top and clamps at 1.0, so ONLY the floor stops 0% landing.
+            double atRange = CombatKernel.HitFraction(slowShot, evasion: ShipCombatValueDB.EvasionCap, separation_m: 1e9);
+
+            // Tolerance 1e-4, not 1e-9: point-blank sits a hair ABOVE the floor because even a 1 m/s shot has a
+            // non-zero velocityTerm (v/(v+VelocityReference)), which shaves ~1e-6 off the dodge. At range the dodge
+            // clamps to 1.0 and the floor alone decides. Same ceiling to every meaningful digit.
+            Assert.That(atRange, Is.EqualTo(pointBlank).Within(1e-4),
+                "the same hull under the same fire must hit the same ceiling whether the gap is 0 or a gigametre");
+
+            double multiplier = 1.0 / pointBlank;
+            Assert.That(multiplier, Is.EqualTo(20.0).Within(0.5), "the single evasion ceiling is ×20 effective health");
+
+            // And it stays BELOW nothing — armour's own ceiling is 1/ArmourMinPassFraction (×10), so evasion is still
+            // the larger multiplier; this test pins the ratio so a retune of either is a deliberate, visible act.
+            double armourCeiling = 1.0 / CombatKernel.ArmourMinPassFraction;
+            Log($"evasion ceiling ×{multiplier:0.#} (point-blank {pointBlank:0.###}, at-range {atRange:0.###})  armour ceiling ×{armourCeiling:0.#}");
+            Assert.That(multiplier, Is.GreaterThan(armourCeiling),
+                "evasion is still the bigger multiplier — bought at the Propulsion door, not the Defense one");
         }
 
         [Test]
@@ -182,6 +216,39 @@ namespace Pulsar4X.Tests
             };
             Assert.That(CombatKernel.SoakFractionOf(mix), Is.EqualTo(0.5).Within(1e-9),
                 "kinetic fully soakable + exotic fully bypassing → half over the mix");
+        }
+
+        [Test]
+        [Description("The SHARED range gate (resolver-merge, UNIFIED Slice 1): WithinReach is the plain `gap <= reach` both domains route through; WeaponReaches layers space's `Range_m <= 0 => unbounded` beam convention on top. Pins the two reach-0 conventions (space beam = unbounded, ground melee = contact-only) and proves WeaponReaches is byte-for-byte the old inline BuildFireMix gate across a sweep.")]
+        public void RangeGate_SharedReachPredicate_PinsBothConventions()
+        {
+            // WithinReach — the convention-free core: a weapon reaches iff the gap is within its reach (same units).
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 2), Is.True, "gap inside reach → hits");
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 3), Is.True, "gap exactly at reach → hits (inclusive)");
+            Assert.That(CombatKernel.WithinReach(reach: 3, gap: 4), Is.False, "gap beyond reach → holds fire");
+            // reach 0 in WithinReach is CONTACT-ONLY (the ground melee convention) — only a 0 gap qualifies.
+            Assert.That(CombatKernel.WithinReach(reach: 0, gap: 0), Is.True, "melee (reach 0) reaches only at contact (gap 0)");
+            Assert.That(CombatKernel.WithinReach(reach: 0, gap: 1), Is.False, "melee (reach 0) can't hit a target one step away");
+
+            // WeaponReaches — the SPACE per-weapon gate: Range_m <= 0 is UNBOUNDED (the beam convention).
+            var unbounded = new WeaponProfile(100, 3e8, 1, double.PositiveInfinity, 0, WeaponNature.Energy, WeaponDelivery.Beam); // Range_m 0
+            var railgun   = new WeaponProfile(100, 1e6, 0, 1, 500_000, WeaponNature.Kinetic, WeaponDelivery.Slug);
+            Assert.That(CombatKernel.WeaponReaches(unbounded, separation_m: 5_000_000), Is.True, "a 0-range beam is unbounded — reaches any gap");
+            Assert.That(CombatKernel.WeaponReaches(railgun, separation_m: 400_000), Is.True, "a 500 km railgun reaches a 400 km gap");
+            Assert.That(CombatKernel.WeaponReaches(railgun, separation_m: 600_000), Is.False, "the same railgun can't reach a 600 km gap");
+
+            // BYTE-IDENTITY vs the old inline gate `separation_m > 0 && w.Range_m > 0 && w.Range_m < separation_m` (skip),
+            // i.e. reaches == !that. Sweep both finite and unbounded weapons across separations incl. 0 / point-blank.
+            var weapons = new[] { unbounded, railgun, Beam(100), Slug(100) };
+            double[] seps = { 0.0, 100_000.0, 500_000.0, 500_001.0, 5_000_000.0 };
+            foreach (var w in weapons)
+                foreach (var sep in seps)
+                {
+                    bool oldSkip = sep > 0 && w.Range_m > 0 && w.Range_m < sep;
+                    Assert.That(CombatKernel.WeaponReaches(w, sep), Is.EqualTo(!oldSkip),
+                        $"WeaponReaches must match the old inline gate @ range={w.Range_m} sep={sep}");
+                }
+            Log("shared range gate: WithinReach (gap<=reach) + WeaponReaches (Range_m<=0 unbounded) match both conventions + the old ship gate");
         }
 
         [Test]

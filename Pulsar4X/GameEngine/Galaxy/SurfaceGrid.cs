@@ -11,7 +11,7 @@ namespace Pulsar4X.Galaxy
     /// global lon/lat). A "region" is just a column BAND label over this grid.
     ///
     /// Hexes are stored row-major (`index = R*Cols + Q`) so lookup is O(1). Save-safe (deep-copied; `[JsonProperty]`).
-    /// Reuses <see cref="GroundHex"/> (its Q/R now hold GLOBAL coords). Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+    /// Reuses <see cref="GroundHex"/> (its Q/R now hold GLOBAL coords). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class SurfaceGrid
     {

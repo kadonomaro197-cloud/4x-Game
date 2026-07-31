@@ -7,7 +7,7 @@ namespace Pulsar4X.Factions
 {
     /// <summary>
     /// First contact — the moment one faction's sensors first detect an entity belonging to ANOTHER non-neutral
-    /// faction. This is the "front door" to all of external politics (docs/DIPLOMACY-DESIGN.md): you cannot have
+    /// faction. This is the "front door" to all of external politics (docs/society/DIPLOMACY-DESIGN.md): you cannot have
     /// relations with an empire you have never met, so nothing in the diplomacy layer can happen until a pair has
     /// made contact. It is what turns the raw sensor blip into a KNOWN faction on your diplomatic ledger.
     ///

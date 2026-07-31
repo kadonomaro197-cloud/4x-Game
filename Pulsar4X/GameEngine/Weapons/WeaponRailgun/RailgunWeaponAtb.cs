@@ -14,7 +14,7 @@ namespace Pulsar4X.Weapons
     /// <see cref="Pulsar4X.Combat.ShipCombatValueDB"/>.Calculate to build a <c>WeaponProfile</c> of
     /// <c>WeaponClass.Railgun</c>). It deliberately does NOT implement <c>IFireWeaponInstr</c> and registers
     /// nothing on install (like <see cref="GenericWeaponAtb"/>), so the per-pixel firing sim never touches it —
-    /// the firing sim is a parked v2 visual skin (docs/WEAPONS-AND-DODGE-DESIGN.md). Built from JSON via
+    /// the firing sim is a parked v2 visual skin (docs/combat/WEAPONS-DESIGN.md). Built from JSON via
     /// <c>AtbConstrArgs(muzzleVelocity, kineticEnergyPerShot, roundsPerSecond, tracking)</c> — the constructor
     /// arg order MUST match that formula in weapons.json (gotcha: a mismatch throws at New Game / design build).
     /// </summary>

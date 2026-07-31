@@ -22,7 +22,7 @@ namespace Pulsar4X.GroundCombat
     /// then removes the transient component so it doesn't linger as an installation. (Verified safe: <c>Entity.AddComponent</c>
     /// fires this hook while iterating the DESIGN's attributes, so removing the instance from the colony's component
     /// store here doesn't disturb that loop, and the following <c>ReCalcAbilities</c> just sees it gone.) Defensive:
-    /// never throws in the install/industry path (landmine L4). Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// never throws in the install/industry path (landmine L4). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class GroundUnitAtb : BaseDataBlob, IComponentDesignAttribute
     {

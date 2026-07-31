@@ -5,7 +5,7 @@ using Pulsar4X.Colonies;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for the REBELLION state machine (docs/GOVERNMENT-AND-POLITICS-DESIGN.md, locked #38): legitimacy
+    /// Gauge for the REBELLION state machine (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md, locked #38): legitimacy
     /// collapse is no longer a dead-end computation — it now BEGINS a rebellion with a reaction window, which is
     /// QUELLED if legitimacy is restored in time (hysteresis so it can't flicker on the collapse line). Proves the
     /// legitimacy → rebellion loop, and that the factory attaches the state to every province. The window-expiry

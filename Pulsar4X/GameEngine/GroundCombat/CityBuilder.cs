@@ -10,7 +10,7 @@ namespace Pulsar4X.GroundCombat
     /// the ROLL-UP INVARIANT: the set of building ids on a hex's <see cref="CityGrid"/> tiles stays ==
     /// <see cref="GroundHex.InstallationIds"/> (the operational footprint W-track captures/bombs). So the two zooms are
     /// the same physical buildings — placement here and capture/bombard there can never disagree.
-    /// Design: docs/GROUND-CITY-AND-WARMAP-DESIGN.md. Defensive throughout.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md. Defensive throughout.
     /// </summary>
     public static class CityBuilder
     {

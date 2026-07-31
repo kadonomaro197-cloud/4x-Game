@@ -40,7 +40,8 @@
       "OutputAmount": 2,
       "Formulas": {
         "ExhaustVelocity": "3510",
-        "FuelType": "conventional"
+        "FuelType": "conventional",
+        "FuelGrade": "1.15"
       }
     }
   },
@@ -63,7 +64,8 @@
       "OutputAmount": 2,
       "Formulas": {
         "ExhaustVelocity": "3615",
-        "FuelType": "conventional"
+        "FuelType": "conventional",
+        "FuelGrade": "1.05"
       }
     }
   },
@@ -86,7 +88,8 @@
       "OutputAmount": 2,
       "Formulas": {
         "ExhaustVelocity": "4462",
-        "FuelType": "conventional"
+        "FuelType": "conventional",
+        "FuelGrade": "0.85"
       }
     }
   },
@@ -110,7 +113,8 @@
       "OutputAmount": 100,
       "Formulas": {
         "ExhaustVelocity": "7000",
-        "FuelType": "ntr"
+        "FuelType": "ntr",
+        "FuelGrade": "0.75"
       }
     }
   },
@@ -443,7 +447,7 @@
       "UniqueID": "lithium-battery",
       "Name": "Lithium Battery Pack",
       "Description": "High-density energy storage cell. Lithium-ion chemistry with copper current collectors.",
-      "CargoTypeID": "battery-storage",
+      "CargoTypeID": "general-storage",
       "CreditValue": 500,
       "MassPerUnit": 1.0,
       "VolumePerUnit": 0.001,
@@ -476,6 +480,53 @@
       "IndustryTypeID": "refining",
       "WealthCost": 5,
       "OutputAmount": 10
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "food",
+      "Name": "Food",
+      "Description": "Rations, protein and produce. The good SustenanceProcessor was written to consume and that never existed, so a colony that could not farm could never be supplied by one that could. Rides a refrigerated hold: in a bare hold it spoils.",
+      "CargoTypeID": "perishable-storage",
+      "CreditValue": 20,
+      "MassPerUnit": 1.0,
+      "VolumePerUnit": 0.0011,
+      "ResourceCosts": {
+        "hydrocarbons": 40,
+        "water": 55,
+        "regolith": 5
+      },
+      "IndustryPointCosts": 8,
+      "IndustryTypeID": "refining",
+      "WealthCost": 0,
+      "OutputAmount": 100
+    }
+  },
+  {
+    "Type": "ProcessedMaterial",
+    "Payload": {
+      "UniqueID": "antimatter",
+      "Name": "Antimatter",
+      "Description": "Antiprotons held in a magnetic bottle. The only fuel that will destroy the ship carrying it if containment fails, so it rides a containment hold and never a fuel tank. WHAT IT BUYS: 8.6x the range per kilogram of fuel of any other propellant - one small containment hold takes a ship further than a tank farm of nuclear propellant. WHAT IT COSTS: it pushes SOFTER than the nuclear drive, so it will not win a knife fight, and one unit eats 500 fissionables and 5000 industry points - fifty thousand times the fissionables per unit that nuclear propellant needs. This is the fuel for the deep-range probe and the one-way strike that cannot afford to carry propellant mass, not for the battle fleet. The cost is ENERGY, not knowledge, which is why it gates on your industry rather than your research.",
+      "CargoTypeID": "contained-storage",
+      "CreditValue": 250000,
+      "MassPerUnit": 1,
+      "VolumePerUnit": 0.01,
+      "ResourceCosts": {
+        "fissionables": 500,
+        "rare-earth-elements": 50,
+        "tungsten": 20
+      },
+      "IndustryPointCosts": 5000,
+      "IndustryTypeID": "refining",
+      "WealthCost": 500,
+      "OutputAmount": 1,
+      "Formulas": {
+        "ExhaustVelocity": "60000",
+        "FuelType": "antimatter",
+        "FuelGrade": "0.05"
+      }
     }
   }
 ]

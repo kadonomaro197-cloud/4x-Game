@@ -73,6 +73,22 @@ namespace Pulsar4X.GroundCombat
         /// <c>Range</c>). Directed fire: a unit only damages enemies within this reach, so a longer-ranged unit hits a
         /// closing shorter-ranged one without being hit back. 0 = same hex only.</summary>
         [JsonProperty] public int Range { get; internal set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this unit's weapon reach in real METRES, the metric TRUTH
+        /// alongside the display <see cref="Range"/> (hexes). Snapshot at raise from the design's <c>Range_m</c>, or —
+        /// absent that (a code-built / garrison / DevTools design) — derived from the hex <see cref="Range"/> × the
+        /// nominal reference pitch (<see cref="GroundCombatant.NominalHexPitch_m"/>). <b>ADDITIVE + UNREAD by the
+        /// resolver</b> (it still gates on hex <see cref="Range"/>) → byte-identical; the gate flips to this in Slice 2.
+        /// 0 = unset. Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
+        [JsonProperty] public double Range_m { get; internal set; }
+        /// <summary>REAL-DISTANCE FOUNDATION (Slice 1b) — this unit's drive SPEED in real km/h, a READOUT of its march
+        /// pace (the abstract chassis/locomotion multiplier × the Foot baseline <see cref="GroundMobility.BaseMarchSpeed_kmh"/>).
+        /// The march TIMER still runs on the multiplier × the region crossing time (<see cref="GroundMobility"/>); this is
+        /// the real-number twin the closing model (Slice 3) crosses the gap at. 0 = unset. Snapshot at raise.
+        /// READ BY the resolver's closing step (was "nothing reads it yet" — stale since the K2/K3 closing
+        /// slices): <see cref="GroundForcesProcessor"/> advances a closing unit
+        /// <c>(Speed_kmh > 0 ? Speed_kmh : GroundMobility.BaseMarchSpeed_kmh) × (deltaSeconds / 3600)</c> km per
+        /// tick, so this field now decides how fast a unit crosses the real gap.</summary>
+        [JsonProperty] public double Speed_kmh { get; internal set; }
         /// <summary>SYSTEM ① survivability-by-dodge — chance to avoid a hit (0..1), snapshot of the design's Σ augment
         /// evasion. Carried now (slice B plumbing); the resolver consumes it in the damage×defence matrix (slice A).
         /// A dodger (Jedi / Zergling) is high here; a walking bunker is ~0.</summary>
@@ -134,7 +150,7 @@ namespace Pulsar4X.GroundCombat
 
         // ── HEX POSITION + FINE MOVEMENT (H2) — where the unit stands WITHIN its region's hex patch, and its
         //    hex-by-hex march. The coarse region march above (MovingToRegion) hops whole regions; this walks the fine
-        //    grid inside one. A unit is raised at the patch centre (0,0). Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+        //    grid inside one. A unit is raised at the patch centre (0,0). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
         /// <summary>Axial Q of the hex this unit stands on within its region's patch (patch centre = 0,0).</summary>
         [JsonProperty] public int HexQ { get; internal set; }
         /// <summary>Axial R of the hex this unit stands on within its region's patch.</summary>
@@ -153,11 +169,35 @@ namespace Pulsar4X.GroundCombat
         // ── GLOBAL GRID POSITION + MOVEMENT (G-track, G3) — the unit's place on the ONE continuous cylinder
         //    (Q = longitude column, R = latitude row; region = a column BAND) and its global hex march via
         //    HexPathfinder.FindGlobalPath (no edge gates — crossing a band border is just the next column). ADDITIVE
-        //    alongside the per-region HexQ/HexR above during the migration. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+        //    alongside the per-region HexQ/HexR above during the migration. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
         /// <summary>Global longitude column on the body's <c>SurfaceGrid</c> (-1 until placed on the grid).</summary>
         [JsonProperty] public int GlobalQ { get; internal set; } = -1;
         /// <summary>Global latitude row on the body's <c>SurfaceGrid</c>.</summary>
         [JsonProperty] public int GlobalR { get; internal set; } = -1;
+
+        // ── MINI-HEX tactical position (docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5, M1) — WHERE within the coarse
+        //    global hex the unit stands, on that hex's CityGrid mini-tiles (the SAME mini-hexes the infrastructure/city
+        //    view uses; origin (0,0) = centre = muster). Combined with GlobalQ/GlobalR by GroundMiniHex into ONE
+        //    continuous real position, so a unit near a coarse-hex EDGE is really-close to a neighbour across the border
+        //    (the developer's "transitional" continuity). ADDITIVE + UNREAD by the resolver (it still gates on hexes) →
+        //    byte-identical; M2 flips the range gate to GroundMiniHex.RealGapMetres.
+        /// <summary>Mini-hex column within the coarse global hex's <c>CityGrid</c> (0 = centre = muster).</summary>
+        [JsonProperty] public int MiniQ { get; internal set; }
+        /// <summary>Mini-hex row within the coarse global hex's <c>CityGrid</c> (0 = centre = muster).</summary>
+        [JsonProperty] public int MiniR { get; internal set; }
+        // ── CONTINUOUS sub-mini-hex real offset (K2) — the unit's real position WITHIN its mini-hex, in kilometres,
+        //    so two units in the SAME mini-hex can still stand a real sub-tile gap apart. This is what makes the
+        //    ground field truly CONTINUOUS (not just mini-hex-quantised): real conventional weapon ranges (<40 km) are
+        //    SMALLER than a ~37 km mini-tile, so edge-continuity needs a real offset finer than the mini-hex. Added by
+        //    GroundMiniHex.ContinuousPosKm/RealGapMetres on TOP of the (MiniQ,MiniR) mini-hex centre; NOT derived from
+        //    MiniQ/MiniR. Default (0,0) = at the mini-hex centre → byte-identical (M2/M3a read gap 0 as before) until
+        //    the K3 spread/closing sets it. Save-safe ([JsonProperty] + deep-copied below). Design: the K-track real-
+        //    distance ground combat (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12 + docs/ground/GROUND-SURFACE-MAP-DESIGN.md Layer 5).
+        /// <summary>Real sub-mini-hex offset EAST (km) added to this unit's mini-hex centre (0 = centred).</summary>
+        [JsonProperty] public double MiniOffX_km { get; internal set; }
+        /// <summary>Real sub-mini-hex offset NORTH (km) added to this unit's mini-hex centre (0 = centred).</summary>
+        [JsonProperty] public double MiniOffY_km { get; internal set; }
+
         /// <summary>Remaining GLOBAL hex steps (current→destination) of a cylinder march; null/empty = not global-marching.</summary>
         [JsonProperty] public List<Pulsar4X.Galaxy.GroundHex> GlobalPath { get; internal set; }
         /// <summary>Game-seconds left to reach the FRONT hex of <see cref="GlobalPath"/>.</summary>
@@ -200,6 +240,7 @@ namespace Pulsar4X.GroundCombat
             UnitId = o.UnitId; FormationId = o.FormationId;
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
+            Range_m = o.Range_m; Speed_kmh = o.Speed_kmh;
             UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
@@ -213,6 +254,8 @@ namespace Pulsar4X.GroundCombat
                 foreach (var h in o.HexPath) HexPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             }
             GlobalQ = o.GlobalQ; GlobalR = o.GlobalR;
+            MiniQ = o.MiniQ; MiniR = o.MiniR;   // mini-hex tactical position (M1) — deep-copied, save-safe
+            MiniOffX_km = o.MiniOffX_km; MiniOffY_km = o.MiniOffY_km;   // continuous sub-mini-hex offset (K2) — deep-copied, save-safe
             GlobalTransitSecondsRemaining = o.GlobalTransitSecondsRemaining; GlobalStepBaseSeconds = o.GlobalStepBaseSeconds;
             if (o.GlobalPath != null)
             {
@@ -225,7 +268,7 @@ namespace Pulsar4X.GroundCombat
 
     /// <summary>
     /// A formation's RULES OF ENGAGEMENT — the movement intent a commander sets, the ground echo of the space
-    /// CLOSING model (docs/FLEET-COMBAT-CLOSING-DESIGN.md: a fast long-range fleet kites, a brawler forces the merge).
+    /// CLOSING model (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4: a fast long-range fleet kites, a brawler forces the merge).
     /// It tells the surface processor how a formation should MANEUVER relative to the enemy each tick, so the H3 range
     /// advantage is used automatically instead of by micro:
     /// </summary>
@@ -271,7 +314,7 @@ namespace Pulsar4X.GroundCombat
     /// One queued order for a <see cref="GroundFormation"/> (O1) — the ground echo of an <c>EntityCommand</c>, kept as a
     /// save-safe DATA object (formations aren't entities, so their orders aren't <c>EntityCommand</c>s either — the same
     /// data-object choice the formation itself makes). A formation's <see cref="GroundFormation.Orders"/> list runs these
-    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md (O1).
+    /// in sequence; each carries only the fields its <see cref="Type"/> needs. Design: docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md (O1).
     /// </summary>
     public class GroundOrder
     {
@@ -330,7 +373,7 @@ namespace Pulsar4X.GroundCombat
     ///
     /// Deliberately mirrors the fleet's CORE grouping; the layers a fleet adds on top — a DOCTRINE/stance with combat
     /// multipliers (<c>FleetDoctrineDB</c>) and nesting SUB-formations (the fleet tree) — are follow-up formation slices
-    /// (each its own gauged step), not folded in here. Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5h formations).
+    /// (each its own gauged step), not folded in here. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5h formations).
     /// </summary>
     public class GroundFormation
     {
@@ -382,6 +425,14 @@ namespace Pulsar4X.GroundCombat
         /// <summary>The brain's last abstract INTENT for this battalion (Advance/Hold/PullBack/Retreat) — the client
         /// readout half. Default <see cref="GroundIntent.Hold"/> (the byte-identical resting value).</summary>
         [JsonProperty] public GroundIntent TacticalIntent { get; internal set; } = GroundIntent.Hold;
+        /// <summary>Audit M2 — posture hysteresis: the game time the brain last CHANGED this battalion's stance (a
+        /// break-glass survival shift also stamps it). A non-survival change is held until <see cref="GroundTactics.MinHoldHours"/>
+        /// elapse OR the odds cross the band, so a battalion doesn't flip stance every hourly tick near a threshold.
+        /// DateTime.MinValue = never changed (byte-identical resting value; the first change always passes the hold).</summary>
+        [JsonProperty] public DateTime LastStanceChange { get; internal set; } = DateTime.MinValue;
+        /// <summary>Audit M2 — the own/enemy odds ratio that set the current stance: the reference the hysteresis band is
+        /// measured from. 0 = unset. Save-safe.</summary>
+        [JsonProperty] public double LastStanceOdds { get; internal set; }
 
         public GroundFormation() { }
         public GroundFormation(GroundFormation o)
@@ -391,6 +442,7 @@ namespace Pulsar4X.GroundCombat
             StanceId = o.StanceId; StanceFamily = o.StanceFamily; AttackMult = o.AttackMult; DamageTakenMult = o.DamageTakenMult;
             SwitchableAfter = o.SwitchableAfter; Engagement = o.Engagement;
             TacticalReason = o.TacticalReason; TacticalIntent = o.TacticalIntent;
+            LastStanceChange = o.LastStanceChange; LastStanceOdds = o.LastStanceOdds;
             Orders = new List<GroundOrder>();
             if (o.Orders != null) foreach (var ord in o.Orders) Orders.Add(new GroundOrder(ord));
         }
@@ -453,7 +505,7 @@ namespace Pulsar4X.GroundCombat
     /// one roster covers a contested world with both sides present. Fully persistent (<see cref="Clone"/> +
     /// [JsonProperty] + deep-copy ctors) from day one — the discipline the old colony hex map lacked.
     ///
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md (slice 5a).
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md (slice 5a).
     /// </summary>
     public class GroundForcesDB : BaseDataBlob
     {
@@ -496,6 +548,15 @@ namespace Pulsar4X.GroundCombat
         /// ground echo of the space per-fleet "in combat" flag.</summary>
         [JsonIgnore] internal bool WasInBattle;
 
+        /// <summary>Region indices whose CURRENT contest has already had its INITIAL ENGAGEMENT SPREAD applied
+        /// (<see cref="GroundForcesProcessor.SpreadNewlyContestedRegions"/>, M3) — so the sides are opened apart ONCE per
+        /// battle, not re-teleported every tick (which would prevent them closing). A region clears from the set when its
+        /// fight ends, so a fresh battle there re-spreads. **Save-safe on PURPOSE** (`[JsonProperty]`, deep-copied below) —
+        /// unlike the runtime <see cref="WasInBattle"/> latch: a mid-battle save must NOT forget which regions were already
+        /// spread, or on load the units would teleport apart again mid-fight. Empty (and untouched) unless
+        /// <see cref="GroundForcesProcessor.EnableInitialEngagementSpread"/> is on → byte-identical, additive like MiniQ/MiniR.</summary>
+        [JsonProperty] public HashSet<int> SpreadRegions { get; internal set; } = new HashSet<int>();
+
         public GroundForcesDB() { }
         public GroundForcesDB(GroundForcesDB other)
         {
@@ -511,6 +572,7 @@ namespace Pulsar4X.GroundCombat
             OutpostEntityIds = other.OutpostEntityIds != null ? new List<int>(other.OutpostEntityIds) : new List<int>();
             BuildSites = new List<GroundBuildSite>();
             if (other.BuildSites != null) foreach (var b in other.BuildSites) BuildSites.Add(new GroundBuildSite(b));
+            SpreadRegions = other.SpreadRegions != null ? new HashSet<int>(other.SpreadRegions) : new HashSet<int>();
         }
 
         public override object Clone() => new GroundForcesDB(this);
@@ -552,6 +614,13 @@ namespace Pulsar4X.GroundCombat
                 CurrentAmmo_kg = design.AmmoCapacity_kg,
                 // Strike range in hexes (H3): the design's, or a per-type default if the design left it unset.
                 Range = design.Range > 0 ? design.Range : GroundRangeTools.DefaultRangeFor(design.UnitType),
+                // REAL-DISTANCE FOUNDATION (Slice 1b): the metric TRUTH twin of the hex Range. Prefer the design's own
+                // real-metre reach; absent that (a code-built/garrison design), derive it from the hex range × the
+                // nominal reference pitch so the number is always populated. ADDITIVE + UNREAD → byte-identical.
+                Range_m = design.Range_m > 0
+                    ? design.Range_m
+                    : (design.Range > 0 ? design.Range * GroundCombatant.NominalHexPitch_m
+                                        : GroundRangeTools.DefaultRangeFor(design.UnitType) * GroundCombatant.NominalHexPitch_m),
                 Evasion = design.Evasion,
                 Shield = design.Shield,
                 CurrentShield = design.Shield,   // the shield pool musters full (resolver merge 3c)
@@ -581,6 +650,10 @@ namespace Pulsar4X.GroundCombat
             // ability falls out of the shared component store (radar/speed/crew). -1 for a design with no component
             // list (monolithic units, backed in a later slice). Defensive — never throws in the raise path.
             unit.BackingEntityId = GroundUnitEntity.BuildBacking(body, design, factionId);
+            // REAL-DISTANCE FOUNDATION (Slice 1b): stamp the unit's real drive SPEED (km/h) — the Foot baseline ×
+            // the chassis/locomotion multiplier that falls out of the backing store (Foot ×1.0 for a monolithic
+            // unit with no backing). READOUT ONLY; the march timer still runs on the multiplier → byte-identical.
+            unit.Speed_kmh = GroundMobility.BaseMarchSpeed_kmh * GroundMobility.SpeedMultForUnit(body, unit);
             // G3: also place the unit on the ONE continuous grid — at its region BAND's centre column (the global twin
             // of the disk's (0,0) muster). Additive; the per-region HexQ/HexR (0,0) is unchanged.
             StampGlobalMuster(body, unit, regionIndex);
@@ -720,7 +793,10 @@ namespace Pulsar4X.GroundCombat
             Pulsar4X.Galaxy.PlanetHexFactory.EnsureHexesForBody(body);
 
             var region = regionsDB.Regions[unit.RegionIndex];
-            var path = HexPathfinder.FindPath(region.Hexes, unit.HexQ, unit.HexR, destQ, destR);
+            // AMPHIBIOUS (2026-07-29): passability is per-unit — a designed amphibious drive may route ACROSS
+            // ocean hexes (at the steep Move_Water cost); everything else still routes around them.
+            bool amphib = GroundMobility.AmphibiousForUnit(body, unit);
+            var path = HexPathfinder.FindPath(region.Hexes, unit.HexQ, unit.HexR, destQ, destR, amphib);
             if (path.Count == 0) return false;   // already there / unreachable / dest off-patch
 
             // Store deep copies (don't alias the region's live hex objects), and capture the region's per-hex base time.
@@ -736,7 +812,7 @@ namespace Pulsar4X.GroundCombat
         // ───────────────────────── GLOBAL HEX MOVEMENT (G-track, G3 — one continuous world, no edge gates) ─────────
         // The G-track twin of OrderMoveToHex: march the unit across the ONE continuous SurfaceGrid to a GLOBAL (Q,R),
         // crossing region BAND borders with no stitching (it's just the next column). Additive alongside the per-region
-        // path above; walked by GroundForcesProcessor's global-path step. Design: docs/GLOBAL-HEX-GRID-DESIGN.md.
+        // path above; walked by GroundForcesProcessor's global-path step. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
 
         /// <summary>
         /// Order a unit to march to GLOBAL grid hex (<paramref name="destQ"/>,<paramref name="destR"/>) on the body's
@@ -753,7 +829,10 @@ namespace Pulsar4X.GroundCombat
             if (unit.GlobalQ < 0 || unit.GlobalR < 0) StampGlobalMuster(body, unit, unit.RegionIndex);   // ensure it's on the grid
             if (unit.GlobalQ < 0) return false;
 
-            var path = HexPathfinder.FindGlobalPath(grid, unit.GlobalQ, unit.GlobalR, destQ, destR);
+            // AMPHIBIOUS (2026-07-29): same per-unit passability on the global cylinder — an amphibious unit can
+            // cross an ocean band instead of walking the long way round the world.
+            var path = HexPathfinder.FindGlobalPath(grid, unit.GlobalQ, unit.GlobalR, destQ, destR,
+                                                    GroundMobility.AmphibiousForUnit(body, unit));
             if (path.Count == 0) return false;   // already there / unreachable / dest off-grid or impassable
 
             unit.GlobalPath = new List<Pulsar4X.Galaxy.GroundHex>(path.Count);

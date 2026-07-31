@@ -6,7 +6,7 @@ using Pulsar4X.GroundCombat;  // GroundUnit(Design), GroundRole(Composer), Groun
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// W-TRACK W3 — SUB-FORMATION ROLE MANEUVER (docs/combat/GROUND-CLOSING-FIGHT-W-TRACK.md §W3). The ground echo of
+    /// W-TRACK W3 — SUB-FORMATION ROLE MANEUVER (docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.4, W3). The ground echo of
     /// space sub-fleet roles: a ground unit's ROLE emerges from its stats (fast → Screen, long-reach → Artillery,
     /// no-punch → Support, else Line), and each role MANEUVERS DIFFERENTLY as it closes — a screen leads, a line holds
     /// at its range, an artillery kites to keep its standoff, support stays back. "Fighters move differently than a

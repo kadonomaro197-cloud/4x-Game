@@ -7,9 +7,9 @@ namespace Pulsar4X.Colonies
 {
     /// <summary>
     /// Morale for a manned host (colony now; station later — this is the shared "manning" concept of
-    /// docs/SPACE-STATIONS-DESIGN.md). Morale is the level-control valve on the population "tank": it sets
+    /// docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md). Morale is the level-control valve on the population "tank": it sets
     /// whether people arrive (immigration) or leave (emigration), and later scales economic output and gates
-    /// recruitment. See docs/MORALE-AND-POPULATION-DESIGN.md.
+    /// recruitment. See docs/society/MORALE-AND-POPULATION-DESIGN.md.
     ///
     /// M1 scope: morale (0..100, 50 = neutral) is recalculated each population tick from inputs that already
     /// exist — environment CONDITIONS (species ColonyCost) and OVERCROWDING (pop vs capacity) — and drives a

@@ -3,7 +3,7 @@ using System;
 namespace Pulsar4X.Sites
 {
     /// <summary>
-    /// Site Engine SE-2c — the posting-danger model (docs/SITE-ENGINE-DESIGN.md §5: "where a leader is posted sets
+    /// Site Engine SE-2c — the posting-danger model (docs/explore/SITE-ENGINE-DESIGN.md §5: "where a leader is posted sets
     /// their incident/death risk, mitigated by the Command Berth's Survivability"). A field-site's Hook sets how
     /// dangerous the posting is; the berth's Survivability dial buys that risk down. Pure/static/deterministic (no
     /// clock/RNG) so the roll itself stays in the processor and this is exactly testable.

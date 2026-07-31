@@ -15,7 +15,7 @@ using Pulsar4X.Ships;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Phase-2.8 P-3 gauge (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md — the means-ends planner): the CONQUER resolver
+    /// Phase-2.8 P-3 gauge (docs/ai/AI-DECISION-ENGINE-DESIGN.md — the means-ends planner): the CONQUER resolver
     /// (Ambition tier), the SIXTH and last objective. v1 proves the NPC MASSES a strike fleet — queues an armed hull
     /// on a free ship line — when pursuing Conquer, and that Conquer is now registered (so every objective resolves).
     /// The actual attack (target-selection / reach / fuel / strike) is the deferred P-3 military sub-subsystem.

@@ -7,7 +7,7 @@ using Pulsar4X.Sites;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Site Engine SE-3d — the GUARDIAN gate (docs/SITE-ENGINE-DESIGN.md §6, the Guardian hook). A surface site whose
+    /// Site Engine SE-3d — the GUARDIAN gate (docs/explore/SITE-ENGINE-DESIGN.md §6, the Guardian hook). A surface site whose
     /// region still holds a foreign unit (a neutral/menace guardian, or a rival) can't be worked until it's cleared —
     /// you beat the defender first (the region combat + capture the ground layer already runs), then work the site.
     /// A region with only your own units is clear. Proves the gate blocks + unblocks, and that a clear region is

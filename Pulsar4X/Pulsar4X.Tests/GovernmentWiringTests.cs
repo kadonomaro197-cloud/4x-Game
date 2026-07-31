@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// Gauge for wiring the government MODULATOR into the processors (docs/GOVERNMENT-AND-POLITICS-DESIGN.md, task
+    /// Gauge for wiring the government MODULATOR into the processors (docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md, task
     /// #30): every faction carries a `GovernmentDB` (default all-Mid = neutral), and `GovernmentTools` is the
     /// lookup the economy/population/research processors use to read its coefficient dials. Proves the factory
     /// attaches it, the lookup resolves the owning faction's regime, and the **TaxCeiling** dial actually caps

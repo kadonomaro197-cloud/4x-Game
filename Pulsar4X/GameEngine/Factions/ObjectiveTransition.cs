@@ -39,7 +39,7 @@ namespace Pulsar4X.Factions
     }
 
     /// <summary>
-    /// Phase-2.3 (docs/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the TRANSITION ENGINE. The
+    /// Phase-2.3 (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement II — the Organism engine): the TRANSITION ENGINE. The
     /// needs-ladder (2.2) re-reads a faction's tier every cycle, but a brain that re-planned every month would
     /// THRASH — abandon a half-built fleet the moment a gauge wobbles. This is the hysteresis that stops that: once
     /// a faction commits to an objective it HOLDS it for a while, and only re-plans when the commitment expires OR a
@@ -67,7 +67,7 @@ namespace Pulsar4X.Factions
         public static readonly TimeSpan DefaultCommitFor = TimeSpan.FromDays(180);
 
         /// <summary>
-        /// Phase-2.5 (docs/AI-BRAIN-BUILD-TRACKER.md — the Ambition CADENCE): how far the AMBITION trait swings an
+        /// Phase-2.5 (docs/ai/AI-BRAIN-BUILD-TRACKER.md — the Ambition CADENCE): how far the AMBITION trait swings an
         /// expansion objective's dwell away from <see cref="DefaultCommitFor"/> at the trait extremes. At 1.0 the dwell
         /// runs from 0.5× (Ambition 1.0 — half the dwell, so the brain re-commits to the expansion push twice as often)
         /// up to 1.5× (Ambition 0.0 — a low-drive faction sits on its plan longer). Named so the swing tunes in one

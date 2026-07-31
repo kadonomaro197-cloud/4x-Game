@@ -13,7 +13,7 @@ namespace Pulsar4X.Galaxy
     /// assigned a terrain drawn from that region's coarse <see cref="Region.Features"/> mix — so the fine map is a
     /// faithful realization of the coarse one. Idempotent, deterministic (system RNG), defensive. Save-safe.
     ///
-    /// Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public static class PlanetHexFactory
     {
@@ -92,7 +92,7 @@ namespace Pulsar4X.Galaxy
     /// The field is a small sum-of-sines, PERIODIC in longitude so it wraps the 4-region ring seamlessly, seeded
     /// per-world from the system RNG (deterministic). Sea level, climate and relief are driven by the body's REAL
     /// scalars — hydrosphere (how much ocean), surface temperature (icy vs scorching), tectonics (how mountainous). The
-    /// threshold constants are tunable "should-make-sense" dials, not physics. Design: docs/HEX-GROUND-AND-ORDERS-DESIGN.md.
+    /// threshold constants are tunable "should-make-sense" dials, not physics. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     internal sealed class WorldTerrain
     {

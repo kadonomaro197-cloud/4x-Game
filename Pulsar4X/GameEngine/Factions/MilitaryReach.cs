@@ -8,7 +8,7 @@ namespace Pulsar4X.Factions
 {
     /// <summary>
     /// Phase-2.8 P-3 — the military REACH, third and last helper (MilitaryReach). The "can my fleet actually GET
-    /// THERE?" perception (docs/AI-BRAIN-BUILD-TRACKER.md). <see cref="MilitaryTarget"/> names the enemy world and
+    /// THERE?" perception (docs/ai/AI-BRAIN-BUILD-TRACKER.md). <see cref="MilitaryTarget"/> names the enemy world and
     /// <see cref="MilitaryComposition"/> confirms a mass fleet is ready; this replaces the coarse near/far PROXY they
     /// use (<see cref="MilitaryTarget.ReachInSystem"/> / <see cref="MilitaryTarget.ReachDistant"/>) with a real read
     /// off the jump-point network and the fleet's fuel/range. Pure read, no warp/order surface touched.

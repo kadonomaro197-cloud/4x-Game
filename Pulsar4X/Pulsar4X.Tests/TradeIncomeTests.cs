@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C1a gauge (docs/AI-BRAIN-BUILD-TRACKER.md, the trade-money pillar): a standing trade agreement now has a
+    /// F-C1a gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, the trade-money pillar): a standing trade agreement now has a
     /// monetary VALUE. Proves the income is the per-agreement value times the number of standing TradeAgreements the
     /// faction holds, and that a faction with none earns nothing. (Nothing PAYS it yet — the gated payout processor
     /// is F-C1b — so this is a pure read; the ledger is untouched until that wire lands.)

@@ -17,7 +17,7 @@ namespace Pulsar4X.Tests
     /// and the "Pacific theatre" survives), each with real area, a crossing time (the distance datum movement will
     /// read), and a bundle of discovered-by-exploration features. These tests assert the generator builds that
     /// layer correctly, that it's persistent (deep-clones), and that features come out random-but-LOGICAL.
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     [TestFixture]
     public class PlanetRegionsTests

@@ -5,7 +5,7 @@ using Pulsar4X.Factions;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-C3a gauge (docs/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): per-rival, per-facet intel
+    /// F-C3a gauge (docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md — the Information Ledger): per-rival, per-facet intel
     /// with the Inferred → Confirmed → Stale bands. Proves an unknown rival/facet reads Inferred, Confirm raises it,
     /// intel decays to Stale only after the refresh window, and the blob clones deeply (save/load, entity transfer).
     /// </summary>

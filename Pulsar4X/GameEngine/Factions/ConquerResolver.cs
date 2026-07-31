@@ -7,7 +7,7 @@ using Pulsar4X.Weapons;
 namespace Pulsar4X.Factions
 {
     /// <summary>
-    /// Phase-2.8 P-3 (docs/AI-MEANS-ENDS-PLANNER-DESIGN.md): the CONQUER resolver — the Ambition-tier "go to war for
+    /// Phase-2.8 P-3 (docs/ai/AI-DECISION-ENGINE-DESIGN.md): the CONQUER resolver — the Ambition-tier "go to war for
     /// gain" brain (chosen when the faction is dominant, secure, and aggressive). It had NO resolver and no-oped; this
     /// is the SIXTH and last objective to get one, so every strategic objective now resolves.
     ///

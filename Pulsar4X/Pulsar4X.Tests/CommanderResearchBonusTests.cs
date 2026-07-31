@@ -7,7 +7,7 @@ using Pulsar4X.Technology;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// F-A2 gauge (docs/AI-BRAIN-BUILD-TRACKER.md, Movement I): scientist RESEARCH competence is now EARNABLE — the
+    /// F-A2 gauge (docs/ai/AI-BRAIN-BUILD-TRACKER.md, Movement I): scientist RESEARCH competence is now EARNABLE — the
     /// research-side twin of the combat-competence generator. Proves (a) the generator scales with the cap and is
     /// shaped for the live reader (FilterId = tech category, Type = Percentage), (b) a scientist carrying rolled
     /// competence actually researches FASTER through the real ResearchProcessor.RefreshPointModifiers on the matching

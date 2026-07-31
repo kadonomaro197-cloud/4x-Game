@@ -90,7 +90,7 @@ namespace Pulsar4X.Galaxy
     /// Fully persistent (<see cref="Clone"/> + [JsonProperty]) from day one — the flaw that killed the earlier
     /// colony hex map was that it could not survive a save; we do not repeat it.
     ///
-    /// Design: docs/GROUND-COMBAT-MAP-DESIGN.md.
+    /// Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.
     /// </summary>
     public class PlanetRegionsDB : BaseDataBlob
     {
@@ -98,7 +98,7 @@ namespace Pulsar4X.Galaxy
 
         /// <summary>The ONE continuous cylinder hex grid (G-track) — null until generated (lazy). Regions are column
         /// BANDS over this. Additive alongside the per-region <c>Region.Hexes</c> disks during the migration; the disks
-        /// are retired once consumers ride the grid (docs/GLOBAL-HEX-GRID-DESIGN.md, G6).</summary>
+        /// are retired once consumers ride the grid (docs/ground/GROUND-SURFACE-MAP-DESIGN.md, G6).</summary>
         [JsonProperty] public SurfaceGrid SurfaceGrid { get; internal set; }
 
         /// <summary>PER-FACTION region fog — the foundation from `docs/ground/SURFACE-FOG-AND-RECON-DESIGN.md` (path A,

@@ -63,7 +63,7 @@ namespace Pulsar4X.Factions
 
         /// <summary>
         /// Space station entities owned by this faction — the parallel registry to <see cref="Colonies"/>.
-        /// A station is the cheap/fast/fragile off-world host (see StationFactory / docs/SPACE-STATIONS-DESIGN.md).
+        /// A station is the cheap/fast/fragile off-world host (see StationFactory / docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md).
         /// </summary>
         [PublicAPI]
         [JsonProperty]
@@ -182,6 +182,15 @@ namespace Pulsar4X.Factions
             ShipDesigns = new Dictionary<string, ShipDesign>(factionDB.ShipDesigns);
             InternalComponentDesigns = new Dictionary<string, ComponentDesign>(factionDB.ComponentDesigns);
             IndustryDesigns = new Dictionary<string, IConstructableDesign>(factionDB.IndustryDesigns);
+            // Audit low-fix (2026-07-22): the fleet-composition + garrison fields were added but never copied here — an
+            // entity-move/clone of a faction blob silently reset them to their defaults (a latent save/composition loss).
+            FleetMinToDeploy = factionDB.FleetMinToDeploy;
+            FleetIdealSize = factionDB.FleetIdealSize;
+            FleetPerfectSize = factionDB.FleetPerfectSize;
+            FleetTemplateName = factionDB.FleetTemplateName;
+            GarrisonComposition = factionDB.GarrisonComposition != null
+                ? new Dictionary<string, int>(factionDB.GarrisonComposition)
+                : new Dictionary<string, int>();
             HaltsOnEvent.Add(EventType.OrdersHalt, true);
 
         }
