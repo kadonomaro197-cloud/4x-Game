@@ -1,233 +1,167 @@
-# Generalized design issues — the repeatable problems the franchise litmus tests surfaced (2026-08-01)
+# The five plain problems the marine and the Venator both hit (2026-08-01)
 
-> **What this is:** the Blood Angels marine and the Venator Star Destroyer builds each hit a set of walls.
-> This file **generalizes** those specific walls into legitimate, repeatable **classes of design issue** —
-> the ones that will show up again in *any* future design, not just these two. Each issue gets: the general
-> statement, where it showed up (the concrete examples), **why it recurs**, a **one-line check** you can run
-> on any new design to catch it early, and the **general recommended fix.**
+> **What this is:** the Blood Angels marine and the Venator Star Destroyer builds each ran into a set of
+> walls. None of those walls are really a "Space Marine problem" or a "Star Destroyer problem" — they're
+> general problems in the designer that those two just *happened to show*. This file states them in plain
+> English, as **five problems** you can watch for on *anything* you build next. Each one has a shop-floor
+> analogy, where it showed up, a one-question check, and the fix.
 >
-> **Why bother generalizing:** a bug found on a Space Marine that stays "a Space Marine bug" gets fixed once
-> and recurs forever. Named as a *class*, it becomes a checklist item — the same way the root `CLAUDE.md`
-> Landmine Index turns one-off traps into a scannable list. Several of these line up with the interconnection
-> audit's five themes (`docs/designers-audit/02-OUTPUT-READABILITY-AUDIT.md §1`); those cross-refs are noted.
+> *(The detailed, code-level version of these — twelve fine-grained items with file names — is kept lower
+> down under "The detail underneath," for when someone needs the specifics. The five below are the real
+> point.)*
 
 ---
 
-## How to use this
+## Problem 1 — Half-finished plumbing (a knob that isn't hooked to anything)
 
-When you design **anything** — a unit, a ship, a building, a component — run the **checks** in §"The
-checklist" against it. Each check is the generalized form of a real wall these two builds hit. A "yes" to any
-check is a design issue to resolve or consciously accept before you build.
+**In plain terms:** you can turn the dial, but it doesn't change anything in an actual game — the wire from
+the knob to the thing it's supposed to move was never run. And its cousin: a feature that got installed on
+one kind of unit but not on its sister unit.
 
----
+**The analogy:** a gauge bolted to the panel that was never piped to the sensor. The needle's there; it reads
+nothing. Or a safety interlock fitted on the port engine but not the starboard one.
 
-## The issues, by family
+**Where it showed up:**
+- The marine's / Venator's **firepower "elite" knob does nothing in a real fight** — it feeds a number only
+  the *test rig* reads, never the live battle.
+- The Venator's **hangar can hold fighters but there's no button to launch them** — you loaded the bay and
+  there's no handle to get them out.
+- **Ground units get a "needs a reactor" safety check; ships don't** — same idea, fitted on one, missing on
+  the other.
 
-### Family A — Structure & multiplicity (what an entity *is*)
+**The check (ask this of every knob you add):** *"If I turn this, does something actually change in a real
+game — and does every unit that should have this feature actually have it?"*
 
-**G1 — The atomic-unit assumption (no multiplicity / sub-element model).**
-- **General statement:** an entity is a single capability+HP scalar, not a countable collection of like
-  sub-elements that live and die independently.
-- **Showed up as:** the marine can't be a *6-model squad* (one HP bar, no `ModelCount`); the Venator's
-  *fighter complement* is the same problem from the ship side (a bay of craft, not a countable wing that
-  attrits).
-- **Why it recurs:** *any* "N of a thing that dies one at a time" hits it — an infantry squad, a fighter
-  wing, a gun battery, a flotilla, a swarm. It's the most cross-cutting issue on this list precisely because
-  it showed up on *both* a ground unit and a ship.
-- **Check:** *"Is this entity really one thing, or N of a thing that should attrit individually?"*
-- **Fix:** a generic `Count`/`ElementsAlive` on the entity + per-element attrition in the resolver + an
-  assembler concept of "this design fields N elements" (today `count` means parts-per-unit, not
-  elements-per-unit). One primitive serves squads *and* fighter wings.
-
-**G11 — Aggregation hides individuation (like sub-parts merge; per-instance behavior is lost).**
-- **General statement:** for performance, like sub-components/units are bucketed into one summed profile, so
-  per-instance state (this turret knocked out, this weapon's own range/nature) disappears.
-- **Showed up as:** ground weapons blend to **one summed Attack + one dominant nature** (a bolter-and-chainsword
-  marine loses its two profiles); ship turrets bucket by class (no named DBY-827 that can be individually
-  silenced).
-- **Why it recurs:** every multi-weapon / multi-module entity hits it. *This one is a deliberate performance
-  tradeoff* (the bucketed resolve is what makes 100s-of-ships battles cheap) — so the issue is knowing *when*
-  the aggregation costs a decision the player cares about.
-- **Check:** *"Does merging these like-parts erase a distinction the player would act on?"*
-- **Fix:** aggregate for the strength-math, but keep a **per-instance layer where the decision lives** — e.g.
-  per-weapon `WeaponProfile` resolution (the ship side already does this by class; the ground side should).
-  Individuate exactly where it matters, aggregate everywhere else.
-
-**G12 — Scale as an emergent scalar, not a modeled dimension** *(judgment call, not a clear defect).*
-- **General statement:** an entity's size is emergent from its mass, so nothing can key off *size* independent
-  of *mass*.
-- **Showed up as:** the Venator's "1,137 m" is just a large mass budget; a bigger hull isn't easier to detect
-  or hit *by virtue of being big*.
-- **Why it recurs:** any size-dependent effect (big-target-easier-to-hit, capacity-by-volume, silhouette).
-- **Check:** *"Does any mechanic need to read size independently of mass?"*
-- **Fix:** usually **none** — mass is a fine proxy; only add an explicit size/length axis if a mechanic
-  genuinely needs it. Flagged for honesty, not urgency.
-
-### Family B — Cost & scarcity across the whole lifecycle
-
-**G2 — Build-cost without hold-cost (creation is priced, existence is free).**
-- **General statement:** the economy charges to *create* an entity but nothing to *keep* it — no standing
-  upkeep, no consumption while it exists, no per-operation cost.
-- **Showed up as:** a fielded marine costs nothing and drains no ammo (ground has no upkeep step); the
-  Venator's *shields and sensors run for free* (no operate-power cost — audit **C12/C15**).
-- **Why it recurs:** any standing asset — idle fleets, garrisons, stations (only partly billed), a running
-  sensor, a held shield. The economy models the *verb build* but not the *verb keep/run*.
-- **Check:** *"Once this exists, does it cost anything to stand there or to operate? If not, should it?"*
-- **Fix:** a **standing-cost model** in two layers — a per-entity upkeep bill (copy
-  `StationUpkeepProcessor.BillUpkeep` into the entity's process tick) **and** a per-component *operate*-draw
-  (the generic power-draw, audit **Design 1**) — plus wiring consumption (ammo drain) into the resolvers.
-
-**G10 — No finite non-material stock, no per-design cap (scarcity beyond materials + time).**
-- **General statement:** buildables draw *materials + time* but not a finite **non-material** input (people, a
-  gene-line, a license) and have no per-type ceiling.
-- **Showed up as:** the marine draws **zero population/gene-seed** (the crew/manpower gate is ship-only) and
-  has no hard cap — so six "irreplaceable" marines are actually re-queueable from steel.
-- **Why it recurs:** anything that should be people-limited or hard-capped — crewed units, elite formations,
-  unique hulls, wonders.
-- **Check:** *"Should this draw on a limited pool of people or a scarce non-material stock, or be capped in
-  number?"*
-- **Fix:** extend the crew/manpower gate to **all** buildable classes (it's `is ShipDesign`-only today) + a
-  generic **finite-stock consumable** (a non-material input a build draws down and that refills slowly) + an
-  optional per-design build cap.
-
-**G9 — Missing loss-accounting (destruction is a silent delete).**
-- **General statement:** removing/destroying an entity publishes no event and returns/consumes nothing — the
-  *grave* rung of cradle-to-grave is unmodeled.
-- **Showed up as:** a dead marine is a silent `RemoveAll` (no casualty event, no gene-seed/manpower
-  write-back); the audit's cradle-to-grave law names this rung explicitly.
-- **Why it recurs:** any entity whose loss should *matter* — a ship fires a crew-loss event, but ground
-  doesn't; a captured colony (audit ruling **T1** — what capture transfers is undecided); a destroyed
-  component.
-- **Check:** *"When this dies, does anything get logged, returned, or paid? Should it?"*
-- **Fix:** a generic **loss event on destruction** + a write-back hook (return/consume resources, publish a
-  casualty/loss event). Make the grave rung a standing engine requirement, not per-system.
-
-### Family C — State between full and dead
-
-**G5 — Whole-or-dead (no partial-condition state).**
-- **General statement:** entities/components are at full capability until instantly destroyed — there is no
-  degradation state in between.
-- **Showed up as:** the marine's **power armour has no condition/maintenance** (can't wear, can't be
-  field-repaired by a capped specialist); the audit **parked enhancer self-repair (C13) on exactly this.**
-- **Why it recurs:** any wear / maintenance / damage-degradation / self-repair / neglect-penalty mechanic —
-  on *any* entity class.
-- **Check:** *"Does this need a state between 100% and destroyed?"*
-- **Fix:** a generic **condition / health-fraction** on components + a degradation step + effects that scale
-  with condition. A large engine change (which is why self-repair is parked) — but it's the single unlock
-  behind a whole family of mechanics.
-
-### Family D — Taxonomy & axis rigidity
-
-**G6 — Closed capability taxonomies (a fixed enum; a new mode needs code, not a dial).**
-- **General statement:** movement, weapon-delivery, damage-nature, etc. are fixed enums — a capability outside
-  the set is unrepresentable without an engine change.
-- **Showed up as:** no **jump/flight** locomotion (the movement enum is Foot/Tracked/Walker/Hover); no
-  **thrown/area** weapon delivery (grenades).
-- **Why it recurs:** any exotic capability — teleport, burrow, cloak-move, artillery arc, a new damage nature.
-- **Check:** *"Is the capability I want a value the enum already has, or does it need a new one?"*
-- **Fix:** treat each taxonomy as a **known extension point** — make it data-driven where feasible, and where
-  not, keep a documented "add-a-mode" recipe (the enum value + its resolver branch) so a new mode is a small
-  scoped build, not a surprise.
-
-**G7 — Coupled axes that should be independent (two dials locked into one).**
-- **General statement:** two design axes that carry independent meaning are hard-coupled, collapsing the
-  option space.
-- **Showed up as:** weapon **nature** is hard-coupled to **delivery** (Ballistic → always Kinetic), so you
-  can't build a kinetic-delivery / explosive-nature round — the bolter's whole *mass-reactive* character.
-- **Why it recurs:** anywhere a "pick one" secretly forces a second choice. It's the **inverse** of the North
-  Star's rule ("two types with no differing variable are one type") — here two axes with *genuinely
-  independent* meaning are forced to move together, and the DATA hard-codes what the DESIGN says should be
-  free.
-- **Check:** *"Do these two choices have to move together, or am I forcing them?"*
-- **Fix:** split into two independent dials (exactly the **Nature × Delivery** matrix the re-derived Weapons
-  designer already espouses — this is a case where the data lags the design).
-
-### Family E — Wiring & cross-class parity (the audit's home turf)
-
-**G3 — Capability parity gap between entity classes (a mechanic built for one class, not mirrored).**
-- **General statement:** a feature exists for ships but not ground (or vice-versa), so equivalent entities
-  behave inconsistently.
-- **Showed up as:** ground has **no elite/caliber dial** (ships do); ships have **no reactor/magazine
-  requirement gate** (ground does); ground penetration works, **ship penetration is hard-0.**
-- **Why it recurs:** *every* new mechanic — it gets built for one class and the port to the others is
-  forgotten. This is the audit's **Theme 2** (space vs ground are asymmetric; ground is often the stricter,
-  more complete one).
-- **Check:** *"Every entity class that shares this concept — do they all have it?"* (ship · ground · station ·
-  installation)
-- **Fix:** when a mechanic is added, **port it across all classes that share the concept in the same slice**;
-  better, host the shared stat/gate on a **common substrate** instead of per-class code, so parity is
-  structural, not remembered.
-
-**G4 — Producer wired to a dead or wrong consumer (a dial that does nothing live).**
-- **General statement:** a dial writes a real field, but that field's only reader is off the live path
-  (test-only, dead code, or a differently-named consumer).
-- **Showed up as:** the **firepower-caliber** enhancer writes `cv.Firepower`, which only the **test-only**
-  `AutoResolve` sums — so it's inert in real combat (audit **D-gate-2**). The audit found a cluster of these
-  (signature → wrong consumer, detection-trigger → wrong path, `LogiBase` → no reader). This is the audit's
-  **Themes 3 & 4** (two resolvers, the tidy one is test-only; named-consumer misattribution).
-- **Why it recurs:** any dial. It's the most insidious class because the design *looks* wired — the value
-  reaches a field — and only tracing to the live reader reveals it does nothing.
-- **Check (the two-ends rule, live form):** *"Cite the file:line of the LIVE code path that reads this dial's
-  field. If the only reader is a test or a dead resolver, the dial is a no-op."*
-- **Fix:** make "trace to the live consumer" a standing step in the designer method (the interconnection audit
-  is the exhaustive form). A dial with no live reader is a bug, not a feature.
-
-**G8 — Container without an operating verb (a carry component with no deploy order).**
-- **General statement:** a component that *stores/carries* sub-entities exists, but the order to **deploy**
-  them — and the resolve for them as an operating group — isn't wired.
-- **Showed up as:** the Venator's **Docking Bay** holds fighters but has **no launch order** (`DockTools` has
-  no game caller; the strike-craft-as-sub-fleet resolver is designed-not-built in `CARRIER-DESIGN.md`).
-- **Why it recurs:** *every* carry-and-deploy pairing — troop bay → land (this one **works**), strike bay →
-  launch (doesn't), dock → undock (doesn't), passenger hold → settle colonists (doesn't — audit **C3**). A
-  container is only as done as its deploy verb.
-- **Check:** *"This component carries something — what's the order that gets it back out, and is that order
-  wired?"*
-- **Fix:** for every container component, ship its **deploy/operate order** (and, if it operates as a group,
-  the group-resolve) **in the same slice** as the container. Never land a "holds X" component without its
-  "release X" verb.
+**The fix:** before a knob ships, follow its wire all the way to the thing it moves in a *live* game (not the
+test bench). If the only thing reading it is a test, it's a dead knob. And when you add a feature to one kind
+of unit, add it to all the kinds that should have it, in the same go.
 
 ---
 
-## The checklist (run on every new design)
+## Problem 2 — Free to own, free to run, free to lose
 
-| # | The check — a "yes" is a design issue | Family |
-|---|----------------------------------------|--------|
-| G1 | Is this one thing, or **N of a thing** that should attrit individually? | structure |
-| G11 | Does **merging like-parts** erase a distinction the player would act on? | structure |
-| G12 | Does any mechanic need **size independent of mass**? *(usually no)* | structure |
-| G2 | Once it exists, does it **cost anything to stand there or operate**? Should it? | cost |
-| G10 | Should it draw a **limited pool of people / a scarce stock**, or be **capped**? | cost |
-| G9 | When it **dies**, does anything get logged, returned, or paid? Should it? | cost |
-| G5 | Does it need a **state between 100% and destroyed** (wear, repair)? | state |
-| G6 | Is the capability I want an **enum value that exists**, or a new one? | taxonomy |
-| G7 | Do these two choices **have to move together**, or am I forcing them? | taxonomy |
-| G3 | Do **all entity classes** that share this concept actually have it? | parity |
-| G4 | Cite the **live file:line** that reads this dial. Test-only reader = no-op. | wiring |
-| G8 | This carries something — is its **deploy order** wired, in the same slice? | wiring |
+**In plain terms:** the game charges you to *build* something, and then it's free forever. It costs nothing to
+keep sitting there, nothing to run, needs no crew, and when it's destroyed nothing is spent or even written
+down.
+
+**The analogy:** a pump you pay to install once — then it draws no power, needs no watchstander, never needs
+maintenance, and when it burns out you just make another from the scrap bin with no log entry.
+
+**Where it showed up:**
+- A **fielded marine costs nothing to keep** and never burns through ammo. A Venator's **shields and sensors
+  run for free** — no power drawn to hold them up.
+- A marine is **built from steel, not from people** — no recruits, no training time, no limit — so "six
+  irreplaceable marines" are actually re-buildable on demand.
+- A dead marine just **vanishes** — no casualty report, nothing recovered, nothing lost on the books.
+
+**The check:** *"Once this exists, does it cost anything to keep, to run, and to lose — or is it free after I
+build it?"*
+
+**The fix:** charge for owning it (an upkeep bill), charge for running it (power/fuel/ammo draw while it
+operates), require crew or scarce parts to build it, and make losing it cost something *and* get logged.
 
 ---
 
-## Severity & effort (for prioritizing the general fixes)
+## Problem 3 — A whole crowd treated as one body
 
-| Issue | Blast (how many designs it silently affects) | Effort of the general fix |
-|-------|----------------------------------------------|---------------------------|
-| G4 dead consumer | **high** — any dial can be a silent no-op | S per case (trace + rewire); the audit is the sweep |
-| G3 parity gap | **high** — every cross-class mechanic | S–M per mechanic (port it) |
-| G8 container-no-verb | high — every carry/deploy pair | M per verb (order + group-resolve) |
-| G2 hold-cost | high — every standing asset | M (upkeep bill + operate-draw) |
-| G1 atomic-unit | high — squads, wings, batteries | **L** (a core primitive) |
-| G9 loss-accounting | medium — every destruction | S–M (loss event + write-back) |
-| G10 finite stock / cap | medium — scarce/elite buildables | M–L (people gate + stock + cap) |
-| G7 coupled axes | medium — every two-axis design | S–M (decouple the dials) |
-| G6 closed taxonomy | medium — exotic capabilities | M per new mode |
-| G5 whole-or-dead | medium — wear/repair mechanics | **L** (condition state) |
-| G11 aggregation | low–medium — a conscious tradeoff | M where individuation is needed |
-| G12 scale-as-scalar | low — a judgment call | M, usually skip |
+**In plain terms:** a group of things is modeled as a single blob with one health bar. You can't lose one man,
+one fighter, or one gun at a time — it's all-or-nothing.
 
-**The two to institutionalize first, because they're cheap and catch the most silent damage:** **G4** (every
-dial must cite a live reader — the two-ends rule made a standing method step) and **G3** (every mechanic ports
-to all entity classes in the same slice). Those two are process fixes as much as code, and they stop the whole
-*class* of "built but does nothing / built for one class only" from recurring.
+**The analogy:** modeling a whole damage-control party as one sailor. When "the sailor" takes damage, the
+whole party's effectiveness drops together; you can't lose two men and keep the rest working.
+
+**Where it showed up:**
+- The marine **can't be a 6-man squad** — it's one health bar, not six men who fall one at a time.
+- The Venator's **wing of fighters** is the same thing from the ship side — a bay full of craft, not a
+  countable group that thins out as it takes losses.
+- A ship's **twenty guns collapse into one gun** for the fight — you can't knock out one turret.
+
+**The check:** *"Is this really one thing, or is it a group that should lose members one at a time?"*
+
+**The fix:** let a "unit" be a *count* of parts that die individually, and have combat take them out one at a
+time. (Keeping the guns lumped together is fine for speed in huge battles — the point is to notice when the
+lumping hides a choice the player cares about.)
+
+---
+
+## Problem 4 — The menu is too rigid
+
+**In plain terms:** two things. First, you can only pick the options already on the list — if the mode you
+want (a jump pack, a thrown grenade) isn't there, you can't build it. Second, some picks drag a second choice
+along with them that you never wanted.
+
+**The analogy:** a valve lineup with only three fixed positions and no way to add a fourth. And two switches
+ganged onto one lever, so you can't move one without the other.
+
+**Where it showed up:**
+- **No jump pack** — the movement menu only has walk / tracks / walker / hover, and there's no way to add
+  "fly." Same for **thrown grenades** — that kind of weapon just isn't on the list.
+- The **bolter can't be a "mass-reactive" round** — picking "bullet" forces "solid slug," and there's no way
+  to also make it explode on impact. Two choices that should be separate are bolted together.
+
+**The check:** *"Can I get the option I actually want — or is it not on the list, or chained to a choice I
+didn't want?"*
+
+**The fix:** make the option lists easy to extend, and unbolt the choices that are wrongly ganged together so
+they can be set separately.
+
+---
+
+## Problem 5 — Everything is either perfect or scrap
+
+**In plain terms:** a thing works at 100% right up until it's instantly destroyed. Nothing wears down, nothing
+is damaged-but-still-working, nothing needs maintenance.
+
+**The analogy:** a pump that runs at full rated flow until the exact second it seizes — no bearing wear, no
+degraded performance, no "it's limping but it still turns."
+
+**Where it showed up:**
+- The marine's **power armour has no condition** — it can't wear, can't take partial damage, can't be patched
+  up by a specialist. It's flawless until it's gone.
+- (This is the same reason the audit had to shelve **self-repair** — you can't repair something that has no
+  "damaged but alive" state to repair *from*.)
+
+**The check:** *"Can this be damaged-but-still-working, or is it only ever full-strength or destroyed?"*
+
+**The fix:** give things a condition somewhere between full and dead — so they can wear, take partial damage,
+and be maintained or repaired.
+
+---
+
+## Which to fix first
+
+**Problem 1 (half-finished plumbing) is the one to institutionalize, because it's cheap and it hides the
+most.** Make it a standing habit, two parts:
+1. **Every knob has to prove it moves something in a real game** — trace its wire to the live battle/economy,
+   not the test bench. A knob that only a test reads is a dead knob, and that should be treated as a bug.
+2. **Every feature goes on all the units that should have it, in the same job** — don't fit the safety on the
+   port engine and forget the starboard.
+
+Those two habits stop the two nastiest patterns — "the knob does nothing" and "it works on ships but not on
+the ground" — from ever coming back. They're the patterns that produced the most surprises in both the audit
+*and* these two builds.
+
+After that, the order is by how much each buys you: **Problem 2** (make things cost something to own/run/lose)
+and **Problem 3** (real squads and wings) are the big gameplay unlocks; **Problem 4** (a less-rigid menu) is
+medium; **Problem 5** (wear and damage) is the biggest engine job and can wait.
+
+---
+
+## The detail underneath (the code-level breakdown, for when specifics are needed)
+
+Each plain problem above is really a few finer issues. Kept here so nothing is lost:
+
+| Plain problem | Breaks down into | Effort of the fix |
+|---------------|------------------|-------------------|
+| **1 · Half-finished plumbing** | a dial wired to a dead/test-only reader · a carry component with no deploy order · a mechanic on one entity class but not the others | S–M each (mostly wiring) |
+| **2 · Free to own/run/lose** | no standing upkeep · no per-component running cost (power/fuel) · no crew/scarce-stock draw and no build cap · destruction is a silent delete | M (upkeep + power draw) · M–L (scarcity) · S–M (loss event) |
+| **3 · Crowd as one body** | no model/element count on a unit · like-weapons/turrets merge to one profile · size is just mass | **L** (the count is a new core piece) · M (per-weapon resolution) · usually skip (scale) |
+| **4 · Rigid menu** | fixed movement/weapon-mode lists (no jump, no grenade) · nature bolted to delivery (no mass-reactive round) | M per new mode · S–M to unbolt the axes |
+| **5 · Perfect or scrap** | no condition/damage state between full and destroyed | **L** (a new state on everything) |
+
+*The full engine-level write-up (file names, the audit's five themes, the per-item checklist) lived in the
+first draft of this doc and is preserved in git history if the code-level detail is ever needed. The five
+plain problems above are the version to work from.*
 
 ---
 
