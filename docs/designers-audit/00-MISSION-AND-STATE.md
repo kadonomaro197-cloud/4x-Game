@@ -142,7 +142,7 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 3 COMPLETE → rolling into PHASE 4 (Design the Missing).
+- **Current phase:** PHASE 4 COMPLETE → rolling into PHASE 5 (Self-Simulation).
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
@@ -158,17 +158,31 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
     `03-CORRECTION-PLAN.md`. Committed + pushed.
     - **Full tracer output at** `/tmp/claude-0/.../tasks/wzclp795b.output`.
 - **Next:**
-  - PHASE 4 — design the genuinely-missing mechanisms (the E-build items) at the full designer standard
-    (doors derived, dials write real vars, priced, intrinsic test, worked examples). New files under
-    `04-MISSING-DESIGNS/`. Candidates: colonist transport (E-build-1), drive-heat (E-build-2), generic
-    power-draw + shield power (E-build-4/5), colony power generator (E-build-11), command agency (E-build-6).
+  - PHASE 5 — walk the whole designer system through 5 classic 4X situations (cold-start bootstrap yrs 0-5
+    checking bootstrap deadlocks; first contact; take-a-planet cradle-to-grave; economy/politics loop; late
+    crisis), naming which designer output every step consumes and where flow breaks. Feed issues back to
+    03/04. Write `05-SIMULATIONS.md`.
 - **Deliverable status:**
   - [x] 01-INTERCONNECTION-MAP.md — committed
   - [x] 02-OUTPUT-READABILITY-AUDIT.md — committed
   - [x] 03-CORRECTION-PLAN.md — committed
-  - [ ] 04-MISSING-DESIGNS/ (one file per missing piece)
+  - [x] 04-MISSING-DESIGNS/ (00-INDEX + 01 power-economy, 02 settle-a-world, 03 employment, 04 heat-signature,
+        05 command-agency) — committed
   - [ ] 05-SIMULATIONS.md
   - [ ] 06-FINAL-REPORT.md
+
+## KEY PHASE-4 NOTES (carry forward)
+- The Phase-4 input-surface agent pass (workflow `wf_3c4abb72-c21`, task `wv0037jow`) **hit a session usage
+  limit — all 5 agents errored, returned nothing.** I authored the 5 designs from Phase-2 ground truth + my
+  own direct source reads instead (North Star "verify in source" done by hand). If re-running agents later,
+  the session limit resets 3:30am UTC.
+- Through-line: every missing design is ~70-80% already built — the door/consumer/competence-machinery exists;
+  the gap is ONE connecting wire. And they STACK (power econ ↔ cryo settling ↔ heat; employment ↔ command).
+- The 5 designs: (1) power economy = generic PowerDraw dial + colony power + shield draw; (2) settle-a-world =
+  colonist good + load/unload/found orders (door already in Logistical); (3) employment = the denominator trap,
+  scale Jobs to workforce or re-scope; (4) heat/signature = drive heat-per-thrust dial feeds combat pool +
+  proportional signature; (5) command agency = seat occupant competence folds into governed rate (flagship
+  pattern), span = emergent capacity.
 
 ## KEY PHASE-3 FINDINGS (the blast-radius traps — carry forward)
 - **Mass-budget is ALREADY enforced** in-game (client sets `EnforceMassBudget=true` at `PulsarMainWindow.cs:144`;
@@ -231,4 +245,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 - `5e987f1` `mission: designer interconnection audit — STEP 0 state anchor` — 00-MISSION-AND-STATE.md.
 - `cae8cd5` `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
 - `237d98f` `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
-- (pending) `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
+- `4509fc5` `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
+- (pending) `audit: Phase 4 missing designs — 5 mechanisms at the North Star standard` — 04-MISSING-DESIGNS/ + STATE.
