@@ -142,7 +142,7 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 5 COMPLETE → rolling into PHASE 6 (Final Report).
+- **Current phase:** ✅ **COMPLETE** — all six phases delivered, committed, and pushed.
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
@@ -161,13 +161,22 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
   - PHASE 6 — the synthesis for the developer: what connects, what can't, the fixes, what was missing and is
     now designed, what the sims exposed, the recommended build order. Add DOCS-INDEX rows for all new docs in
     the same commit. Write `06-FINAL-REPORT.md`, then the final chat summary (5 most important things).
-- **Deliverable status:**
+- **Deliverable status: ALL COMPLETE**
   - [x] 01-INTERCONNECTION-MAP.md — committed
   - [x] 02-OUTPUT-READABILITY-AUDIT.md — committed
   - [x] 03-CORRECTION-PLAN.md — committed
   - [x] 04-MISSING-DESIGNS/ (00-INDEX + 01..05) — committed
   - [x] 05-SIMULATIONS.md — committed
-  - [ ] 06-FINAL-REPORT.md
+  - [x] 06-FINAL-REPORT.md — committed (+ DOCS-INDEX rows added same commit)
+
+## COMPLETION CRITERIA — MET
+- All six deliverables exist, committed, pushed. ✓
+- Every designer output has a sourced verdict (02). ✓
+- Every broken connection has a correction (03). ✓
+- Every gap has a design (04). ✓
+- All five simulations run + issues dispositioned (05). ✓
+- Six open developer rulings collected (06 §R1-R6); one NEW (T1/R1: what capture transfers). ✓
+- DOCS-INDEX rows added for all new docs (06 commit). ✓
 
 ## KEY PHASE-5 FINDINGS (carry forward)
 - **The through-line of all 5 sims: the game is BUILT BUT UNLIT.** Mechanical chains are astonishingly complete
@@ -260,4 +269,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 - `237d98f` `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
 - `4509fc5` `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
 - `3ed5e03` `audit: Phase 4 missing designs — 5 mechanisms at the North Star standard` — 04-MISSING-DESIGNS/ + STATE.
-- (pending) `audit: Phase 5 self-simulation — 5 walkthroughs, built-but-unlit` — 05 + STATE.
+- `4bd6b1f` `audit: Phase 5 self-simulation — 5 walkthroughs, built-but-unlit` — 05 + STATE.
+- (pending) `audit: Phase 6 final report + DOCS-INDEX rows — mission COMPLETE` — 06 + DOCS-INDEX + STATE.
