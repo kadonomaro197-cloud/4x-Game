@@ -142,26 +142,49 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 1 COMPLETE → rolling into PHASE 2 (Output Readability Audit).
+- **Current phase:** PHASE 2 COMPLETE → rolling into PHASE 3 (Correction Plan).
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
-  - PHASE 1 — extraction fan-out (11 designers, workflow `wf_f0f98d9f-92d`) done; every door's
-    doors/dials/named-outputs/claimed-feeds captured. Synthesized the designer×designer matrix +
-    directed edge ledger + 15 early cracks into `01-INTERCONNECTION-MAP.md`. Committed + pushed.
+  - PHASE 1 — extraction fan-out (workflow `wf_f0f98d9f-92d`) + synthesized `01-INTERCONNECTION-MAP.md`.
+  - PHASE 2 — verification fan-out (workflow `wf_f3284be9-6e5`, task `w8ra3xow4`: 12 agents = 6 verifier
+    + 6 skeptic, 0 errors, 1.7M tokens) + 7 of my own independent spot-checks. Every ~50 edge given a
+    sourced verdict. Wrote `02-OUTPUT-READABILITY-AUDIT.md`. Committed + pushed.
+    - **My raw spot-checks preserved at** `scratchpad/phase2-my-groundtruth.md` (survives compaction).
+    - **Full agent output at** `/tmp/claude-0/.../tasks/w8ra3xow4.output` (1204 lines).
 - **Next:**
-  - PHASE 2 — for every ● and ○ edge in the map, prove against engine source (file:line) whether the
-    game reads it TODAY, and whether the named consumer exists. Adversarial: one skeptic agent per
-    claimed connection whose job is to refute it. Priority targets = §6 of the map (the four backbones,
-    the C1 jobs-producer hunt, the C7 band gate, the dead-ends, the transport chain, the boundary
-    disputes). Write `02-OUTPUT-READABILITY-AUDIT.md`.
+  - PHASE 3 — for every broken/absent connection, the smallest DESIGN correction, dependency-ordered,
+    each with its gauge + blast radius. Use the §5 five correction buckets from the readability audit as
+    the skeleton. Plan only — implement nothing. Write `03-CORRECTION-PLAN.md`.
 - **Deliverable status:**
   - [x] 01-INTERCONNECTION-MAP.md — committed
-  - [ ] 02-OUTPUT-READABILITY-AUDIT.md
+  - [x] 02-OUTPUT-READABILITY-AUDIT.md — committed
   - [ ] 03-CORRECTION-PLAN.md
   - [ ] 04-MISSING-DESIGNS/ (one file per missing piece)
   - [ ] 05-SIMULATIONS.md
   - [ ] 06-FINAL-REPORT.md
+
+## KEY PHASE-2 FINDINGS (carry forward)
+- **Five cross-cutting themes** (§1 of 02) — the real story, above any single wire:
+  1. "MISSING" is mostly **BUILT-BUT-DORMANT** — default-false flags (EnforceMassBudget, EnableFuelExhaustion,
+     EnableReactorHeat, EnableFireControl*), zero demand coeffs (PerCapitaFood/PowerDemand=0), producers on
+     no start-build list (academy, intel directorate), or no template declaring an attribute (jobs). Fix = a
+     value/data line, not an engine build.
+  2. **Space vs ground asymmetric — GROUND is stricter.** Reactor gate, magazine gate, penetration, kernel
+     flat ArmourSoak exist ONLY on the ground assembler; ships have none.
+  3. **TWO resolvers; `AutoResolve` is TEST-ONLY.** Live path = `CombatEngagement.StepEngagementGroup`
+     (BattleTriggerProcessor). Consequence: **Firepower-Caliber enhancer is DEAD in live combat** (touches
+     cv.Firepower, which only test-only AutoResolve sums; live reads per-weapon dps). Toughness-Caliber IS live.
+  4. **Named-consumer misattribution** — data flows to a DIFFERENT consumer than the design names (armour→
+     FleetArmourSoakFraction not CombatKernel; signature→EmconActivityProcessor not SensorSignatureAtb;
+     IntelDirectorate in Factions/ not Sensors/; combat-trigger→SensorContactExists not RangeForSignal).
+  5. **Wrong-mechanism** — CargoStorageAtb('ammo'/'troops') DON'T EXIST; ammo=ShipMagazineAtb/GroundMagazineAtb,
+     troops=GroundBayAtb. Logistical designer's "cargo class taxonomy" over-promises.
+- **Crack scorecard: 14/15 confirmed; C4 OVERTURNED.** C4 (research Cost-Per-Day) is READS, not a dead-end —
+  I was wrong (my first-pass chat claim), agents right; install copies _costPerDay→ResearcherDB.CostPerDay
+  (ResearchPointsAtbDB.cs:71), charged daily (ResearchProcessor.cs:107,114). Logged as honesty guard in 02 §4.
+- **Five correction buckets** (02 §5) = the Phase-3 skeleton: (1) flip a flag/set a coeff; (2) add a data line;
+  (3) re-label the designer output; (4) mirror a ground gate onto ships; (5) build a missing mechanism.
 
 ## KEY PHASE-1 FINDINGS (carry forward — these are what Phase 2 must prove/kill)
 - **Four backbones** (many-to-many spines): A = mass/budget hub (Chassis), B = manpower pool (Civic
@@ -182,4 +205,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## COMMIT LOG
 - `5e987f1` `mission: designer interconnection audit — STEP 0 state anchor` — 00-MISSION-AND-STATE.md.
-- (pending) `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
+- `cae8cd5` `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
+- (pending) `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
