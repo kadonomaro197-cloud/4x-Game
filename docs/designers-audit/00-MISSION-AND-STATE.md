@@ -142,7 +142,7 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 2 COMPLETE → rolling into PHASE 3 (Correction Plan).
+- **Current phase:** PHASE 3 COMPLETE → rolling into PHASE 4 (Design the Missing).
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
@@ -152,17 +152,41 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
     sourced verdict. Wrote `02-OUTPUT-READABILITY-AUDIT.md`. Committed + pushed.
     - **My raw spot-checks preserved at** `scratchpad/phase2-my-groundtruth.md` (survives compaction).
     - **Full agent output at** `/tmp/claude-0/.../tasks/w8ra3xow4.output` (1204 lines).
+  - PHASE 3 — blast-radius fan-out (workflow `wf_b90d36e2-1cd`, task `wzclp795b`: 6 tracers, 5 done + 1
+    errored [firepower-caliber, handled by me from source], 1.06M tokens). Drafted 26 corrections in 5
+    buckets + a dependency-ordered wave plan, then integrated the traced blast radii. Wrote
+    `03-CORRECTION-PLAN.md`. Committed + pushed.
+    - **Full tracer output at** `/tmp/claude-0/.../tasks/wzclp795b.output`.
 - **Next:**
-  - PHASE 3 — for every broken/absent connection, the smallest DESIGN correction, dependency-ordered,
-    each with its gauge + blast radius. Use the §5 five correction buckets from the readability audit as
-    the skeleton. Plan only — implement nothing. Write `03-CORRECTION-PLAN.md`.
+  - PHASE 4 — design the genuinely-missing mechanisms (the E-build items) at the full designer standard
+    (doors derived, dials write real vars, priced, intrinsic test, worked examples). New files under
+    `04-MISSING-DESIGNS/`. Candidates: colonist transport (E-build-1), drive-heat (E-build-2), generic
+    power-draw + shield power (E-build-4/5), colony power generator (E-build-11), command agency (E-build-6).
 - **Deliverable status:**
   - [x] 01-INTERCONNECTION-MAP.md — committed
   - [x] 02-OUTPUT-READABILITY-AUDIT.md — committed
-  - [ ] 03-CORRECTION-PLAN.md
+  - [x] 03-CORRECTION-PLAN.md — committed
   - [ ] 04-MISSING-DESIGNS/ (one file per missing piece)
   - [ ] 05-SIMULATIONS.md
   - [ ] 06-FINAL-REPORT.md
+
+## KEY PHASE-3 FINDINGS (the blast-radius traps — carry forward)
+- **Mass-budget is ALREADY enforced** in-game (client sets `EnforceMassBudget=true` at `PulsarMainWindow.cs:144`;
+  engine ignores `IsValid`; only the client build-list filter reads it). Correction = add a scenario-faction
+  gauge, not a flip.
+- **Jobs (C1) is a DENOMINATOR trap:** `employmentRatio = jobs/(pop×0.5)` = jobs/billions. A fixed jobs number
+  reads as −25 morale and reds `MoraleTests.StartingColony_HasMorale_NeutralOnHomeworld` on turn 1. Must scale
+  Jobs to workforce (NCalc formula like Support Colonists) or re-scope the denominator FIRST.
+- **Ship reactor/magazine gates invalidate ~12+ shipping designs** (incl. the AI's whole fleet) if unconditional;
+  energy gate fights the **battery-buffered** power model. → default-off `EnforceWeaponSupplyGates` flag; fix
+  start designs first; `MagazineCapacity_kg` reads `GroundMagazineAtb` (needs a ship variant).
+- **Per-capita demand starves earth.json turn 1** (no farm, no power plant). Food = per-scenario strain node +
+  farm in same commit; **POWER BLOCKED — no colony-installable power generator exists** (new build E-build-11;
+  `Colonies/CLAUDE.md` "the remaining gap").
+- **EMCON split:** reactor-heat (A-flip-3a) is low-blast, do first (re-baseline detection gauges); fuel-exhaustion
+  (A-flip-3b) is a slow lockout (non-refuelable reactors) — needs a fuel readout + Lifetime audit + save migration.
+- **Firepower-caliber fix is clean:** fold `UnitCaliberFirepowerMult` into per-weapon dps at build, drop the
+  redundant `ShipCombatValueDB.cs:529` aggregate multiply; branches are mutually exclusive → no double-count.
 
 ## KEY PHASE-2 FINDINGS (carry forward)
 - **Five cross-cutting themes** (§1 of 02) — the real story, above any single wire:
@@ -206,4 +230,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 ## COMMIT LOG
 - `5e987f1` `mission: designer interconnection audit — STEP 0 state anchor` — 00-MISSION-AND-STATE.md.
 - `cae8cd5` `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
-- (pending) `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
+- `237d98f` `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
+- (pending) `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
