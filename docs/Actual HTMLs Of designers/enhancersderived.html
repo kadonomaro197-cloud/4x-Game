@@ -1,0 +1,746 @@
+<meta charset="utf-8">
+<title>Enhancers, re-derived - the door where you set your own price, and the two kinds it cannot express</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark].chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary.n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch - ";color:var(--ink3)}
+@media(min-width:700px){
+.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+.ten{grid-template-columns:1fr 1fr}
+.tenq{border-left:1px solid var(--rule2)}
+.tenq:nth-child(odd){border-left:0}
+.nums{grid-template-columns:repeat(5,1fr)}
+.opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+.oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)}.t b.a{color:var(--warn)}.t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)}.num.sh.a b{color:var(--warn)}.num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)}.mt.a b{color:var(--warn)}.mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)}.num.a b{color:var(--warn)}.num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* -- added for the remaining six doors (same idiom) ---------------------- */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)}.bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+
+/* -- section nav ------------------------------------------------------------- */
+.jump{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);
+ box-shadow:var(--sh);padding:8px 0;font-size:12.5px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jump.w{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.jump b{color:var(--ink3);font-weight:600;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;font-size:10.5px}
+.jump a{color:var(--ink2);text-decoration:none;padding:4px 9px;border:1px solid var(--rule);border-radius:999px;white-space:nowrap}
+.jump a:hover{color:var(--ink);border-color:var(--ac);background:var(--card2)}
+.jump a.new{color:var(--ac2);border-color:var(--ac)}
+/* -- control help ------------------------------------------------------------ */
+.chelp{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.5}
+.chelp b{color:var(--ink2);font-weight:600}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}
+.legend dd{margin:0}
+/* -- output markers ---------------------------------------------------------- */
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.dead{border-color:var(--flag);color:var(--flag)}
+.mk.chk{border-color:var(--warn);color:var(--warn)}
+.num i,.mt i{display:block}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X - component designer - door 6 of the remaining eight</p>
+<h1>Eight templates that make other things better - and on six of them, you set your own price.</h1>
+<p class="lead">A veteran cadre, an automation suite, power armour, a shield generator, a ward projector, reflex boosters, a training cadre, sealed systems. Every one of them is <b>the same component</b>: <em>pick what it improves, pick by how much.</em> One choice, one slider. It reproduces all eight.</p>
+<p class="lead" style="margin-top:10px"><b>And six of the eight have their mass on a SEPARATE dial from their capability.</b> <code>Mass = PropertyValue('CarryMass')</code> - so the weight is a number you type in, independent of what the part actually does. Set the mass to its minimum and the capability to its maximum and you get <b>a x2 firepower multiplier for a tonne, total evasion for a kilogram, 200 crew saved for nothing.</b></p>
+<p class="lead" style="margin-top:10px"><b>One of them is worse than free - it is a bootstrap.</b> Power armour's <code>StrengthBonus</code> <em>adds to the carry budget</em> while its <code>CarryMass</code> is what it spends from it. Both are dials. So a one-kilogram part can grant <b>+2,999 carry capacity</b>, which you then spend on more of them. <b>The ground unit assembler's budget does not have a ceiling.</b> And the engine's own error message, when you run out of room, is: <em>"Add an augment (e.g. power armour) or use a bigger frame."</em></p>
+<p class="lead" style="margin-top:10px"><b>Both fixes are already written in the codebase.</b> Two of the eight templates price their capability into their mass formula - and one of them says so out loud: <em>"Training is EARNED: the higher you dial the multiplier, the steeper the mass."</em> And the exact leverage cap the augments need is already running one attribute over, on the ground weapons.</p>
+</div></div>
+<nav class="jump" aria-label="Section navigation"><div class="w">
+<b>Jump to</b><a href="#e-door">The door</a><a href="#e-build" class="new"> The designer</a>
+<a href="#e-collapse">The collapse</a><a href="#e-limit" class="new"> The limit</a><a href="#e-frontier"> The frontier</a>
+</div></nav>
+
+<section class="band"><div class="w">
+<h2 id="e-door">The whole door - one question asked seven ways, and the two it could not ask</h2>
+<p class="sub">What each enhancer multiplies, and what actually reads it.</p>
+<div class="ten">
+<div class="tenq"><h4>Better at fighting</h4><div class="vars"><span class="tag">Firepower Caliber</span><span class="tag">Toughness Caliber</span><span class="tag">TrainingMultiplier</span></div><p>A ship's <code>unit-caliber</code> multiplies <code>ShipCombatValueDB</code> firepower and toughness at build. A ground unit's <code>ground-training-cadre</code> does the identical job. <b>Two versions of one enhancer, and only one of them charges for it.</b></p></div>
+<div class="tenq"><h4>Better at surviving</h4><div class="vars"><span class="tag">EvasionBonus</span><span class="tag">Shield</span><span class="tag">ShieldRegenFraction</span><span class="tag">ToughnessBonus</span><span class="tag">Sealing</span></div><p>Four ways not to die, all read by <code>GroundUnitAssembly</code> into the unit's combat stats. <b>Evasion is the most valuable of them</b> - the Defense door measured it as an effective-health multiplier up to x20, against armour's x10.</p></div>
+<div class="tenq"><h4>Better at carrying</h4><div class="vars"><span class="tag">StrengthBonus</span></div><p>Raises the frame's carry budget so an augmented human can lug a weapon a bare human cannot - <b>the Space Marine story, and a genuinely good mechanic.</b> It is also the one that bootstraps.</p></div>
+<div class="tenq"><h4>Better at running with fewer people</h4><div class="vars"><span class="tag">Crew Reduction</span></div><p><code>crew-automation</code> cuts a hull's bulk crew requirement - spending mass and research instead of <b>scarce workforce</b> (a real pool, via <code>ManpowerTools</code>). Its own description says exactly that. The dial is free.</p></div>
+</div>
+<div class="okbox"> <b>So the collapse is: one choice - <em>what does it improve?</em> - and one slider, <em>by how much.</em></b> The four ground-augment templates (<code>power-armor</code>, <code>shield-generator</code>, <code>ward-projector</code>, <code>reflex-booster</code>) are <b>literally the same attribute with different defaults</b>: all four carry all five dials, and each simply leaves the four it does not use at zero. A shield generator ships with <code>StrengthBonus 0..1000</code> it never uses; a reflex booster ships with <code>Shield 0..1000</code> it never uses. <b>They are one component, copied four times.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The same enhancer, built for ships and for ground troops - and only the ground one charges</h2>
+<p class="big">These two components do the identical job: embed a veteran cadre so an identical chassis fights above its class. Compare their <code>Mass</code> formulas.</p>
+<div class="warnbox" style="margin:0 0 9px"><b>SHIP - <code>unit-caliber</code> "Veteran Cadre"</b><br><code>Mass = PropertyValue('Cadre Mass')</code>   -   dials: <code>Cadre Mass</code> 1,000-20,000 - <code>Firepower Caliber</code> <b>1.0-2.0</b> - <code>Toughness Caliber</code> <b>1.0-2.0</b><br><b style="color:var(--flag)">=> neither caliber appears in any cost formula. Cadre Mass 1,000 + both calibers 2.0 = a x2/x2 combat multiplier for one tonne.</b></div>
+<div class="okbox" style="margin:0 0 11px"><b>GROUND - <code>ground-training-cadre</code> "Training Cadre"</b><br><code>Mass = 50 x (1 + (TrainingMultiplier - 1) x 4)</code>   -   dial: <code>TrainingMultiplier</code> <b>1.0-2.0</b><br><b style="color:var(--ac)">=> the multiplier IS the mass. Dialing 1.0 -> 2.0 takes the part from 50 kg to 250 kg, and research and credits follow.</b></div>
+<p class="sub" style="margin-top:0"><b>And the ground template says so in its own description:</b> <em>"Training is EARNED: the higher you dial the multiplier, the steeper the mass/credits/research/build-time to field the unit. Multiplier range + cost curve are FLAGGED balance values."</em> Somebody understood the problem exactly, wrote the fix, flagged their own numbers for review - <b>and the ship version, which shipped in the same era, does not have it.</b></p>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Setting</th><th>Ship cadre <s>xfirepower</s></th><th>Its mass</th><th>Ground cadre <s>xattack</s></th><th>Its mass</th></tr>
+<tr><td>the minimum</td><td>x1.0</td><td>1,000 kg</td><td>x1.0</td><td>50 kg</td></tr>
+<tr><td><b>the shipped design</b></td><td><b>x1.30</b></td><td>3,000 kg</td><td><b>x1.20</b></td><td><b class="g">90 kg</b></td></tr>
+<tr><td>the maximum, cheapest</td><td><b class="r">x2.00</b></td><td><b class="r">1,000 kg - LESS than the shipped one</b></td><td><b class="g">x2.00</b></td><td><b class="g">250 kg - 5x the minimum</b></td></tr>
+</table></div>
+<div class="warnbox"><b>Read the bottom-left cell again.</b> The <em>most powerful</em> ship cadre you can design is <b>cheaper than the one that ships</b> - because the shipped design pays 3,000 kg of Cadre Mass for a x1.3, and the free version pays 1,000 kg for a x2.0. <b>The design in the game is strictly worse than the design a player will make in thirty seconds</b>, and the difference is a x1.54 firepower advantage on every warship in the fleet, for a third of the mass. <b>That is the largest free combat multiplier found anywhere in the designer.</b></div>
+<div class="okbox"> <b>The fix is a transcription, exactly like Power's was.</b> <code>Mass = Cadre Mass x (1 + (Firepower Caliber - 1) x k + (Toughness Caliber - 1) x k)</code>, with <code>k</code> chosen so the shipped 3,000 kg / x1.30 / x1.20 design is byte-identical. The ground template already demonstrates the shape and already flags its own coefficient as a balance value. <b>Nothing here needs designing.</b></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Power armour is not a leak - it is a bootstrap</h2>
+<p class="big">This is the most serious single finding in the campaign, and it needs three lines of code read side by side. From <code>GroundUnitAssembly.Compute</code>:</p>
+<div class="warnbox" style="margin:0 0 11px"><b>pass 1 - augments raise the budget</b><br><code>capacity += d.GetAttribute&lt;GroundAugmentAtb&gt;.StrengthBonus * c;</code><br><code>r.MaxItemWeight = capacity * MaxItemFraction;</code>  <s>MaxItemFraction = 0.5</s><br><br><b>pass 2 - and what they cost is a different dial</b><br><code>itemMass = g.Mass;</code>  <s>which is <code>Mass = PropertyValue('CarryMass')</code></s><br><code>used += itemMass * c;</code><br><br><b>the gate</b><br><code>if (used &gt; capacity)...invalid</code></div>
+<p class="sub" style="margin-top:0"><b><code>StrengthBonus</code> and <code>CarryMass</code> are two independent dials on the same part.</b> One adds to the budget; the other spends from it. Neither constrains the other. So the net contribution of a power-armour design is <code>StrengthBonus - CarryMass</code>, and <b>you choose both.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>A power-armour design</th><th>CarryMass <s>what it spends</s></th><th>StrengthBonus <s>what it grants</s></th><th>Net to the budget</th><th>Heaviest single part now allowed</th></tr>
+<tr><td>the shipped Power Armour</td><td>30</td><td>300</td><td><b class="a">+270</b></td><td>185</td></tr>
+<tr><td>the same, mass dialled down</td><td><b>1</b></td><td>300</td><td><b class="r">+299</b></td><td>199</td></tr>
+<tr><td><b>both dials at their extremes</b></td><td><b>1</b></td><td><b>3,000</b></td><td><b class="r">+2,999</b></td><td><b class="r">1,549</b></td></tr>
+<tr><td><b>ten of those</b></td><td>10</td><td>30,000</td><td><b class="r">+29,990</b></td><td><b class="r">15,045</b> <s>a human frame now carries a siege railgun</s></td></tr>
+</table></div>
+<div class="warnbox"><b>So the ground unit assembler's carry budget has no ceiling</b> - and because <code>MaxItemWeight = capacity x 0.5</code>, the per-item cap rises with it too. A 20 kg human frame with a base carry strength of 100 can be walked up to <b>tens of thousands</b> of carry capacity using parts that each weigh one unit. Every gate that depends on the carry budget - the per-item limit, the power-supply gate, the ammo gate - is downstream of a number the player can inflate at will. <b>This is the ground-side equivalent of the Chassis door's free mass budget, except it compounds.</b></div>
+<div class="warnbox"><b>And for the third time in this campaign, the engine's own error message advises pulling the free lever.</b> <code>GroundUnitAssembly.cs:226</code>: <code>"{name} (carry-mass 300) is too heavy for this frame - max single item is 50. <b>Add an augment (e.g. power armour)</b> or use a bigger frame."</code> Friendly, accurate, and it is telling the player how to bypass the budget. The building foundation says <em>"raise the Footprint Budget"</em>; the station says <em>"raise the structure budget"</em>. <b>Three helpful messages, three free levers. A good error message is evidence about what the designer expected to be costly.</b></div>
+<div class="okbox"><b>And the cap this needs is already running, one attribute over, on the ground weapons.</b> When the Attack dial turned out to be free, the fix was a <b>floor on the part's carry-mass driven by its capability</b>:<br><code>itemMass = Math.Max(w.Mass, w.Attack * AttackCarryFactor);</code>  <s>AttackCarryFactor = 0.1</s><br>Apply the identical pattern to the augments - <code>Math.Max(CarryMass, StrengthBonus * 0.1)</code> - and the shipped Power Armour is <b>byte-identical</b> (300 x 0.1 = 30, exactly its authored CarryMass), while the leverage is capped at a <b>stated, uniform 10:1</b>. Power armour still lets you carry ten times what it weighs, which is what power armour is for. It just stops being infinite. <b>The pattern, the coefficient and the byte-identity anchor are all already in the file.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="e-build">The designer - build one enhancer</h2>
+<p class="sub">This is the one place you design an enhancer: one door, one template, two sliders - and it reproduces all eight shipped templates, each opening on its real shipped part. Tick the box to price the capability into the mass, the way two of the eight already do. <b>Below the designer is a read-only map of what this door cannot build yet</b> - the frontier, not a second builder.</p>
+<div class="build">
+<div class="bsec"><p class="blab">The first door - what KIND of better?</p>
+<p class="chelp">The <b>three locked doors of 6</b>, and they split by <b>what you are upgrading</b>. <b>Augmentation</b> raises the host's physical envelope - carry, evasion, protection - whatever the frame is. <b>Advanced Training</b> stamps an extra layer of buff onto the unit at design time - it is simply better than the baseline. <b>Systems</b> lets the machine do a crew or yard job - automation, a battle-management link, self-repair. <b>Environmental thresholds and damage control are NOT here</b> - they are <b>Defense > Hardening 5.3</b>, and they moved. See.</p>
+<div class="chips">
+<button class="chip kchip" type="button" data-k="bio" aria-pressed="true" title="6.1 - raise the host's own physical envelope: what it carries, how it dodges, what it soaks. Host-agnostic - a soldier's powered frame, a tank's drivetrain, a ship's bracing - so it is NOT called bio anymore. The one door in this category actually built, ground-side.">Augmentation</button>
+<button class="chip kchip" type="button" data-k="train" aria-pressed="false" title="6.2 - an extra layer of buff that makes the entity intrinsically better. A Space Marine is not a guardsman; the Falcon is not a freighter.">Advanced Training</button>
+<button class="chip kchip" type="button" data-k="sys" aria-pressed="false" title="6.3 - let the MACHINE do a crew or yard job: automation (buy back people), a battle-management link (re-task faster), self-repair.">Systems</button>
+</div>
+<p class="sub" id="kindnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">The second door - which enhancer?</p>
+<div class="warnbox" style="margin:0 0 10px"><b>These are TEMPLATES, not dials.</b> Each row below is a
+<b>thing you can build</b>; the <b>dials</b> are the numbers you set on it, and 6.0 locks the same five for every
+enhancer: <b>what it boosts - magnitude - host - cost/side-effect - grave rung</b>. So "Magnitude" is a dial that every
+template has - <b>not a door</b>, which is what an earlier pass here got wrong. The sliders under are this template's
+instance of those dials.</div>
+<p class="chelp"><b>Five templates used to be on this row and are not any more.</b> <code>sealed-systems</code>, pressure, radiation, damage-control and redundancy are <b>Defense > Hardening 5.3</b> - <em>"surviving the environment, not the weapon"</em>. They moved rather than being deleted; see the Defense door.</p>
+<p class="chelp">The <b>forced choice</b>: it picks <b>which template you are building</b> and therefore which single number the enhancer writes into the simulation. All seven ask the same question - <em>how much better does this make the thing?</em> - and <b>five of them charge nothing for the answer.</b> The two marked are the reference implementations that do.</p><div class="chips">
+<button class="chip" type="button" data-v="caliber" aria-pressed="true" title="unit-caliber. Writes ship firepower AND toughness multipliers. BOTH capability dials are free - mass is a separate number you declare.">Fighting - ship cadre </button>
+<button class="chip" type="button" data-v="training" aria-pressed="false" title="ground-training-cadre. PRICED: Mass = 50 x (1 + (multiplier-1)x4). The reference implementation the other five should copy.">Fighting - ground cadre </button>
+<button class="chip" type="button" data-v="carry" aria-pressed="false" title="power-armor. Writes StrengthBonus, which ADDS to the unit's carry budget - so it can pay for itself and then some. Free.">Carrying - power armour </button>
+<button class="chip" type="button" data-v="dodge" aria-pressed="false" title="reflex-booster. Writes EvasionBonus - evasion is the best defence in the game, and this costs nothing.">Dodging - reflexes </button>
+<button class="chip" type="button" data-v="shield" aria-pressed="false" title="shield-generator / ward-projector. Writes a damage pool taken before HP. Free.">Shielding </button>
+<button class="chip" type="button" data-v="crew" aria-pressed="false" title="crew-automation. Writes Crew Reduction - it buys back people from a genuinely scarce pool. Free, and it has the highest research cost in any door.">Crew - automation </button>
+<button class="chip" type="button" data-v="iface" aria-pressed="false" title="NEW. A command link that cuts the doctrine/stance switch cooldown - the host re-tasks sooner. Hard-floored so it is never instant. Stands alone; not a prerequisite. Lives in Systems.">Interface </button>
+<button class="chip" type="button" data-v="fieldrep" aria-pressed="false" title="NEW. Field repair - structure regained without returning to a yard. The season-long survivor.">Field repair </button></div>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<p class="blab">The sliders - the capability, and the price you set yourself</p>
+<div class="sl" id="w1"><div class="slh"><span id="n1">How much</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="30" aria-label="Capability"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div>
+<p class="chelp" id="h1help">The <b>capability</b> - the number that actually reaches the simulation.</p></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Declared mass</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="30" aria-label="Declared mass"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div>
+<p class="chelp" id="h2help"><b>The price - and on five of seven templates YOU set it, independently of the capability above.</b> That is the whole finding of this door: <code>Mass</code> is its own dial, so you declare what your enhancer weighs and then take as much capability as you like for free.</p></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix"><span>Price the capability into the mass, the way <code>ground-training-cadre</code> and <code>sealed-systems</code> already do <b>(proposed - slice E1)</b></span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">-</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">-</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><u class="mk set" id="k_a1">you set it</u><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><u class="mk set" id="k_a2">you set it</u><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><u class="mk calc" id="k_a3">computed</u><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4">Mass</i><u class="mk calc" id="k_a4">computed</u><b id="v_a4"></b></div>
+<div class="num fixed"><i id="l_a5">Research</i><u class="mk calc" id="k_a5">computed</u><b id="v_a5"></b></div>
+<div class="num fixed"><i>Credits</i><u class="mk calc" id="k_cost">computed</u><b id="v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it is actually worth</p>
+<p class="muN">Against the real consumers: <code>ShipCombatValueDB</code>, the ground assembler's carry budget, and the manpower pool.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">What it buys</i><u class="mk sim" id="k_m1">reaches the sim</u><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Per tonne</i><u class="mk calc" id="k_m2">comparison only</u><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Ladder test</i><u class="mk chk" id="k_m3">design check</u><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">vs the shipped design</i><u class="mk calc" id="k_m4">comparison only</u><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk set">you set it</u></dt><dd>You chose it with a control above.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it.</dd>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>This number is genuinely read by the running game.</dd>
+<dt><u class="mk dead">costs NOTHING</u></dt><dd><b>The capability is free.</b> You can take the maximum and pay no mass, no crew, no materials for it - the defining defect of this door.</dd>
+<dt><u class="mk chk">design check</u></dt><dd>Not a game value - this panel's own verdict on whether the dial is honest.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>The two-click proof.</b> Pick <b>ship cadre </b>, drag capability to the top and mass to the bottom: <b>a x2 multiplier that weighs less than the shipped x1.3.</b> Now pick <b>ground cadre </b> and do the same - <b>the mass climbs with you, because that template already charges.</b> Same door, same question, two different answers about whether capability costs anything.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The other two free dials, and the one that is quietly the most expensive</h2>
+<div class="leak"><h4><code>Crew Reduction</code> - 200 people saved, for nothing</h4><p><code>crew-automation</code>: <code>Mass = PropertyValue('Automation Mass')</code>, and <code>Crew Reduction</code> (0 -> 200) is a separate dial that appears in no cost formula. So a 1,000 kg suite can cut <b>200 crew</b> off a hull. And the template's own description explains precisely why that matters: <em>"It cuts the BULK crew requirement, letting you spend mass and high tech instead of <b>scarce workforce</b>."</em> Crew <b>is</b> a scarce pool - <code>ManpowerTools.ResolveBuild</code> gates construction on it, and a government's <code>CrewPolicy</code> decides whether a shortage blocks the build or conscripts. <b>So this dial converts a scarce strategic resource into nothing, and the template knows the resource is scarce.</b> Same fix: put <code>Crew Reduction</code> into the mass formula.</p></div>
+<div class="leak"><h4><code>EvasionBonus</code> - total evasion for one kilogram, on the best defence in the game</h4><p><code>reflex-booster</code>: <code>CarryMass</code> 1 -> 2,000 and <code>EvasionBonus</code> <b>0 -> 1.0</b>, independent. Evasion 1.0 is <em>every attack missing</em>. And the Defense door already put a number on how much that is worth: <b>evasion is an effective-health multiplier up to x20, where armour reaches x10.</b> So the single most valuable defensive stat in the game is on a free dial, on a part whose weight you also choose. <b>One kilogram of reflex wetware makes a unit unkillable by aimed fire.</b> (Saturation fire still floors it - the weapon triangle holds - which is the only reason this is not the worst finding in the door.)</p></div>
+<div class="leak"><h4><code>Shield</code> and <code>ShieldRegenFraction</code> - a 1,500-point pool, or a 600-point pool that refills five times faster</h4><p>Same shape: <code>shield-generator</code> can hold <b>1,500</b> shield for one carry-mass; <code>ward-projector</code> can hold <b>600</b> and recharge at <code>ShieldRegenFraction 5.0</code>, also free. <b>And the ward projector's own description is a model of good design writing</b> - it explains the capacity-versus-recharge trade in plain terms (<em>"a smaller pool that recharges much faster between salvos... so it shrugs off sustained chip-fire where a big slow shield eats one alpha then stays down"</em>) and <b>flags both dials for a balance pass.</b> The trade it describes is real and it is the right trade. It just is not priced, so both ends are free and the trade never bites.</p></div>
+<div class="leak" style="border-left-color:var(--ac)"><h4><code>sealed-systems</code> - the second template that already charges, and it is the cheapest one to copy</h4><p><code>Mass = 40 x (1 + Sealing x 1.5)</code>. One dial, in the mass formula, so a fully sealed suit (Sealing 1.0) weighs <b>100 kg against an unsealed 40 kg</b> - and research and credits follow from mass. It also, like the training cadre, <b>flags its own coefficient</b>: <em>"Sealing fraction + cost curve are FLAGGED balance values."</em> Two templates in this door were written by someone applying exactly the rule this whole campaign has been deriving, <b>and they left a note saying which numbers they were unsure about.</b> That is the standard.</p></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="e-collapse">Four templates, one attribute - the collapse in the data</h2>
+<p class="big">The four ground augments are not four components. They are one component with four sets of defaults, and every one of them carries every dial:</p>
+<div class="scroll"><table class="t">
+<tr><th>Template</th><th>CarryMass</th><th>StrengthBonus</th><th>EvasionBonus</th><th>ToughnessBonus</th><th>Shield</th><th>Regen</th></tr>
+<tr><td><b>power-armor</b></td><td>30</td><td><b class="g">300</b></td><td>0 <s>0-1</s></td><td><b class="g">0.2</b></td><td>0 <s>0-1000</s></td><td>-</td></tr>
+<tr><td><b>shield-generator</b></td><td>20</td><td>0 <s>0-1000</s></td><td>0 <s>0-1</s></td><td>0 <s>0-2</s></td><td><b class="g">150</b></td><td>-</td></tr>
+<tr><td><b>ward-projector</b></td><td>20</td><td>0 <s>0-1000</s></td><td>0 <s>0-1</s></td><td>0 <s>0-2</s></td><td><b class="g">60</b></td><td><b class="g">1.0</b></td></tr>
+<tr><td><b>reflex-booster</b></td><td>15</td><td>0 <s>0-1000</s></td><td><b class="g">0.4</b></td><td>0 <s>0-2</s></td><td>0 <s>0-1000</s></td><td>-</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>Every grey cell is a live dial with a real range that the template leaves at zero.</b> So a player designing a "shield generator" can set its <code>StrengthBonus</code> to 1,000 and its <code>EvasionBonus</code> to 1.0 - it is the same attribute, and nothing forbids it. <b>Which means the four templates are not four choices; they are four suggestions.</b> That is not necessarily wrong - the developer's rule is <em>"anyone can create anything within reason"</em> - but it does mean <b>the door already IS one component with one slider per axis</b>, and the four templates are just presets. Naming them as presets rather than as separate parts would make the designer honest about what it is.</p>
+<div class="okbox"> <b>And this is where the door's one genuinely good structural decision lives.</b> <code>GroundUnitAssembly</code> handles stacking correctly and deliberately: <b>shields and evasion ADD across parts</b> (mount two wards, get both pools), while <b>training and sealing take the BEST</b> and do not stack (<code>if (t.TrainingMultiplier &gt; bestTraining)</code> - <em>"the best cadre's multiplier wins; they don't stack"</em>). That distinction is exactly right - you can wear two shields but you cannot be trained twice - and it is documented at both sites. <b>Nothing to change.</b></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Does it reproduce what exists?</h2>
+<div class="scroll"><table class="t">
+<tr><th>Template today</th><th>It improves</th><th>Under the derived door</th></tr>
+<tr><td><b>unit-caliber</b> <s>ship</s></td><td>firepower + toughness</td><td>capability x mass - <b class="r">the calibers must enter the mass formula (largest free multiplier in the designer)</b></td></tr>
+<tr><td><b>ground-training-cadre</b></td><td>attack + toughness</td><td><b class="g">already exactly this</b> - the reference implementation, and it flags its own curve</td></tr>
+<tr><td><b>power-armor</b></td><td>carry strength</td><td>capability x mass - <b class="r">needs the <code>Max(CarryMass, Strength x 0.1)</code> floor; byte-identical at stock</b></td></tr>
+<tr><td><b>reflex-booster</b></td><td>evasion</td><td>capability x mass - <b class="r">free, on the best defence in the game</b></td></tr>
+<tr><td><b>shield-generator</b> - <b>ward-projector</b></td><td>shield pool - recharge</td><td>capability x mass - <b class="a">the capacity<->recharge trade is right and unpriced; both flagged by their author</b></td></tr>
+<tr><td><b>crew-automation</b></td><td>crew requirement</td><td>capability x mass - <b class="r">free; converts a scarce pool into nothing</b></td></tr>
+<tr><td><b>sealed-systems</b></td><td>environmental survival</td><td><b class="g">already exactly this</b> - and it flags its own curve too</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>And here the "oldest attribute" lesson finally has a clean counter-example, which sharpens it.</b> Sensors said <em>look at the oldest</em>; Chassis added <em>new code gets the structure right and forgets the economy</em>. This door breaks both: <code>unit-caliber</code> and <code>crew-automation</code> are <b>recent</b> (the 6.2 / 6.3 slices, with their own CI gauges) and they are the ones that forgot to charge - while <code>ground-training-cadre</code> and <code>sealed-systems</code>, written in the <b>same month</b>, price their dials <em>and</em> annotate their own uncertainty. <b>So age is not the predictor. What predicts it is whether the author was thinking about the COST or about the CAPABILITY</b> - and the two who got it right both left a "FLAGGED balance values" note, which is what thinking about cost looks like in a diff.</p>
+</div></section>
+
+
+
+
+
+<section class="band alt"><div class="w">
+<h2 id="e-limit">THE LIMIT - what makes a Space Marine, a Jedi, and a ship that survives a season</h2>
+<div class="warnbox" style="margin:0 0 14px"><b>CORRECTION - this section once proposed Threshold and Endurance as new Enhancer doors. They are neither new nor Enhancers.</b>
+A read of <code>docs/economy/COMPONENT-DESIGNER-DIALS.md</code> (3,807 lines, <b>all 11 categories / 37 doors LOCKED</b>) found both already designed and homed:
+<b>Threshold</b> is <b>Defense > Hardening 5.3</b> dials A+B - <em>"surviving the environment, not the weapon... Hardening buys operation where an unhardened hull degrades or fails."</em>
+<b>Damage-control / redundancy</b> is <b>Hardening 5.3 dial C</b> verbatim.
+Only <b>self-repair</b> is Enhancers, at <b>6.3 Systems</b>, and it is half of hole <b>H2</b>.
+ <b>And the wall is the same one:</b> both halves of H2 are blocked on the <em>parked degraded-condition / per-component-damage model</em> - which is what "whole-or-dead" means. <b>The analysis below stands; the homing did not.</b> The five templates have moved to Defense.</div>
+<p class="lead">Push this door as far as it goes and it hits a wall that is not about tuning. <b>Every one of the seven
+enhancers is the same KIND of thing: a scalar multiplier on a stat the unit already has.</b> More firepower, more
+toughness, more carry, more evasion, more shield, less crew, more sealing.</p>
+
+<div class="big"><b>Nothing that makes a unit iconic in fiction is a scalar multiplier.</b> You cannot make a Space Marine
+by multiplying a guardsman.</div>
+
+<h2>What the source material actually says - three cases</h2>
+
+<div class="scroll"><table class="t">
+<tr><th>Case</th><th>What people assume it is</th><th>What it actually is</th></tr>
+<tr><td><b>Space Marine</b><br><s>19 implanted organs</s></td><td>"a soldier, but stronger and tougher"</td>
+<td><b>Mostly capability, not magnitude.</b> The <b>Preomnor</b> lets him eat poison and inedible matter. The <b>Oolitic Kidney</b> lets him survive toxins by breath, touch or ingestion. <b>Larraman's Organ</b> closes wounds on contact with air. The <b>Multi-lung</b> breathes atmospheres that kill. The <b>Omophagea</b> takes memory from flesh. <b>None of those is a bigger number - they are things a human cannot do at all.</b></td></tr>
+<tr><td><b>Jedi</b><br><s>Force deflection</s></td><td>"very high evasion / very fast reflexes"</td>
+<td><b>Battle precognition</b> - the described experience is <em>double vision of where they are now and where the shot will be in a moment</em>. The Jedi is not dodging better. <b>He is acting on information that has not happened yet.</b></td></tr>
+<tr><td><b>The hero ship</b><br><s>Falcon - Serenity - Rocinante - Galactica</s></td><td>"more HP / better armour"</td>
+<td><b>It does not die when it should.</b> The trope is jury-rig, redundancy and improvised repair - <em>"she'll hold together."</em> And in BattleTech the mechanic is explicit: <b>a veteran crew pushes equipment past its rated limits</b>, so an assault mech moves with the lights. Tabletop names the meta-layer directly: <b>hero points / plot points</b>, a resource that turns a fatal result into a survivable one.</td></tr>
+</table></div>
+
+<div class="kill">
+<h4>Why the two templates that already charge are both THRESHOLDS</h4>
+<p>The door has exactly two templates that price their dial: <code>ground-training-cadre</code> and
+<code>sealed-systems</code>. The second is a <b>threshold</b> - its <code>Sealing</code> dial decides whether the unit can
+operate somewhere <b>at all</b>. <b>A threshold is easy to price because it is obviously worth something;</b> a multiplier
+is easy to leave free because it never feels like a purchase. That, not biology, is why five of the eight are free.</p>
+<p style="margin-top:7px"><b>One shape this door will NOT use: the forced prerequisite.</b> An earlier pass modelled the
+interface as a Black Carapace - gear that makes <i>other</i> gear usable, so that destroying it bricks the armour. That was
+retired: <b>enhancers must never be forcibly dependent on each other</b>, or the designer becomes a build-order puzzle
+instead of a set of choices. The interface now stands alone in <b>Systems</b> - it shortens the doctrine/stance switch
+cooldown, and losing it just returns the unit to the base timer.</p>
+</div>
+
+<h2 id="e-frontier">The frontier - four kinds this door cannot build yet</h2>
+<p class="sub">A <b>read-only map</b>, not a second designer - the one designer is above. Each kind below is drawn from a case just above, checked against what the engine actually has, and <b>none is expressible as a multiplier</b> - which is exactly why the designer above cannot build them.</p>
+
+<div class="scroll"><table class="t">
+<tr><th>Kind (and its pattern)</th><th>The question it asks</th><th>Where it lives now / what is missing</th><th>Is it a DIAL?</th><th>The gauge that proves it</th></tr>
+<tr><td><b>Magnitude</b><br><s>how much better</s></td><td>How much?</td><td><b class="g">The designer above</b> - all eight templates. Nothing to build; the defect here is pricing, not expressiveness.</td><td>Yes - settable knowing only the component.</td><td>the ladder test: benefit / cost stays flat</td></tr>
+<tr><td><b>Threshold</b><br><s>Space Marine - "can, at all"</s></td><td>Can it operate here at all?</td><td><b>Moved to Defense > Hardening 5.3</b> - environment gates plus the <code>sealed-systems</code> seal dial. Not this door anymore.</td><td>Yes - "rated for vacuum" needs nothing else known.</td><td>an unsealed unit CANNOT deploy - not "worse", cannot</td></tr>
+<tr><td><b>Foresight</b><br><s>Jedi - acting on what has not happened</s></td><td>When does it react?</td><td><b>Belongs on the Sensors / detection system</b>, not here. The contact track-table exists; the <b>react-before-resolve hook</b> does not - combat resolves an exchange atomically.</td><td>Yes - "reacts N seconds early" is intrinsic.</td><td>opens fire on a contact it has not yet detected</td></tr>
+<tr><td><b>Endurance</b><br><s>hero ship - not dying when you should</s></td><td>How long past its limit?</td><td>Damage-control and redundancy half <b>moved to Defense > Hardening 5.3</b>; the <b>self-repair</b> half is HERE (Systems) but <b>BLOCKED</b> on the whole-or-dead model (hole H2).</td><td>Yes - "keeps working to -20% structure" is intrinsic.</td><td>survives a hit that kills its identical twin</td></tr>
+<tr><td><b>Learning</b><br><s>veterancy - better by surviving</s></td><td>What does it become?</td><td>Belongs beside <b>Advanced Training</b> (earned skill, not bought). The <code>Veteran</code> and <code>Experience</code> fields are stored but never compounded - <b>not built</b>.</td><td><b>NO</b> - the dial is learn-rate plus ceiling; the accumulated veterancy is an <b>emergent readout</b> (fails the intrinsic test).</td><td>two identical units diverge by history</td></tr>
+</table></div>
+<p class="sub" style="margin-top:9px"><b>The door's honest edge:</b> one kind is built (Magnitude, in the designer above), two moved to Defense (Threshold, and Endurance's damage-control), one points at Sensors (Foresight), and one is an emergent readout rather than a dial (Learning). <b>The self-repair half of Endurance is the only unbuilt piece that is genuinely this door's to build</b> - and it waits on the same whole-or-dead ruling every hero-ship-shaped capability waits on.</p>
+
+<div class="okbox" style="margin-top:14px"><b>THE RULE THIS PRODUCES - and it explains why iconic units feel iconic.</b>
+A magnitude enhancer can <b>always be out-scaled by simply building a bigger unit</b>. A threshold cannot: no amount of
+firepower lets an unsealed trooper fight on an airless moon, and no amount of armour lets a ship act on a shot that has
+not been fired. <b>Iconic units own a CATEGORY, not a number</b> - and a category is something the enemy cannot buy their
+way past. That is the difference between "elite infantry" and Space Marines.</div>
+
+<h2>Cradle to grave - the same chain, and it still holds</h2>
+<p class="sub">None of these break the rule that a capability must be reachable through the whole chain. Each is still a
+<b>component</b>: researched, built from materials, installed on a unit, and <b>lost when that component is destroyed</b>.
+The interface makes this concrete - <b>destroy it and the unit loses its tempo edge, re-tasking at the base 300s again</b>
+while the enemy who kept theirs switches stance in a third of the time. That is a grave rung with real teeth, and it needs
+no forced dependency to bite - a lost capability is loss enough.</p>
+
+<div class="warnbox" style="margin-top:13px"><b>One is NOT a dial, and the intrinsic test is what catches it.</b>
+<b>Learning</b> fails 1a: you cannot set a unit's veterancy knowing only the component, because it depends on what that
+unit has survived. So the <b>dial</b> is how fast it learns and how high it can climb - <b>the accumulated veterancy is an
+emergent readout</b>, exactly like delta-V or engagement range. Build the dial; display the total; never let the designer
+set it directly.</div>
+</div></section>
+
+<script>
+
+// -- the shipped arithmetic, verbatim from electronics.json + installations.json -----------------------------
+// unit-caliber Mass = Cadre Mass (1000..20000) Firepower Caliber 1..2 Toughness Caliber 1..2 <- BOTH FREE
+// Crew = [Mass]*0.2 - Research = [Mass]*2 - Credits = [Mass]*3
+// crew-automation Mass = Automation Mass (1000..30000) Crew Reduction 0..200 <- FREE
+// Research = [Mass]*3 (the highest in any door) - Credits = [Mass]*4
+// power-armor Mass = CarryMass (1..2000) StrengthBonus 0..3000 <- FREE, and it ADDS to the carry budget
+// reflex-booster Mass = CarryMass (1..2000) EvasionBonus 0..1 <- FREE
+// shield-generator Mass = CarryMass Shield 0..1500 <- FREE
+// ward-projector Mass = CarryMass Shield 0..600 - ShieldRegenFraction 0..5 <- FREE
+// ground-training-cadre Mass = 50 * (1 + (TrainingMultiplier-1)*4) <- PRICED. the reference implementation
+// sealed-systems Mass = 40 * (1 + Sealing*1.5) <- PRICED
+// GroundUnitAssembly: capacity += StrengthBonus*c; used += g.Mass*c; MaxItemWeight = capacity*0.5
+// the fix pattern, already live on ground weapons: itemMass = Max(w.Mass, w.Attack * 0.1)
+const ENH = {
+ caliber: {cap:'Firepower caliber', clo:1, chi:2, cdef:1.3, mlab:'Cadre mass', mlo:1000, mhi:20000, mdef:3000,
+ rcK:2, crK:3, crewK:0.2, unit:'x', priced:false, ground:false,
+ noun:['Cadre','Veteran Cadre','Elite Cadre'], desc:'A cadre of veterans folded into the unit at build time - the difference between a line regiment and a chapter.', why:" <b>The only enhancer that raises TWO stats from one dial</b> (firepower and toughness). That is also what makes it the door\'s worst offender: two capabilities bought with one free dial, against a mass you type in yourself.",
+ buys:'ship firepower + toughness'},
+ training: {cap:'Training multiplier', clo:1, chi:2, cdef:1.2, mlab:'(derived - 50 x (1+(m-1)x4))', mlo:50, mhi:250, mdef:90,
+ rcK:2, crK:0.5, crewK:0, unit:'x', priced:true, ground:true,
+ noun:['Drill Cadre','Training Cadre','Chapter Cadre'], desc:'A standing training establishment attached to the formation - drill, doctrine, live-fire, repeated until it is reflex.', why:' <b>The reference implementation for the entire door.</b> Its mass is DERIVED from the multiplier - <code>50 x (1 + (m-1) x 4)</code> - so the capability can never be free. Every other template in this category should read like this one, and five of them do not.',
+ buys:'ground attack + toughness'},
+ carry: {cap:'Load capacity added', clo:0, chi:3000, cdef:300, mlab:'Declared carry-mass', mlo:1, mhi:2000, mdef:30,
+ rcK:0, crK:0.1, crewK:0, unit:' carry', priced:false, ground:true,
+ noun:['Load Assist','Load Augmentation','Heavy Augmentation'], desc:'Whatever lets a chassis carry more than its frame should: powered actuators and myomer on a soldier, heavier drives and suspension on a vehicle, structural bracing and handling gear on a hull. <b>The in-game name follows the host</b> - a tank does not wear power armour, it gets a heavier drivetrain - but the component is one thing: <b>bought load capacity</b>.', why:' <b>The only enhancer that ADDS to the carry budget instead of spending it.</b> Every other component on a host is a withdrawal; this one can be a deposit. That is also why its <b>leverage</b> - capacity gained per kilogram spent - is the one dial that needs a hard cap: uncapped, it is a perpetual-motion machine for mass, on any chassis.',
+ buys:'carry capacity - and it ADDS to the budget'},
+ dodge: {cap:'Evasion bonus', clo:0, chi:1, cdef:0.4, mlab:'Declared carry-mass', mlo:1, mhi:2000, mdef:15,
+ rcK:0, crK:0.1, crewK:0, unit:'', priced:false, ground:true,
+ noun:['Reflex Wetware','Reflex Booster','Neural Governor'], desc:'Wired reflexes and neural acceleration - the soldier moves before the conscious decision arrives.', why:' <b>It buys EVASION, and evasion is the best defence in the game</b> - an effective-health multiplier reaching x20 where armour reaches x10. It owns the only defence that scales <b>without mass</b>, which is precisely why leaving it free is the most expensive mistake in this door.',
+ buys:'evasion - the best defence in the game'},
+ shield: {cap:'Shield pool', clo:0, chi:1500, cdef:150, mlab:'Declared carry-mass', mlo:1, mhi:2000, mdef:20,
+ rcK:0, crK:0.1, crewK:0, unit:' pts', priced:false, ground:true,
+ noun:['Ward','Shield Generator','Bastion Field'], desc:'A personal energy screen - the depleting pool, at one-person scale.', why:'The only bio-augment that puts something <b>between</b> the wearer and the hit rather than improving the wearer. Being the unit-scale instance of the shield layer, it inherits the nature matchup whole: strong against energy, poor against kinetic - so it is a counter, not a blanket.',
+ buys:'a damage pool before HP is touched'},
+ crew: {cap:'Crew reduction', clo:0, chi:200, cdef:30, mlab:'Automation mass', mlo:1000, mhi:30000, mdef:5000,
+ rcK:3, crK:4, crewK:0.002, unit:' crew', priced:false, ground:false,
+ noun:['Autoloader','Automation Suite','Ship Intelligence'], desc:'Autoloaders, expert systems, and a ship-mind that stands the watches nobody wants.', why:' <b>The only enhancer that buys back a SCARCE resource rather than a stat.</b> Crew is drawn from the same talent pool that produces officers and scientists - so automation is the one component in the game that competes with your academies for the same people. Its research cost is the highest in any door, and that is the one honest thing about it.',
+ buys:'fewer people - a scarce pool'},
+ iface: {cap:'Switch-time cut', clo:0, chi:0.75, cdef:0.4, mlab:'(derived - 25 x (1+ cut x1.2))', mlo:25, mhi:48, mdef:37,
+ rcK:3, crK:1.0, crewK:0, unit:'', priced:true, ground:true, kind:'sys',
+ mbase:25, mcoef:1.2, moff:0, floorS:20,
+ noun:['Control Link','Direct Interface','Full Neural Link'], desc:'A direct link between the commander and the unit - a neural lattice on a soldier, drive-by-wire on a vehicle, a battle-management helm on a ship. It does not make the host stronger or tougher. <b>It shortens the loop between deciding to change stance and the stance actually changing.</b>', why:' <b>The only enhancer that buys a DECISION rather than a stat.</b> Every doctrine or stance switch carries a cooldown - 60s for the quick postures, 300s for the rest (<code>combatDoctrines.json</code> / <code>groundStances.json</code>) - and today that timer is a flat constant, the same for a green militia and a veteran chapter. This cuts it. Stress sim <b>B09</b> showed a mid-fight doctrine switch turning a dead-even mirror into a 22-15 win; this is what lets a unit reach that lever sooner. <b>Hard-floored so it is never instant</b> - the cooldown exists to stop stance-flipping every tick, so this shortens the leash, it does not cut it. <b>Stands alone - not a prerequisite.</b>',
+ buys:'a shorter cooldown on doctrine and stance switches',
+ gate:'any host that runs doctrine or a formation stance', denies:'nothing - it stands alone'},
+
+ // -- ENDURANCE - "how far past its limit". The hero-ship pattern: not dying when it should. --
+ fieldrep: {cap:'Self-repair rate', clo:0, chi:1, cdef:0.3, mlab:'(derived - 45 x (1+rx2.8))', mlo:45, mhi:171, mdef:83,
+ rcK:2, crK:0.6, crewK:0.01, unit:'', priced:true, ground:true, kind:'endure',
+ mbase:45, mcoef:2.8, moff:0,
+ noun:['Patch Kit','Self-Repair Rig','Regenerative Suite'], desc:'Nanite stock, patch plate and a fabricator that works while you are still fighting.', why:' <b>The only enhancer that acts on TIME rather than on a stat.</b> It does not make the unit better - it makes damage <b>temporary</b>, which is the difference between surviving a battle and surviving a season. The Enhancers half of hole <b>H2</b>, blocked on the parked degraded-condition model.',
+ buys:'structure regained over time - the H2 self-repair half',
+ gate:'', denies:''}
+};
+// every magnitude template keeps kind:'mag'
+// the LOCKED 6 decomposition - Bio-augmentation - Training/Doctrine - Systems.
+// (An earlier pass here used Magnitude/Threshold/Endurance. That was wrong twice over:
+// "Magnitude" is a SHARED DIAL in 6.0, not a door, and Threshold/Endurance are
+// Defense > Hardening 5.3. Corrected - see the note in.)
+ENH.carry.kind='bio'; ENH.dodge.kind='bio'; ENH.shield.kind='bio';
+ENH.caliber.kind='train'; ENH.training.kind='train';
+ENH.crew.kind='sys'; ENH.fieldrep.kind='sys'; ENH.iface.kind='sys';
+ENH.training.mbase=50; ENH.training.mcoef=4; ENH.training.moff=1;
+const FRAME_CARRY = 100; // the human frame\'s BaseStrength
+const LEVERAGE = 0.1; // the ground weapons' AttackCarryFactor - the fix\'s coefficient
+
+let job='carry', kind='bio';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(a<10?2:0);}
+function kg(v){return Math.abs(v)>=1000?(v/1000).toFixed(1)+' t':v.toFixed(0)+' kg';}
+function lin(d,lo,hi){return lo+(hi-lo)*d/100;}
+function unlin(v,lo,hi){return 100*(v-lo)/(hi-lo);}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+function unmap(v,lo,hi){return 100*Math.log(v/lo)/Math.log(hi/lo);}
+function band(v,cuts){let i=0;while(i<cuts.length&&v>=cuts[i])i++;return i;}
+
+// -- compositional naming: generic vocabulary, one temper axis, the 5-word cap can never fire
+// Word tiers scale with how far a slider is dragged from its shipped position (STOCK), as a
+// FRACTION of the available travel - so responsiveness is uniform for every template no matter
+// where its shipped value sits in the range: the shipped design keeps a clean name (small dead
+// zone -> no adjective, just the noun), and a moderate drag of EITHER slider always changes a word.
+const SCALE_HI=['Uprated','Heavy','Massive','Peak'], SCALE_LO=['Modest','Light','Minimal'];
+const TEMPER_HI=['Reinforced','Heavy-frame','Overbuilt'], TEMPER_LO=['Light-frame','Trimmed','Featherweight'];
+function tierWord(d,p0,lo,hi){
+ const dead=0.05;                                  // +/-5% of travel around shipped -> no adjective
+ if(d>=p0){ const g=(100-p0)>0?(d-p0)/(100-p0):0; if(g<dead)return '';
+  return hi[Math.min(hi.length-1,Math.floor((g-dead)/(1-dead)*hi.length))]; }
+ const f=p0>0?(p0-d)/p0:0; if(f<dead)return '';
+ return lo[Math.min(lo.length-1,Math.floor((f-dead)/(1-dead)*lo.length))];
+}
+function partName(d1,d2){
+ const E=ENH[job], p0=STOCK[job]?STOCK[job].d1:50, m0=STOCK[job]?STOCK[job].d2:50;
+ let scale=tierWord(d1,p0,SCALE_LO,SCALE_HI);
+ let noun = d1 < p0-0.4*p0 ? E.noun[0] : d1 > p0+0.4*(100-p0) ? E.noun[2] : E.noun[1];
+ let temper=E.priced? '': tierWord(d2,m0,TEMPER_LO,TEMPER_HI);
+ const nf=noun.split(' ')[0].toLowerCase();        // drop scale only if it repeats the noun's first word
+ if(scale && scale.toLowerCase()===nf) scale='';
+ return [scale,temper,noun].filter(Boolean).join(' ');
+}
+const STOCK={};
+for(const k in ENH){ const E=ENH[k];
+ STOCK[k]={d1:Math.round(unlin(E.cdef,E.clo,E.chi)), d2:Math.round(unmap(E.mdef,E.mlo,E.mhi))}; }
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, fixed=$('fix').checked;
+ const E=ENH[job];
+ // -- the KIND door: show only this kind\'s enhancers, and say what the kind is for --
+ document.querySelectorAll('.chip[data-v]').forEach(c=>{
+ c.style.display = (ENH[c.dataset.v] && ENH[c.dataset.v].kind===kind)? '': 'none';
+ });
+ document.querySelectorAll('.kchip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.k===kind));
+ $('kindnote').innerHTML = kind==='bio'
+? '<b>6.1 Augmentation - the one door in this category that is actually BUILT</b>, ground-side. Power armour, the reflex booster and the ward are buildable in the base mod today. Each raises the host\'s physical envelope - carry, evasion, protection - whatever the frame is, and each charges nothing for the capability (the defect this door exists to fix).'
+: kind==='train'
+? '<b>6.2 Advanced Training - an extra layer of buff, stamped at design time, that makes the entity intrinsically better.</b> That is all it is: a veteran!= a conscript. <code>ground-training-cadre</code> is the reference implementation - it PRICES its multiplier; <code>unit-caliber</code> does not.'
+: '<b>6.3 Systems - let the machine do a crew or yard job.</b> Automation buys back people from a scarce pool. The <b>interface</b> shortens the doctrine/stance switch cooldown - the one live re-task timer in the game. <b>Self-repair is blocked</b> on the parked degraded-condition model - a Pulsar unit is <b>whole-or-dead</b>, and that is exactly what a hero ship is not.';
+ // a PRICED template has no separate mass dial at all - the mass IS the capability
+ show('w2',!E.priced);
+ set('v_name', partName(d1,d2));
+
+ const capv = lin(d1,E.clo,E.chi);
+ // Snap to the AUTHORED value at the stock slider position: the integer slider cannot land exactly on
+ // a log-mapped default, and the byte-identity claim is about the shipped design, not about rounding.
+ const declared = E.priced? 0: (d2===STOCK[job].d2? E.mdef: logmap(d2,E.mlo,E.mhi));
+
+ // mass: the shipped formula, then the proposed fix (capability priced in, anchored byte-identical at stock)
+ let mass;
+ if(E.priced){
+ // generalised so every PRICED template - the two shipped and the six new - uses one law:
+ // mass = base x (1 + (capability - offset) x coefficient)
+ mass = E.mbase * (1 + (capv - (E.moff||0)) * E.mcoef);
+ } else if(!fixed){
+ mass = declared; // <- the leak: you type in your own weight
+ } else if(job==='caliber'){
+ // The caliber now multiplies the cadre\'s mass, anchored at the SHIPPED caliber so the shipped
+ // 3,000 kg / x1.30 design comes out at exactly 3,000 kg. Floored so x1.0 is not free either.
+ mass = declared * Math.max(0.3, 1 + (capv - E.cdef) * 2.0);
+ } else {
+ // The ground weapons' AttackCarryFactor pattern: a FLOOR on the declared mass driven by the
+ // capability. The per-template coefficient is mdef/cdef, so every shipped design is byte-identical.
+ mass = Math.max(declared, capv * (E.mdef / E.cdef));
+ }
+
+ const crew = mass*E.crewK, research = mass*E.rcK, credits = mass*E.crK;
+ const shipped = E.priced? E.mdef: E.mdef;
+
+ set('n1',E.cap); set('s1', (E.unit==='x'?capv.toFixed(2):fmt(capv))+E.unit);
+ set('e1a', (E.unit==='x'?E.clo.toFixed(1):fmt(E.clo))+E.unit);
+ set('e1b', (E.unit==='x'?E.chi.toFixed(1):fmt(E.chi))+E.unit+' - shipped = '+(E.unit==='x'?E.cdef.toFixed(2):fmt(E.cdef)));
+ if(!E.priced){ set('n2', fixed?E.mlab+' now a FLOOR':E.mlab+' free - you set your own price');
+ set('s2', kg(declared)); set('e2a', kg(E.mlo)); set('e2b', kg(E.mhi)+' - shipped = '+kg(E.mdef)); }
+
+ // the bootstrap, only meaningful for the carry augment
+ const net = capv - mass;
+ const budget = FRAME_CARRY + net;
+
+ set('l_a1','What it buys'); set('v_a1',(E.unit==='x'?capv.toFixed(2):fmt(capv))+E.unit);
+ set('l_a2', E.priced?'Mass - DERIVED from it':'Mass you declared'); set('v_a2', kg(mass));
+ let thirdL, thirdV, thirdC;
+ if(job==='carry'){
+ // A strength augment SHOULD net positive - that is what power armour is. The bug is that the
+ // LEVERAGE (strength per kg) is itself a free dial, so it is unbounded. The fix caps it at 10:1.
+ const lev = capv/Math.max(1e-9,mass);
+ thirdL = fixed?'Leverage - CAPPED at 10:1':'Leverage - strength per kg';
+ thirdV = lev.toFixed(1)+':1 - net '+(net>=0?'+':'')+fmt(net);
+ thirdC = fixed?'g':(lev>10.5?'r':'a');
+ } else if(job==='iface'){
+ // A CUT, not a rate - "per tonne" is meaningless. What matters is the EFFECTIVE cooldown it leaves,
+ // and the floor below which no amount of interface can push it.
+ const floor=E.floorS||20;
+ const eff300=Math.max(floor,Math.round(300*(1-capv)));
+ const eff60 =Math.max(floor,Math.round(60 *(1-capv)));
+ thirdL='Switch cooldown left';
+ thirdV = capv<=0? ' unchanged - 300s / 60s, no cut': eff300+'s / '+eff60+'s  (was 300 / 60, floor '+floor+'s)';
+ thirdC = capv<=0? 'r': ((eff60<=floor)? 'a': 'g');
+ // the dial is a FRACTION - show it as a percentage so it telegraphs as "cut 40%", not "0.40"
+ const pc=(capv*100).toFixed(0)+'%';
+ set('s1',pc); set('e1a','0%'); set('e1b','75% max - proposed default 40%'); set('v_a1',pc);
+ } else if(job==='fieldrep'){
+ // Self-repair - a rate, but the state it acts on does not exist yet (whole-or-dead), so it is BLOCKED.
+ const pd = capv*12;
+ thirdL = 'Structure regained per day';
+ thirdV = pd<=0? ' none - damage is permanent until a yard': pd.toFixed(1)+'% - but BLOCKED: no damaged state to act on (whole-or-dead)';
+ thirdC = pd<=0? 'r': 'a';
+ } else {
+ thirdL = fixed?'Capability per tonne - priced':'Capability per tonne';
+ const per = capv/(mass/1000);
+ thirdV = fmt(per)+(fixed?' v falls as you scale':' ^ unbounded');
+ thirdC = fixed?'g':'r';
+ }
+ // -- OUTPUT MARKERS -- the headline of this door is whether the CAPABILITY costs anything,
+ // so that is what the badge on the capability readout says, per template.
+ function mk(id,kind,text){ const e=$(id); if(!e) return; e.className='mk '+kind; e.textContent=text; }
+ const free =!E.priced &&!fixed;
+ mk('k_a1', free? 'dead': 'set', free? 'costs NOTHING': 'you set it');
+ mk('k_a2','set', E.priced? 'derived from ': 'you set it');
+ mk('k_a3', thirdC==='r'? 'dead': thirdC==='a'? 'chk': 'calc',
+ thirdC==='r'? 'unbounded': thirdC==='a'? 'watch this': 'computed');
+ mk('k_a4','calc','computed');
+ mk('k_a5', research>0? 'calc': 'dead', research>0? 'computed': 'no research at all');
+ mk('k_cost','calc','computed');
+ mk('k_m1','sim','reaches the sim');
+ mk('k_m2','calc','comparison only');
+ mk('k_m3','chk','design check');
+ mk('k_m4','calc','comparison only');
+ // the sliders say what they are, and to a screen reader too
+ $('d1').setAttribute('aria-label', $('n1').textContent+' - '+$('s1').textContent);
+ $('d2').setAttribute('aria-label', $('n2').textContent+' - '+$('s2').textContent);
+ $('h1help').innerHTML = free
+? ' <b>The capability - and it is FREE on this template.</b> Drag it to the top and watch <i>Mass</i> below not move. This is the number the simulation reads, and nothing charges you for it.'
+: E.priced
+? ' <b>The capability, and this template PRICES it.</b> Drag it and watch <i>Mass</i> climb with you - the mass is <b>derived</b> from this dial rather than declared beside it.'
+: ' <b>The capability, now priced by the proposed fix.</b> Mass follows it instead of sitting beside it.';
+ $('h2help').innerHTML = E.priced
+? ' <b>Not a dial on this template - it is DERIVED.</b> <code>' + (job==='training'? 'Mass = 50 x (1 + (multiplier-1)x4)': 'Mass = 40 x (1 + sealingx1.5)') + '</code>. That is the whole fix the other five need.'
+: fixed
+? ' <b>Now derived from the capability</b> instead of declared beside it.'
+: ' <b>You set the price yourself, independently of the capability.</b> <code>Mass</code> is its own dial with its own range, so a maximum-strength enhancer can weigh less than a minimum-strength one. That is the door\'s defining defect.';
+ set('l_a3',thirdL); set('v_a3',thirdV); $('l_a3').parentElement.className='num '+thirdC;
+ set('v_a4', kg(mass));
+ set('l_a5','Research'); set('v_a5', research>0?fmt(research)+' RP':'0 none');
+ set('v_cost', fmt(credits)+' cr'+(crew>0?' - '+fmt(crew)+' crew':''));
+
+ set('l_m1','What it buys'); set('m_1',job==='iface'?(capv*100).toFixed(0)+'%':(E.unit==='x'?capv.toFixed(2):fmt(capv))+E.unit); set('s_m1',E.buys);
+ const perT = capv/Math.max(1e-9,mass/1000);
+ set('l_m2','Per tonne'); set('m_2',fmt(perT)); set('s_m2', E.unit==='x'?'multiplier per t':'points per t');
+ set('l_m3','Ladder test');
+ if(E.priced){ set('m_3',' passes'); set('s_m3','the capability IS the mass'); $('m_3').parentElement.className='mt g'; }
+ else if(fixed){ set('m_3',' passes'); set('s_m3','a floor caps the leverage'); $('m_3').parentElement.className='mt g'; }
+ else { set('m_3',' fails'); set('s_m3','benefit rises, cost is a separate dial'); $('m_3').parentElement.className='mt r'; }
+ const ratio = mass/shipped;
+ const isNew = (E.kind!=='mag' && job!=='seal');
+ set('l_m4', isNew? 'Build state': 'vs the shipped design');
+ set('m_4', isNew? (job==='fieldrep'? ' blocked': ' proposed'): ratio.toFixed(2)+'x mass');
+ set('s_m4', (!E.priced &&!fixed && capv>E.cdef && mass<shipped)? ' stronger AND lighter': 'at '+(capv/E.cdef).toFixed(2)+'x the capability');
+ $('m_4').parentElement.className='mt '+((!E.priced &&!fixed && capv>E.cdef && mass<shipped)?'r':'g');
+
+ let note, verdict;
+ if(job==='caliber'){
+ note = fixed
+? 'Both calibers now enter the mass formula, anchored so the shipped 3,000 kg / x1.30 design is <b>byte-identical</b>. A x2 cadre is heavier than a x1.3 one, which is the only thing that was ever missing.'
+: ' <b><code>Mass = PropertyValue(\'Cadre Mass\')</code> - a dial of its own.</b> Neither <code>Firepower Caliber</code> nor <code>Toughness Caliber</code> appears in any of the seven cost channels. Drag capability to 2.00 and mass to 1,000 kg: <b>a x2 combat multiplier that weighs a third of the shipped x1.30.</b>';
+ verdict = fixed
+? ' <b>A transcription, not a design.</b> Its ground twin <code>ground-training-cadre</code> already does exactly this - and flags its own coefficient as a balance value.'
+: ' <b>The largest free combat multiplier in the designer.</b> Every warship in the fleet gets x1.54 more firepower than the shipped design, for a third of the mass. Compare the <b>ground cadre</b> chip - same job, and it charges.';
+ } else if(job==='training'){
+ note = ' <b>The reference implementation.</b> <code>Mass = 50 x (1 + (TrainingMultiplier - 1) x 4)</code> - the multiplier <em>is</em> the mass, so x1 -> x2 takes the part from 50 kg to 250 kg, and research and credits follow. <b>There is no separate mass dial to drag.</b>';
+ verdict = ' <b>And it says so out loud:</b> <em>"Training is EARNED: the higher you dial the multiplier, the steeper the mass/credits/research/build-time. Multiplier range + cost curve are FLAGGED balance values."</em> That note is what thinking about cost looks like in a diff.';
+ } else if(job==='carry'){
+ note = fixed
+? 'With the ground weapons\' own floor applied - <code>Max(CarryMass, StrengthBonus x 0.1)</code> - the shipped Power Armour is <b>byte-identical</b> (300 x 0.1 = 30, exactly its authored mass) and the leverage is capped at a <b>stated 10:1</b>. Power armour still carries ten times its weight. It stops being infinite.'
+: ' <b>This is a bootstrap, not a leak.</b> <code>GroundUnitAssembly</code> does <code>capacity += StrengthBonus x count</code> in pass 1 and <code>used += g.Mass x count</code> in pass 2 - <b>two independent dials on the same part</b>, one funding the budget, the other spending it. And <code>MaxItemWeight = capacity x 0.5</code>, so the per-item cap rises with it too.';
+ verdict = fixed
+? ' <b>And every gate downstream is trustworthy again</b> - the per-item weight limit, the power-supply gate and the ammo gate are all measured against the carry budget.'
+: ' <b>Drag capability up and mass down: net +2,999 on a frame whose base is 100.</b> Stack ten and a human frame carries a siege railgun. And the engine\'s own error message says <em>"Add an augment (e.g. power armour) or use a bigger frame."</em>';
+ } else if(job==='dodge'){
+ note = fixed
+? 'Priced by the same floor. Evasion is worth more than anything else a unit can mount, so it should be the heaviest thing per point - this at least makes it cost <em>something</em>.'
+: ' <b>Total evasion for one kilogram.</b> <code>EvasionBonus</code> runs 0 -> 1.0 and <code>Mass</code> is the separate <code>CarryMass</code> dial. Evasion 1.0 means every aimed attack misses - and the Defense door measured evasion as an effective-health multiplier up to <b>x20</b>, where armour reaches x10.';
+ verdict = fixed
+? ' <b>Still the best defence in the game - now with a weight.</b>'
+: ' <b>The single most valuable defensive stat, on a free dial, on a part whose weight you also choose.</b> Only saturation fire still floors it, which is the one thing keeping this from being the worst finding in the door.';
+ } else if(job==='shield'){
+ note = fixed
+? 'Priced by the same floor, so the capacity<->recharge trade the ward projector\'s description already describes finally bites.'
+: ' <b>A 1,500-point pool for one carry-mass.</b> And note the <code>ward-projector</code>\'s description, which is a model of good design writing: it explains the capacity-versus-recharge trade in plain terms and <b>flags both dials for a balance pass.</b> The trade is real and right. It just is not priced, so both ends are free and it never bites.';
+ verdict = fixed
+? ' <b>Small-and-fast versus big-and-slow becomes a decision instead of a preference.</b>'
+: ' <b>Shields and evasion ADD across parts</b> (mount two wards, get both pools) while <b>training and sealing take the BEST and do not stack</b> - that distinction is exactly right and documented at both sites. <b>Nothing to change there.</b>';
+ } else if(job==='crew'){
+ note = fixed
+? 'Crew reduction now costs mass at the shipped ratio - about 167 kg of automation per person removed.'
+: ' <b>200 people saved for nothing.</b> <code>Mass = PropertyValue(\'Automation Mass\')</code>, and <code>Crew Reduction</code> (0 -> 200) is a separate dial in no cost formula. The template\'s own description says why it matters: it lets you spend mass <em>"instead of <b>scarce workforce</b>."</em>';
+ verdict = fixed
+? ' <b>Now it trades one real resource for another,</b> which is exactly what the description promises.'
+: ' <b>And the workforce genuinely is scarce</b> - <code>ManpowerTools.ResolveBuild</code> gates construction on it, and a government\'s <code>CrewPolicy</code> decides whether a shortage blocks the build or conscripts. <b>This dial converts a strategic resource into nothing, and the template knows it is strategic.</b> It does carry the highest research cost in the designer: <code>[Mass] x 3</code>.';
+ } else if(job==='iface'){
+ note = ' <b>The variable it writes is <code>SwitchableAfter</code></b> - the timestamp a fleet or formation may next change doctrine/stance (<code>FleetDoctrine.TrySetDoctrine</code> / <code>GroundFormationDoctrine.TrySetStance</code>). Effective cooldown = <code>Max(floor, base x (1 - cut))</code>, floored at 20s so it is never instant. Priced like the training cadre: <code>Mass = 25 x (1 + cut x 1.2)</code> - a deeper cut weighs more.';
+ verdict = ' <b>The only enhancer in the category that buys TEMPO instead of a number</b> - and the one that pays off a lever you already built (doctrine/stance switching; stress-sim <b>B09</b> flipped an even mirror to a 22-15 win) but rarely reach, because the switch timer is a flat 60-300s for everyone. <b>Both seats drive the same call</b> - the AI\'s ground brain calls <code>TrySetStance</code>, the player calls the same thing - so it satisfies One-Verb-Both-Seats for free. Floor it, and "veteran" means quicker, never instant. <b>An earlier pass mis-telegraphed this as a "reaction/latency" stat, which the engine has no variable for; the real variable is the switch cooldown.</b>';
+ } else if(job==='fieldrep'){
+ note = ' <b>Self-repair - structure regained without returning to a yard.</b> Priced already: <code>Mass = 45 x (1 + rate x 2.8)</code>. It does not raise a stat; it makes damage <b>temporary</b>.';
+ verdict = ' <b>The one enhancer this door cannot ship yet</b> - not because the dial is wrong but because the thing it acts on does not exist. A Pulsar unit is <b>whole-or-dead</b>; there is no damaged state for a repair rate to chew on. The Enhancers half of hole <b>H2</b>, blocked on the parked degraded-condition model. When per-component condition lands, this is the hero-ship survivability rung.';
+ } else {
+ note = ' <b>The second template that already charges.</b> <code>Mass = 40 x (1 + Sealing x 1.5)</code> - a fully sealed suit weighs 100 kg against an unsealed 40 kg, and research and credits follow from mass. <b>No separate mass dial.</b>';
+ verdict = ' <b>And it flags its own curve too:</b> <em>"Sealing fraction + cost curve are FLAGGED balance values."</em> Two of the eight templates in this door were written by someone applying the rule this campaign has been deriving - and both left a note saying which numbers they were unsure about. <b>That is the standard.</b>';
+ }
+ $('odesc').innerHTML =
+ '<b>'+E.desc+'</b>'
+ + '<span style="display:block;margin-top:7px">'+E.why+'</span>'
+ + '<span style="display:block;margin-top:9px;padding-top:8px;border-top:1px solid var(--rule2)">'+note+'</span>';
+ $('verdict').innerHTML=verdict;
+ set('oname', (job==='iface'?(capv*100).toFixed(0)+'% cut to ':(E.unit==='x'?capv.toFixed(2)+'x ':fmt(capv)+E.unit+' of '))+E.buys.split(' -')[0]+' for '+kg(mass));
+ $('jobnote').textContent = E.priced
+? 'One of the two templates in this door that already prices its dial - there is no separate mass slider, because the capability IS the mass.'
+: 'Its mass is a dial of its own, independent of what it does - so the second slider is where the leak lives.';
+ set('v_namesub', E.priced? 'scale <- how much capability - noun <- the enhancer'
+: 'scale <- how much capability - temper <- the mass you declared - noun <- the enhancer');
+}
+document.querySelectorAll('.chip[data-v]').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [kk,v] of Object.entries(STOCK[job]||{})) $(kk).value=v;
+ render();}));
+document.querySelectorAll('.kchip').forEach(c=>c.addEventListener('click',()=>{
+ kind=c.dataset.k;
+ const first=Object.keys(ENH).find(k=>ENH[k].kind===kind);
+ job=first;
+ document.querySelectorAll('.chip[data-v]').forEach(x=>x.setAttribute('aria-pressed', x.dataset.v===first));
+ if(STOCK[job]) for(const [kk,v] of Object.entries(STOCK[job])) $(kk).value=v;
+ render();
+}));
+['d1','d2'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+// start consistent: the door and the template MUST agree (Augmentation / power armour)
+document.querySelectorAll('.kchip').forEach(x=>x.setAttribute('aria-pressed', x.dataset.k===kind));
+document.querySelectorAll('.chip[data-v]').forEach(x=>x.setAttribute('aria-pressed', x.dataset.v===job));
+if(STOCK[job]) for(const [kk,v] of Object.entries(STOCK[job])) $(kk).value=v;
+render();
+
+</script>
