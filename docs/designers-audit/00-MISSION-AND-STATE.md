@@ -1,0 +1,161 @@
+# 00 — MISSION AND STATE (the resilience anchor — re-read this at the start of every phase)
+
+> **If you are a future context window of this mission: THIS FILE IS THE MISSION.** Re-read it in
+> full, then read the latest committed deliverables under `docs/designers-audit/`, then continue from
+> the STATE section's "NEXT". Nothing lives only in chat or in a model's head — if it matters, it is
+> committed here or in a sibling file.
+
+---
+
+## THE PROMPT (verbatim — do not paraphrase, do not drift)
+
+```
+MISSION: THE DESIGNER INTERCONNECTION AUDIT — run at MAXIMUM effort, fully autonomous.
+
+You are Opus 4.8 on branch claude/operation-ground-truth-prompt-l9729h of kadonomaro197-cloud/4x-Game.
+This mission is the last gate BEFORE any game code is written: prove the designer system works as a
+CONNECTED WHOLE on paper, or find every place it does not.
+
+── STEP 0 — PERMISSIONS AND PERSISTENCE (do this before anything else) ─────────────────────────────
+1. In your FIRST reply, list every permission you will need for the whole mission (writing files under
+   docs/designers-audit/, running git add/commit/push, spawning subagents and workflows, reading the
+   whole repo) and ask me to approve them ALL NOW — e.g. by switching to auto-accept edits — so you
+   never have to stop and ask again. After this single ask, you never block on me. The
+   AskUserQuestion tool is BROKEN in this environment — never call it; when a decision is needed,
+   pick the most sensible default, say in chat what you chose and why, and keep moving.
+2. Create docs/designers-audit/00-MISSION-AND-STATE.md. Paste THIS ENTIRE PROMPT into it verbatim at
+   the top, then a "STATE" section below it: current phase, what is done, what is next, and a log of
+   every commit you make. Commit and push it immediately.
+3. RESILIENCE PROTOCOL: your context window will fill and be compacted. Re-read
+   00-MISSION-AND-STATE.md at the START OF EVERY PHASE and any time you feel context was lost — it IS
+   the mission. Update its STATE section and commit at every significant interval (after every
+   deliverable, every major finding, every agent fan-out that returns). Nothing may exist only in
+   your head or only in chat: if it matters, it is in a committed file.
+
+── HARD RULES ──────────────────────────────────────────────────────────────────────────────────────
+- The subject is the ELEVEN door designers in "docs/Actual HTMLs Of designers/" (note the spaces in
+  the path): weapons + defense (the two long descriptive filenames), and chassisderived, civicderived,
+  commandderived, enhancersderived, industrialderived, logisticalderived, powerderived,
+  propulsionderived, sensorsderived (.html), plus the logisticaldesigner20260730 snapshot for
+  reference. These files are the developer's locked standard. DO NOT EDIT ANY OF THEM. Ever.
+- DO NOT modify ANY file under Pulsar4X/ — no engine code, no JSON data, no tests. The entire point
+  is to find design problems BEFORE code is written. You are read-only everywhere except
+  docs/designers-audit/ (and the required DOCS-INDEX.md row updates).
+- Ground every claim in source. A statement about what the game reads must carry a file:line citation
+  from the engine (GameEngine/...). The method is docs/economy/DESIGNER-NORTH-STAR.md: a dial is real
+  only if it writes a variable the simulation actually reads; the intrinsic test separates component
+  dials from assembly decisions; every option must win an axis (§39.8). Read that doc, the root
+  CLAUDE.md, docs/SYSTEM-CONNECTION-MAP.md, and docs/economy/COMPONENT-DESIGNER-DIALS.md before
+  writing a word.
+- You are EXPLICITLY AUTHORIZED to spawn subagents (Agent tool) and multi-agent workflows (Workflow
+  tool) as much as the work requires, for as long as it requires. Fan out for coverage; verify
+  adversarially; synthesize yourself.
+- Talk to me constantly in plain English (I am a Navy nuke machinist, not a programmer): a short chat
+  update at every phase change and every meaningful finding — what you are doing, why, and what you
+  found. Lead with what it means, then the detail.
+- Commit style: match the branch's existing commits (short imperative subject, story in the body,
+  the standard Co-Authored-By + Claude-Session trailer). Push after every commit — these are
+  docs-only commits, so do not wait for CI between them.
+
+── THE WORK — SIX PHASES, IN ORDER ─────────────────────────────────────────────────────────────────
+PHASE 1 — INTERCONNECTION MAP → 01-INTERCONNECTION-MAP.md
+  Open all eleven designers and extract, for each: every door/choice, every dial, every named output
+  (the component/template/stat it produces), and what that output claims to feed. Then build the
+  designer×designer connection matrix: which designer's OUTPUT is another designer's INPUT or gate
+  (chassis environments → industrial yard domains; power supply → weapon draw; civic academy →
+  command seats; enhancers → any host; logistical holds → propulsion fuels; sensors → weapons fog;
+  command spans ← civic admin; etc.). Every cell: CONNECTED / CLAIMED-BUT-UNVERIFIED / ABSENT.
+
+PHASE 2 — OUTPUT READABILITY AUDIT → 02-OUTPUT-READABILITY-AUDIT.md
+  For every output found in Phase 1, answer with engine evidence: can the game as it exists TODAY
+  actually read this? (Which Atb/DataBlob/processor consumes it — file:line. The gotcha-10 two-ends
+  rule: a producer with no consumer and a consumer with no producer are both failures.) And can the
+  OTHER designers read it where the map says they should? Verdict per output: READS / DEAD-END /
+  MISSING-CONSUMER / MISSING-PRODUCER / TYPE-MISMATCH. This is the EXISTS/MISSING/NEEDS-CHANGE
+  ledger, done exhaustively. Use adversarial verification: for each claimed connection, spawn a
+  skeptic agent whose job is to refute it from source.
+
+PHASE 3 — CORRECTION PLAN → 03-CORRECTION-PLAN.md
+  For every broken/absent connection from Phases 1-2: the smallest correction that makes it work,
+  stated as a change to the DESIGN (what the designer must output, what the consumer must accept),
+  ordered by dependency (what unblocks what), each with its gauge (the test that would prove it) and
+  its blast radius. This is a plan for me to approve — you implement none of it.
+
+PHASE 4 — DESIGN THE MISSING → 04-MISSING-DESIGNS/
+  Determine what the eleven do not cover but the connected system requires (orphan outputs with no
+  home, gaps the simulations in Phase 5 will hit, whole missing doors if any). Design each missing
+  piece at the SAME standard as the existing designers: doors derived not invented, dials that write
+  real variables, priced capabilities, the intrinsic test applied, worked examples reproducing
+  anything that already exists. One file per design. New files only — never edits to the eleven.
+
+PHASE 5 — SELF-SIMULATION → 05-SIMULATIONS.md
+  Walk the whole designer system through the classic 4X situations of Aurora 4X / Beyond Protocol
+  style play, as thought-experiments with the designers' actual outputs (no code): (a) cold-start
+  colony bootstrap years 0-5 — survey→mine→refine→build→research, checking for bootstrap deadlocks
+  (does building the first yard require a yard? training the first leader require a leader?);
+  (b) first contact — sensors/diplomacy/espionage flow; (c) full war mobilization and "take a
+  planet" cradle-to-grave — research→design→build→transport→invade→occupy, naming which designer
+  output every single step consumes; (d) the Beyond-Protocol economy/politics loop — population,
+  morale, markets, governance, leaders; (e) a late-game crisis surge. For each: order of operations,
+  which connections carry the load, where flow breaks, what dominates or is never worth building.
+  Every issue found feeds back into 03 (correction) or 04 (missing design).
+
+PHASE 6 — FINAL REPORT → 06-FINAL-REPORT.md
+  The synthesis, written for me: what connects, what cannot, what the fixes are, what was missing and
+  is now designed, what the simulations exposed, and the recommended build order when code-writing
+  begins. Add rows for all new docs to docs/DOCS-INDEX.md in the same commit (repo rule). Then a
+  final chat summary: the five most important things you found, in plain English.
+
+── COMPLETION CRITERIA ─────────────────────────────────────────────────────────────────────────────
+You are done only when: all six deliverables exist and are committed and pushed; every designer
+output has a sourced verdict; every broken connection has a correction; every gap has a design; all
+five simulations are run and their issues dispositioned; and 00-MISSION-AND-STATE.md's STATE section
+reads COMPLETE with the full commit log. Do not stop early because the session is long — the
+resilience protocol exists precisely so you can keep going.
+```
+
+---
+
+## THE ELEVEN DESIGNERS (the subject — READ-ONLY, never edit)
+
+Path (note the spaces): `docs/Actual HTMLs Of designers/`
+
+| Door | File |
+|------|------|
+| Weapons | `Weapons, re-derived — two choices and four sliders.html` |
+| Defense | `Defense, re-derived — the four layers.html` |
+| Chassis | `chassisderived.html` |
+| Civic | `civicderived.html` |
+| Command | `commandderived.html` |
+| Enhancers | `enhancersderived.html` |
+| Industrial | `industrialderived.html` |
+| Logistical | `logisticalderived.html` |
+| Power | `powerderived.html` |
+| Propulsion | `propulsionderived.html` |
+| Sensors | `sensorsderived.html` |
+| *(reference snapshot)* | `logisticaldesigner20260730.html` |
+
+Method doc: `docs/economy/DESIGNER-NORTH-STAR.md`. Blueprint: `docs/economy/COMPONENT-DESIGNER-DIALS.md`.
+Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLAUDE.md`.
+
+---
+
+## STATE
+
+- **Current phase:** PHASE 1 (Interconnection map) — just started.
+- **Done:**
+  - STEP 0.1 — permissions requested in chat (auto-accept).
+  - STEP 0.2 — this file created + committed + pushed.
+- **Next:**
+  - PHASE 1 — fan out one extraction agent per designer (doors / dials / named outputs / claimed-feeds),
+    then synthesize the designer×designer connection matrix into `01-INTERCONNECTION-MAP.md`.
+- **Deliverable status:**
+  - [ ] 01-INTERCONNECTION-MAP.md
+  - [ ] 02-OUTPUT-READABILITY-AUDIT.md
+  - [ ] 03-CORRECTION-PLAN.md
+  - [ ] 04-MISSING-DESIGNS/ (one file per missing piece)
+  - [ ] 05-SIMULATIONS.md
+  - [ ] 06-FINAL-REPORT.md
+
+## COMMIT LOG
+- (pending) `mission: designer interconnection audit — STEP 0 state anchor` — this file.
