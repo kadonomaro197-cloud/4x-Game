@@ -64,13 +64,20 @@ Assembler under **Ground Unit**.
 |------|-------|--------------|
 | Mode | **Ballistic** → resolves as **Kinetic** | a solid-round rifle |
 | Attack | **80** (dialed up from the 40 base — a bolter is a heavy round) | sums into unit firepower |
-| Range | **4 hexes** | fires as the marine closes |
+| **Range_m** | **500 m** (the base-mod value; the truth) | the actual reach the resolver checks — `WeaponReaches` compares `Range_m` to the real gap |
+| Range (hexes) | 1 (display) | **only a map ruler** — authored separately from the meters, a hex is a different real distance on every body |
 | CarryMass | 10 | |
+
+> **Note on range (the truth is meters, not hexes):** a `GroundWeaponAtb` carries *two* range dials —
+> `Range` in hexes (a display ruler) and `Range_m` in meters (what the combat resolver actually uses,
+> `GroundCombatant.cs:99`, `GroundForcesProcessor.cs:479`). They're authored independently. The stock Service
+> Rifle is **500 m**; a vehicle main gun is **4000 m**; a melee weapon is **0 m**. Quote the meters, not the
+> hexes.
 
 ### Chainsword — the `claw-weapon` (`GroundWeaponAtb`) — Weapons ▸ Melee
 | Dial | Value | What it does |
 |------|-------|--------------|
-| Mode | **Melee** (range 0) | resolves as **undodgeable** (Tracking-1) — you can't dodge a chainsword in your face |
+| Mode | **Melee** (`Range_m` 0) | resolves as **undodgeable** (Tracking-1) — you can't dodge a chainsword in your face |
 | Attack | **60** (dialed up — a power melee weapon) | sums into firepower, fires in the melee band |
 | CarryMass | 2 | |
 
@@ -89,8 +96,8 @@ Running `GroundUnitAssembly.Compute` by hand with the values above:
 - **Health** = (BaseHP 200 + plate 150) × (1 + ToughnessBonus 0.2) = 350 × 1.2 = **420 HP**
 - **Defense** = plate **40** (flat mitigation, tuned ×1.2 vs kinetic/explosive)
 - **Evasion** = reflex **0.40** (40% of non-saturation shots dodged)
-- **Attack** = bolter 80 + chainsword 60 = **140**, resolving in **two range bands** — the bolter fires from
-  4 hexes out as the marine closes, the chainsword hits (undodgeable) in contact
+- **Attack** = bolter 80 + chainsword 60 = **140**, resolving in **two range bands** — the bolter engages
+  inside its **500 m** `Range_m` as the marine closes, the chainsword hits (undodgeable) at **0 m** in contact
 - **Environment** = **sealed** — fights on a vacuum or poison world where an unsealed levy bleeds out
 - **Valid?** ✅ — passes the carry gate, the per-item gate, and (no energy weapon → no reactor needed) the
   supply gate. The design registers as a buildable `GroundUnitDesign` on the industry rails.
