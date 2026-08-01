@@ -270,4 +270,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 - `4509fc5` `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
 - `3ed5e03` `audit: Phase 4 missing designs — 5 mechanisms at the North Star standard` — 04-MISSING-DESIGNS/ + STATE.
 - `4bd6b1f` `audit: Phase 5 self-simulation — 5 walkthroughs, built-but-unlit` — 05 + STATE.
-- (pending) `audit: Phase 6 final report + DOCS-INDEX rows — mission COMPLETE` — 06 + DOCS-INDEX + STATE.
+- `9a8218d` `audit: Phase 6 final report + DOCS-INDEX rows — mission COMPLETE` — 06 + DOCS-INDEX + STATE.
+- (this line's own commit records the final sha above; mission is COMPLETE — no further phases.)
