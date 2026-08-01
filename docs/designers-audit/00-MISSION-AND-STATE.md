@@ -142,7 +142,7 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 4 COMPLETE → rolling into PHASE 5 (Self-Simulation).
+- **Current phase:** PHASE 5 COMPLETE → rolling into PHASE 6 (Final Report).
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
@@ -158,18 +158,31 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
     `03-CORRECTION-PLAN.md`. Committed + pushed.
     - **Full tracer output at** `/tmp/claude-0/.../tasks/wzclp795b.output`.
 - **Next:**
-  - PHASE 5 — walk the whole designer system through 5 classic 4X situations (cold-start bootstrap yrs 0-5
-    checking bootstrap deadlocks; first contact; take-a-planet cradle-to-grave; economy/politics loop; late
-    crisis), naming which designer output every step consumes and where flow breaks. Feed issues back to
-    03/04. Write `05-SIMULATIONS.md`.
+  - PHASE 6 — the synthesis for the developer: what connects, what can't, the fixes, what was missing and is
+    now designed, what the sims exposed, the recommended build order. Add DOCS-INDEX rows for all new docs in
+    the same commit. Write `06-FINAL-REPORT.md`, then the final chat summary (5 most important things).
 - **Deliverable status:**
   - [x] 01-INTERCONNECTION-MAP.md — committed
   - [x] 02-OUTPUT-READABILITY-AUDIT.md — committed
   - [x] 03-CORRECTION-PLAN.md — committed
-  - [x] 04-MISSING-DESIGNS/ (00-INDEX + 01 power-economy, 02 settle-a-world, 03 employment, 04 heat-signature,
-        05 command-agency) — committed
-  - [ ] 05-SIMULATIONS.md
+  - [x] 04-MISSING-DESIGNS/ (00-INDEX + 01..05) — committed
+  - [x] 05-SIMULATIONS.md — committed
   - [ ] 06-FINAL-REPORT.md
+
+## KEY PHASE-5 FINDINGS (carry forward)
+- **The through-line of all 5 sims: the game is BUILT BUT UNLIT.** Mechanical chains are astonishingly complete
+  (take-a-planet 8/9 steps; economy plumbing whole; ground combat finished) but the DECISIONS that make them a
+  game (expand, stealth, elite quality, leadership, scarcity) sit behind dormant flags / zeroed coeffs / dead
+  producers / a few missing wires. Argues for LIGHTING, not rebuilding.
+- **Bootstrap: the first colony boots clean; EVERY colony after it is BLOCKED on colonist transport (Design 2)**
+  — the X in 4X doesn't work. Highest-priority build.
+- **ONE NEW DEVELOPER RULING surfaced (T1): what colony CAPTURE TRANSFERS** — you can win the ground battle and
+  seize buildings (CaptureInfrastructure), but flipping the COLONY's ownership is undecided (the close-planetary
+  -delta S12 block). This is the literal MVP finish line ("you can take a planet") and its last rung is open.
+- **Dominated-strategy board:** never-worth-building today = firepower cadres (D-gate-2 dead), big transports
+  (C11), fire control (flag off), cryo holds (Designs 1&2), admin components (Design 5), colony power/farms
+  (A-flip-2). Dominant = toughness cadres > firepower cadres (bug asymmetry); ground design > ship design
+  (ground enforces gates ships don't).
 
 ## KEY PHASE-4 NOTES (carry forward)
 - The Phase-4 input-surface agent pass (workflow `wf_3c4abb72-c21`, task `wv0037jow`) **hit a session usage
@@ -246,4 +259,5 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 - `cae8cd5` `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
 - `237d98f` `audit: Phase 2 output-readability — sourced verdicts + 5 themes` — 02 + STATE update.
 - `4509fc5` `audit: Phase 3 correction plan — 26 fixes, waves, traced blast radii` — 03 + STATE update.
-- (pending) `audit: Phase 4 missing designs — 5 mechanisms at the North Star standard` — 04-MISSING-DESIGNS/ + STATE.
+- `3ed5e03` `audit: Phase 4 missing designs — 5 mechanisms at the North Star standard` — 04-MISSING-DESIGNS/ + STATE.
+- (pending) `audit: Phase 5 self-simulation — 5 walkthroughs, built-but-unlit` — 05 + STATE.
