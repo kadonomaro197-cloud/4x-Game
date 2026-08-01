@@ -167,6 +167,7 @@ The last gate BEFORE game code is written: prove the eleven door designers work 
 | `docs/designers-audit/04-MISSING-DESIGNS/` | Phase 4 — 5 missing mechanisms at the North Star standard (power economy, settle-a-world, employment, heat/signature, command agency) | 🟢 ⚫ | New designs only; each ~70-80% already built = one connecting wire |
 | `docs/designers-audit/05-SIMULATIONS.md` | Phase 5 — 5 classic-4X walkthroughs + the dominated/dominant strategy board | 🟢 | Surfaced one NEW developer ruling (T1: what colony capture transfers) |
 | `docs/designers-audit/06-FINAL-REPORT.md` | Phase 6 — synthesis + recommended build order + the open developer rulings | 🟢 | The single doc to read to know what to do next |
+| `docs/designers-audit/GENERAL-DESIGN-ISSUES.md` | **NEW 2026-08-01.** The franchise-litmus walls (marine + Venator) GENERALIZED into 12 repeatable classes of design issue — each with a one-line check to run on any new design + a general fix. Families: structure/multiplicity · cost/scarcity · condition · taxonomy · wiring-parity. The two to institutionalize first: G4 (every dial must cite a LIVE reader) + G3 (every mechanic ports to all entity classes). | 🟢 ♻️ | Turns one-off franchise bugs into a reusable checklist; lines up with the audit's 5 themes |
 
 ## 5. Aurora 4X design reference (static external spec — `docs/aurora/`)
 
