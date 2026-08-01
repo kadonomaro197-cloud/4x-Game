@@ -142,20 +142,44 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 
 ## STATE
 
-- **Current phase:** PHASE 1 (Interconnection map) — just started.
+- **Current phase:** PHASE 1 COMPLETE → rolling into PHASE 2 (Output Readability Audit).
 - **Done:**
   - STEP 0.1 — permissions requested in chat (auto-accept).
   - STEP 0.2 — this file created + committed + pushed.
+  - PHASE 1 — extraction fan-out (11 designers, workflow `wf_f0f98d9f-92d`) done; every door's
+    doors/dials/named-outputs/claimed-feeds captured. Synthesized the designer×designer matrix +
+    directed edge ledger + 15 early cracks into `01-INTERCONNECTION-MAP.md`. Committed + pushed.
 - **Next:**
-  - PHASE 1 — fan out one extraction agent per designer (doors / dials / named outputs / claimed-feeds),
-    then synthesize the designer×designer connection matrix into `01-INTERCONNECTION-MAP.md`.
+  - PHASE 2 — for every ● and ○ edge in the map, prove against engine source (file:line) whether the
+    game reads it TODAY, and whether the named consumer exists. Adversarial: one skeptic agent per
+    claimed connection whose job is to refute it. Priority targets = §6 of the map (the four backbones,
+    the C1 jobs-producer hunt, the C7 band gate, the dead-ends, the transport chain, the boundary
+    disputes). Write `02-OUTPUT-READABILITY-AUDIT.md`.
 - **Deliverable status:**
-  - [ ] 01-INTERCONNECTION-MAP.md
+  - [x] 01-INTERCONNECTION-MAP.md — committed
   - [ ] 02-OUTPUT-READABILITY-AUDIT.md
   - [ ] 03-CORRECTION-PLAN.md
   - [ ] 04-MISSING-DESIGNS/ (one file per missing piece)
   - [ ] 05-SIMULATIONS.md
   - [ ] 06-FINAL-REPORT.md
 
+## KEY PHASE-1 FINDINGS (carry forward — these are what Phase 2 must prove/kill)
+- **Four backbones** (many-to-many spines): A = mass/budget hub (Chassis), B = manpower pool (Civic
+  fills, every crewed part draws), C = build+tech overlay (Industrial builds & research gates all),
+  D = agency overlay (Command seats an operator, doesn't pipe a number).
+- **15 early cracks** (full list = §5 of the map). The load-bearing ones:
+  - C1 `EmploymentAtbDB.Jobs` — reader wired (→ ColonyMoraleDB), **producer ZERO/contested** (Chassis,
+    Civic, Industrial all gesture at it). The biggest crack.
+  - C7 sensor band gate written wrong (`max(...) < max(...)` vs correct `< min(recvMax,sigMax)`) —
+    every detection edge rides on it.
+  - C2 LogiBaseAtb / C4 research Cost-Per-Day / C8 SeatType-AdminLevel = producers with zero readers.
+  - C3 passenger→colonists + C11 frame-Size→CarrySizeOf = dead transport dials (threatens take-a-planet
+    and settle-a-planet).
+  - C9 Defense outsources Structure+Evasion (boundary dispute); C10 Industrial vs Civic both claim
+    housing (duplicate producer).
+  - C5 fighter-construction / C6 drive-heat / C12 generic power-draw = missing mechanisms.
+  - C13 self-repair (whole-or-dead) / C14 foresight (no reaction var) = blocked by engine model.
+
 ## COMMIT LOG
-- (pending) `mission: designer interconnection audit — STEP 0 state anchor` — this file.
+- `5e987f1` `mission: designer interconnection audit — STEP 0 state anchor` — 00-MISSION-AND-STATE.md.
+- (pending) `audit: Phase 1 interconnection map — matrix + edge ledger + 15 cracks` — 01 + STATE update.
