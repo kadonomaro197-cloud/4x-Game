@@ -1,9 +1,14 @@
-# 05 — MATERIAL INPUTS BY DOOR (does the game provide them?)
+# 05 — INPUTS BY DOOR: materials AND people (does the game provide them?)
 
-> **The objective, stated plainly:** for each of the 12 doors, list the **material inputs** its components
-> actually need to be built, and **verify the game provides them** — i.e. every input is either a defined
-> mineral you can mine or a defined material you can refine from real minerals. This is the direct answer, not
-> a gap essay: a per-door bill of materials with a ✓/✗ on each line.
+> **The objective, stated plainly:** for each of the 12 doors, list the inputs its components actually need to
+> be built and run, and **verify the game provides them.** A component has **two** kinds of input, and both are
+> checked here: **materials** (minerals + refined goods — PART 1) and **people** (crew to operate it, drawn from
+> the colony workforce — PART 2). A per-door bill with a ✓/✗ on each line.
+>
+> *(Originally this file covered only materials; PART 2 was added when the obvious question came up — a
+> component isn't built from metal alone, it's crewed by people, and people are the scarcer input.)*
+
+## PART 1 — THE MATERIAL INPUTS
 >
 > **Method:** scanned all 102 buildable component templates across `weapons/ordnance/installations/storage/
 > energy/engines/electronics/docking.json`, grouped each by the door that designs it (via its attribute type),
@@ -128,8 +133,61 @@ chain — a missile costs `explosive-compound` (hydrocarbons + fissionables + co
    verified recipe by recipe. There is no hidden dead-end: mine the 15 minerals and you can refine everything
    any door needs.
 
-**Bottom line:** the game provides every material input for 11 of 12 doors today; fix the three ordnance
-references and it provides **all** of them.
+---
 
-*Companion to `03-RESOURCE-LEDGER.md` (the full supply/demand/gaps) and `04-ACQUISITION-MAP.md` (how you get
-each one). This file is the direct per-door provision check.*
+## PART 2 — THE PEOPLE INPUT (crew), by door
+
+A component isn't built from metal alone — it's **crewed by people**, and people are the input the game is
+*scarcest* in. Every crewed component draws from the colony's **workforce pool**, which is filled by population
+(the Civic door) and gated at build time by `ManpowerTools.ResolveBuild`. Unlike ore, you can't "mine more
+people" — the pool is finite, slow to grow, and hard-drawn.
+
+### How much crew each door needs (components that require crew / total)
+| Door | Needs crew | Notably crew-FREE |
+|---|---|---|
+| Sensors | **11 / 11** | — (every sensor is manned) |
+| Logistical | **16 / 17** | Stainless-Steel Fuel Tank (a passive tank) |
+| Industrial | **10 / 11** | RoboMiner (unmanned by design) |
+| Civic | **5 / 5** | — |
+| Command | **4 / 4** | — |
+| Weapons | 9 / 16 | the ground weapons; big ship guns draw `[Mass]` crew |
+| Propulsion | 5 / 7 | Conventional Rocket, NTP (fire-and-forget) |
+| Defense | 4 / 10 | armour plates, shields, wards (passive — **no crew**) |
+| Chassis | 3 / 7 | the ground frames (crew comes from the unit, not the frame) |
+| Power | 2 / 5 | RTG, Solar, Battery (passive — **no crew**); a Reactor needs `Max(2,[Mass]/500)` |
+| Enhancers | 2 / 5 | power armour, reflex, training cadre (passive augments) |
+
+**And ground units draw people directly:** an **Infantry** unit is `CrewReq = 100`, **Armor** 60, **Artillery**
+40 — those are the *soldiers*, pulled from the workforce pool the same as a factory's workers. So a battalion is
+paid for in people as much as in steel.
+
+### Does the game PROVIDE the people? — mostly yes, with three gaps
+**The supply chain exists and is one of the four backbones:**
+- **Population** — grown by the Civic door (residency / housing → `PopulationProcessor`). The base pool.
+- **The workforce** — `ManpowerTools.ResolveBuild` draws crew from population for every build; a government's
+  `CrewPolicy` decides whether a shortage **blocks** the build or **conscripts** to cover it.
+- **Specialists** — officers from the Naval / Ground / Government academies, scientists from the Research
+  Academy (the Civic + Command doors) fill the seats that generic crew can't.
+
+So the people-supply is real and wired for the core loop. But three people-side gaps mirror the three undefined
+ordnance minerals — the places where the accounting doesn't close:
+
+| People gap | What it is |
+|---|---|
+| **Employment has no producer** (crack C1) | The colony reads a *jobs-vs-workforce* ratio for morale (`ColonyMoraleDB` reads `employmentRatio`), but **no template produces `EmploymentAtbDB.Jobs`** — so that morale term is permanently dead (contributes 0). The consumer exists; the producer was never built. |
+| **No recruitment / scarcity pipeline** | Units draw generic crew (Infantry = 100), but there's **no distinct recruit → train → veteran scarcity** — a lost battalion is just re-queued from the same pool, so "irreplaceable veterans" can't exist yet. (The marine-build gap.) |
+| **Colonists can't be delivered** | Settling a new world needs people *shipped there*, but the colonist cargo has **no unload path** — nothing adds them to a new colony's population (engine-pending, from the Logistical door). |
+
+**Net for people:** the game provides the workforce for building and manning everything today (population → pool
+→ crew, gated by government policy). What's missing is the *fine-grained* people accounting — the employment
+morale wire, a real recruitment-scarcity pipeline, and colonist delivery.
+
+---
+
+**Bottom line (both inputs):** the game provides every **material** input for 11 of 12 doors (fix the three
+ordnance references for the 12th), and it provides the **people** to build and crew everything through the
+workforce pool — with people being the genuinely *scarce* input, and three people-accounting wires still open
+(employment, recruitment-scarcity, colonist delivery).
+
+*Companion to `03-RESOURCE-LEDGER.md` (the full material supply/demand/gaps) and `04-ACQUISITION-MAP.md` (how
+you get each one). This file is the direct per-door provision check for both inputs — materials and people.*
