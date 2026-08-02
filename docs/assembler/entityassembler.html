@@ -156,6 +156,18 @@ h2{margin:0;font-size:15px;letter-spacing:.02em}
 .f .state{position:absolute;top:6px;right:8px;font:8px/1 ui-monospace,Menlo,monospace;letter-spacing:.04em;font-weight:700;text-transform:uppercase}
 .f.live .state{color:var(--ok)} .f.inert .state{color:var(--ink3)} .f.shiponly .state{color:var(--ac2)}
 
+/* engagement ranges — a magnitude ruler */
+.rng{display:flex;flex-direction:column;gap:8px}
+.rngrow{display:grid;grid-template-columns:130px 1fr 62px;gap:10px;align-items:center}
+.rngrow .rn{font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rngrow .rn em{font-style:normal;color:var(--ink3);font-size:10px}
+.rngtrack{height:9px;background:var(--card3);border:1px solid var(--rule2);border-radius:5px;overflow:hidden}
+.rngbar{height:100%;background:var(--ac);border-radius:5px;transition:width .18s ease}
+.rngv{font:11px/1 ui-monospace,Menlo,monospace;color:var(--ac2);font-variant-numeric:tabular-nums;text-align:right}
+.rngscale{display:grid;grid-template-columns:130px 1fr 62px;gap:10px;margin-top:2px}
+.rngticks{grid-column:2;display:flex;justify-content:space-between;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3)}
+.rngcap{grid-column:1;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3);align-self:center;letter-spacing:.04em}
+
 /* handoff */
 .handoff{background:var(--card2);border:1px solid var(--rule2);border-radius:8px;padding:0;overflow:hidden}
 .handoff pre{margin:0;padding:13px 15px;overflow-x:auto;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -232,8 +244,21 @@ footer{padding:6px 0 60px}
     </div>
 
     <div class="panel">
+      <div class="phead"><h2>Engagement ranges</h2><span class="sub">how far each gun reaches · km</span></div>
+      <div class="pbody" id="ranges"></div>
+    </div>
+
+    <div class="panel">
       <div class="phead"><h2>Cost surface</h2><span class="sub">to build one</span></div>
       <div class="pbody"><div class="gauges" id="cost"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Resource bill</h2><span class="sub">the materials it eats</span></div>
+      <div class="pbody">
+        <div class="gauges" id="resources"></div>
+        <p class="note" id="resNote" style="margin:12px 0 0"></p>
+      </div>
     </div>
 
     <div class="panel">
@@ -316,11 +341,11 @@ var CAT=[
    honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
  {id:'armour',cat:'Defense',name:'Composite Armour Plating',hosts:['ship','ground','station'],
    mass:64,vol:12,crew:0,hp:44,draw:0,supply:0,armour:{thick:22,vsK:1.6,vsE:0.9},
-   cost:{bp:90,cr:6,rp:1,steel:120,elec:2},
+   cost:{bp:90,cr:6,rp:1,steel:60,elec:2,mats:{'tungsten-plating':20,'ablative-composite':40}},
    honesty:'Ship: thickness folds into one Toughness pool. Ground: soaked shot-by-shot vs each weapon nature.'},
  {id:'shield',cat:'Defense',name:'Shield Generator',hosts:['ship','ground','station'],
    mass:74,vol:22,crew:3,hp:16,draw:4,supply:0,shield:{cap:1500,regen:0.05},
-   cost:{bp:160,cr:22,rp:4,steel:30,elec:52},
+   cost:{bp:160,cr:22,rp:4,steel:30,elec:52,mats:{'em-shielding-mesh':30,'ree-magnetics':12}},
    honesty:'A depleting pool laid over HP. Ship: drained through the kernel. Ground: drained inline — different code, same idea.'},
  {id:'reactor',cat:'Power',name:'Fusion Reactor',hosts:['ship','ground','station'],
    mass:200,vol:52,crew:8,hp:28,draw:0,supply:20,loud:true,
@@ -336,7 +361,7 @@ var CAT=[
    honesty:'Ship: thrust ÷ mass → Evasion. Ground: becomes locomotion (march speed). Burns fuel, not power.'},
  {id:'fighterbay',cat:'Carrier',name:'Fighter Bay',hosts:['ship','station'],
    mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
-   cost:{bp:300,cr:40,rp:5,steel:160,elec:60},
+   cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
    honesty:'Holds ~70 fighters. THE carrier capability — and the honest gap: strike-launch is a PENDING output (verified: ParasiteLauncherReady has zero emitters), so the wing embarks but cannot sortie in the sim yet.'},
  {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
    mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,
@@ -362,7 +387,8 @@ var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
     counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,magazine:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
-    counts:{heavyturbo:8,pdbattery:10,missile:2,fighterbay:6,armour:14,shield:4,capreactor:3,drive:4,magazine:3,sensor:2,bridge:1}},
+    /* canon armament: 8 heavy dual turbolasers · 2 medium turbolasers · 52 point-defense · 4 torpedo tubes · 420 fighters */
+    counts:{heavyturbo:8,laser:2,pdbattery:26,missile:4,fighterbay:6,armour:16,shield:5,capreactor:4,drive:4,magazine:5,sensor:2,bridge:2}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
@@ -589,16 +615,68 @@ function renderWeapons(S){
   el.innerHTML=html;
 }
 
+/* ---------- the material bill (shared by cost + resources) ---------- */
+function materialBill(S){
+  var m={};
+  function add(k,v){if(v)m[k]=(m[k]||0)+v;}
+  S.A.forEach(function(c){var n=counts[c.id];if(!c.cost)return;
+    add('stainless-steel',(c.cost.steel||0)*n);
+    add('electronics',(c.cost.elec||0)*n);
+    add('fissile-fuels',(c.cost.fissile||0)*n);
+    if(c.cost.mats)Object.keys(c.cost.mats).forEach(function(k){add(k,c.cost.mats[k]*n);});
+  });
+  var arr=Object.keys(m).map(function(k){return {name:k,t:m[k]};}).sort(function(a,b){return b.t-a.t;});
+  var total=arr.reduce(function(s,x){return s+x.t;},0);
+  return {arr:arr,total:total};
+}
+
 /* ---------- render: cost surface ---------- */
 function renderCost(S){
   var el=document.getElementById('cost');
-  var bp=0,cr=0,rp=0,steel=0,elec=0;
-  S.A.forEach(function(c){var n=counts[c.id];if(c.cost){bp+=(c.cost.bp||0)*n;cr+=(c.cost.cr||0)*n;rp=Math.max(rp,c.cost.rp||0);steel+=(c.cost.steel||0)*n;elec+=(c.cost.elec||0)*n;}});
+  var bp=0,cr=0,rp=0;
+  S.A.forEach(function(c){var n=counts[c.id];if(c.cost){bp+=(c.cost.bp||0)*n;cr+=(c.cost.cr||0)*n;rp=Math.max(rp,c.cost.rp||0);}});
+  var bill=materialBill(S);
   el.innerHTML=
     '<div class="gauge'+(bp?'':' muted')+'"><i>Build points</i><b>'+fmt(bp)+'</b><s>factory-hours</s></div>'+
     '<div class="gauge'+(cr?'':' muted')+'"><i>Credits</i><b>'+fmt(cr)+'k</b><s>to construct</s></div>'+
     '<div class="gauge'+(rp?'':' muted')+'"><i>Tech tier</i><b>'+(rp||'—')+'</b><s>highest RP gate</s></div>'+
-    '<div class="gauge'+(steel+elec?'':' muted')+'"><i>Materials</i><b>'+fmt(steel+elec)+'t</b><s>steel + electronics</s></div>';
+    '<div class="gauge'+(bill.total?'':' muted')+'"><i>Materials</i><b>'+fmt(bill.total)+'t</b><s>'+bill.arr.length+' types (below)</s></div>';
+}
+
+/* ---------- render: resource bill (the materials — cradle rung) ---------- */
+function renderResources(S){
+  var el=document.getElementById('resources');var note=document.getElementById('resNote');
+  var bill=materialBill(S);
+  if(!bill.arr.length){el.innerHTML='<p class="note" style="color:var(--ink3)">Nothing mounted — no materials required.</p>';note.innerHTML='';return;}
+  el.innerHTML=bill.arr.map(function(x){
+    return '<div class="gauge"><i>'+x.name+'</i><b>'+fmt(x.t)+'t</b><s>'+(bill.total?(x.t/bill.total*100).toFixed(0):0)+'% of bill</s></div>';
+  }).join('');
+  note.innerHTML='Every line is a <b>refined</b> material that mines back to raw ore — '+
+    '<b>stainless-steel</b> ← iron + chromium · <b>electronics</b> ← copper + silicon + plastic · '+
+    '<b>fissile-fuels</b> ← fissionables · <b>tungsten-plating</b> ← tungsten. '+
+    'Verified provided end-to-end in the inputs check (05) + resource ledger (03).';
+}
+
+/* ---------- render: engagement ranges (the war-range ruler) ---------- */
+function renderRanges(S){
+  var el=document.getElementById('ranges');
+  var W=S.A.filter(function(c){return c.weapon;});
+  if(!W.length){el.innerHTML='<p class="note" style="color:var(--ink3)">No weapons mounted — no engagement envelope.</p>';return;}
+  var rows=W.map(function(c){return {name:c.name,nature:c.weapon.nature,range:c.weapon.range};})
+            .sort(function(a,b){return b.range-a.range;});
+  var maxR=rows[0].range;
+  var nice=(function(v){var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var f=v/p;var n=f<=1?1:f<=2?2:f<=5?5:10;return n*p;})(maxR);
+  var bars=rows.map(function(r){
+    var w=clamp(r.range/nice*100,0,100);
+    var nm=r.name.replace('Battery','').replace('Launcher','').replace('Projector','').replace('Cannon','').trim();
+    return '<div class="rngrow"><span class="rn">'+nm+' <em>'+r.nature.toLowerCase()+'</em></span>'+
+      '<div class="rngtrack"><div class="rngbar" style="width:'+w+'%"></div></div>'+
+      '<span class="rngv">'+fmt(r.range)+' km</span></div>';
+  }).join('');
+  var ticks='<div class="rngscale"><span class="rngcap">◄ hull</span><span class="rngticks">'+
+    '<span>0</span><span>'+fmt(nice/4)+'</span><span>'+fmt(nice/2)+'</span><span>'+fmt(nice*3/4)+'</span><span>'+fmt(nice)+' km</span></span></div>';
+  el.innerHTML='<div class="rng">'+bars+'</div>'+ticks+
+    '<p class="note" style="margin:11px 0 0;color:var(--ink3)">Each bar starts at the hull (0) and reaches to that gun’s max range. The <b style="color:var(--ink2)">stand-off envelope</b> is the longest bar (open with turbolasers); the short bars are knife-fight and point-defense guns. Real km — hexes are only a display ruler.</p>';
 }
 
 /* ---------- render: handoff object ---------- */
@@ -635,7 +713,7 @@ function renderSplit(){
 function renderAll(){
   renderHosts();renderPresets();renderRoster();
   var S=compute();
-  renderBudgets(S);renderGates(S);renderGauges(S);renderWeapons(S);renderCost(S);renderHandoff(S);renderSplit();
+  renderBudgets(S);renderGates(S);renderGauges(S);renderWeapons(S);renderRanges(S);renderCost(S);renderResources(S);renderHandoff(S);renderSplit();
 }
 
 /* seed a clean starter warship so the page tells its story on open:
