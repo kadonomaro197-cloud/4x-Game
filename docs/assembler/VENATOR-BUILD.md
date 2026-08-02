@@ -133,13 +133,13 @@ and command side). Six components were added to close the worst of it; the rest 
 | **Command** | ship bridge **+ a flag command suite** | Bridge **+ Flag Command Suite** ✅ | — |
 | **Enhancers** | fire-control · automation | **+ Targeting Computer** (the door was **empty**) | crew-automation · damage-control enhancers |
 | **Logistical** | cargo · ammo · fuel · fighters · troops | **+ Cargo Hold** (rest already) ✅ | — |
-| **Power** | reactors · radiators · **batteries** | reactor + radiators | **capacitor / battery bank** (deferred) |
-| **Sensors** | search · **fire-control** · **EW** | search only | **fire-control sensor · ECM / jammer** (deferred) |
+| **Power** | reactors · radiators · **batteries** | reactor · radiators · **+ Capacitor Bank** ✅ | — |
+| **Sensors** | search · **fire-control** · **EW** | search · **+ Fire-Control Sensor** · **+ ECM Suite** ✅ | — |
 | **Propulsion** | drives · fuel · warp | 3 ✅ | maneuvering thrusters (minor) |
 | **Industrial** | an onboard **repair / engineering bay** | — | **repair bay** (deferred) |
 | **Aura** | area buffs (fleet-wide) | — | the whole door is engine-pending (no aura processor) |
 
-**The six added this pass** (catalog 25 → 31), and how live each is:
+**Added across two passes** (catalog 25 → 34), and how live each is:
 
 | Added | Door | Reaches the sim? |
 |---|---|---|
@@ -149,6 +149,9 @@ and command side). Six components were added to close the worst of it; the rest 
 | **Flag Command Suite** | Command | ⚠ seats a leader (`CommandBerthAtb` LIVE for site work); fleet-command scope (`AdminLevel`) is **dead** in the engine |
 | **Targeting Computer** (caliber) | Enhancers | ✅ **LIVE** — `UnitCaliberAtb.FirepowerMult`; `ShipCombatValueDB.Calculate` multiplies firepower by the best module (×1.25 → Firepower 2,236 → 2,795) |
 | **Cargo Hold** | Logistical | ✅ **LIVE** — `CargoStorageAtb` general stores |
+| **Capacitor Bank** | Power | ✅ **LIVE** — `EnergyStoreAtb` → `EnergyStored`; the warp-departure buffer (4,000 MJ) |
+| **Fire-Control Sensor** | Sensors | ✅ **LIVE** (gated) — `BeamFireControlAtbDB` → `ShipCombatValueDB`; ×1.12 tracking on firepower |
+| **ECM Suite** | Sensors | ✅ **LIVE** (gated) — `JammerAtb` → `SensorTools`; +10% hit-avoidance (evasion) |
 
 **The crew-sustainment gates now make the ship house its own crew:** berths (900) and life support (1,000) both
 cover the 825 crew, medical covers them too. Leave off the quarters and the build **fails the gate** — a real
@@ -156,10 +159,21 @@ decision, not a decoration. The nicest tell: the Targeting Computer is the *most
 firepower multiplier), while the crew-sustainment parts the ship most obviously *needs* are the *least* wired —
 which is itself the finding: **the engine models a colony's civic life in depth and a ship's crew barely at all.**
 
-**The deferred backlog** (real gaps, not yet added): a **capacitor/battery bank** (Power — a warp/weapon energy
-buffer, `EnergyStore` is live), a **fire-control sensor** and an **ECM/jammer** (Sensors — both live-gated in the
-engine), an onboard **repair/engineering bay** (Industrial), **damage-control** (Defense/Enhancers), and a
-**recreation/morale** facility (Civic). Any of these is a quick add on the same pattern.
+**Do the door-DESIGNERS need fixing to close the rest? No — and the split is clean, verified against source:**
+
+- **Nothing to fix — just add (done).** The **Capacitor Bank**, **Fire-Control Sensor**, and **ECM Suite** were
+  each *already* designed AND read by the engine — `EnergyStoreAtb.cs`, `BeamFireControlAtbDB.cs` →
+  `ShipCombatValueDB.cs`, and `JammerAtb.cs` → `SensorTools.cs`. So they were added and the gap is closed
+  (firepower ×1.40, +10% evasion from jamming, a 4,000 MJ warp buffer).
+- **Needs ENGINE work, not a designer fix.** The rest can't be closed by adding a part, because the OUTPUT has no
+  reader: an onboard **repair / damage-control** system (grep for `SelfRepair` / `RepairRate` / `DamageControl` =
+  **zero** — the whole-or-dead model has no damaged state), a **recreation / crew-morale** facility (no
+  `ShipMorale` — morale is colony-only), the **fighter-launch** the carrier needs (`ParasiteLauncherReady`, 0
+  emitters), and the **tractor-beam payoff** (capture is an open ruling, salvage is a stub). These are engine
+  features to build; the tool flags them honestly instead of pretending a component closes them.
+
+**Bottom line: no door-designer needs changing.** Everything the designers can express is either wired (added
+this pass) or waiting on an engine *consumer* — never blocked on the designer itself.
 
 ## Two honest caveats on the model
 

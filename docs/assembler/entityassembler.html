@@ -381,6 +381,10 @@ var CAT=[
    mass:40,vol:44,crew:1,hp:8,draw:0,supply:0,heatDissip:40,
    cost:{bp:80,cr:6,rp:2,steel:60,elec:8},
    honesty:'Sheds weapon heat. If energy guns make more heat than the radiators shed, the ship THROTTLES its own fire — a real live limit.'},
+ {id:'capacitor',cat:'Power',name:'Capacitor Bank',hosts:['ship','station'],
+   mass:70,vol:40,crew:1,hp:12,draw:0,supply:0,energyStore:2000,
+   cost:{bp:140,cr:18,rp:4,steel:40,elec:60,mats:{'lithium-battery':20}},
+   honesty:'Stored charge — the warp-departure buffer and surge reserve for energy weapons. LIVE: EnergyStoreAtb → EnergyStored, which warp draws from at departure (WarpMoveCommand). No designer change needed — the Power door already builds this.'},
  {id:'drive',cat:'Propulsion',name:'Ion Drive',hosts:['ship','ground'],
    mass:150,vol:40,crew:5,hp:22,draw:0,supply:0,thrust:220,ve:30,fuelBurn:9,speedFactor:1.6,
    cost:{bp:190,cr:18,rp:4,steel:80,elec:24},
@@ -441,6 +445,14 @@ var CAT=[
    mass:90,vol:44,crew:6,hp:14,draw:6,supply:0,detect:450,
    cost:{bp:200,cr:28,rp:5,steel:40,elec:80,mats:{'ree-magnetics':16}},
    honesty:'A dedicated deep-search array — sees far enough to target at capital-weapon range, so your torpedoes aren’t firing past your own vision. Detection is the who-shoots-first line (LIVE, client-gated).'},
+ {id:'firecontrol',cat:'Sensors',name:'Fire-Control Sensor',hosts:['ship','ground','station'],
+   mass:50,vol:22,crew:3,hp:10,draw:4,supply:0,fireControl:1.12,
+   cost:{bp:190,cr:26,rp:5,steel:30,elec:70,mats:{'ree-magnetics':10}},
+   honesty:'The targeting radar — locks and tracks a target so the guns land. LIVE (client-gated): BeamFireControlAtbDB.Range/TrackingSpeed feed ShipCombatValueDB, raising every gun’s tracking and reach. The Sensors door already builds this.'},
+ {id:'ecm',cat:'Sensors',name:'ECM Suite',hosts:['ship','station'],
+   mass:60,vol:26,crew:3,hp:10,draw:5,supply:0,ecm:0.10,
+   cost:{bp:200,cr:28,rp:6,steel:30,elec:80,mats:{'ree-magnetics':14}},
+   honesty:'Jams enemy targeting — they can’t get a clean lock, so fewer shots land. LIVE (client-gated): JammerAtb.SensitivityDegrade degrades their detection (SensorTools). The Sensors door already builds this.'},
  {id:'tractor',cat:'Utility',name:'Tractor Beam Projector',hosts:['ship','station'],
    mass:110,vol:40,crew:4,hp:16,draw:5,supply:0,tractor:true,
    cost:{bp:150,cr:20,rp:4,steel:70,elec:40,mats:{'ree-magnetics':10}},
@@ -468,17 +480,17 @@ CAT.forEach(function(c){counts[c.id]=0;});
    a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
 var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
-    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,magazine:1,
-            provisions:1,cargo:1,quarters:1,lifesupport:1,targeting:1,sensor:1}},
+    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,capacitor:1,magazine:1,
+            provisions:1,cargo:1,quarters:1,lifesupport:1,targeting:1,sensor:1,firecontrol:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
     /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
        laser cannons · 4 heavy proton torpedo tubes · 6 tractor beam projectors · 420 starfighters ·
        40 LAAT gunships + 24 AT-TE walkers · 7,400 crew · Class-1 hyperdrive. Support parts (reactors, radiators,
        fuel, shields, armour, hydroponics, sensors, twin bridge towers) sized to power/cool/feed/man the above. */
     counts:{heavyturbo:8,medturbo:2,pdbattery:52,missile:4,tractor:6,fighterbay:6,vehiclebay:4,
-            capreactor:4,radiator:5,shield:5,armour:20,drive:4,warp:1,fueltank:4,magazine:5,ammobunker:5,
+            capreactor:4,radiator:5,capacitor:2,shield:5,armour:20,drive:4,warp:1,fueltank:4,magazine:5,ammobunker:5,
             provisions:4,hydroponics:6,cargo:2,quarters:6,lifesupport:4,medbay:3,targeting:2,
-            sensor:2,searchsensor:2,bridge:2,flagsuite:1}},
+            sensor:2,searchsensor:2,firecontrol:2,ecm:1,bridge:2,flagsuite:1}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
@@ -561,6 +573,7 @@ function compute(){
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
   var warpCap=false,warpSustain=0,speedFactor=0,reactorDays=Infinity;
   var berths=0,lifeSupport=0,medical=0,cargo=0,caliber=1,hasFlag=false;
+  var energyStore=0,fcMult=1,ecmBonus=0;
   A.forEach(function(c){
     var n=counts[c.id];
     mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
@@ -591,6 +604,9 @@ function compute(){
     if(c.cargo)cargo+=c.cargo*n;
     if(c.caliber)caliber=Math.max(caliber,c.caliber);
     if(c.flagship)hasFlag=true;
+    if(c.energyStore)energyStore+=c.energyStore*n;
+    if(c.fireControl)fcMult=Math.max(fcMult,c.fireControl);
+    if(c.ecm)ecmBonus=Math.max(ecmBonus,c.ecm);
     if(c.weapon){
       firepower+=c.weapon.dps*n;
       // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
@@ -600,7 +616,7 @@ function compute(){
       draw+=(c.draw||0)*n;
     }
   });
-  firepower*=caliber; // best installed caliber module multiplies total firepower (UnitCaliberAtb, LIVE)
+  firepower*=caliber*fcMult; // caliber module (UnitCaliberAtb) × fire-control tracking (BeamFireControlAtb), both LIVE
   var baseHP={ship:120,ground:80,station:400}[host];
   var totalHP=baseHP+hp;
   var toughness=(totalHP + armourThick*(host==='station'?4:2))*0.1; // MJ-ish
@@ -609,6 +625,7 @@ function compute(){
   if(host==='ship'){evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
   else if(host==='ground'){evasion=speedFactor>0?clamp(0.22+0.20,0,0.95):0.22;}
   else {evasion=0;}
+  evasion=clamp(evasion+ecmBonus,0,0.95); // ECM jams enemy targeting → fewer shots land (a hit-avoidance term, not dodging)
   var roleWeight=firepower>0?1.0:0.25;
   // movement + FTL
   var fuelMass=fuelStore;
@@ -635,6 +652,7 @@ function compute(){
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
     reactorDays:reactorDays,deployDays:deployDays,deployLimiter:deployLimiter,
     berths:berths,lifeSupport:lifeSupport,medical:medical,cargo:cargo,caliber:caliber,hasFlag:hasFlag,
+    energyStore:energyStore,fcMult:fcMult,ecmBonus:ecmBonus,
     ammoCap:ammoCap,ammoUse:ammoUse,ammoMin:ammoMin,
     heatGen:heatGen,heatDissip:heatDissip,heatBalance:heatBalance,detect:detect,
     over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
@@ -735,7 +753,9 @@ function renderGauges(S){
   if(host==='ship')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
   if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
-  if(S.caliber>1)bits.push('<b style="color:var(--ac2)">Targeting ×'+S.caliber.toFixed(2)+'</b> on firepower (LIVE)');
+  if(S.caliber>1||S.fcMult>1)bits.push('<b style="color:var(--ac2)">Firepower ×'+(S.caliber*S.fcMult).toFixed(2)+'</b> (targeting + fire-control, LIVE)');
+  if(S.ecmBonus>0)bits.push('<b style="color:var(--ac2)">ECM +'+(S.ecmBonus*100).toFixed(0)+'%</b> hit-avoidance (LIVE)');
+  if(S.energyStore>0)bits.push('Capacitors '+fmt(S.energyStore)+' MJ warp/weapon buffer');
   if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
   if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' fighters berthed — PENDING (can’t sortie yet).</b>');
   if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' vehicles/troops — invasion chain LIVE.</b>');
