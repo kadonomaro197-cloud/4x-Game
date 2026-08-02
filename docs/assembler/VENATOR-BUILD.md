@@ -36,6 +36,19 @@ Building the real ship surfaced three component types the bench didn't have. All
 | **Tractor Beam Projector** | the 6 tractor beam projectors | **PENDING** — grips/drags for docking, salvage, capture, but capture is still a bare ownership flip (an open ruling) and salvage isn't built (`SpawnWreck` is a stub) |
 | **Vehicle & Troop Bay** | the 40 gunships + 24 walkers + embarked troops | **LIVE** — `GroundBayAtb` → `GroundTransport` is the invasion chain the game actually runs |
 
+## A second pass — making the canon ship combat-viable
+
+Canon-accurate isn't the same as fightable. Building the real Venator exposed two ways it *couldn't actually
+fight*, both fixed by **adding** parts (not changing the canon armament):
+
+| Problem the tool flagged | Fix (a part added to the catalog) |
+|---|---|
+| **It couldn't see as far as it shot** — 4 sensors reached 170 km, but the torpedoes fly 400 km. You'd be firing blind past your own vision. | **Long-Range Sensor** (deep-search array, 450 km) ×2 → detection **470 km**, now past every gun. The ruler's grey Detection bar becomes the longest one. |
+| **5 minutes of ammunition** — 52 point-defense guns + torpedoes drained 5 magazines in ~5 min of sustained fire. | **Ammo Bunker** (deep magazine, 300 t) ×5 → **61 minutes**. Also tuned point-defense to burst-fire consumption (0.5 → 0.3 t/min), since 52 flak guns don't run full-auto continuously. |
+
+Both are *live* systems (detection is a real reader; ammo is the real dry-magazine gate), so closing these gaps
+makes the ship genuinely combat-worthy, not just paper-accurate.
+
 ## The full mapping — every Venator system → a component → the count
 
 | Venator system | Assembler component | Count | Reaches the sim? |
@@ -65,18 +78,19 @@ Load the **▲ Venator-class carrier** preset (host = Warship):
 
 | Readout | Value |
 |---|---|
-| Hull mass | 16,348 / 20,000 t ✓ |
-| Power | 386 / 480 MW ✓ |
+| Hull mass | 17,468 / 20,000 t ✓ |
+| Power | 398 / 480 MW ✓ |
 | **Firepower** | **2,236 dmg/s** (8 heavy + 2 medium turbolasers + 52 PD + 4 torpedoes) |
 | **Toughness** | **393** |
 | Shields | 7,500 J (+375/s) |
 | Evasion | 4% (a slow capital ship) |
 | FTL | warp-capable; 15 MW to sustain |
-| Δv / fuel | 3.1 km/s · 50 h at full burn |
-| Crew provisions | **∞** — hydroponics feeds 1,200 ≥ 767 crew (closed loop) |
+| Δv / fuel | 3.9 km/s · 67 h at full burn |
+| **Detection** | **470 km** — reaches past the 400 km torpedoes (see-first) |
+| Crew provisions | **∞** — hydroponics feeds 1,200 ≥ 789 crew (closed loop) |
 | Heat margin | +20 MW (radiators clear it) |
-| Ammo | 5 min of continuous fire before dry |
-| Cost | 23,190 build-points · 2,613k credits · 18,466 t across 9 materials |
+| **Ammo** | **61 min** of sustained fire (was 5 — fixed with ammo bunkers) |
+| Cost | ~24k build-points · ~2.7M credits · ~19k t across 10 materials |
 
 ## The litmus verdict — what's real, what's pending
 

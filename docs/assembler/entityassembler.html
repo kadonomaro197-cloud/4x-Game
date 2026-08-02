@@ -357,7 +357,7 @@ var CAT=[
    cost:{bp:300,cr:40,rp:5,steel:140,elec:70,mats:{'em-shielding-mesh':12}},
    honesty:'The mid-weight main gun — between the point-defense screen and the heavy batteries. Energy, runs on the reactor.'},
  {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
-   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,ammoUse:0.5,
+   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,ammoUse:0.3,
    weapon:{dps:14,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.3,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
    cost:{bp:90,cr:8,rp:2,steel:44,elec:16},
    honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
@@ -405,6 +405,10 @@ var CAT=[
    mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,ammoCap:36,
    cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
    honesty:'Feeds kinetic/explosive weapons. Holds 36 t of rounds — the ammo endurance clock. Empty, ammo weapons fire dry and fall silent.'},
+ {id:'ammobunker',cat:'Logistics',name:'Ammo Bunker',hosts:['ship','ground','station'],
+   mass:180,vol:130,crew:2,hp:22,draw:0,supply:0,ammoStore:true,ammoCap:300,
+   cost:{bp:150,cr:10,rp:2,steel:150,elec:2,mats:{'reinforced-trusswork':20}},
+   honesty:'A deep magazine — 300 t of reserve rounds. Same feed as the magazine, far more of it: this is what keeps a capital ship’s guns fed through a long engagement instead of five minutes.'},
  {id:'provisions',cat:'Logistics',name:'Provisions Store',hosts:['ship','ground','station'],
    mass:45,vol:60,crew:0,hp:8,draw:0,supply:0,provisions:4000,storeFood:true,
    cost:{bp:60,cr:6,rp:1,steel:34,elec:6,mats:{'food':30}},
@@ -417,6 +421,10 @@ var CAT=[
    mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,detect:150,
    cost:{bp:110,cr:14,rp:3,steel:28,elec:40},
    honesty:'Detection range = who shoots first. LIVE, but behind a flag the client switches on.'},
+ {id:'searchsensor',cat:'Sensors',name:'Long-Range Sensor',hosts:['ship','station'],
+   mass:90,vol:44,crew:6,hp:14,draw:6,supply:0,detect:450,
+   cost:{bp:200,cr:28,rp:5,steel:40,elec:80,mats:{'ree-magnetics':16}},
+   honesty:'A dedicated deep-search array — sees far enough to target at capital-weapon range, so your torpedoes aren’t firing past your own vision. Detection is the who-shoots-first line (LIVE, client-gated).'},
  {id:'tractor',cat:'Utility',name:'Tractor Beam Projector',hosts:['ship','station'],
    mass:110,vol:40,crew:4,hp:16,draw:5,supply:0,tractor:true,
    cost:{bp:150,cr:20,rp:4,steel:70,elec:40,mats:{'ree-magnetics':10}},
@@ -443,7 +451,8 @@ var PRESETS=[
        40 LAAT gunships + 24 AT-TE walkers · 7,400 crew · Class-1 hyperdrive. Support parts (reactors, radiators,
        fuel, shields, armour, hydroponics, sensors, twin bridge towers) sized to power/cool/feed/man the above. */
     counts:{heavyturbo:8,medturbo:2,pdbattery:52,missile:4,tractor:6,fighterbay:6,vehiclebay:4,
-            capreactor:4,radiator:5,shield:5,armour:20,drive:4,warp:1,fueltank:3,magazine:5,provisions:4,hydroponics:6,sensor:2,bridge:2}},
+            capreactor:4,radiator:5,shield:5,armour:20,drive:4,warp:1,fueltank:4,magazine:5,ammobunker:5,
+            provisions:4,hydroponics:6,sensor:2,searchsensor:2,bridge:2}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
