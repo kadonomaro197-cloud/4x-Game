@@ -311,7 +311,7 @@ if(tb){tb.addEventListener('click',function(){
 /* ---------- hosts ---------- */
 var HOSTS={
   ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
-        budgetName:'Hull mass budget',budget:14000,volCap:9000,crewRef:500,role:'ship'},
+        budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:800,role:'ship'},
   ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles. Armour is soaked shot-by-shot; penetration bites here.',
         budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
@@ -347,6 +347,11 @@ var CAT=[
    weapon:{dps:140,nature:'Energy',delivery:'Beam',pen:0,pershot:14,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
    cost:{bp:520,cr:70,rp:6,steel:240,elec:120},
    honesty:'Capital energy gun — huge power draw, slow tracking (weak vs fighters). Runs on the reactor. Adds heavy heat.'},
+ {id:'medturbo',cat:'Weapons',name:'Medium Turbolaser',hosts:['ship','station'],
+   mass:200,vol:70,crew:12,hp:28,draw:14,supply:0,heat:10,
+   weapon:{dps:78,nature:'Energy',delivery:'Beam',pen:0,pershot:6,rate:4,range:140,vel:299792,track:0.50,ammo:false,pd:false},
+   cost:{bp:300,cr:40,rp:5,steel:140,elec:70,mats:{'em-shielding-mesh':12}},
+   honesty:'The mid-weight main gun — between the point-defense screen and the heavy batteries. Energy, runs on the reactor.'},
  {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
    mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,ammoUse:0.5,
    weapon:{dps:14,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.3,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
@@ -388,6 +393,10 @@ var CAT=[
    mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
    cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
    honesty:'Holds ~70 fighters. THE carrier capability — and the honest gap: strike-launch is a PENDING output (verified: ParasiteLauncherReady has zero emitters), so the wing embarks but cannot sortie in the sim yet.'},
+ {id:'vehiclebay',cat:'Carrier',name:'Vehicle & Troop Bay',hosts:['ship','station'],
+   mass:300,vol:360,crew:10,hp:24,draw:2,supply:0,vehicles:16,troopsLive:true,
+   cost:{bp:280,cr:36,rp:4,steel:150,elec:40,mats:{'reinforced-trusswork':40}},
+   honesty:'Carries ground units — gunships, walkers, troops — down to a surface. Unlike the fighter bay, THIS chain is LIVE: GroundBayAtb → GroundTransport is the invasion path the game actually runs.'},
  {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
    mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,ammoCap:36,
    cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
@@ -404,6 +413,10 @@ var CAT=[
    mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,detect:150,
    cost:{bp:110,cr:14,rp:3,steel:28,elec:40},
    honesty:'Detection range = who shoots first. LIVE, but behind a flag the client switches on.'},
+ {id:'tractor',cat:'Utility',name:'Tractor Beam Projector',hosts:['ship','station'],
+   mass:110,vol:40,crew:4,hp:16,draw:5,supply:0,tractor:true,
+   cost:{bp:150,cr:20,rp:4,steel:70,elec:40,mats:{'ree-magnetics':10}},
+   honesty:'Grips and drags a target — docking, salvage, capture. Battlefield payoff is PENDING: capture is still a bare ownership flip (an open ruling) and salvage isn’t built.'},
  {id:'bridge',cat:'Command',name:'Command Bridge',hosts:['ship','station'],
    mass:40,vol:18,crew:-4,hp:15,draw:1,supply:0,deadOut:'Admin-level (seat scope)',
    cost:{bp:120,cr:10,rp:2,steel:34,elec:20},
@@ -420,9 +433,12 @@ var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
     counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,magazine:1,provisions:1,sensor:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
-    /* canon armament: 8 heavy dual turbolasers · 2 medium turbolasers · 52 point-defense · 4 torpedo tubes · 420 fighters;
-       + FTL, fuel, radiators for the turbolaser heat, and a hydroponics closed loop that feeds the crew */
-    counts:{heavyturbo:8,laser:2,pdbattery:26,missile:4,fighterbay:6,armour:16,shield:5,capreactor:4,radiator:5,drive:4,warp:1,fueltank:3,magazine:5,provisions:4,hydroponics:4,sensor:2,bridge:2}},
+    /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
+       laser cannons · 4 heavy proton torpedo tubes · 6 tractor beam projectors · 420 starfighters ·
+       40 LAAT gunships + 24 AT-TE walkers · 7,400 crew · Class-1 hyperdrive. Support parts (reactors, radiators,
+       fuel, shields, armour, hydroponics, sensors, twin bridge towers) sized to power/cool/feed/man the above. */
+    counts:{heavyturbo:8,medturbo:2,pdbattery:52,missile:4,tractor:6,fighterbay:6,vehiclebay:4,
+            capreactor:4,radiator:5,shield:5,armour:20,drive:4,warp:1,fueltank:3,magazine:5,provisions:4,hydroponics:6,sensor:2,bridge:2}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
@@ -500,7 +516,7 @@ function compute(){
   var H=HOSTS[host];
   var mass=0,vol=0,crew=0,supply=0,draw=0,thrust=0,hp=0,armourThick=0,shieldCap=0,shieldRegen=0,firepower=0;
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
-  var fighters=0,hasFighterBay=false;
+  var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0;
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
   var warpCap=false,warpSustain=0,speedFactor=0;
   A.forEach(function(c){
@@ -511,6 +527,8 @@ function compute(){
     if(c.shield){shieldCap+=c.shield.cap*n;shieldRegen+=c.shield.cap*c.shield.regen*n;}
     if(c.ammoStore)ammoStore+=n;
     if(c.fighters){fighters+=c.fighters*n;hasFighterBay=true;}
+    if(c.vehicles){vehicles+=c.vehicles*n;hasVehicleBay=true;}
+    if(c.tractor)tractors+=n;
     heatGen+=(c.heat||0)*n;
     if(c.heatDissip)heatDissip+=c.heatDissip*n;
     if(c.fuelStore)fuelStore+=c.fuelStore*n;
@@ -557,7 +575,7 @@ function compute(){
   return {A:A,H:H,mass:mass,vol:vol,crew:crew,supply:supply,draw:draw,thrust:thrust,
     firepower:firepower,toughness:toughness,evasion:evasion,shieldCap:shieldCap,shieldRegen:shieldRegen,
     roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
-    fighters:fighters,hasFighterBay:hasFighterBay,
+    fighters:fighters,hasFighterBay:hasFighterBay,vehicles:vehicles,hasVehicleBay:hasVehicleBay,tractors:tractors,
     accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
     warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
@@ -620,6 +638,16 @@ function renderGates(S){
     gate('pend','Carrier wing (fighter launch)',
       fmt(S.fighters)+' fighters berthed — but strike-launch is a PENDING output: no live consumer yet (ParasiteLauncherReady has 0 emitters). They embark; they cannot sortie in the sim.');
   }
+  // vehicle & troop bay — the LIVE delivery chain (contrast with fighters)
+  if(S.hasVehicleBay){
+    gate('pass','Ground delivery (vehicle & troop bay)',
+      fmt(S.vehicles)+' vehicle/troop capacity — the GroundBayAtb → GroundTransport invasion chain is LIVE: this is how the game actually lands an assault.');
+  }
+  // tractor beams — pending payoff
+  if(S.tractors>0){
+    gate('pend','Tractor beams',
+      S.tractors+' projector'+(S.tractors>1?'s':'')+' — docking / salvage / capture payoff is PENDING (capture is a bare ownership flip, an open ruling; salvage isn’t built).');
+  }
   el.innerHTML=g.join('');
 }
 
@@ -640,7 +668,8 @@ function renderGauges(S){
   if(host==='ship')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
   if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
-  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">Carrier: '+fmt(S.fighters)+' fighters berthed — PENDING, no combat value reaches the resolver yet.</b>');
+  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' fighters berthed — PENDING (can’t sortie yet).</b>');
+  if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' vehicles/troops — invasion chain LIVE.</b>');
   nt.innerHTML=bits.join(' · ');
 }
 
