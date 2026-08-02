@@ -118,10 +118,18 @@ h2{margin:0;font-size:15px;letter-spacing:.02em}
 .gates{display:flex;flex-direction:column;gap:8px}
 .gate{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--rule2);border-radius:7px;background:var(--card2)}
 .gate .gi{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;margin-top:1px;color:#fff}
-.gate.pass .gi{background:var(--ok)} .gate.fail .gi{background:var(--flag)} .gate.na .gi{background:var(--ink3)}
+.gate.pass .gi{background:var(--ok)} .gate.fail .gi{background:var(--flag)} .gate.na .gi{background:var(--ink3)} .gate.pend .gi{background:var(--warn)}
 .gate .gt{font-size:12.5px;color:var(--ink)}
 .gate .gr{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--ink3);margin-top:2px}
 .gate.fail{background:var(--flagbg);border-color:var(--flag)}
+.gate.pend{background:var(--warnbg);border-color:var(--warn)}
+
+/* presets */
+.presetbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid var(--rule2)}
+.presetbar .pl{font:9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
+.preset{font-size:12px;padding:6px 11px;border:1px solid var(--rule);border-radius:20px;background:var(--card2);color:var(--ink2);cursor:pointer}
+.preset:hover{border-color:var(--ac);color:var(--ink)}
+.preset.hero{border-color:var(--ac);color:var(--ac2);font-weight:600}
 
 /* totals gauges */
 .gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
@@ -192,7 +200,10 @@ footer{padding:6px 0 60px}
   <div class="pane">
     <div class="panel">
       <div class="phead"><h2>The bench</h2><span class="sub" id="rosterSub">step 2 · mount parts</span></div>
-      <div class="pbody" id="roster"></div>
+      <div class="pbody">
+        <div class="presetbar" id="presets"></div>
+        <div id="roster"></div>
+      </div>
     </div>
   </div>
 
@@ -261,12 +272,12 @@ if(tb){tb.addEventListener('click',function(){
 
 /* ---------- hosts ---------- */
 var HOSTS={
-  ship:{name:'Warship',glyph:'▲',desc:'A mobile hull. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
-        budgetName:'Hull mass budget',budget:900,volCap:520,role:'ship'},
+  ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
+        budgetName:'Hull mass budget',budget:14000,volCap:9000,crewRef:500,role:'ship'},
   ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles. Armour is soaked shot-by-shot; penetration bites here.',
-        budgetName:'Carry budget',budget:640,volCap:400,role:'ground'},
+        budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
-        budgetName:'Structural budget',budget:1600,volCap:1400,role:'station'}
+        budgetName:'Structural budget',budget:22000,volCap:16000,crewRef:900,role:'station'}
 };
 var HOSTORDER=['ship','ground','station'];
 
@@ -293,6 +304,16 @@ var CAT=[
    weapon:{dps:40,nature:'Energy',delivery:'Bolt',pen:2,pershot:2.4,rate:16,range:55,vel:40000,track:0.6,ammo:false,pd:false},
    cost:{bp:170,cr:18,rp:5,steel:44,elec:38},
    honesty:'Teaching case: the door LABELS a bolt "ammo", but the engine reads its NATURE (Energy) → it runs on POWER, drains no ammo.'},
+ {id:'heavyturbo',cat:'Weapons',name:'Heavy Turbolaser Battery',hosts:['ship','station'],
+   mass:340,vol:120,crew:22,hp:42,draw:26,supply:0,
+   weapon:{dps:140,nature:'Energy',delivery:'Beam',pen:0,pershot:14,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
+   cost:{bp:520,cr:70,rp:6,steel:240,elec:120},
+   honesty:'Capital energy gun — huge power draw, slow tracking (weak vs fighters). Runs on the reactor. Adds heavy heat.'},
+ {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
+   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,
+   weapon:{dps:14,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.3,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
+   cost:{bp:90,cr:8,rp:2,steel:44,elec:16},
+   honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
  {id:'armour',cat:'Defense',name:'Composite Armour Plating',hosts:['ship','ground','station'],
    mass:64,vol:12,crew:0,hp:44,draw:0,supply:0,armour:{thick:22,vsK:1.6,vsE:0.9},
    cost:{bp:90,cr:6,rp:1,steel:120,elec:2},
@@ -305,10 +326,18 @@ var CAT=[
    mass:200,vol:52,crew:8,hp:28,draw:0,supply:20,loud:true,
    cost:{bp:240,cr:30,rp:5,steel:110,elec:60,fissile:40},
    honesty:'Supplies power AND is a loud heat/EM source — it decides who gets detected first.'},
+ {id:'capreactor',cat:'Power',name:'Capital Reactor',hosts:['ship','station'],
+   mass:900,vol:240,crew:40,hp:60,draw:0,supply:120,loud:true,
+   cost:{bp:820,cr:110,rp:7,steel:420,elec:180,fissile:160},
+   honesty:'Capital-scale output — one feeds a whole wall of turbolasers. Very loud: a beacon on any sensor.'},
  {id:'drive',cat:'Propulsion',name:'Ion Drive',hosts:['ship','ground'],
    mass:150,vol:40,crew:5,hp:22,draw:0,supply:0,thrust:220,
    cost:{bp:190,cr:18,rp:4,steel:80,elec:24},
    honesty:'Ship: thrust ÷ mass → Evasion. Ground: becomes locomotion (march speed). Burns fuel, not power.'},
+ {id:'fighterbay',cat:'Carrier',name:'Fighter Bay',hosts:['ship','station'],
+   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
+   cost:{bp:300,cr:40,rp:5,steel:160,elec:60},
+   honesty:'Holds ~70 fighters. THE carrier capability — and the honest gap: strike-launch is a PENDING output (verified: ParasiteLauncherReady has zero emitters), so the wing embarks but cannot sortie in the sim yet.'},
  {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
    mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,
    cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
@@ -327,6 +356,16 @@ var host='ship';
 var counts={};
 CAT.forEach(function(c){counts[c.id]=0;});
 
+/* presets — one-click loadouts. The Venator is a franchise litmus:
+   a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
+var PRESETS=[
+  {id:'escort',name:'Escort destroyer',host:'ship',
+    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,magazine:1}},
+  {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
+    counts:{heavyturbo:8,pdbattery:10,missile:2,fighterbay:6,armour:14,shield:4,capreactor:3,drive:4,magazine:3,sensor:2,bridge:1}},
+  {id:'clear',name:'Clear',host:null,counts:{}}
+];
+
 /* ---------- helpers ---------- */
 function actives(){return CAT.filter(function(c){return counts[c.id]>0 && c.hosts.indexOf(host)>=0;});}
 function fmt(n,d){if(!isFinite(n))n=0;return n.toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
@@ -340,6 +379,22 @@ function renderHosts(){
     var b=document.createElement('button');b.className='host';b.setAttribute('aria-pressed',String(k===host));
     b.innerHTML='<span class="hn"><span class="dot"></span>'+h.glyph+' '+h.name+'</span><span class="hd">'+h.desc+'</span>';
     b.addEventListener('click',function(){host=k;renderAll();});
+    el.appendChild(b);
+  });
+}
+
+/* ---------- render: presets ---------- */
+function renderPresets(){
+  var el=document.getElementById('presets');el.innerHTML='';
+  var lab=document.createElement('span');lab.className='pl';lab.textContent='presets';el.appendChild(lab);
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');b.className='preset'+(p.hero?' hero':'');b.textContent=p.name;
+    b.addEventListener('click',function(){
+      if(p.host)host=p.host;
+      CAT.forEach(function(c){counts[c.id]=0;});
+      Object.keys(p.counts).forEach(function(k){if(counts.hasOwnProperty(k))counts[k]=p.counts[k];});
+      renderAll();
+    });
     el.appendChild(b);
   });
 }
@@ -385,6 +440,7 @@ function compute(){
   var H=HOSTS[host];
   var mass=0,vol=0,crew=0,supply=0,draw=0,thrust=0,hp=0,armourThick=0,shieldCap=0,shieldRegen=0,firepower=0;
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
+  var fighters=0,hasFighterBay=false;
   A.forEach(function(c){
     var n=counts[c.id];
     mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
@@ -392,6 +448,7 @@ function compute(){
     if(c.armour)armourThick+=c.armour.thick*n;
     if(c.shield){shieldCap+=c.shield.cap*n;shieldRegen+=c.shield.cap*c.shield.regen*n;}
     if(c.ammoStore)ammoStore+=n;
+    if(c.fighters){fighters+=c.fighters*n;hasFighterBay=true;}
     if(c.weapon){
       firepower+=c.weapon.dps*n;
       // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
@@ -412,6 +469,7 @@ function compute(){
   return {A:A,H:H,mass:mass,vol:vol,crew:crew,supply:supply,draw:draw,thrust:thrust,
     firepower:firepower,toughness:toughness,evasion:evasion,shieldCap:shieldCap,shieldRegen:shieldRegen,
     roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
+    fighters:fighters,hasFighterBay:hasFighterBay,
     over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
 }
 
@@ -432,7 +490,7 @@ function renderBudgets(S){
     bar(S.H.budgetName,S.mass,S.H.budget,'t')+
     bar('Volume',S.vol,S.H.volCap,'m³')+
     '<div class="budrow"><div class="bl"><span class="bn">Crew required</span><span class="bv">'+fmt(Math.max(0,S.crew))+' from the pool</span></div>'+
-      '<div class="track"><div class="fill warn" style="width:'+clamp(Math.max(0,S.crew)/40*100,0,100)+'%"></div></div></div>'+
+      '<div class="track"><div class="fill warn" style="width:'+clamp(Math.max(0,S.crew)/S.H.crewRef*100,0,100)+'%"></div></div></div>'+
     '<div class="budrow"><div class="bl"><span class="bn">Power draw vs reactor</span><span class="bv">'+fmt(powerUse)+' / '+fmt(powerCap)+' MW</span></div>'+
       '<div class="track"><div class="fill '+pcls+'" style="width:'+ppct+'%"></div></div></div>';
 }
@@ -441,7 +499,7 @@ function renderBudgets(S){
 function renderGates(S){
   var el=document.getElementById('gates');var g=[];
   function gate(state,title,reason){
-    var sym=state==='pass'?'✓':state==='fail'?'✕':'–';
+    var sym=state==='pass'?'✓':state==='fail'?'✕':state==='pend'?'~':'–';
     g.push('<div class="gate '+state+'"><div class="gi">'+sym+'</div><div><div class="gt">'+title+'</div><div class="gr">'+reason+'</div></div></div>');
   }
   var any=S.A.length>0;
@@ -464,6 +522,11 @@ function renderGates(S){
   // crew
   gate(!any?'na':'pass','Crew from the population pool',
     !any?'—':(S.crew<=0?'net crew freed by automation':fmt(S.crew)+' drawn from the colony pool (informational — the pool provides it)'));
+  // carrier wing — the honest pending gap
+  if(S.hasFighterBay){
+    gate('pend','Carrier wing (fighter launch)',
+      fmt(S.fighters)+' fighters berthed — but strike-launch is a PENDING output: no live consumer yet (ParasiteLauncherReady has 0 emitters). They embark; they cannot sortie in the sim.');
+  }
   el.innerHTML=g.join('');
 }
 
@@ -484,6 +547,7 @@ function renderGauges(S){
   if(host==='ship')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
   if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
+  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">Carrier: '+fmt(S.fighters)+' fighters berthed — PENDING, no combat value reaches the resolver yet.</b>');
   nt.innerHTML=bits.join(' · ');
 }
 
@@ -569,7 +633,7 @@ function renderSplit(){
 
 /* ---------- master render ---------- */
 function renderAll(){
-  renderHosts();renderRoster();
+  renderHosts();renderPresets();renderRoster();
   var S=compute();
   renderBudgets(S);renderGates(S);renderGauges(S);renderWeapons(S);renderCost(S);renderHandoff(S);renderSplit();
 }
