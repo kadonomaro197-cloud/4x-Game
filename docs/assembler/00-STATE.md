@@ -51,7 +51,10 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 
 ### PHASE 2 — verification pass (MYSELF, NO subagents; append `## VERIFIED` to each record)
 - [x] 2.1 verify weapons + defense + chassis + civic (all: no corrections; VERIFIED blocks appended)
-- [ ] 2.2 verify command + enhancers + industrial + logistical
+- [x] 2.2 verify command + enhancers + industrial + logistical
+  - command: **CORRECTED** — grid is 27 filled / 5 blank (census said 21/11, was backwards)
+  - industrial: engine cross-ref — lab `Cost Per Day` IS read (`ResearchPointsAtbDB.cs:71`), not dead
+  - enhancers, logistical: no corrections
 - [ ] 2.3 verify power + propulsion + sensors + aura
 
 ### PHASE 3 — master I/O matrix (`02-IO-MATRIX.md`)
