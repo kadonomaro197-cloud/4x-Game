@@ -60,7 +60,8 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
     industrial engine cross-ref (Cost Per Day is live). All 12 have VERIFIED blocks.
 
 ### PHASE 3 — master I/O matrix (`02-IO-MATRIX.md`)
-- [ ] 3.1 Table A (every sim-reaching variable), Table B (cross-door wires), Table C (Assembler input contract)
+- [x] 3.1 Table A (every sim-reaching variable, 12 doors), Table B (23 cross-door wires + 4 backbones),
+      Table C (Assembler input contract: C1 reads · C2 the totals it computes · C3 the 3 assembler-only dials)
 
 ### PHASE 4 — the Entity Assembler design HTML (`entityassembler.html`), staged
 - [ ] 4a skeleton + CSS + prose bands
@@ -82,6 +83,13 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
   formulas exact, markers correct. Census schema each record follows: **A. Inputs** (A.1 chips, A.2
   sliders with range/default/mapping/formula, A.3 toggles/presets) · **B. Outputs** (label/units/
   formula/honesty-marker/sim-variable/consumer/build-state) · **C. Cross-door reads** · **D. Notes**.
-- **NEXT: Phase 2** — MY OWN line-by-line verification, no subagents. Open each HTML, check its census
-  record against the JS: every control present, ranges/defaults/formulas/sim-var names exact. Append a
-  `## VERIFIED` block to each record (corrections, or "no corrections"). Commit every ~3 doors.
+- Phase 2 done (all 12 verified; command corrected to 27/5; industrial Cost-Per-Day is live).
+- Phase 3 done — `02-IO-MATRIX.md` written: Table A (per-door sim variables), Table B (cross-door wires +
+  backbones + the C9/C10/C1 boundary disputes), Table C (the Assembler's read-vs-compute contract + the
+  three assembler-only dials: host · component×count · model-count). The resolver totals in C2 are the
+  Assembler's output contract (`ShipCombatValueDB.Calculate`).
+- **NEXT: Phase 4** — build `entityassembler.html`, staged (4a skeleton/CSS/prose → 4b host+mounting panel
+  → 4c budgets+gates → 4d emergent readouts+cost+totals handoff → 4e polish), committing each stage.
+  Copy the house CSS from `defensederived.html`. Host is the first forced choice; mounting = component×count
+  with separate weapon profiles; model-count dial (engine-pending); budgets/gates live; cost surface here;
+  a TOTALS-handoff section citing the resolver §6.1. No franchise IP. Then Phase 5 (verify render + DOCS-INDEX).
