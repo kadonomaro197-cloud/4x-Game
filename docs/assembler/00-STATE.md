@@ -33,19 +33,21 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 - [x] 0.1 Orientation docs read (North Star method, resolver totals, interconnection map)
 - [x] 0.2 State file created + committed + pushed
 
-### PHASE 1 — I/O census (one `01-IO-<door>.md` per door)
-- [ ] 1.01 weapons
-- [ ] 1.02 defense
-- [ ] 1.03 chassis
-- [ ] 1.04 civic
-- [ ] 1.05 command
-- [ ] 1.06 enhancers
-- [ ] 1.07 industrial
-- [ ] 1.08 logistical
-- [ ] 1.09 power
-- [ ] 1.10 propulsion
-- [ ] 1.11 sensors
-- [ ] 1.12 aura
+### PHASE 1 — I/O census (one `01-IO-<door>.md` per door) — DRAFTS DONE (unverified)
+- [x] 1.01 weapons     (draft)
+- [x] 1.02 defense     (draft)
+- [x] 1.03 chassis     (draft)
+- [x] 1.04 civic       (draft)
+- [x] 1.05 command     (draft)
+- [x] 1.06 enhancers   (draft)
+- [x] 1.07 industrial  (draft)
+- [x] 1.08 logistical  (draft)
+- [x] 1.09 power       (draft)
+- [x] 1.10 propulsion  (draft)
+- [x] 1.11 sensors     (draft)
+- [x] 1.12 aura        (draft)
+> Drafts produced by a 12-agent parallel extraction (workflow wf_ed75044e-ee3), each writing its
+> `01-IO-<door>.md` to the fixed schema. **Unverified** — Phase 2 is my own line-by-line pass.
 
 ### PHASE 2 — verification pass (MYSELF, NO subagents; append `## VERIFIED` to each record)
 - [ ] 2.1 verify weapons + defense + chassis + civic
@@ -70,8 +72,11 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 ---
 
 ## RESUME NOTES (update on every commit — what's done, what's next, any gotcha)
-- 2026-08-02: State file created. Next: Phase 1 census. Plan — extract each door's I/O to
-  `01-IO-<door>.md` (parallel first-draft allowed in Phase 1), then Phase 2 is my own line-by-line
-  verify (no subagents). The census schema each record follows: **A. Inputs** (A.1 chips, A.2 sliders
-  with range/default/mapping/formula, A.3 toggles/presets) · **B. Outputs** (label/units/formula/
-  honesty-marker/sim-variable/consumer/build-state) · **C. Cross-door reads** · **D. Notes/discrepancies**.
+- 2026-08-02: State file created. Then Phase 1 census DRAFTS produced (12 files, one per door) via a
+  parallel extraction workflow. Spot-checked `01-IO-weapons.md` against the HTML — schema followed,
+  formulas exact, markers correct. Census schema each record follows: **A. Inputs** (A.1 chips, A.2
+  sliders with range/default/mapping/formula, A.3 toggles/presets) · **B. Outputs** (label/units/
+  formula/honesty-marker/sim-variable/consumer/build-state) · **C. Cross-door reads** · **D. Notes**.
+- **NEXT: Phase 2** — MY OWN line-by-line verification, no subagents. Open each HTML, check its census
+  record against the JS: every control present, ranges/defaults/formulas/sim-var names exact. Append a
+  `## VERIFIED` block to each record (corrections, or "no corrections"). Commit every ~3 doors.
