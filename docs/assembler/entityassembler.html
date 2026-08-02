@@ -130,6 +130,10 @@ h2{margin:0;font-size:15px;letter-spacing:.02em}
 .preset{font-size:12px;padding:6px 11px;border:1px solid var(--rule);border-radius:20px;background:var(--card2);color:var(--ink2);cursor:pointer}
 .preset:hover{border-color:var(--ac);color:var(--ink)}
 .preset.hero{border-color:var(--ac);color:var(--ac2);font-weight:600}
+.preset.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+@media(prefers-color-scheme:dark){.preset.on{color:#0B1013}}
+:root[data-theme=dark] .preset.on{color:#0B1013}
+:root[data-theme=light] .preset.on{color:#fff}
 
 /* totals gauges */
 .gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
@@ -425,6 +429,7 @@ var CAT=[
 
 var host='ship';
 var counts={};
+var activePreset='venator';
 CAT.forEach(function(c){counts[c.id]=0;});
 
 /* presets — one-click loadouts. The Venator is a franchise litmus:
@@ -464,11 +469,12 @@ function renderPresets(){
   var el=document.getElementById('presets');el.innerHTML='';
   var lab=document.createElement('span');lab.className='pl';lab.textContent='presets';el.appendChild(lab);
   PRESETS.forEach(function(p){
-    var b=document.createElement('button');b.className='preset'+(p.hero?' hero':'');b.textContent=p.name;
+    var b=document.createElement('button');b.className='preset'+(p.hero?' hero':'')+(p.id===activePreset?' on':'');b.textContent=p.name;
     b.addEventListener('click',function(){
       if(p.host)host=p.host;
       CAT.forEach(function(c){counts[c.id]=0;});
       Object.keys(p.counts).forEach(function(k){if(counts.hasOwnProperty(k))counts[k]=p.counts[k];});
+      activePreset=p.id;
       renderAll();
     });
     el.appendChild(b);
@@ -504,8 +510,8 @@ function renderRoster(){
       '<div class="imeta">'+meta.join(' · ')+'</div>';
     el.appendChild(row);
   });
-  el.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.p]++;renderAll();});});
-  el.querySelectorAll('[data-m]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.m]=Math.max(0,counts[b.dataset.m]-1);renderAll();});});
+  el.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.p]++;activePreset=null;renderAll();});});
+  el.querySelectorAll('[data-m]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.m]=Math.max(0,counts[b.dataset.m]-1);activePreset=null;renderAll();});});
   var total=actives().reduce(function(s,c){return s+counts[c.id];},0);
   document.getElementById('rosterSub').textContent=total?(total+' part'+(total>1?'s':'')+' mounted'):'step 2 · mount parts';
 }
@@ -881,9 +887,10 @@ function renderAll(){
   renderBudgets(S);renderGates(S);renderGauges(S);renderMobility(S);renderEndurance(S);renderWeapons(S);renderRanges(S);renderCost(S);renderResources(S);renderHandoff(S);renderSplit();
 }
 
-/* seed a clean starter warship so the page tells its story on open:
-   three weapon types (energy / kinetic / guided), a reactor, armour, a shield, a drive, a magazine */
-counts.reactor=1;counts.laser=1;counts.railgun=1;counts.missile=1;counts.armour=2;counts.shield=1;counts.drive=1;counts.magazine=1;
+/* open on the Venator preset — it's what the whole tour is about, so the numbers match on first sight.
+   (activePreset defaults to 'venator', so its preset button reads as the selected loadout.) */
+(function(){var v=PRESETS.find(function(p){return p.id==='venator';});
+  if(v){host=v.host;Object.keys(v.counts).forEach(function(k){if(counts.hasOwnProperty(k))counts[k]=v.counts[k];});}})();
 renderAll();
 })();
 </script>
