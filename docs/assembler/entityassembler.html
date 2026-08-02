@@ -1,0 +1,442 @@
+<meta charset="utf-8">
+<title>The Entity Assembler — where designed components become the totals the resolver reads</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.mount{display:grid;grid-template-columns:1fr auto;gap:5px 11px;align-items:center;margin-bottom:9px}
+.mount:last-child{margin-bottom:0}
+.mrow{display:flex;flex-direction:column;gap:2px}
+.mname{font-size:13px;font-weight:600}
+.mname s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);font-weight:400}
+.mctl{display:flex;align-items:center;gap:8px;min-width:190px}
+.mctl input[type=range]{flex:1;accent-color:var(--ac);height:24px;margin:0}
+.cnt{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--ac2);min-width:44px;text-align:right}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.gates{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden;margin-bottom:13px}
+.gate{background:var(--card);padding:8px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.gate i{font-style:normal;font-size:11px;color:var(--ink3)}
+.gate b{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-variant-numeric:tabular-nums}
+.gate.g b{color:var(--ac2)} .gate.r b{color:var(--flag)} .gate.a b{color:var(--warn)}
+.gate .pill{font-size:9.5px;letter-spacing:.06em;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid var(--rule)}
+.gate.g .pill{border-color:var(--ac);color:var(--ac2)} .gate.r .pill{border-color:var(--flag);color:var(--flag)} .gate.a .pill{border-color:var(--warn);color:var(--warn)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(3,1fr)}}
+.lay{border:1px solid var(--rule);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:8px}
+.lay.door{border-left:3px solid var(--ac)} .lay.asm{border-left:3px solid var(--warn)} .lay.emg{border-left:3px solid var(--ink3)}
+.lay h4{margin:0 0 4px;font-size:14px;font-family:inherit;display:flex;gap:9px;align-items:baseline}
+.lay h4 em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-left:auto}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.emg{border-color:var(--ink3);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.pend{border-color:var(--warn);color:var(--warn)}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.6;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}.legend dd{margin:0}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(min-width:700px){.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}.nums{grid-template-columns:repeat(4,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · the ENTITY ASSEMBLER · the second half of the design pair</p>
+<h1>The twelve doors make parts. This is the machine that turns a pile of parts into a ship.</h1>
+<p class="lead">Every door-designer stamps out a <b>component</b> — a gun, a reactor, a suit of armour. But the
+combat resolver never reads a gun; it reads <b>one Firepower number for the whole ship</b>. It never reads a
+plate; it reads <b>one Toughness number</b>. The Entity Assembler is the machine in the middle: you pick a
+<b>host</b> (a hull, a ground frame, a station), bolt on your designed components — <b>and how many of each</b> —
+and it adds them up into the handful of totals the fight actually runs on.</p>
+<p class="lead" style="margin-top:10px">🔑 <b>The one rule that defines this door: it only owns the decisions you cannot make knowing a single
+part.</b> How much a gun hurts is the Weapon door's dial — you set it knowing only the gun. <b>How many guns,
+on what hull, next to what reactor</b> — those need the whole entity in front of you, so they live here. And a
+third kind of number — Firepower, Evasion, effective health — belongs to <b>nobody's dial</b>: it only exists
+once everything is assembled. The Assembler is where those get <em>computed</em>, never set.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>Three kinds of number — and this door owns exactly one of them</h2>
+<p class="sub">The boundary is the whole design. It comes straight from the intrinsic test in
+<code>DESIGNER-NORTH-STAR.md</code>: <em>can you set this knowing only the part in your hand?</em></p>
+<div class="lay door"><h4>A component DIAL<em>lives in a door, not here</em></h4><p>Set knowing only the part:
+a weapon's damage, a plate's thickness, a reactor's output. The Assembler <b>reads</b> these off the components
+you mounted and never re-sells them — it shows them greyed, marked <span class="mk set">read</span>.</p></div>
+<div class="lay asm"><h4>An ASSEMBLY decision<em>THIS door's dials</em></h4><p>Needs the whole entity in front of
+you: <b>which host, which components, how many of each,</b> and — for a ground design — <b>how many models the
+unit fields.</b> You cannot set any of these knowing one part, so they are the Assembler's own controls.</p></div>
+<div class="lay emg"><h4>An EMERGENT readout<em>computed, never set</em></h4><p>Only exists once the whole thing is
+built: <b>Firepower, Toughness, Evasion, effective health, detection footprint.</b> Nobody's dial. The
+Assembler computes them from everything mounted and hands them to the resolver, marked
+<span class="mk emg">emergent</span>.</p></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The Assembler — build one entity</h2>
+<p class="sub">Pick a host, then set the count on each component. The budgets and gates below go
+<b class="g">green</b> or <b class="r">red</b> live — the same checks the engine runs. The totals at the bottom
+are what the resolver actually reads. <b>The components here are representative pre-designed parts</b> (one of
+each kind, at shipped-ish values) — the real Assembler reads whatever you designed in the twelve doors; this
+panel proves the <em>wiring</em>, not a fixed catalog.</p>
+<div class="build">
+
+<div class="bsec"><p class="blab">① The host — the first forced choice (sets the budget and which gates apply)</p>
+<div class="chips">
+<button class="chip hchip" type="button" data-h="ship" aria-pressed="true">Ship hull</button>
+<button class="chip hchip" type="button" data-h="ground" aria-pressed="false">Ground frame</button>
+<button class="chip hchip" type="button" data-h="station" aria-pressed="false">Station</button>
+</div>
+<p class="sub" id="hostnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">② Mounting — each component × how many (multiplicity is the assembler dial)</p>
+<div id="roster"></div>
+<p class="sub" style="margin:9px 0 0">🔑 <b>Two different weapons stay two separate profiles</b> — a beam and a
+railgun are never averaged into one gun; each is multiplied by its own count and handed to the resolver as its
+own <code>WeaponProfile</code>. That is the developer's explicit ruling, and it is why mounting is a per-part
+count, not a single "weapons" slider.</p></div>
+
+<div class="bsec" id="modelsec"><p class="blab">③ Models fielded — the six-man-squad dial (ground only)</p>
+<div class="sl"><div class="slh"><span>How many models this design fields</span><span id="s_models"></span></div><input type="range" id="models" min="1" max="12" value="1" aria-label="Models fielded"><div class="ends"><span>1 — a single body</span><span>12 — a squad</span></div></div>
+<p class="sub" style="margin:6px 0 0">⚠ <b>ENGINE-PENDING.</b> The ground resolver has no per-model count today — a
+unit is one health bar, not six men who fall one at a time. The dial is designed here so the shape is right; it
+waits on the model-count primitive in <code>GroundUnit</code>. It scales the whole unit's Firepower, Toughness
+and cost.</p></div>
+
+<div class="out">
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+
+<p class="blab" style="margin:4px 0 6px">The budgets and gates — the same pass/fail checks the engine runs</p>
+<div class="gates" id="gates"></div>
+
+<p class="blab" style="margin:4px 0 6px">The component dials it READS (set in the doors, not here)</p>
+<div class="nums" id="reads"></div>
+
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">The TOTALS it computes — what the resolver actually reads</p>
+<p class="muN"><code>ShipCombatValueDB.Calculate(entity)</code> reads exactly these. Not one door produces them — the Assembler sums them across everything mounted.</p>
+<div class="mus">
+<div class="mt"><i id="l_fp">Firepower</i><u class="mk sim" id="k_fp">reaches the sim</u><b id="v_fp"></b><s id="s_fp"></s></div>
+<div class="mt"><i>Toughness</i><u class="mk sim" id="k_tn">reaches the sim</u><b id="v_tn"></b><s id="s_tn"></s></div>
+<div class="mt"><i>Evasion</i><u class="mk emg" id="k_ev">emergent</u><b id="v_ev"></b><s id="s_ev"></s></div>
+<div class="mt"><i>Shield capacity</i><u class="mk sim" id="k_sh">reaches the sim</u><b id="v_sh"></b><s id="s_sh"></s></div>
+<div class="mt"><i>Weapon profiles</i><u class="mk sim" id="k_wp">reaches the sim</u><b id="v_wp"></b><s id="s_wp"></s></div>
+<div class="mt"><i>Effective health</i><u class="mk emg" id="k_eh">emergent</u><b id="v_eh"></b><s id="s_eh"></s></div>
+</div>
+</div>
+
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">The cost surface — the whole bill, in one place (this door's job, not the doors')</p>
+<div class="nums" id="costs"></div>
+</div>
+<p class="sub" id="verdict" style="margin-top:11px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk set">read</u></dt><dd>A component dial set in a door — the Assembler reads it, never re-sells it.</dd>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>A total the resolver genuinely reads (<code>ShipCombatValueDB</code>).</dd>
+<dt><u class="mk emg">emergent</u></dt><dd>Computed from the whole assembled entity — nobody's dial.</dd>
+<dt><u class="mk pend">pending</u></dt><dd>Designed here, but waits on an engine primitive (model count, the morale field, the aura pass).</dd>
+</dl>
+<p style="margin:9px 0 0"><b>One thing to try.</b> Mount a beam cannon with no reactor and watch the <b>power</b>
+gate go red — a ship can't fire energy weapons it can't power (the Chassis door's requirement, checked here).
+Add a reactor and it goes green. Switch the host to <b>Ground frame</b> and the budget flips from kilograms of
+mass to carry-strength, and the <b>models</b> dial appears — same machine, both seats.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The TOTALS handoff — the bridge from components to the fight</h2>
+<p class="sub">This is the whole reason the Assembler exists. The resolver's build-time call
+(<code>ShipCombatValueDB.Calculate</code>, <code>AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §6.1</code>) reads a
+fixed short list of totals — and <b>every one is a sum or a combination across the assembled entity that no
+single door owns.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Total the resolver reads</th><th>How the Assembler builds it</th><th>Reads from</th></tr>
+<tr><td><b>Firepower</b> (J/s)</td><td><code>Σ weapon.DamagePerSecond × count × caliber</code></td><td>Weapons × count × Enhancers</td></tr>
+<tr><td><b>Toughness</b> (J)</td><td><code>Σ component.Health × 100 kJ + armour.thickness × 100 kJ</code></td><td>every component + Defense</td></tr>
+<tr><td><b>Evasion</b> (0–0.95)</td><td><code>EvasionCap × sizeFactor(hull) × agilityFactor(thrust/mass)</code></td><td><b>Chassis + Propulsion</b> — the C9 seam</td></tr>
+<tr><td><b>RoleWeight</b></td><td>1.0 if any weapon is mounted, else 0.25 (utility)</td><td>the weapon list</td></tr>
+<tr><td><b>ShieldCapacity_J / Regen</b></td><td><code>Σ shield pools (ADD across parts)</code></td><td>Defense + Enhancers</td></tr>
+<tr><td><b><code>List&lt;WeaponProfile&gt;</code></b></td><td>each mount kept as its OWN profile × its count</td><td>Weapons (per component)</td></tr>
+</table></div>
+<div class="okbox">🔑 <b>Because the totals are host-agnostic, so is the Assembler.</b> A ship, a ground unit, and a
+station all produce the <em>same</em> totals bundle — Firepower, Toughness, Evasion, Shield, weapon profiles,
+cost. Only the host choice, the gates that apply, and the model-count differ. That is the combat north star —
+<em>"ground units work the same as ships as far as fleets or battalions are concerned"</em> — made concrete:
+one assembler, both seats, one primitive the AI and the player both drive.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Cradle to grave — the Assembler is where the chain becomes a thing you can lose</h2>
+<p class="sub">Every component reached here by the full chain (mineral → material → research → designed in a door →
+built at a colony). The Assembler adds the two rungs a single door cannot: <b>the entity</b> the components add
+up to, and <b>the loss</b> when it dies.</p>
+<div class="scroll"><table class="t">
+<tr><th>Rung</th><th>For an assembled entity</th></tr>
+<tr><td>the components</td><td>each designed in its door, built from materials, researched — reached here as a mounted part × a count</td></tr>
+<tr><td><b>the assembly decision</b></td><td><b>this door</b> — host + components + counts + models → the entity, gated by the live budgets/power/crew/ammo checks</td></tr>
+<tr><td>the in-play decision</td><td>the totals feed the fleet/battalion the seated commander orders (Command's agency wire)</td></tr>
+<tr><td><b>damaged / destroyed</b></td><td><b>whole-or-dead today</b> — the entity rates at full value until it is removed. Per-component damage (<code>DamageComplex</code>) is parked; the grave rung is coarse until it lands.</td></tr>
+</table></div>
+<div class="warnbox"><b>The honest limit, stated plainly.</b> The engine is <b>whole-or-dead</b>: a ship or unit
+is at full strength until the instant it is destroyed, and combat value is cached at build and never recut on
+damage. So the Assembler's totals are a <em>build-time nameplate</em>, not a live-under-load reading. Everything
+that would make a fielded entity wear, degrade, or lose one model at a time waits on the same parked
+per-component-damage model — flagged here, never faked.</div>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the Assembler stands</h3>
+<p><b>This is the design the in-game assembler will mirror.</b> Its shape is settled: <b>one host choice</b>,
+<b>a component × count roster</b> (separate weapon profiles, never blended), <b>a model-count dial</b>, the
+<b>live budgets and gates</b> (mass/carry, power supply vs draw, crew, ammo), the <b>emergent totals</b>
+(Firepower/Toughness/Evasion/Shield), and the <b>cost surface</b> summed in one place — then the
+<b>totals handoff</b> to the resolver.</p>
+<p>🔒 <b>The boundary held.</b> Every dial here passes the intrinsic test at assembly time and NOWHERE else:
+you cannot set "how many guns on what hull" knowing a single gun. Component dials are read, never re-sold;
+combat totals are computed, never set. That line is what keeps the Component Designer and the Entity Assembler
+from fighting over the same number.</p>
+<p>⚠ <b>What it must flag, never fake</b> (each designed, each waiting on one engine primitive): <b>model
+count</b> (the six-man squad — no per-model count in <code>GroundUnit</code> yet), <b>per-component damage</b>
+(whole-or-dead; the grave rung is coarse), and the pending door outputs it carries through — the <b>morale
+field</b> (fury/rally/dread), the <b>aura pass</b>, the <b>colonist unload path</b>, and the <b>strike-craft
+launch caller</b>. The wiring is designed now so that when each primitive lands, the number already has a home.</p>
+</div></footer>
+
+<script>
+// ── The Entity Assembler — a working model of the components→totals bridge. ─────────────────────────────
+// Representative pre-designed components (one per kind, shipped-ish values). The REAL assembler reads whatever
+// the player designed in the twelve doors; this proves the wiring, not a fixed catalog. Values are illustrative
+// and cite the door each field comes from. Totals mirror ShipCombatValueDB.Calculate (§6.1).
+const HOST = {
+ ship:    {n:'Ship hull',     cur:'kg',    budget:90000, gates:['mass','power','crew','ammo'], evasion:true,  models:false, mount:'ShipComponent',    baseMass:0,
+           desc:'A medium hull — 90,000 kg mass budget. Everything mounted spends kilograms against it; energy weapons demand a reactor.'},
+ ground:  {n:'Ground frame',  cur:'carry', budget:100,   gates:['carry','power','crew','ammo'], evasion:true,  models:true,  mount:'GroundUnit',       baseMass:0,
+           desc:'A human-scale frame — 100 units of carry-strength (BaseStrength). Power armour ADDS to the budget; a design can field several models. (The sample parts here are ship-scale, so the carry gate bites — that is correct: real ground components, designed lighter in the doors, would fit.)'},
+ station: {n:'Station',       cur:'m³',    budget:2000,  gates:['vol','crew'],                  evasion:false, models:false, mount:'PlanetInstallation',baseMass:0,
+           desc:'An off-world installation — 2,000 m³ of structural budget. It does not dodge (evasion is for things that move); it is captured, not destroyed whole.'}
+};
+// door — the designer that owns the component's dials, shown as "read" in the panel.
+const COMP = {
+ weapon:  {n:'Beam cannon',        door:'Weapons',   kind:'weapon',   mass:10100, dps:200000, powerDraw:250000, ammoDraw:0,   crew:5, credits:60000, research:2000, build:12000,
+           read:'DamagePerSecond 200 kW · Range_m 400 km · Nature Energy', max:12},
+ railgun: {n:'Railgun',            door:'Weapons',   kind:'weapon',   mass:8000,  dps:140000, powerDraw:0,      ammoDraw:80,  crew:4, credits:44000, research:1500, build:9000,
+           read:'DamagePerShot big · Range_m 500 km · Nature Kinetic · runs on AMMO', max:12},
+ armour:  {n:'Armour plate',       door:'Defense',   kind:'armour',   mass:150,   defense:5,  health:150, crew:0,  credits:1800,  research:0,    build:675,
+           read:'Defense 5 · resists sum 4.0', max:40},
+ shield:  {n:'Shield generator',   door:'Defense',   kind:'shield',   mass:20,    pool:150,   regen:0,    powerDraw:0, crew:1, credits:600,   research:0,    build:120,
+           read:'Shield pool 150 pts · regen 0', max:8},
+ reactor: {n:'Reactor',            door:'Power',     kind:'power',    mass:1500,  output:250000, crew:2,   credits:12000, research:800,  build:6000,
+           read:'TotalOutputMax 250 kW · Lifetime→LocalFuel', max:8},
+ drive:   {n:'Ion drive',          door:'Propulsion',kind:'drive',    mass:3000,  thrust:120000, crew:0,   credits:9000,  research:600,  build:6000,
+           read:'thrust 120 kN · ExhaustVelocity → evasion', max:8},
+ mag:     {n:'Ammo magazine',      door:'Logistical',kind:'cargo',    mass:6000,  ammoStore:5000, crew:1,  credits:2160,  research:600,  build:9720,
+           read:"CargoTypeID 'ammo' · store 5,000 kg", max:6},
+ cadre:   {n:'Veteran cadre',      door:'Enhancers', kind:'enhancer', mass:3000,  caliber:1.3, crew:0,    credits:9000,  research:6000, build:13500,
+           read:'Firepower Caliber ×1.30 (best-only, does not stack)', max:4}
+};
+const ORDER = ['weapon','railgun','armour','shield','reactor','drive','mag','cadre'];
+// resolver constants (verbatim, §6.4)
+const EVA_CAP=0.95, SIZE_REF=1000, AGIL_REF=5.0, COMP_HP_J=100000, ARMOR_HP_J=100000, UTIL_RW=0.25;
+const CREW_POOL=200;          // an illustrative manpower pool the crew gate checks against
+
+let host='ship';
+const cnt={}; ORDER.forEach(k=>cnt[k]=0);
+cnt.weapon=1; cnt.armour=4; cnt.reactor=1;    // a sensible opening loadout
+
+const $=id=>document.getElementById(id);
+const qa=s=>document.querySelectorAll(s);
+function set(i,v){const e=$(i);if(e)e.textContent=v;}
+function fmt(v){const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(2)+'G':a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':(''+Math.round(v));}
+function kgcur(v){return Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' kt':Math.abs(v)>=1000?(v/1000).toFixed(1)+' t':Math.round(v)+' kg';}
+
+function buildRoster(){
+ const r=$('roster'); if(!r) return;
+ r.innerHTML = ORDER.map(k=>{const c=COMP[k];
+  return '<div class="mount"><div class="mrow"><span class="mname">'+c.n
+   +' <s>'+c.door+' · '+c.read+'</s></span></div>'
+   +'<div class="mctl"><input type="range" class="crange" data-k="'+k+'" min="0" max="'+c.max+'" value="'+cnt[k]+'" aria-label="'+c.n+' count">'
+   +'<span class="cnt" id="cnt_'+k+'">×'+cnt[k]+'</span></div></div>';
+ }).join('');
+ qa('.crange').forEach(el=>el.addEventListener('input',()=>{cnt[el.dataset.k]=+el.value; set('cnt_'+el.dataset.k,'×'+el.value); render();}));
+}
+
+function render(){
+ const H=HOST[host];
+ qa('.hchip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.h===host));
+ set('hostnote', H.desc);
+ const showModels = H.models;
+ const ms=$('modelsec'); if(ms) ms.style.display = showModels?'':'none';
+ const models = showModels ? (+$('models').value) : 1;
+ if(showModels) set('s_models','× '+models+(models>1?' models':' model'));
+
+ // ── sums across everything mounted (per single entity) ──
+ let mass=H.baseMass, crew=0, powerOut=0, powerDraw=0, ammoStore=0, ammoDraw=0, thrust=0;
+ let firepowerBase=0, toughness=0, shieldPool=0, weaponProfiles=0, anyWeapon=false;
+ let caliber=1.0;
+ let credits=0, research=0, build=0;
+ ORDER.forEach(k=>{const c=COMP[k], n=cnt[k]; if(!n) return;
+  mass    += (c.mass||0)*n;
+  crew    += (c.crew||0)*n;
+  credits += (c.credits||0)*n;
+  research+= (c.research||0)*n;
+  build   += (c.build||0)*n;
+  toughness += COMP_HP_J*n;                                   // every component is 100 kJ of "health" (whole-or-dead)
+  if(c.kind==='weapon'){ anyWeapon=true; firepowerBase += c.dps*n; weaponProfiles += 1; powerDraw += (c.powerDraw||0)*n; ammoDraw += (c.ammoDraw||0)*n; }
+  if(c.kind==='armour'){ toughness += ARMOR_HP_J*c.defense*n; }
+  if(c.kind==='shield'){ shieldPool += c.pool*n; }
+  if(c.kind==='power'){  powerOut += c.output*n; }
+  if(c.kind==='drive'){  thrust += c.thrust*n; }
+  if(c.kind==='cargo'){  ammoStore += (c.ammoStore||0)*n; }
+  if(c.kind==='enhancer'){ caliber = Math.max(caliber, c.caliber); }   // best-only, does not stack
+ });
+ const firepower = firepowerBase*caliber;
+
+ // ── evasion: EvasionCap × sizeFactor × agilityFactor (needs the whole hull) ──
+ let evasion=0, evMult=1;
+ if(H.evasion && mass>0){
+  const sizeFactor = SIZE_REF/(SIZE_REF + mass/150);
+  const accel = thrust/Math.max(1,mass);
+  const agilityFactor = accel/(AGIL_REF+accel);
+  evasion = EVA_CAP*sizeFactor*agilityFactor;
+  evMult = 1/Math.max(1-evasion, 0.05);
+ }
+ const roleWeight = anyWeapon ? 1.0 : UTIL_RW;
+ // effective health (illustrative): toughness × evasion mult, + shield pool as kJ on top
+ const effHealth = toughness*evMult + shieldPool*1000;
+
+ // per-design totals scale by model count (the six-man squad) — engine-pending
+ const fpAll = firepower*models, tnAll = toughness*models, ehAll = effHealth*models;
+ const crAll = credits*models, rsAll = research*models, bdAll = build*models;
+
+ // ── GATES ──
+ const gr=$('gates');
+ const rows=[];
+ function gate(id, label, val, ok, note){ rows.push({label, val, ok, note}); }
+ if(H.gates.includes('mass'))  gate('mass','Mass budget', kgcur(mass)+' / '+kgcur(H.budget), mass<=H.budget, mass<=H.budget?'fits the hull':'OVER — trim mass or bigger hull');
+ if(H.gates.includes('carry')) gate('carry','Carry budget', Math.round(mass)+' / '+H.budget+' carry', mass<=H.budget, mass<=H.budget?'the frame can bear it':'OVER — add power armour or a bigger frame');
+ if(H.gates.includes('vol'))   gate('vol','Volume budget', Math.round(mass)+' / '+H.budget+' m³', mass<=H.budget, mass<=H.budget?'fits the footprint':'OVER footprint');
+ if(H.gates.includes('power')){ const ok=powerOut>=powerDraw; gate('power','Power supply vs draw', fmt(powerOut)+' W  ≥  '+fmt(powerDraw)+' W', ok, ok?(powerDraw>0?'reactor covers the guns':'no draw yet'):'BROWNOUT — energy weapons unpowered (needs a reactor)'); }
+ if(H.gates.includes('crew')){ const need=crew; const ok=need<=CREW_POOL; gate('crew','Crew required vs pool', need+' / '+CREW_POOL, ok, ok?'manned':'SHORT — draws more than the pool'); }
+ if(H.gates.includes('ammo')){ const ok = ammoDraw===0 || ammoStore>0; gate('ammo','Ammo feed', (ammoDraw>0? (ammoStore>0? fmt(ammoStore)+' kg fed':'0 — no magazine') : 'no ammo weapons'), ok, ammoDraw>0?(ammoStore>0?'the guns are fed':'DRY — a kinetic gun with no magazine'):'nothing to feed'); }
+ if(gr){ gr.innerHTML = rows.map(r=>{const cls=r.ok?'g':'r';
+   return '<div class="gate '+cls+'"><i>'+r.label+' — <span style="color:var(--ink3)">'+r.note+'</span></i><span><b>'+r.val+'</b> <span class="pill">'+(r.ok?'pass':'fail')+'</span></span></div>';
+  }).join(''); }
+ const allPass = rows.every(r=>r.ok);
+
+ // ── READS (the component dials it does not own) ──
+ const rd=$('reads');
+ if(rd){ const parts=ORDER.filter(k=>cnt[k]>0).map(k=>{const c=COMP[k];
+   return '<div class="num set"><i>'+c.door+' — ×'+cnt[k]+'</i><b>'+c.n+'</b></div>';
+  }); rd.innerHTML = parts.length? parts.join('') : '<div class="num"><i>nothing mounted</i><b>—</b></div>'; }
+
+ // ── name + headline ──
+ const wcount=cnt.weapon+cnt.railgun;
+ const cls = wcount>0 ? (mass>=H.budget*0.8?'a heavy warship':'an armed hull') : 'a utility hull';
+ set('oname', HOST[host].n+' — '+(wcount>0? wcount+'-gun ':'')+(host==='ground'&&models>1? models+'-model ':'')+cls);
+ set('odesc', allPass ? 'All budgets and gates pass — this is a buildable entity.' : 'One or more gates fail — the engine would refuse this design until it is fixed (see red below).');
+
+ // ── TOTALS handoff ──
+ set('v_fp', fmt(fpAll)+' J/s'); set('s_fp', 'Σ dps × count × '+caliber.toFixed(2)+' caliber'+(models>1?' × '+models+' models':''));
+ set('v_tn', fmt(tnAll)+' J'); set('s_tn','Σ health + armour × 100 kJ'+(models>1?' × '+models:''));
+ set('v_ev', H.evasion? evasion.toFixed(2)+' (×'+evMult.toFixed(1)+' eff. health)' : 'n/a'); set('s_ev', H.evasion? 'from hull size + thrust/mass' : 'a station does not dodge');
+ set('v_sh', fmt(shieldPool)+' pts'); set('s_sh','Σ shield pools (ADD)');
+ set('v_wp', weaponProfiles+' profile'+(weaponProfiles===1?'':'s')); set('s_wp', weaponProfiles>0? 'each kept separate, not blended':'no weapons mounted');
+ set('v_eh', fmt(ehAll)); set('s_eh','Health × evasion + shield'+(models>1?' × '+models:''));
+ $('k_ev').className='mk emg'; $('k_eh').className='mk emg';
+ // role weight into the firepower box subtitle
+ $('l_fp').textContent = 'Firepower'+(roleWeight<1?' · utility ×0.25':'');
+
+ // ── cost surface ──
+ const cs=$('costs');
+ if(cs){ cs.innerHTML =
+   '<div class="num set"><i>Credits</i><b>'+fmt(crAll)+' cr</b></div>'
+  +'<div class="num set"><i>Research</i><b>'+fmt(rsAll)+' RP</b></div>'
+  +'<div class="num set"><i>Build points</i><b>'+fmt(bdAll)+' BP</b></div>'
+  +'<div class="num set"><i>Crew</i><b>'+(crew*models)+' people</b></div>'; }
+
+ // ── verdict ──
+ let verdict;
+ if(!allPass){ verdict = '🔴 <b>Not buildable as configured.</b> A red gate is the engine\'s own refusal — the same check <code>ShipDesign.Recalculate</code> / the ground assembler runs. Fix the red line and the totals above become a real entity the resolver can field.'; }
+ else if(wcount===0){ verdict = '⚙ <b>A utility hull</b> — no weapons, so RoleWeight drops to 0.25 and the resolver treats it as a support unit, not a combatant. Add a gun to make it fight.'; }
+ else { verdict = '✅ <b>Buildable.</b> Every gate passes, and the six totals on the right are exactly what <code>ShipCombatValueDB.Calculate</code> hands the resolver. '+(host==='ground'&&models>1? 'The '+models+'-model scaling is <b>engine-pending</b> — shown so the shape is right, but the ground resolver has no per-model count yet.' : 'Change the host to see the same machine build a ground unit or a station from the same totals.'); }
+ $('verdict').innerHTML = verdict;
+}
+
+qa('.hchip').forEach(c=>c.addEventListener('click',()=>{ host=c.dataset.h; render(); }));
+const mdl=$('models'); if(mdl) mdl.addEventListener('input',render);
+buildRoster();
+render();
+</script>

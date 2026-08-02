@@ -63,12 +63,16 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 - [x] 3.1 Table A (every sim-reaching variable, 12 doors), Table B (23 cross-door wires + 4 backbones),
       Table C (Assembler input contract: C1 reads · C2 the totals it computes · C3 the 3 assembler-only dials)
 
-### PHASE 4 — the Entity Assembler design HTML (`entityassembler.html`), staged
-- [ ] 4a skeleton + CSS + prose bands
-- [ ] 4b host/mounting panel (host choice; component × COUNT; separate weapon profiles; model count)
-- [ ] 4c budgets + gates (mass/carry, power supply vs draw, crew, ammo)
-- [ ] 4d emergent readouts + cost surface + TOTALS handoff
-- [ ] 4e final polish
+### PHASE 4 — the Entity Assembler design HTML (`entityassembler.html`) — DONE
+- [x] 4a skeleton + CSS (house style from defensederived) + prose bands (3-kinds-of-number boundary,
+      totals handoff, cradle-to-grave, footer)
+- [x] 4b host/mounting panel (host forced choice ship/ground/station; 8-component roster × COUNT;
+      separate weapon profiles; model-count dial engine-pending)
+- [x] 4c budgets + gates (mass/carry/vol, power supply vs draw, crew, ammo — live pass/fail)
+- [x] 4d emergent totals (Firepower/Toughness/Evasion/Shield/WeaponProfiles/effHealth) + cost surface
+      + TOTALS-handoff band citing ShipCombatValueDB.Calculate §6.1
+- [x] 4e verified: node --check + DOM-stub harness driving all 3 hosts + power-gate stress test (0 throws)
+> Built as one atomic file (safer than 5 partial edits to one <script>); all stages present + verified.
 
 ### PHASE 5 — verify, index, close out
 - [ ] 5.1 render-verify the HTML (node --check + DOM-stub driving every host + branch)
