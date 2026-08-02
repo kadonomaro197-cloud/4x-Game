@@ -50,7 +50,7 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 > `01-IO-<door>.md` to the fixed schema. **Unverified** — Phase 2 is my own line-by-line pass.
 
 ### PHASE 2 — verification pass (MYSELF, NO subagents; append `## VERIFIED` to each record)
-- [ ] 2.1 verify weapons + defense + chassis + civic
+- [x] 2.1 verify weapons + defense + chassis + civic (all: no corrections; VERIFIED blocks appended)
 - [ ] 2.2 verify command + enhancers + industrial + logistical
 - [ ] 2.3 verify power + propulsion + sensors + aura
 

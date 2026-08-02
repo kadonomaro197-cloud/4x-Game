@@ -73,3 +73,11 @@ Note: the shield **soak fraction** itself (`nt.soak`) IS owned by this weapon do
 - **Contact family zeroes several outputs**: range = `contact` (0), sup = `nothing`, pd = `no`, vel/trk = `—`; `sat` forced to 1 and `pen` uses the `foc*0.4` branch. The `SCALE_C` name table exists solely because contact "reads oddly with naval/spinal."
 - **Nature door names no engine variable directly.** Door 2 sets `nt.soak` (the shield soak fraction); the file describes it as "the shield soak fraction" rather than an engine field name. If the assembler needs a `Nature` enum, that mapping is implied by the four `NAT` keys (kinetic/energy/explosive/exotic) but not spelled as a sim variable here.
 - **§"What this kills" collapses** confirm scope: Pulse-vs-Continuous beam is "one weapon at two shot-size positions"; the old Exotic *door* becomes the Nature *setting*; and "Bolt/Slug/Cloud" collapse to one row (all answer "no" to point-defence). Non-damage effects (mind control, jump inhibition) "write none of the ten" and are explicitly excluded from this weapon door.
+
+## VERIFIED (Phase 2 — personal pass, 2026-08-02)
+Checked the census against `weaponsderived.html` source (`<script>` + slider inputs), line by line.
+- **Slider defaults confirmed** (lines 177–183): `scale` def **45**, `shot` def **35**, `rng` def **40**, `foc` def **50**. All match.
+- **Formulas confirmed:** `dps=Math.round(200*Math.pow(10,scale/28))` (`:372`); `perShot=dps*Math.pow(10,(shot-50)/26)` (`:373`); `pen=fam==='contact'?foc*0.4:foc*(fam==='proj'?0.9:0.6)` (`:377`); `range=fam==='contact'?0:Math.round((f.rng[0]+(f.rng[1]-f.rng[0])*rng/100)*1000)` (`:379`); `ARM=400,PERPT=1.5,MINPASS=0.1,NF=1.0` (`:396`). All exact.
+- **NAT soak confirmed** (`:297-300`): Kinetic 1.0 / Energy 0.5 / Explosive 0.75 / Exotic 0.0.
+- **FAM axis + defaults confirmed**: Beam is `aria-pressed="true"` default; Energy is the nat default.
+- **No corrections.** The two flagged discrepancies stand and are correct: (1) `v_heat` is teal-marked but writes no engine variable in the canonical ten — a real marker discrepancy for whoever wires the door; (2) the four "how much lands" tiles compute against reference armour 400, whose true value is emergent on the defender's plate.
