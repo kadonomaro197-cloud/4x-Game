@@ -118,6 +118,49 @@ So the Venator is the perfect stress test: **everything that makes it a warship 
 *Venator* — a flight deck launching hundreds of fighters — is the one rung still to build.** Fixing #1 (a
 strike-bay component whose launch output has a live reader) is the highest-value carrier-enabling change.
 
+## Every door, applied to a capital ship — the completeness audit
+
+A capital ship is not just guns and a hull; it's a *town* — it houses, feeds, and commands thousands of people
+for a year at a time. Going through all twelve doors against the Venator surfaced a whole missing half (the crew
+and command side). Six components were added to close the worst of it; the rest is a documented backlog.
+
+| Door | On a capital ship it's… | Catalog now | Still missing |
+|---|---|---|---|
+| **Weapons** | main guns · PD screen · torpedoes | 7 types ✅ | — |
+| **Defense** | shields · armour | 2 ✅ | damage-control / repair (self-repair is engine-pending) |
+| **Chassis** | the hull itself (**= the host**) | the Warship host ✅ | structural-integrity dial (engine-pending) |
+| **Civic** | **crew sustainment: quarters · life support · medical · food** | **+ Crew Quarters · + Life Support Plant · + Medical Bay** (food already) ✅ | recreation / morale facility |
+| **Command** | ship bridge **+ a flag command suite** | Bridge **+ Flag Command Suite** ✅ | — |
+| **Enhancers** | fire-control · automation | **+ Targeting Computer** (the door was **empty**) | crew-automation · damage-control enhancers |
+| **Logistical** | cargo · ammo · fuel · fighters · troops | **+ Cargo Hold** (rest already) ✅ | — |
+| **Power** | reactors · radiators · **batteries** | reactor + radiators | **capacitor / battery bank** (deferred) |
+| **Sensors** | search · **fire-control** · **EW** | search only | **fire-control sensor · ECM / jammer** (deferred) |
+| **Propulsion** | drives · fuel · warp | 3 ✅ | maneuvering thrusters (minor) |
+| **Industrial** | an onboard **repair / engineering bay** | — | **repair bay** (deferred) |
+| **Aura** | area buffs (fleet-wide) | — | the whole door is engine-pending (no aura processor) |
+
+**The six added this pass** (catalog 25 → 31), and how live each is:
+
+| Added | Door | Reaches the sim? |
+|---|---|---|
+| **Crew Quarters** (berths) | Civic | ⚠ colony housing is LIVE (comfort→morale); a ship's crew is drawn from the pool and *assumed* berthed — modeled here as the real need + a build **gate** (berths ≥ crew) |
+| **Life Support Plant** (air/water) | Civic | ⚠ same shape — colony `PopulationSupportAtbDB` is live, per-ship isn't; here it's a **gate** (support ≥ crew) |
+| **Medical Bay** | Civic | ⏳ the civic "+health" output is engine-**pending** (no consumer); a readiness readout, not a live number |
+| **Flag Command Suite** | Command | ⚠ seats a leader (`CommandBerthAtb` LIVE for site work); fleet-command scope (`AdminLevel`) is **dead** in the engine |
+| **Targeting Computer** (caliber) | Enhancers | ✅ **LIVE** — `UnitCaliberAtb.FirepowerMult`; `ShipCombatValueDB.Calculate` multiplies firepower by the best module (×1.25 → Firepower 2,236 → 2,795) |
+| **Cargo Hold** | Logistical | ✅ **LIVE** — `CargoStorageAtb` general stores |
+
+**The crew-sustainment gates now make the ship house its own crew:** berths (900) and life support (1,000) both
+cover the 825 crew, medical covers them too. Leave off the quarters and the build **fails the gate** — a real
+decision, not a decoration. The nicest tell: the Targeting Computer is the *most* live of the six (a real
+firepower multiplier), while the crew-sustainment parts the ship most obviously *needs* are the *least* wired —
+which is itself the finding: **the engine models a colony's civic life in depth and a ship's crew barely at all.**
+
+**The deferred backlog** (real gaps, not yet added): a **capacitor/battery bank** (Power — a warp/weapon energy
+buffer, `EnergyStore` is live), a **fire-control sensor** and an **ECM/jammer** (Sensors — both live-gated in the
+engine), an onboard **repair/engineering bay** (Industrial), **damage-control** (Defense/Enhancers), and a
+**recreation/morale** facility (Civic). Any of these is a quick add on the same pattern.
+
 ## Two honest caveats on the model
 
 - **The counts are canonical; the per-part *numbers* (mass, damage, power) are the assembler's own tuning**, not

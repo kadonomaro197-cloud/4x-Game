@@ -315,7 +315,7 @@ if(tb){tb.addEventListener('click',function(){
 /* ---------- hosts ---------- */
 var HOSTS={
   ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
-        budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:800,role:'ship'},
+        budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:900,role:'ship'},
   ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles. Armour is soaked shot-by-shot; penetration bites here.',
         budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
@@ -417,6 +417,22 @@ var CAT=[
    mass:60,vol:80,crew:2,hp:10,draw:2,supply:0,foodOut:200,
    cost:{bp:100,cr:10,rp:3,steel:30,elec:20,mats:{'food':10}},
    honesty:'Grows food underway — the live FoodProductionAtbDB output, on the move. Feeds 200 crew continuously, slowing the provisions drain. Enough of it = a closed loop that feeds the crew forever.'},
+ {id:'cargo',cat:'Logistics',name:'Cargo Hold',hosts:['ship','ground','station'],
+   mass:40,vol:120,crew:0,hp:10,draw:0,supply:0,cargo:500,
+   cost:{bp:60,cr:4,rp:1,steel:44,elec:2},
+   honesty:'General stores — spare parts, supplies, salvage. CargoStorageAtb is LIVE; a ship needs hold space for everything that isn’t ammo, fuel, or fighters.'},
+ {id:'quarters',cat:'Crew',name:'Crew Quarters',hosts:['ship','ground','station'],
+   mass:80,vol:100,crew:0,hp:12,draw:1,supply:0,berths:150,
+   cost:{bp:90,cr:8,rp:1,steel:50,elec:8,mats:{'food':4}},
+   honesty:'Living quarters — bunks, mess, the crew’s home for the whole cruise. Colony housing is LIVE (comfort→morale); a ship’s crew is drawn from the colony pool and assumed berthed, so onboard quarters aren’t a separate engine gate yet — modeled here as the real requirement.'},
+ {id:'lifesupport',cat:'Crew',name:'Life Support Plant',hosts:['ship','ground','station'],
+   mass:60,vol:70,crew:2,hp:10,draw:3,supply:0,lifeSupport:250,
+   cost:{bp:110,cr:12,rp:2,steel:40,elec:30,mats:{'em-shielding-mesh':6}},
+   honesty:'Recycles air and water — the crew can’t breathe without it. The engine models life-support CAPACITY for colonies (PopulationSupportAtbDB), not per-ship; here it’s the real onboard need.'},
+ {id:'medbay',cat:'Crew',name:'Medical Bay',hosts:['ship','ground','station'],
+   mass:70,vol:80,crew:4,hp:12,draw:2,supply:0,medical:300,
+   cost:{bp:120,cr:14,rp:3,steel:34,elec:30},
+   honesty:'Sickbay — treats casualties, keeps the crew fit on a long cruise. The civic “+health” output is PENDING in the engine (no consumer yet), so this is the need flagged, not a live number.'},
  {id:'sensor',cat:'Sensors',name:'Sensor Array',hosts:['ship','ground','station'],
    mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,detect:150,
    cost:{bp:110,cr:14,rp:3,steel:28,elec:40},
@@ -429,10 +445,18 @@ var CAT=[
    mass:110,vol:40,crew:4,hp:16,draw:5,supply:0,tractor:true,
    cost:{bp:150,cr:20,rp:4,steel:70,elec:40,mats:{'ree-magnetics':10}},
    honesty:'Grips and drags a target — docking, salvage, capture. Battlefield payoff is PENDING: capture is still a bare ownership flip (an open ruling) and salvage isn’t built.'},
+ {id:'targeting',cat:'Enhancers',name:'Targeting Computer',hosts:['ship','ground','station'],
+   mass:30,vol:12,crew:2,hp:8,draw:3,supply:0,caliber:1.25,
+   cost:{bp:180,cr:26,rp:5,steel:20,elec:60,mats:{'ree-magnetics':8}},
+   honesty:'A fire-control enhancer — sharpens every gun by a quarter. Maps to UnitCaliberAtb.FirepowerMult, which is LIVE: ShipCombatValueDB.Calculate multiplies a ship’s firepower by the best installed caliber module.'},
  {id:'bridge',cat:'Command',name:'Command Bridge',hosts:['ship','station'],
    mass:40,vol:18,crew:-4,hp:15,draw:1,supply:0,deadOut:'Admin-level (seat scope)',
    cost:{bp:120,cr:10,rp:2,steel:34,elec:20},
-   honesty:'Seats a commander (a real, live berth). But its "admin-level" scope dial is DEAD — printed, no rule reads it.'}
+   honesty:'Seats a commander (a real, live berth). But its "admin-level" scope dial is DEAD — printed, no rule reads it.'},
+ {id:'flagsuite',cat:'Command',name:'Flag Command Suite',hosts:['ship','station'],
+   mass:120,vol:80,crew:12,hp:16,draw:4,supply:0,flagship:true,
+   cost:{bp:200,cr:30,rp:5,steel:60,elec:70,mats:{'ree-magnetics':10}},
+   honesty:'A flagship’s command suite — a fleet CIC, not just the ship’s bridge. Seats a FLEET commander (CommandBerthAtb seats a leader, LIVE for site work), but fleet-command scope (AdminLevel) is DEAD in the engine — the capability, flagged.'}
 ];
 
 var host='ship';
@@ -444,7 +468,8 @@ CAT.forEach(function(c){counts[c.id]=0;});
    a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
 var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
-    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,magazine:1,provisions:1,sensor:1}},
+    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,magazine:1,
+            provisions:1,cargo:1,quarters:1,lifesupport:1,targeting:1,sensor:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
     /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
        laser cannons · 4 heavy proton torpedo tubes · 6 tractor beam projectors · 420 starfighters ·
@@ -452,7 +477,8 @@ var PRESETS=[
        fuel, shields, armour, hydroponics, sensors, twin bridge towers) sized to power/cool/feed/man the above. */
     counts:{heavyturbo:8,medturbo:2,pdbattery:52,missile:4,tractor:6,fighterbay:6,vehiclebay:4,
             capreactor:4,radiator:5,shield:5,armour:20,drive:4,warp:1,fueltank:4,magazine:5,ammobunker:5,
-            provisions:4,hydroponics:6,sensor:2,searchsensor:2,bridge:2}},
+            provisions:4,hydroponics:6,cargo:2,quarters:6,lifesupport:4,medbay:3,targeting:2,
+            sensor:2,searchsensor:2,bridge:2,flagsuite:1}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
@@ -534,6 +560,7 @@ function compute(){
   var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0;
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
   var warpCap=false,warpSustain=0,speedFactor=0,reactorDays=Infinity;
+  var berths=0,lifeSupport=0,medical=0,cargo=0,caliber=1,hasFlag=false;
   A.forEach(function(c){
     var n=counts[c.id];
     mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
@@ -558,6 +585,12 @@ function compute(){
     if(c.warpSustain)warpSustain+=c.warpSustain*n;
     if(c.speedFactor)speedFactor=Math.max(speedFactor,c.speedFactor);
     if(c.deployDays)reactorDays=Math.min(reactorDays,c.deployDays);
+    if(c.berths)berths+=c.berths*n;
+    if(c.lifeSupport)lifeSupport+=c.lifeSupport*n;
+    if(c.medical)medical+=c.medical*n;
+    if(c.cargo)cargo+=c.cargo*n;
+    if(c.caliber)caliber=Math.max(caliber,c.caliber);
+    if(c.flagship)hasFlag=true;
     if(c.weapon){
       firepower+=c.weapon.dps*n;
       // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
@@ -567,6 +600,7 @@ function compute(){
       draw+=(c.draw||0)*n;
     }
   });
+  firepower*=caliber; // best installed caliber module multiplies total firepower (UnitCaliberAtb, LIVE)
   var baseHP={ship:120,ground:80,station:400}[host];
   var totalHP=baseHP+hp;
   var toughness=(totalHP + armourThick*(host==='station'?4:2))*0.1; // MJ-ish
@@ -600,6 +634,7 @@ function compute(){
     warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
     reactorDays:reactorDays,deployDays:deployDays,deployLimiter:deployLimiter,
+    berths:berths,lifeSupport:lifeSupport,medical:medical,cargo:cargo,caliber:caliber,hasFlag:hasFlag,
     ammoCap:ammoCap,ammoUse:ammoUse,ammoMin:ammoMin,
     heatGen:heatGen,heatDissip:heatDissip,heatBalance:heatBalance,detect:detect,
     over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
@@ -654,6 +689,17 @@ function renderGates(S){
   // crew
   gate(!any?'na':'pass','Crew from the population pool',
     !any?'—':(S.crew<=0?'net crew freed by automation':fmt(S.crew)+' drawn from the colony pool (informational — the pool provides it)'));
+  // crew sustainment — the ship must house and support its own crew (Civic door, applied to a ship)
+  if(S.crew>0){
+    gate(S.berths>=S.crew?'pass':'fail','Crew berths ≥ crew',
+      S.berths>=S.crew?(fmt(S.berths)+' berths for '+fmt(S.crew)+' crew'):('only '+fmt(S.berths)+' berths for '+fmt(S.crew)+' crew — add Crew Quarters'));
+    gate(S.lifeSupport>=S.crew?'pass':'fail','Life support ≥ crew',
+      S.lifeSupport>=S.crew?(fmt(S.lifeSupport)+' air/water capacity'):('supports '+fmt(S.lifeSupport)+' of '+fmt(S.crew)+' crew — add a Life Support Plant'));
+    gate(S.medical>0?'pass':'pend','Medical coverage',
+      S.medical>0
+        ? (fmt(S.medical)+' sickbay capacity ('+(S.medical>=S.crew?'covers the crew':'partial')+') — readiness only; the +health output is engine-pending')
+        : 'no medical bay — readiness note only, since the +health output is engine-pending anyway');
+  }
   // carrier wing — the honest pending gap
   if(S.hasFighterBay){
     gate('pend','Carrier wing (fighter launch)',
@@ -689,6 +735,8 @@ function renderGauges(S){
   if(host==='ship')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
   if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
+  if(S.caliber>1)bits.push('<b style="color:var(--ac2)">Targeting ×'+S.caliber.toFixed(2)+'</b> on firepower (LIVE)');
+  if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
   if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' fighters berthed — PENDING (can’t sortie yet).</b>');
   if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' vehicles/troops — invasion chain LIVE.</b>');
   nt.innerHTML=bits.join(' · ');
