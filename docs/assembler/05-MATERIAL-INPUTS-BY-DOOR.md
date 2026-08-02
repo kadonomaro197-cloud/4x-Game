@@ -1,12 +1,34 @@
-# 05 — INPUTS BY DOOR: materials AND people (does the game provide them?)
+# 05 — EVERY INPUT BY DOOR (does the game provide them?)
 
-> **The objective, stated plainly:** for each of the 12 doors, list the inputs its components actually need to
-> be built and run, and **verify the game provides them.** A component has **two** kinds of input, and both are
-> checked here: **materials** (minerals + refined goods — PART 1) and **people** (crew to operate it, drawn from
-> the colony workforce — PART 2). A per-door bill with a ✓/✗ on each line.
+> **The objective, stated plainly:** for each of the 12 doors, list **everything** its components consume — to
+> BUILD them and to OWN and RUN them — and **verify the game provides it.** A component isn't just metal; it's
+> metal + people + industry + money + research to build, then power + fuel + ammo + upkeep + food + budget to
+> keep and operate. All of it is checked here, in four parts:
+> **PART 1 materials · PART 2 people · PART 3 the rest of the build cost · PART 4 the run-time inputs.**
 >
-> *(Originally this file covered only materials; PART 2 was added when the obvious question came up — a
-> component isn't built from metal alone, it's crewed by people, and people are the scarcer input.)*
+> *(This file grew as the question got sharper: materials → "shouldn't there be people too?" → "I want
+> EVERYTHING." So it now covers the complete input surface.)*
+
+## THE COMPLETE INPUT TAXONOMY (the summary — detail in the parts below)
+| # | Input | When | Provided / charged? |
+|---|---|---|---|
+| 1 | **Materials** (minerals + refined) | build | ✅ 11/12 doors; only 3 ordnance minerals undefined (PART 1) |
+| 2 | **People / crew** (workforce) | build + run | ✅ supplied (population → pool); the *scarce* input; 3 accounting gaps (PART 2) |
+| 3 | **Build points** (industry capacity → time) | build | ✅ every component; needs the right factory |
+| 4 | **Credits** (money) | build | ✅ every component |
+| 5 | **Research** (RP + the tech unlock) | build | ✅ every component; unlock gate lightly used in base mod |
+| 6 | **The right facility** (installation- / component-construction) | build | ✅ every component declares its `IndustryTypeID` |
+| 7 | **Power** (a reactor feeding it) | run | ⚠ energy weapons + warp draw; **no generic component draw** (crack C12) |
+| 8 | **Fuel** (propellant / fissile-fuels) | run | ✅ engines burn propellant; reactors burn fissile-fuels |
+| 9 | **Ammo** (a magazine to feed a gun) | run | ✅ kinetic/missile weapons (WeaponSupply Energy/Ammo/Both + `GroundAmmo`); wire lightly used |
+| 10 | **Upkeep** (standing maintenance) | run | ⚠ ground units + stations billed monthly; **ships/most installations free** |
+| 11 | **Food / life-support** (crew must eat) | run | ⚠ machinery exists; `PerCapitaFoodDemand` defaults **0** → population eats free by default |
+| 12 | **Mass / carry / volume budget** (host space) | assemble | ✅ every component spends the chassis budget (the Assembler gate) |
+| 13 | **Infrastructure capacity** (colony support) | run | ✅ installations throttle on the infra-efficiency grid |
+
+**Headline: the BUILD side is fully provided and charged (1–6). The RUN side is mostly built too (7–13), with
+three "free" gaps — no generic power draw, no ship upkeep, no per-capita food.** These are the audit's "free to
+own / free to run" problem (Problem 2), and some of it has since been closed (ground upkeep and ammo now exist).
 
 ## PART 1 — THE MATERIAL INPUTS
 >
@@ -184,10 +206,51 @@ morale wire, a real recruitment-scarcity pipeline, and colonist delivery.
 
 ---
 
-**Bottom line (both inputs):** the game provides every **material** input for 11 of 12 doors (fix the three
-ordnance references for the 12th), and it provides the **people** to build and crew everything through the
-workforce pool — with people being the genuinely *scarce* input, and three people-accounting wires still open
-(employment, recruitment-scarcity, colonist delivery).
+## PART 3 — THE REST OF THE BUILD COST (points · money · research · facility)
 
-*Companion to `03-RESOURCE-LEDGER.md` (the full material supply/demand/gaps) and `04-ACQUISITION-MAP.md` (how
-you get each one). This file is the direct per-door provision check for both inputs — materials and people.*
+Every component template carries the *same* four build-cost channels alongside its materials and crew — verified
+present on all 102 templates (`Formulas`: `BuildPointCost`, `CreditCost`, `ResearchCost`, plus `Mass`/`Volume`/
+`HTK`/`CrewReq`). **All fully provided and charged, on every door.**
+
+| Input | What it is | Provided? |
+|---|---|---|
+| **Build points** | Industry capacity — a Factory/Shipyard/Refinery contributes typed points/day; the build consumes them, which is what makes a build take *time* | ✅ every component; throttled by infrastructure efficiency |
+| **Credits** | Money from the faction ledger (fed by colony tax) | ✅ every component (`CreditCost`) |
+| **Research** | Research points to unlock + a per-build `ResearchCost` | ✅ every component; **the tech UNLOCK gate** (a component must be on the faction's buildable list) exists but is *lightly used* in the base mod — most parts start unlocked |
+| **The right facility** | You need the matching factory: **installation-construction** (60 components — buildings/ground) or **component-construction** (42 — ship parts); refining and ship-assembly are their own lines | ✅ every component declares its `IndustryTypeID` |
+
+So the whole **build side** is closed: materials + crew + build-points + credits + research + the right factory,
+all charged, all provided (bar the 3 ordnance minerals).
+
+## PART 4 — THE RUN-TIME INPUTS (what it eats once it exists)
+
+A component keeps consuming after it's built. This is the audit's **"free to own / free to run"** territory
+(Problem 2) — and it's more built than that audit implied, but three gaps remain. Verified from source:
+
+| Input | Who consumes it | State |
+|---|---|---|
+| **Power** | Energy weapons + warp drives draw from a reactor (`WeaponSupply`: a weapon takes Energy / Ammo / Both) | ⚠ **real for weapons + warp; no GENERIC component draw** — active sensors and everything else draw nothing (crack C12). Reactors/RTG/solar SUPPLY it; most consumers don't declare a demand |
+| **Fuel** | Engines burn propellant (`NewtonThrust` fuel draw); reactors burn fissile-fuels (`Lifetime → LocalFuel`, gated by `EnableFuelExhaustion`) | ✅ real for the things that move and generate |
+| **Ammo** | Kinetic / missile weapons feed from a magazine (`WeaponSupply` Ammo mode + `GroundAmmo`) | ✅ mechanism real; the per-shot **consume wire is lightly used** (the marine-build gap — `GroundAmmo.Consume` mostly exercised by tests) |
+| **Upkeep** | **Ground units** (`GroundUpkeep` bills `Σ UnitUpkeepCredits` monthly to the faction ledger) + **stations** (`StationUpkeepProcessor`); colonies pay via tax | ⚠ **real for ground units + stations; ships and most installations have NO standing upkeep** — the "free to own" gap, half-closed |
+| **Food / life-support** | Population + crew (`SustenanceProcessor`: `foodDemand = pop × PerCapitaFoodDemand`) | ⚠ machinery exists but **`PerCapitaFoodDemand` defaults to 0** → population is fed for **free** by default; organic units "eat biomass" (an *undefined* material — see `03`) |
+| **Mass / carry / volume budget** | Every mounted component spends the host's chassis budget | ✅ the Assembler gate (mass/carry/volume vs the frame budget) |
+| **Infrastructure capacity** | Installations demand colony infrastructure support | ✅ the efficiency throttle — over-demand the grid and mining/refining/building all slow together |
+
+So the **run side** is genuinely built for the things that fight and move (power for guns, fuel for engines,
+ammo for kinetics, upkeep for ground/stations) — and has three honest "it's free" gaps: **no generic power
+draw, no ship upkeep, and population that eats nothing by default.**
+
+---
+
+**Bottom line (EVERYTHING):**
+- **Build inputs (1–6): fully provided and charged** on every door — materials, people, build-points, credits,
+  research, the right factory — with the single exception of the 3 undefined ordnance minerals.
+- **Run inputs (7–13): mostly built** — power (weapons/warp), fuel, ammo, ground+station upkeep, the mass budget,
+  and infrastructure all bite today. **Three stay "free":** no generic component power draw, no ship upkeep, and
+  no per-capita food. Those, plus the 3 ordnance minerals and the 3 people-accounting wires, are the complete
+  list of places a component's input chain doesn't yet close.
+
+*Companion to `03-RESOURCE-LEDGER.md` (material supply/demand/gaps) and `04-ACQUISITION-MAP.md` (how you get each
+one). This file is the direct per-door provision check for the COMPLETE input surface — everything a component
+consumes to be built, owned, and run.*
