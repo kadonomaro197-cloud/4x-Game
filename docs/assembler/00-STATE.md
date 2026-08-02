@@ -75,9 +75,19 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
 > Built as one atomic file (safer than 5 partial edits to one <script>); all stages present + verified.
 
 ### PHASE 5 — verify, index, close out
-- [ ] 5.1 render-verify the HTML (node --check + DOM-stub driving every host + branch)
-- [ ] 5.2 DOCS-INDEX rows for all new docs/assembler/ files
-- [ ] 5.3 mark all boxes complete + final chat summary
+- [x] 5.1 render-verify the HTML (node --check + DOM-stub driving all 3 hosts + power-gate stress test; 0 throws)
+- [x] 5.2 DOCS-INDEX: new §4b (Entity Assembler) + "As of" stamp updated (same commit as this close-out)
+- [x] 5.3 all boxes complete; final chat summary delivered
+
+## ✅ MISSION COMPLETE (2026-08-02)
+All five phases delivered, committed, pushed to `claude/operation-ground-truth-prompt-l9729h`:
+- Phase 1+2: 12 verified I/O census records (`01-IO-<door>.md`) — 11/12 no corrections; command corrected (27/5);
+  industrial engine cross-ref (Cost Per Day live).
+- Phase 3: `02-IO-MATRIX.md` — the master wiring reference (Table A variables · Table B wires+backbones · Table C
+  the Assembler's read-vs-compute contract).
+- Phase 4: `entityassembler.html` — the design HTML the game mirrors; render-verified.
+- Phase 5: DOCS-INDEX §4b + stamp; this close-out.
+Nothing implemented in engine/JSON/tests (design-only, as mandated). The 12 door HTMLs were not edited.
 
 ---
 
