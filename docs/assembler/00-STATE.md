@@ -102,6 +102,19 @@ The cradle rung, requested after the mission: the bill of materials the designer
   NEW-5 exotic substrates (engine-pending), NEW-6 wire-ins — each with a mine→refine→spend acquisition path
   grounded in existing minerals. DOCS-INDEX §4b row added. Design-only; no GameData JSON touched.
 
+## FOLLOW-ON (2026-08-02) — THE ACQUISITION MAP (`04-ACQUISITION-MAP.md`)
+"And what about acquisition?" — the companion to the ledger: how you actually GET each resource.
+- Geography: where each mineral is (from the abundance tables) — home terrestrial / asteroids (copper,
+  nickel) / outer system (fuels, lithium) / comets (water); tungsten the ultra-rare bottleneck.
+- The one working chain, source-verified (workflow wf_4b1c080d-126, 5 agents, file:line):
+  survey (reveals tonnage — but does NOT gate mining; the mine reads omniscient truth) → mine (auto,
+  faction-blind, throttled by infra efficiency + accessibility) → deplete (cubic decay, one-way, never
+  refills) → refine (one daily processor, all 3 stages) → build (consumes minerals + materials).
+- Strategic routes: settle WORKS; trade moves goods but NO MONEY (can't buy); capture is a bare
+  FactionOwnerID flip ("deeper transfer later" — deposits live on the body, an OPEN ruling); salvage
+  DOES NOT EXIST (SpawnWreck is a stub). gallicite would FAULT the ordnance build.
+- New resources all ride the mining chain except biomass (grown, not mined). DOCS-INDEX §4b row added.
+
 ---
 
 ## RESUME NOTES (update on every commit — what's done, what's next, any gotcha)
