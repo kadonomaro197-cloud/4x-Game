@@ -260,7 +260,8 @@ instance of those dials.</div>
 <button class="chip" type="button" data-v="shield" aria-pressed="false" title="shield-generator / ward-projector. Writes a damage pool taken before HP. Free.">Shielding </button>
 <button class="chip" type="button" data-v="crew" aria-pressed="false" title="crew-automation. Writes Crew Reduction - it buys back people from a genuinely scarce pool. Free, and it has the highest research cost in any door.">Crew - automation </button>
 <button class="chip" type="button" data-v="iface" aria-pressed="false" title="NEW. A command link that cuts the doctrine/stance switch cooldown - the host re-tasks sooner. Hard-floored so it is never instant. Stands alone; not a prerequisite. Lives in Systems.">Interface </button>
-<button class="chip" type="button" data-v="fieldrep" aria-pressed="false" title="NEW. Field repair - structure regained without returning to a yard. The season-long survivor.">Field repair </button></div>
+<button class="chip" type="button" data-v="fieldrep" aria-pressed="false" title="NEW. Field repair - structure regained without returning to a yard. The season-long survivor.">Field repair </button>
+<button class="chip" type="button" data-v="fury" aria-pressed="false" title="PROPOSED - engine-pending. Steadiness / fury - a per-unit temperament under fire. Does NOT write a live variable yet: the engine has no morale field. Kept here so the shape is designed.">Steadiness / fury </button></div>
 <p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
 
 <div class="bsec">
@@ -475,7 +476,15 @@ const ENH = {
  mbase:45, mcoef:2.8, moff:0,
  noun:['Patch Kit','Self-Repair Rig','Regenerative Suite'], desc:'Nanite stock, patch plate and a fabricator that works while you are still fighting.', why:' <b>The only enhancer that acts on TIME rather than on a stat.</b> It does not make the unit better - it makes damage <b>temporary</b>, which is the difference between surviving a battle and surviving a season. The Enhancers half of hole <b>H2</b>, blocked on the parked degraded-condition model.',
  buys:'structure regained over time - the H2 self-repair half',
- gate:'', denies:''}
+ gate:'', denies:''},
+
+ // -- BEHAVIOUR - a temperament, not a stat on the sheet. Proposed; the psychology half of the frozen-unit gap. --
+ fury: {cap:'Steadiness / fury', clo:0, chi:1, cdef:0.6, mlab:'(derived - 40 x (1+ d x1.5))', mlo:40, mhi:100, mdef:76,
+ rcK:1.5, crK:0.6, crewK:0, unit:'', priced:true, ground:true, kind:'train',
+ mbase:40, mcoef:1.5, moff:0,
+ noun:['Discipline','Fervour','Fury'], desc:'A unit\'s temperament under fire - how steady it holds and how hard it hits when it commits. A green levy routs early; a fanatic cadre never breaks and surges on the charge.', why:' <b>PROPOSED - the psychology half of the frozen-unit gap, and it does NOT write a live variable yet.</b> A Pulsar unit today has <b>no morale field</b> - it is whole-or-dead and never routs, rages or breaks (grep of GroundCombat for morale/fury/suppress returns nothing). This template is the SPEC for what the engine must add: a per-unit morale state with a rout threshold, a triggerable surge (fury-on-charge), and a permanent flag (fearless / berserk). <b>Blocked on the same missing model as self-repair</b> - kept here so the shape is designed, marked so nobody ships it as a dead knob.',
+ buys:'a per-unit morale/behaviour state - PROPOSED, engine-pending',
+ gate:'any crewed unit', denies:'nothing - it stands alone'}
 };
 // every magnitude template keeps kind:'mag'
 // the LOCKED 6 decomposition - Bio-augmentation - Training/Doctrine - Systems.
@@ -483,7 +492,7 @@ const ENH = {
 // "Magnitude" is a SHARED DIAL in 6.0, not a door, and Threshold/Endurance are
 // Defense > Hardening 5.3. Corrected - see the note in.)
 ENH.carry.kind='bio'; ENH.dodge.kind='bio'; ENH.shield.kind='bio';
-ENH.caliber.kind='train'; ENH.training.kind='train';
+ENH.caliber.kind='train'; ENH.training.kind='train'; ENH.fury.kind='train';
 ENH.crew.kind='sys'; ENH.fieldrep.kind='sys'; ENH.iface.kind='sys';
 ENH.training.mbase=50; ENH.training.mcoef=4; ENH.training.moff=1;
 const FRAME_CARRY = 100; // the human frame\'s BaseStrength
@@ -609,6 +618,12 @@ function render(){
  thirdL = 'Structure regained per day';
  thirdV = pd<=0? ' none - damage is permanent until a yard': pd.toFixed(1)+'% - but BLOCKED: no damaged state to act on (whole-or-dead)';
  thirdC = pd<=0? 'r': 'a';
+ } else if(job==='fury'){
+ // Steadiness/fury - a baseline temperament, but the state it sets does not exist yet (no morale field),
+ // so it is PROPOSED. capv 0->1 reads as "how far from a green levy to a fanatic cadre".
+ thirdL = 'Rout resistance / charge surge';
+ thirdV = capv<=0? ' none - a green levy that breaks early': (capv*100).toFixed(0)+'% steadier - but PROPOSED: no morale state to set yet (whole-or-dead, never routs)';
+ thirdC = capv<=0? 'r': 'a';
  } else {
  thirdL = fixed?'Capability per tonne - priced':'Capability per tonne';
  const per = capv/(mass/1000);
@@ -707,6 +722,9 @@ function render(){
  } else if(job==='fieldrep'){
  note = ' <b>Self-repair - structure regained without returning to a yard.</b> Priced already: <code>Mass = 45 x (1 + rate x 2.8)</code>. It does not raise a stat; it makes damage <b>temporary</b>.';
  verdict = ' <b>The one enhancer this door cannot ship yet</b> - not because the dial is wrong but because the thing it acts on does not exist. A Pulsar unit is <b>whole-or-dead</b>; there is no damaged state for a repair rate to chew on. The Enhancers half of hole <b>H2</b>, blocked on the parked degraded-condition model. When per-component condition lands, this is the hero-ship survivability rung.';
+ } else if(job==='fury'){
+ note = ' <b>A temperament stamped at design time - the training-door twin of self-repair.</b> Priced like the training cadre: <code>Mass = 40 x (1 + steadiness x 1.5)</code> - a fanatic cadre carries the indoctrination weight a green levy does not. But where the other training templates raise a NUMBER on the sheet, this one sets a BEHAVIOUR the sheet has no column for yet.';
+ verdict = ' <b>The psychology half of the frozen-unit gap - and the second enhancer this door cannot ship yet.</b> A Pulsar unit today has <b>no morale field</b>: it is whole-or-dead and never routs, rages or surges (a grep of GroundCombat for morale / fury / suppress returns nothing). The dial is right; the state it would set does not exist. This is the SPEC for what the engine must add - a per-unit morale state with a rout threshold, a triggerable charge-surge and a permanent flag (fearless / berserk) - kept here, marked <b>PROPOSED</b>, so nobody ships it as a dead knob. It waits on the same whole-or-dead ruling self-repair does.';
  } else {
  note = ' <b>The second template that already charges.</b> <code>Mass = 40 x (1 + Sealing x 1.5)</code> - a fully sealed suit weighs 100 kg against an unsealed 40 kg, and research and credits follow from mass. <b>No separate mass dial.</b>';
  verdict = ' <b>And it flags its own curve too:</b> <em>"Sealing fraction + cost curve are FLAGGED balance values."</em> Two of the eight templates in this door were written by someone applying the rule this campaign has been deriving - and both left a note saying which numbers they were unsure about. <b>That is the standard.</b>';

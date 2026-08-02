@@ -290,7 +290,8 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 <button class="gchip" type="button" data-g="ordnance" aria-pressed="false" title="CargoTypeID = ordnance-storage. Read by the missile launcher. Pick 'Both' with this to see the negative-storage bug.">Ordnance</button>
 <button class="gchip" type="button" data-g="ammo" aria-pressed="false" title="CargoTypeID = ammo. Read by the resolver's dry-magazine gate. The only honest cost chain in the door.">Ammo</button>
 <button class="gchip" type="button" data-g="troops" aria-pressed="false" title="Troop bay. Read by GroundTransport — the invasion chain. Its Mass is a hard-coded constant.">Troops</button>
-<button class="gchip" type="button" data-g="people" aria-pressed="false" title="NEW: passenger-storage or cryogenic-storage. Carries colonists — and nothing in the engine can read them, which is why you cannot colonise.">★ Colonists</button></div>
+<button class="gchip" type="button" data-g="people" aria-pressed="false" title="NEW: passenger-storage or cryogenic-storage. Carries colonists — and nothing in the engine can read them, which is why you cannot colonise.">★ Colonists</button>
+<button class="gchip" type="button" data-g="strike" aria-pressed="false" title="🆕 The BERTH class: strikecraft-bay. Holds whole craft (a docked ship is ICargoable) — pick 'Both' to add the LAUNCH mover. The store works today; the launch verb is engine-pending (ParasiteLauncherReady fires nothing, DockTools has no game caller).">🆕 Craft — a berth</button></div>
 <p class="sub" id="gnote" style="margin:9px 0 0"></p>
 <div id="packsec" style="display:none;margin-top:13px">
 <p class="blab">②b How are they carried — awake, or frozen?</p>
@@ -679,7 +680,11 @@ const TYPE = {
   // ── NEW 2026-07-30 · the two people-compartments, verbatim from storage.json ──
   people:   {store:'passenger-storage', unit:'m³',   lo:10,   hi:10000,  def:500,    massK:4.0,  crewK:0.4, bp:6.0, cr:0.3,  rc:0,
              noun:['Cabin','Passenger Deck','Colony Module'],
-             consumer:'🔴 NOTHING — no system reads colonists', per:'people per t'}
+             consumer:'🔴 NOTHING — no system reads colonists', per:'people per t'},
+  // ── NEW · the BERTH class from the taxonomy below, wired into the panel: a store of craft that also LAUNCHES them ──
+  strike:   {store:'strikecraft-bay',   unit:'m³',   lo:500,  hi:1000000,def:12000,  massK:1.6,  crewK:0.2, bp:3.0, cr:0.25, rc:0.5,
+             noun:['Launch Cradle','Strike Bay','Flight Deck'],
+             consumer:'⚠ ENGINE-PENDING launch — a docked craft is ICargoable (ShipDesign), so the STORE holds it; the LAUNCH verb has no game caller (ParasiteLauncherReady fires nothing, DockTools unused)', per:'m³ per t'}
 };
 // passenger-cabin  Mass = SizeEff*400  Crew = Max(2, SizeEff*0.4)   Credit *0.3   BP *6.0   berth 10 m³
 // cryo-bay         Mass = SizeEff*300  Crew = Max(1, SizeEff*0.05)  Credit *0.35  BP *6.5   pod    2 m³
@@ -726,6 +731,7 @@ const STOCK={ general:{d1:Math.round(unmap(1000,10,10000))}, fuel:{d1:Math.round
               ordnance:{d1:Math.round(unmap(2627,100,1000000)), d2:12}, ammo:{d1:Math.round(unmap(5000,100,100000))},
               troops:{d1:Math.round(unmap(6,1,60))},
               people:{d1:Math.round(unmap(500,10,10000))},
+              strike:{d1:Math.round(unmap(12000,500,1000000)), d2:12},
               move:{d1:Math.round(unmap(5000,2000,200000)), d2:12} };
 
 function render(){
@@ -817,7 +823,10 @@ function render(){
                     : '0  of '+carried.toLocaleString()+'  ◄ nothing can unload them';
      thirdC = fixed ? 'g' : 'r';
    }
-   if(typ==='fuel'){
+   if(typ==='strike'){
+     note = '⚠️ <b>The store half WORKS today; the launch half does not.</b> A whole craft is <code>ICargoable</code> (<code>ShipDesign</code>), so a compartment of type <code>strikecraft-bay</code> holds one the same way a hold holds ore — this is the <b>Berth class</b> in the taxonomy below, and it needs no new engine code. What is missing is the verb that gets a craft back OUT: pick <b>Both</b> to add the launch mover, and note that <code>ParasiteLauncherReady</code> is an event the engine <b>defines and never fires</b>, with <code>DockTools</code> holding the docking machinery but <b>no game caller</b>. So a loaded bay just sits there.';
+     verdict = '🔴 <b>The carrier gap in one line: the hangar is a solved store, the launch is an unbuilt verb.</b> This is slice #2 (Berth) crossed with slice #3 (a generic power draw) — the store rides the existing two-argument <code>CargoStorageAtb</code> (no constructor overload, no save-load risk — landmine L13), but the mover needs a game caller for <code>ParasiteLauncherReady</code> and a strike-craft-as-sub-fleet resolver before a launched wing can fight. Kept here, marked <b>ENGINE-PENDING</b>, so the compartment is designable now and nobody ships a launch button that does nothing.';
+   } else if(typ==='fuel'){
      note = '✅ <b>The best-authored template in this door.</b> You set the volume you want; it solves the radius, then computes the mass of the <b>4 mm steel shell</b> needed to contain it — <code>1.333π(r³ − (r−0.004)³) × 8000</code>. A bigger tank costs more steel for a physical reason, and <b>nobody mans a tank</b> (crew 0). 🔴 Its twin <code>fuel-cargo-hold</code> sets crew to the tank’s VOLUME — <b>65 billion people</b> — and is unlocked on Earth.';
      verdict = '✅ <b>Copy this and delete the other one.</b> Four shipped designs ride this template (1,000 / 1,500 / 3,000 m³ and a 5,000 km³ fuel farm); zero ride the broken twin.';
    } else if(typ==='ammo'){
@@ -914,14 +923,23 @@ function render(){
  mk('k_m1','sim','reaches the sim');
  mk('k_m2','calc','comparison only');
  mk('k_m3','chk','design check');
- mk('k_m4', (typ==='people' && job!=='move' && !fixed) ? 'dead' : 'sim',
-            (typ==='people' && job!=='move' && !fixed) ? 'NOTHING reads it' : 'reaches the sim');
+ mk('k_m4', (typ==='people' && job!=='move' && !fixed) ? 'dead'
+            : typ==='strike' ? 'chk'
+            : 'sim',
+            (typ==='people' && job!=='move' && !fixed) ? 'NOTHING reads it'
+            : typ==='strike' ? (job==='hold' ? 'store reads · launch pending' : 'launch — no caller yet')
+            : 'reaches the sim');
  set('l_m4','Its consumer');
  if(typ==='people' && job!=='move'){
    set('m_4', fixed?'ColonyInfoDB.Population':'🔴 NOTHING');
    set('s_m4', fixed?'proposed: unload ADDS population — slice C1'
                     :'no additive population path exists in the engine');
    $('m_4').parentElement.className='mt '+(fixed?'g':'r');
+ } else if(typ==='strike'){
+   set('m_4', job==='hold' ? 'strikecraft-bay' : '⚠ ParasiteLauncherReady');
+   set('s_m4', job==='hold' ? 'the STORE reads it (a docked craft is ICargoable) — the launch verb does not'
+                            : 'ENGINE-PENDING: the event exists but nothing fires it, and DockTools has no game caller');
+   $('m_4').parentElement.className='mt a';
  } else {
    set('m_4', job==='move'?'cargo xfer':(TYPE[typ]?TYPE[typ].store:''));
    set('s_m4', job==='move'?'the logistics + transfer orders':(TYPE[typ]?TYPE[typ].consumer:''));

@@ -34,10 +34,12 @@ CONNECTED WHOLE on paper, or find every place it does not.
 
 ── HARD RULES ──────────────────────────────────────────────────────────────────────────────────────
 - The subject is the ELEVEN door designers in "docs/Actual HTMLs Of designers/" (note the spaces in
-  the path): weapons + defense (the two long descriptive filenames), and chassisderived, civicderived,
+  the path): weaponsderived, defensederived, chassisderived, civicderived,
   commandderived, enhancersderived, industrialderived, logisticalderived, powerderived,
   propulsionderived, sensorsderived (.html), plus the logisticaldesigner20260730 snapshot for
-  reference. These files are the developer's locked standard. DO NOT EDIT ANY OF THEM. Ever.
+  reference. These files were the developer's locked standard **for the duration of this audit** — the
+  audit was read-only w.r.t. them. DO NOT EDIT ANY OF THEM *during an audit run*. (Post-audit, the
+  developer explicitly authorized follow-on edits — see the STATE addendum dated 2026-08-02.)
 - DO NOT modify ANY file under Pulsar4X/ — no engine code, no JSON data, no tests. The entire point
   is to find design problems BEFORE code is written. You are read-only everywhere except
   docs/designers-audit/ (and the required DOCS-INDEX.md row updates).
@@ -122,8 +124,8 @@ Path (note the spaces): `docs/Actual HTMLs Of designers/`
 
 | Door | File |
 |------|------|
-| Weapons | `Weapons, re-derived — two choices and four sliders.html` |
-| Defense | `Defense, re-derived — the four layers.html` |
+| Weapons | `weaponsderived.html` |
+| Defense | `defensederived.html` |
 | Chassis | `chassisderived.html` |
 | Civic | `civicderived.html` |
 | Command | `commandderived.html` |
@@ -134,6 +136,11 @@ Path (note the spaces): `docs/Actual HTMLs Of designers/`
 | Propulsion | `propulsionderived.html` |
 | Sensors | `sensorsderived.html` |
 | *(reference snapshot)* | `logisticaldesigner20260730.html` |
+| *(NEW — proposed 12th door, post-audit)* | `auraderived.html` |
+
+> **Filename note (2026-08-02):** Weapons and Defense were rebuilt as editable single-file
+> `weaponsderived.html` / `defensederived.html` (the two long-named compiled saved-artifacts + their
+> `_files/` folders were deleted). Table repointed to match disk.
 
 Method doc: `docs/economy/DESIGNER-NORTH-STAR.md`. Blueprint: `docs/economy/COMPONENT-DESIGNER-DIALS.md`.
 Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLAUDE.md`.
@@ -177,6 +184,34 @@ Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLA
 - All five simulations run + issues dispositioned (05). ✓
 - Six open developer rulings collected (06 §R1-R6); one NEW (T1/R1: what capture transfers). ✓
 - DOCS-INDEX rows added for all new docs (06 commit). ✓
+
+---
+
+## ADDENDUM — post-audit designer edits (2026-08-02, developer-authorized)
+
+The audit was read-only w.r.t. the designers. **After it completed, the developer explicitly authorized
+editing the designer HTMLs** to add the small missing surface the franchise litmus builds (Blood Angels
+marine, Venator) exposed — *"just edit the Applicable designers … Its ok just do it."* Three edits landed,
+each following the North-Star method and the existing "proposed / engine-pending" convention (nothing
+shipped as a dead knob):
+
+1. **Enhancers ▸ `enhancersderived.html`** — added the **Steadiness / fury** template (Advanced Training
+   kind). A design-time temperament dial. Marked **PROPOSED / engine-pending**: it writes a per-unit
+   morale state the engine does not have yet (grep of GroundCombat for morale/fury/suppress returns
+   nothing) — the psychology half of the frozen-unit gap, blocked on the same missing state as self-repair.
+2. **Logistical ▸ `logisticalderived.html`** — wired the already-documented **Berth class** into the live
+   panel as a **Craft — a berth** cargo type (`strikecraft-bay`). The **store half works today** (a docked
+   craft is `ICargoable`); the **launch half is engine-pending** (`ParasiteLauncherReady` fires nothing,
+   `DockTools` has no game caller). This is the Venator's carrier-launch signature, honestly split.
+3. **NEW ▸ `auraderived.html`** — a **proposed 12th door, "projected effects."** An aura acts on OTHER
+   units, so it fails the Enhancers thesis ("a multiplier on a stat the unit already has") and earns its
+   own door: one forced choice (Rally / Dread / Command / Jamming / Ward) + a target choice
+   (friend/foe/all) + two dials (strength, radius). **The whole door is a SPEC** — the engine has no aura
+   pass, and four of five effects write a variable that does not exist (no morale field). **Jamming is the
+   exception** (its target variable — detection range — is real), so it is the one that ships first.
+
+All three verified to render (node --check + DOM-stub harness driving every branch). No engine code, JSON,
+or tests were touched.
 
 ## KEY PHASE-5 FINDINGS (carry forward)
 - **The through-line of all 5 sims: the game is BUILT BUT UNLIT.** Mechanical chains are astonishingly complete
