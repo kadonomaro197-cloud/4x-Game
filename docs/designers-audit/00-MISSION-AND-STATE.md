@@ -36,8 +36,9 @@ CONNECTED WHOLE on paper, or find every place it does not.
 - The subject is the ELEVEN door designers in "docs/Actual HTMLs Of designers/" (note the spaces in
   the path): weaponsderived, defensederived, chassisderived, civicderived,
   commandderived, enhancersderived, industrialderived, logisticalderived, powerderived,
-  propulsionderived, sensorsderived (.html), plus the logisticaldesigner20260730 snapshot for
-  reference. These files were the developer's locked standard **for the duration of this audit** — the
+  propulsionderived, sensorsderived (.html). (A logisticaldesigner20260730 frozen snapshot existed during
+  the audit as a reference copy; it was deleted post-audit at the developer's request.)
+  These files were the developer's locked standard **for the duration of this audit** — the
   audit was read-only w.r.t. them. DO NOT EDIT ANY OF THEM *during an audit run*. (Post-audit, the
   developer explicitly authorized follow-on edits — see the STATE addendum dated 2026-08-02.)
 - DO NOT modify ANY file under Pulsar4X/ — no engine code, no JSON data, no tests. The entire point
@@ -135,12 +136,12 @@ Path (note the spaces): `docs/Actual HTMLs Of designers/`
 | Power | `powerderived.html` |
 | Propulsion | `propulsionderived.html` |
 | Sensors | `sensorsderived.html` |
-| *(reference snapshot)* | `logisticaldesigner20260730.html` |
 | *(NEW — proposed 12th door, post-audit)* | `auraderived.html` |
 
 > **Filename note (2026-08-02):** Weapons and Defense were rebuilt as editable single-file
 > `weaponsderived.html` / `defensederived.html` (the two long-named compiled saved-artifacts + their
-> `_files/` folders were deleted). Table repointed to match disk.
+> `_files/` folders were deleted). The `logisticaldesigner20260730.html` frozen snapshot was also deleted
+> at the developer's request, leaving **12 files = 12 doors** on disk. Table repointed to match.
 
 Method doc: `docs/economy/DESIGNER-NORTH-STAR.md`. Blueprint: `docs/economy/COMPONENT-DESIGNER-DIALS.md`.
 Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLAUDE.md`.
