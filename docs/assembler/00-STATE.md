@@ -55,7 +55,9 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
   - command: **CORRECTED** — grid is 27 filled / 5 blank (census said 21/11, was backwards)
   - industrial: engine cross-ref — lab `Cost Per Day` IS read (`ResearchPointsAtbDB.cs:71`), not dead
   - enhancers, logistical: no corrections
-- [ ] 2.3 verify power + propulsion + sensors + aura
+- [x] 2.3 verify power + propulsion + sensors + aura (all: no corrections)
+  - **PHASE 2 COMPLETE** — 11/12 no corrections; command CORRECTED (27/5 grid);
+    industrial engine cross-ref (Cost Per Day is live). All 12 have VERIFIED blocks.
 
 ### PHASE 3 — master I/O matrix (`02-IO-MATRIX.md`)
 - [ ] 3.1 Table A (every sim-reaching variable), Table B (cross-door wires), Table C (Assembler input contract)

@@ -64,3 +64,14 @@ The shape is **two forced choices plus two sliders**: choice 1 picks *what the f
 - **Two effects named but deliberately absent from the five buttons:** a **healing / repair field** is ⚠ HELD BACK (blocked on the whole-or-dead ruling, like field repair), and a **permanent "presence" that never moves or dies** is 🚫 REFUSED (fails cradle-to-grave — un-researchable/un-buildable/un-losable). Neither is a control; both are in the science-fiction cross-check table as stated exclusions.
 - **Emergent vs dial boundary is explicit:** strength, radius, and target pass the intrinsic test (settable knowing only the projector) so they are legitimate dials; **units affected** depends on who is standing in the radius, so it is an emergent readout (`DENSITY=1/40000` is labelled "illustrative … EMERGENT, not a dial").
 - **Mass** here is labelled "illustrative cost" (`strengthFrac*400 + areaKm*600`, floor 20 kg). It is a computed comparison figure in this panel, not asserted as writing a real component-mass sim field — treat any downstream use as unverified.
+
+## VERIFIED (Phase 2 — personal pass, 2026-08-02)
+Checked the census against `auraderived.html` source (a file I authored this session).
+- **Confirmed:** init `let eff='rally', tgt='friends'` (`:300`); constants `RAD_LO=50, RAD_HI=5000` (`:262`), `DENSITY=1/40000` (`:263`). EFFECT read-values exact: rally `read:'no'` (`:269`), fear `read:'no'` (`:274`), command `read:'partial'` (`:279`), jamming `read:'yes'` (`:284`), ward `read:'partial'` (`:289`). Mass `Math.max(20, strengthFrac*400 + areaKm*600)` (`:330`). Sliders str=**45** (`:152`), rad=**40** (`:153`).
+- **No corrections.** The whole door is a SPEC/engine-pending, correctly recorded. For the Assembler, this is a **fully engine-pending input** — it needs the aura pass (a per-tick neighbour sweep) before any of it reaches the sim, and four of five effects also need the (nonexistent) morale field. Jamming is the one effect whose target variable (detection range) already exists. The Assembler must present the aura projector as a mountable component whose effect is projected, but flag every projected output as pending.
+
+---
+### Phase 2 CLOSE-OUT (all 12 doors verified)
+- **11 of 12: no corrections** (weapons, defense, chassis, civic, enhancers, industrial, logistical, power, propulsion, sensors, aura).
+- **1 correction (command):** the seat grid is **27 filled / 5 blank**, not the census's original "21 / 11" (which was backwards) — `P_ROLES` holds 27 keys, `buildGrid()` renders "27 seats - 5 blanks - 32 cells".
+- **1 engine cross-reference (industrial):** the lab's `Cost Per Day`, which the HTML calls dead, **is** read (`ResearchPointsAtbDB.cs:71` → `ResearcherDB.CostPerDay`) — build-state should read *live* in the matrix.
