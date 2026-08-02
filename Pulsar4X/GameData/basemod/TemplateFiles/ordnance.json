@@ -308,7 +308,8 @@
         "BuildPointCost": "[Mass]"
       },
       "ResourceCost": {
-        "gallicite": "[Mass] * 8"
+        "electronics": "[Mass] * 0.6",
+        "aluminium": "[Mass] * 0.4"
       },
       "ComponentType": "Sensor",
       "MountType": "Missile",
@@ -451,8 +452,8 @@
         "BuildPointCost": "[Mass]"
       },
       "ResourceCost": {
-        "duranium": "60",
-        "mercassium": "60"
+        "stainless-steel": "60",
+        "aluminium": "60"
       },
       "ComponentType": "Cargo Hold",
       "MountType": "ShipComponent, ShipCargo, PlanetInstallation",

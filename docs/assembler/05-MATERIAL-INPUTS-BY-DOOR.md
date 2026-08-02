@@ -12,7 +12,7 @@
 ## THE COMPLETE INPUT TAXONOMY (the summary — detail in the parts below)
 | # | Input | When | Provided / charged? |
 |---|---|---|---|
-| 1 | **Materials** (minerals + refined) | build | ✅ 11/12 doors; only 3 ordnance minerals undefined (PART 1) |
+| 1 | **Materials** (minerals + refined) | build | ✅ **ALL 12 doors** — the 3 undefined ordnance minerals were **FIXED 2026-08-02** (redirected to electronics/steel/aluminium; see PART 1) |
 | 2 | **People / crew** (workforce) | build + run | ✅ supplied (population → pool); the *scarce* input; 3 accounting gaps (PART 2) |
 | 3 | **Build points** (industry capacity → time) | build | ✅ every component; needs the right factory |
 | 4 | **Credits** (money) | build | ✅ every component |
@@ -42,12 +42,17 @@ own / free to run" problem (Problem 2), and some of it has since been closed (gr
 
 ## THE HEADLINE
 
-**11 of the 12 doors: every material input is PROVIDED.** ✅
-**1 door (the missile/ordnance chain): 3 undefined inputs.** 🔴 — `gallicite`, `duranium`, `mercassium`.
+**ALL 12 doors: every material input is PROVIDED.** ✅ *(as of the 2026-08-02 ordnance fix)*
 
-That's the whole finding. The base-mod economy is closed and consistent — almost every component is built from
-a small, shared set of minerals and materials that are all mineable/refinable — **except three phantom minerals
-referenced only by ordnance components**, which are defined nowhere and fault the build.
+The base-mod economy is closed and consistent — every component is built from a small, shared set of minerals
+and materials that are all mineable/refinable. The three phantom minerals that used to fault the ordnance build
+(`gallicite`, `duranium`, `mercassium`) were **redirected to already-provided materials** — a verified scan now
+finds **zero** undefined component-cost references anywhere in the game.
+
+> **FIXED 2026-08-02:** `gallicite` → `electronics` + `aluminium` (the Missile Electronics Suite is an
+> electronics part); `duranium`/`mercassium` → `stainless-steel` + `aluminium` (Ordnance Storage is a metal
+> rack). Both now cost materials the game already provides. Gauge: `BaseModIntegrityTests`. The per-door lists
+> below still show the *pre-fix* undefined entries with a ✅ FIXED note so the history is visible.
 
 Legend: **(M)** = a mined mineral · **(R)** = a refined material (its recipe is shown to close the loop) ·
 **🔴** = undefined, the game cannot provide it.
@@ -56,19 +61,15 @@ Legend: **(M)** = a mined mineral · **(R)** = a refined material (its recipe is
 
 ## THE LIST, BY DOOR
 
-### 🔴 Weapons — 16 components — **1 UNDEFINED**
+### ✅ Weapons — 16 components — *(was 1 undefined; FIXED 2026-08-02)*
 | Input | Provided? |
 |---|---|
-| aluminium | (M) |
-| copper | (M) |
-| graphite | (M) |
-| titanium | (M) |
-| tungsten | (M) |
+| aluminium · copper · graphite · titanium · tungsten | (M) |
 | stainless-steel | (R) iron + chromium + hydrocarbons |
 | plastic | (R) hydrocarbons |
 | electronics | (R) copper + plastic + aluminium + silicon |
 | ree-magnetics | (R) rare-earth-elements + iron |
-| **gallicite** | **🔴 UNDEFINED** — on *Missile Electronics Suite* (`ordnance.json`) |
+| ~~gallicite~~ → electronics + aluminium | ✅ **FIXED** — Missile Electronics Suite now costs provided materials |
 
 ### ✅ Defense — 10 components — all provided
 aluminium (M) · copper (M) · stainless-steel (R). *(Composite/Ablative/Reactive plating, shields, hardening,
@@ -93,14 +94,13 @@ NTP drives + ground locomotion.)*
 aluminium (M) · copper (M) · titanium (M) · stainless-steel (R) · plastic (R) · electronics (R). *(Passive
 sensor, fire control, jammer, cloak, surveyors, ground radar, hardening.)*
 
-### 🔴 Logistical — 17 components — **2 UNDEFINED**
+### ✅ Logistical — 17 components — *(was 2 undefined; FIXED 2026-08-02)*
 | Input | Provided? |
 |---|---|
 | aluminium, copper, iron, titanium, tungsten | (M) |
 | stainless-steel, plastic, electronics | (R) |
-| **duranium** | **🔴 UNDEFINED** — on *Ordnance Storage* (`ordnance.json`) |
-| **mercassium** | **🔴 UNDEFINED** — on *Ordnance Storage* (`ordnance.json`) |
-*(All the cargo holds, fuel tanks, magazines, troop bays, docking — fully provided EXCEPT the ordnance store.)*
+| ~~duranium~~ + ~~mercassium~~ → stainless-steel + aluminium | ✅ **FIXED** — Ordnance Storage now costs provided metals |
+*(All the cargo holds, fuel tanks, magazines, troop bays, docking — now fully provided.)*
 
 ### ✅ Industrial — 11 components — all provided
 aluminium (M) · copper (M) · iron (M) · graphite (M) · nickel (M) · silicon (M) · titanium (M) · tungsten (M) ·
@@ -125,21 +125,23 @@ electronics + metals chain (all provided).
 
 ---
 
-## THE THREE THAT AREN'T PROVIDED (the only failures)
+## THE THREE THAT WEREN'T PROVIDED — ✅ FIXED 2026-08-02
 
-All three are **Aurora-4X mineral names** referenced by ordnance components but **never defined** in Pulsar's
-mineral or material lists — so a build of these designs faults in `ConsumeResources` ("Cant build from non
-ICargoable Items"):
+All three were **Aurora-4X mineral names** referenced by ordnance components but **never defined** in Pulsar's
+mineral or material lists — so a build of those designs faulted in `ConsumeResources` ("Cant build from non
+ICargoable Items"). **Now redirected to already-provided materials:**
 
-| Undefined input | On this component | File |
+| Was (undefined) | On this component | Now costs |
 |---|---|---|
-| `gallicite` | Missile Electronics Suite | `ordnance.json` |
-| `duranium` | Ordnance Storage | `ordnance.json` |
-| `mercassium` | Ordnance Storage | `ordnance.json` |
+| `gallicite` | Missile Electronics Suite | `electronics` [Mass]×0.6 + `aluminium` [Mass]×0.4 |
+| `duranium` + `mercassium` | Ordnance Storage | `stainless-steel` 60 + `aluminium` 60 |
 
-**The fix (from `03-RESOURCE-LEDGER.md`, NEW-1):** replace these three references with the buildable munitions
-chain — a missile costs `explosive-compound` (hydrocarbons + fissionables + copper) + `electronics` +
-`stainless-steel`. That closes the last open chain in the game. `BaseModIntegrityTests` is the gauge.
+Both now cost materials the game already provides, matching what analogous components cost (an electronics suite
+costs electronics; a cargo rack costs steel + aluminium). A verified scan finds **zero** undefined
+component-cost references remaining. `BaseModIntegrityTests` is the gauge that confirms it on CI.
+*(A richer optional version — a dedicated `explosive-compound` munitions chain — is designed in
+`03-RESOURCE-LEDGER.md` NEW-1 if the developer wants warheads to pull on the gas-giant economy; the redirect
+above is the minimal safe fix.)*
 
 ---
 
@@ -248,8 +250,12 @@ draw, no ship upkeep, and population that eats nothing by default.**
   research, the right factory — with the single exception of the 3 undefined ordnance minerals.
 - **Run inputs (7–13): mostly built** — power (weapons/warp), fuel, ammo, ground+station upkeep, the mass budget,
   and infrastructure all bite today. **Three stay "free":** no generic component power draw, no ship upkeep, and
-  no per-capita food. Those, plus the 3 ordnance minerals and the 3 people-accounting wires, are the complete
-  list of places a component's input chain doesn't yet close.
+  no per-capita food.
+- **Progress (2026-08-02):** the 3 ordnance-mineral gaps are now **FIXED** (a data redirect — every component
+  cost resolves). The remaining open items are **6, all engine-side:** the 3 people-accounting wires (employment
+  producer, recruitment scarcity, colonist delivery) + the 3 run-time "free" gaps (generic power draw, ship
+  upkeep, per-capita food) — each an engine change requiring the CI build-loop one slice at a time, and three of
+  them (food amount, recruitment model, ship-upkeep policy) needing a developer balance ruling.
 
 *Companion to `03-RESOURCE-LEDGER.md` (material supply/demand/gaps) and `04-ACQUISITION-MAP.md` (how you get each
 one). This file is the direct per-door provision check for the COMPLETE input surface — everything a component

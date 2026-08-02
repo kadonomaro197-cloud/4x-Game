@@ -151,8 +151,10 @@ chain, and it retires the one undefined reference in the whole game.
   the ammunition/explosive chain above (a missile costs `explosive-compound` + a guidance `electronics` +
   `stainless-steel` body). **Alternative** if the Aurora names are wanted: define them as new minerals with
   abundance profiles — but that adds three minerals for a handful of references, so redirecting to the buildable
-  chain is cleaner and cradle-to-grave. Status: **NEW (near-term); all three are live latent bugs — a missile
-  build faults on them; `BaseModIntegrityTests` is the gauge.**
+  chain is cleaner and cradle-to-grave. Status: ✅ **FIXED 2026-08-02** — the minimal safe redirect landed
+  (`gallicite` → electronics + aluminium; `duranium`/`mercassium` → stainless-steel + aluminium), so every
+  component cost now resolves. The richer `explosive-compound` chain above remains available as optional depth.
+  `BaseModIntegrityTests` is the gauge.
 
 ### NEW-2 · Biomass — the biology chain (grown, not mined)
 - **`biomass`** — *raw living matter: the feedstock the organic economy runs on.* Unlike every other resource it
