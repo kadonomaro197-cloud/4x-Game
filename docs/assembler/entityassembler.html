@@ -139,6 +139,7 @@ h2{margin:0;font-size:15px;letter-spacing:.02em}
 .gauge b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:4px;color:var(--ac2)}
 .gauge s{display:block;text-decoration:none;font:10px/1.3 ui-monospace,Menlo,monospace;color:var(--ink3);margin-top:2px}
 .gauge.muted b{color:var(--ink3)}
+.gauge.warnb b{color:var(--warn)} .gauge.okb b{color:var(--ok)}
 
 /* weapon profiles — the hero */
 .wp{border:1px solid var(--rule2);border-radius:8px;overflow:hidden;margin-bottom:10px}
@@ -163,6 +164,8 @@ h2{margin:0;font-size:15px;letter-spacing:.02em}
 .rngrow .rn em{font-style:normal;color:var(--ink3);font-size:10px}
 .rngtrack{height:9px;background:var(--card3);border:1px solid var(--rule2);border-radius:5px;overflow:hidden}
 .rngbar{height:100%;background:var(--ac);border-radius:5px;transition:width .18s ease}
+.rngbar.det{background:var(--ink3);opacity:.55}
+.rngrow.detrow .rn{color:var(--ink3)} .rngrow.detrow .rngv{color:var(--ink3)}
 .rngv{font:11px/1 ui-monospace,Menlo,monospace;color:var(--ac2);font-variant-numeric:tabular-nums;text-align:right}
 .rngscale{display:grid;grid-template-columns:130px 1fr 62px;gap:10px;margin-top:2px}
 .rngticks{grid-column:2;display:flex;justify-content:space-between;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3)}
@@ -239,6 +242,16 @@ footer{padding:6px 0 60px}
     </div>
 
     <div class="panel">
+      <div class="phead"><h2>Mobility &amp; FTL</h2><span class="sub" id="mobsub">can it get there?</span></div>
+      <div class="pbody"><div class="gauges" id="mobility"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Endurance</h2><span class="sub">can it stay in the fight?</span></div>
+      <div class="pbody"><div class="gauges" id="endurance"></div><p class="note" id="endNote" style="margin:12px 0 0"></p></div>
+    </div>
+
+    <div class="panel">
       <div class="phead"><h2>Weapon profiles</h2><span class="sub" id="wpsub">the host split, live</span></div>
       <div class="pbody" id="weapons"></div>
     </div>
@@ -310,32 +323,32 @@ var HOSTORDER=['ship','ground','station'];
    host output behaviour is encoded in weapon.fields[] state per host below. */
 var CAT=[
  {id:'railgun',cat:'Weapons',name:'Railgun Battery',hosts:['ship','ground'],
-   mass:120,vol:42,crew:6,hp:24,draw:2,supply:0,
+   mass:120,vol:42,crew:6,hp:24,draw:2,supply:0,ammoUse:1.2,
    weapon:{dps:46,nature:'Kinetic',delivery:'Projectile',pen:9,pershot:1.8,rate:26,range:80,vel:9000,track:0.55,ammo:true,pd:false},
    cost:{bp:180,cr:12,rp:2,steel:96,elec:14},
    honesty:'Kinetic → drains the ammo pool. Penetration/per-shot LIVE on ground, INERT on ship.'},
  {id:'laser',cat:'Weapons',name:'Laser Cannon',hosts:['ship','ground'],
-   mass:80,vol:26,crew:4,hp:18,draw:8,supply:0,
+   mass:80,vol:26,crew:4,hp:18,draw:8,supply:0,heat:6,
    weapon:{dps:31,nature:'Energy',delivery:'Beam',pen:0,pershot:0.9,rate:34,range:60,vel:299792,track:0.72,ammo:false,pd:false},
    cost:{bp:150,cr:16,rp:3,steel:40,elec:34},
    honesty:'Energy → runs on reactor power, no ammo. Adds heat (a live throttle on ships).'},
  {id:'missile',cat:'Weapons',name:'Missile Launcher',hosts:['ship','ground'],
-   mass:100,vol:60,crew:5,hp:20,draw:1,supply:0,
+   mass:100,vol:60,crew:5,hp:20,draw:1,supply:0,ammoUse:3.0,
    weapon:{dps:58,nature:'Explosive',delivery:'Guided',pen:4,pershot:6.0,rate:1.2,range:400,vel:14000,track:0.9,ammo:true,pd:false},
    cost:{bp:200,cr:20,rp:4,steel:70,elec:40},
    honesty:'Guided → the ONLY weapon point-defence can shoot down (a ship-only reader).'},
  {id:'plasma',cat:'Weapons',name:'Plasma Bolt Projector',hosts:['ship','ground'],
-   mass:92,vol:34,crew:4,hp:19,draw:6,supply:0,
+   mass:92,vol:34,crew:4,hp:19,draw:6,supply:0,heat:7,
    weapon:{dps:40,nature:'Energy',delivery:'Bolt',pen:2,pershot:2.4,rate:16,range:55,vel:40000,track:0.6,ammo:false,pd:false},
    cost:{bp:170,cr:18,rp:5,steel:44,elec:38},
    honesty:'Teaching case: the door LABELS a bolt "ammo", but the engine reads its NATURE (Energy) → it runs on POWER, drains no ammo.'},
  {id:'heavyturbo',cat:'Weapons',name:'Heavy Turbolaser Battery',hosts:['ship','station'],
-   mass:340,vol:120,crew:22,hp:42,draw:26,supply:0,
+   mass:340,vol:120,crew:22,hp:42,draw:26,supply:0,heat:20,
    weapon:{dps:140,nature:'Energy',delivery:'Beam',pen:0,pershot:14,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
    cost:{bp:520,cr:70,rp:6,steel:240,elec:120},
    honesty:'Capital energy gun — huge power draw, slow tracking (weak vs fighters). Runs on the reactor. Adds heavy heat.'},
  {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
-   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,
+   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,ammoUse:0.5,
    weapon:{dps:14,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.3,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
    cost:{bp:90,cr:8,rp:2,steel:44,elec:16},
    honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
@@ -355,20 +368,40 @@ var CAT=[
    mass:900,vol:240,crew:40,hp:60,draw:0,supply:120,loud:true,
    cost:{bp:820,cr:110,rp:7,steel:420,elec:180,fissile:160},
    honesty:'Capital-scale output — one feeds a whole wall of turbolasers. Very loud: a beacon on any sensor.'},
+ {id:'radiator',cat:'Power',name:'Radiator Bank',hosts:['ship','station'],
+   mass:40,vol:44,crew:1,hp:8,draw:0,supply:0,heatDissip:40,
+   cost:{bp:80,cr:6,rp:2,steel:60,elec:8},
+   honesty:'Sheds weapon heat. If energy guns make more heat than the radiators shed, the ship THROTTLES its own fire — a real live limit.'},
  {id:'drive',cat:'Propulsion',name:'Ion Drive',hosts:['ship','ground'],
-   mass:150,vol:40,crew:5,hp:22,draw:0,supply:0,thrust:220,
+   mass:150,vol:40,crew:5,hp:22,draw:0,supply:0,thrust:220,ve:30,fuelBurn:9,speedFactor:1.6,
    cost:{bp:190,cr:18,rp:4,steel:80,elec:24},
-   honesty:'Ship: thrust ÷ mass → Evasion. Ground: becomes locomotion (march speed). Burns fuel, not power.'},
+   honesty:'Ship: thrust ÷ mass → Evasion + acceleration; exhaust velocity → Δv. Ground: locomotion (march speed). Burns fuel, not power.'},
+ {id:'fueltank',cat:'Propulsion',name:'Fuel Tank',hosts:['ship'],
+   mass:40,vol:90,crew:0,hp:10,draw:0,supply:0,fuelStore:600,
+   cost:{bp:60,cr:5,rp:1,steel:50,elec:2},
+   honesty:'Holds propellant. Fuel is wet mass (raises Δv when full) — and the endurance clock: run dry and the ship is adrift.'},
+ {id:'warp',cat:'Propulsion',name:'Warp Drive',hosts:['ship'],
+   mass:180,vol:50,crew:6,hp:20,draw:0,supply:0,warp:true,warpSustain:15,
+   cost:{bp:260,cr:34,rp:6,steel:90,elec:70,mats:{'ree-magnetics':16}},
+   honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Creating the bubble needs a stored-energy buffer; sustaining it draws power the whole crossing.'},
  {id:'fighterbay',cat:'Carrier',name:'Fighter Bay',hosts:['ship','station'],
    mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
    cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
    honesty:'Holds ~70 fighters. THE carrier capability — and the honest gap: strike-launch is a PENDING output (verified: ParasiteLauncherReady has zero emitters), so the wing embarks but cannot sortie in the sim yet.'},
  {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
-   mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,
+   mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,ammoCap:36,
    cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
-   honesty:'Feeds kinetic/explosive weapons. Without it, ammo weapons fire dry and fall silent.'},
+   honesty:'Feeds kinetic/explosive weapons. Holds 36 t of rounds — the ammo endurance clock. Empty, ammo weapons fire dry and fall silent.'},
+ {id:'provisions',cat:'Logistics',name:'Provisions Store',hosts:['ship','ground','station'],
+   mass:45,vol:60,crew:0,hp:8,draw:0,supply:0,provisions:4000,storeFood:true,
+   cost:{bp:60,cr:6,rp:1,steel:34,elec:6,mats:{'food':30}},
+   honesty:'Stored food (the FoodProductionAtbDB output, packed as cargo — it eats hold volume). 4,000 crew-days. When it and the hydroponics run dry the crew can no longer man the unit.'},
+ {id:'hydroponics',cat:'Logistics',name:'Hydroponics Bay',hosts:['ship','ground','station'],
+   mass:60,vol:80,crew:2,hp:10,draw:2,supply:0,foodOut:200,
+   cost:{bp:100,cr:10,rp:3,steel:30,elec:20,mats:{'food':10}},
+   honesty:'Grows food underway — the live FoodProductionAtbDB output, on the move. Feeds 200 crew continuously, slowing the provisions drain. Enough of it = a closed loop that feeds the crew forever.'},
  {id:'sensor',cat:'Sensors',name:'Sensor Array',hosts:['ship','ground','station'],
-   mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,
+   mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,detect:150,
    cost:{bp:110,cr:14,rp:3,steel:28,elec:40},
    honesty:'Detection range = who shoots first. LIVE, but behind a flag the client switches on.'},
  {id:'bridge',cat:'Command',name:'Command Bridge',hosts:['ship','station'],
@@ -385,10 +418,11 @@ CAT.forEach(function(c){counts[c.id]=0;});
    a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
 var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
-    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,magazine:1}},
+    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,magazine:1,provisions:1,sensor:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
-    /* canon armament: 8 heavy dual turbolasers · 2 medium turbolasers · 52 point-defense · 4 torpedo tubes · 420 fighters */
-    counts:{heavyturbo:8,laser:2,pdbattery:26,missile:4,fighterbay:6,armour:16,shield:5,capreactor:4,drive:4,magazine:5,sensor:2,bridge:2}},
+    /* canon armament: 8 heavy dual turbolasers · 2 medium turbolasers · 52 point-defense · 4 torpedo tubes · 420 fighters;
+       + FTL, fuel, radiators for the turbolaser heat, and a hydroponics closed loop that feeds the crew */
+    counts:{heavyturbo:8,laser:2,pdbattery:26,missile:4,fighterbay:6,armour:16,shield:5,capreactor:4,radiator:5,drive:4,warp:1,fueltank:3,magazine:5,provisions:4,hydroponics:4,sensor:2,bridge:2}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
@@ -467,6 +501,8 @@ function compute(){
   var mass=0,vol=0,crew=0,supply=0,draw=0,thrust=0,hp=0,armourThick=0,shieldCap=0,shieldRegen=0,firepower=0;
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
   var fighters=0,hasFighterBay=false;
+  var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
+  var warpCap=false,warpSustain=0,speedFactor=0;
   A.forEach(function(c){
     var n=counts[c.id];
     mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
@@ -475,6 +511,19 @@ function compute(){
     if(c.shield){shieldCap+=c.shield.cap*n;shieldRegen+=c.shield.cap*c.shield.regen*n;}
     if(c.ammoStore)ammoStore+=n;
     if(c.fighters){fighters+=c.fighters*n;hasFighterBay=true;}
+    heatGen+=(c.heat||0)*n;
+    if(c.heatDissip)heatDissip+=c.heatDissip*n;
+    if(c.fuelStore)fuelStore+=c.fuelStore*n;
+    if(c.fuelBurn)fuelBurn+=c.fuelBurn*n;
+    if(c.ve)ve=Math.max(ve,c.ve);
+    if(c.provisions)provisions+=c.provisions*n;
+    if(c.foodOut)foodProd+=c.foodOut*n;
+    if(c.ammoCap)ammoCap+=c.ammoCap*n;
+    if(c.ammoUse)ammoUse+=c.ammoUse*n;
+    if(c.detect)detect=Math.max(detect,c.detect+(n-1)*20);
+    if(c.warp)warpCap=true;
+    if(c.warpSustain)warpSustain+=c.warpSustain*n;
+    if(c.speedFactor)speedFactor=Math.max(speedFactor,c.speedFactor);
     if(c.weapon){
       firepower+=c.weapon.dps*n;
       // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
@@ -487,15 +536,33 @@ function compute(){
   var baseHP={ship:120,ground:80,station:400}[host];
   var totalHP=baseHP+hp;
   var toughness=(totalHP + armourThick*(host==='station'?4:2))*0.1; // MJ-ish
+  var accel=mass>0?thrust/mass:0; // kN/t = m/s^2
   var evasion;
-  if(host==='ship'){var accel=mass>0?(thrust)/(mass):0;evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
-  else if(host==='ground'){evasion=thrust>0?clamp(0.22+0.20,0,0.95):0.22;}
+  if(host==='ship'){evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
+  else if(host==='ground'){evasion=speedFactor>0?clamp(0.22+0.20,0,0.95):0.22;}
   else {evasion=0;}
   var roleWeight=firepower>0?1.0:0.25;
+  // movement + FTL
+  var fuelMass=fuelStore;
+  var deltaV=(ve>0&&mass>0&&fuelMass>0)?ve*Math.log((mass+fuelMass)/mass):0; // km/s
+  var fuelHrs=fuelBurn>0?fuelStore/fuelBurn:(fuelStore>0?Infinity:0);
+  var marchKmh=(host==='ground')?(speedFactor>0?30*speedFactor:18):0;
+  var warpIndex=(warpCap&&mass>0)?supply/mass:0; // power-to-mass proxy for warp cruise
+  // endurance — provisions are stored food; hydroponics grow food to offset the crew's draw
+  var foodNet=Math.max(0,crew-foodProd); // crew-days consumed per day after homegrown food
+  var selfSufficient=(crew>0&&foodProd>=crew);
+  var provDays=foodNet>0?provisions/foodNet:(crew>0?Infinity:(provisions>0?Infinity:0));
+  var ammoMin=ammoUse>0?ammoCap/ammoUse:(hasAmmoWeapon?0:Infinity);
+  var heatBalance=heatDissip-heatGen; // MW; <0 = throttling
   return {A:A,H:H,mass:mass,vol:vol,crew:crew,supply:supply,draw:draw,thrust:thrust,
     firepower:firepower,toughness:toughness,evasion:evasion,shieldCap:shieldCap,shieldRegen:shieldRegen,
     roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
     fighters:fighters,hasFighterBay:hasFighterBay,
+    accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
+    warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,
+    provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
+    ammoCap:ammoCap,ammoUse:ammoUse,ammoMin:ammoMin,
+    heatGen:heatGen,heatDissip:heatDissip,heatBalance:heatBalance,detect:detect,
     over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
 }
 
@@ -575,6 +642,62 @@ function renderGauges(S){
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
   if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">Carrier: '+fmt(S.fighters)+' fighters berthed — PENDING, no combat value reaches the resolver yet.</b>');
   nt.innerHTML=bits.join(' · ');
+}
+
+/* ---------- render: mobility & FTL ---------- */
+function renderMobility(S){
+  var el=document.getElementById('mobility');var sub=document.getElementById('mobsub');
+  function g(label,val,s,muted){return '<div class="gauge'+(muted?' muted':'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+s+'</s></div>';}
+  var out;
+  if(host==='station'){sub.textContent='immobile';
+    out=g('Sublight','—','a station holds station',true)+g('Δv','—','—',true)+g('FTL','—','stations don’t move',true)+g('Warp','—','—',true);
+  } else if(host==='ground'){sub.textContent='how fast it marches';
+    out=g('March speed',S.marchKmh?fmt(S.marchKmh,0)+' km/h':'—',S.marchKmh?'from locomotion':'no drive → crawl',!S.marchKmh)+
+        g('Terrain','varies','slowed by rough ground',true)+
+        g('FTL','—','ground units don’t warp',true)+
+        g('Lift','transport','carried between worlds',true);
+  } else {sub.textContent='can it get there — and back?';
+    out=g('Acceleration',S.accel>0?fmt(S.accel,2)+' m/s²':'—',S.accel>0?'thrust ÷ mass':'no drive',S.accel<=0)+
+        g('Δv',S.deltaV>0?fmt(S.deltaV,1)+' km/s':'—',S.deltaV>0?'on the fuel load':(S.accel>0?'add fuel':'add a drive'),S.deltaV<=0)+
+        g('FTL',S.warpCap?'warp':'sublight',S.warpCap?'cruise ∝ power÷mass = '+fmt(S.warpIndex,3):'no warp drive',!S.warpCap)+
+        g('Warp sustain',S.warpCap?fmt(S.warpSustain,0)+' MW':'—',S.warpCap?'power drawn crossing':'—',!S.warpCap);
+  }
+  el.innerHTML=out;
+}
+
+/* ---------- render: endurance (fuel · food · ammo · heat) ---------- */
+function renderEndurance(S){
+  var el=document.getElementById('endurance');var note=document.getElementById('endNote');
+  function g(label,val,s,cls){return '<div class="gauge'+(cls||'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+s+'</s></div>';}
+  // fuel (ship movement)
+  var fV,fS,fC='';
+  if(host!=='ship'){fV='—';fS='n/a — '+S.H.name.toLowerCase()+' doesn’t burn fuel';fC=' muted';}
+  else if(S.fuelStore<=0){fV=S.accel>0?'0':'—';fS=S.accel>0?'a drive with no fuel tank':'no fuel needed yet';fC=S.accel>0?' warnb':' muted';}
+  else if(S.fuelHrs===Infinity){fV=fmt(S.fuelStore,0)+' t';fS='fuel stored, nothing burning it';}
+  else {fV=fmt(S.fuelHrs,0)+' h';fS=fmt(S.fuelStore,0)+' t ÷ '+fmt(S.fuelHrs>0?S.fuelStore/S.fuelHrs:0,1)+' t/h burn';}
+  // crew provisions (stored food, offset by hydroponics)
+  var pV,pS,pC='';
+  if(S.crew<=0){pV='—';pS='no crew to feed';pC=' muted';}
+  else if(S.selfSufficient){pV='∞';pS='hydroponics feeds '+fmt(S.foodProd,0)+' ≥ '+fmt(S.crew,0)+' crew — closed loop';pC=' okb';}
+  else if(S.provisions<=0){pV='0 d';pS=fmt(S.crew,0)+' crew, no food aboard';pC=' warnb';}
+  else {pV=fmt(S.provDays,0)+' d';pS=fmt(S.provisions,0)+' cd ÷ '+fmt(S.foodNet,0)+'/day'+(S.foodProd>0?' (after '+fmt(S.foodProd,0)+' grown)':'');}
+  // ammo
+  var aV,aS,aC='';
+  if(!S.hasAmmoWeapon){aV='—';aS='no ammo weapons';aC=' muted';}
+  else if(S.ammoMin<=0){aV='0';aS='ammo guns, no magazine';aC=' warnb';}
+  else {aV=fmt(S.ammoMin,0)+' min';aS=fmt(S.ammoCap,0)+' t ÷ '+fmt(S.ammoUse,1)+' t/min';}
+  // heat
+  var hV,hS,hC='';
+  if(S.heatGen<=0){hV='—';hS='no energy weapons';hC=' muted';}
+  else if(S.heatBalance>=0){hV='+'+fmt(S.heatBalance,0)+' MW';hS='radiators clear the heat';hC=' okb';}
+  else {hV=fmt(S.heatBalance,0)+' MW';hS='over-heats → throttles fire';hC=' warnb';}
+  el.innerHTML=g('Fuel',fV,fS,fC)+g('Crew provisions',pV,pS,pC)+g('Ammo',aV,aS,aC)+g('Heat margin',hV,hS,hC);
+  var w=[];
+  if(host==='ship'&&S.accel>0&&S.fuelStore<=0)w.push('a drive with no fuel — it can’t maneuver');
+  if(S.crew>0&&!S.selfSufficient&&S.provisions<=0)w.push('crew aboard with no food — add provisions or hydroponics');
+  if(S.hasAmmoWeapon&&S.ammoMin<=0)w.push('ammo weapons with no magazine — they fire dry');
+  if(S.heatBalance<0)w.push('energy guns out-heat the radiators — sustained fire throttles');
+  note.innerHTML=w.length?('⚠ '+w.join(' · ')):'Endurance keeps a unit in the fight after the first exchange — fuel to maneuver, food to man it, ammo to keep firing, radiators to not cook itself.';
 }
 
 /* ---------- render: weapon profiles (the hero) ---------- */
@@ -665,7 +788,8 @@ function renderRanges(S){
   var rows=W.map(function(c){return {name:c.name,nature:c.weapon.nature,range:c.weapon.range};})
             .sort(function(a,b){return b.range-a.range;});
   var maxR=rows[0].range;
-  var nice=(function(v){var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var f=v/p;var n=f<=1?1:f<=2?2:f<=5?5:10;return n*p;})(maxR);
+  var maxScale=Math.max(maxR,S.detect||0);
+  var nice=(function(v){var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var f=v/p;var n=f<=1?1:f<=2?2:f<=5?5:10;return n*p;})(maxScale);
   var bars=rows.map(function(r){
     var w=clamp(r.range/nice*100,0,100);
     var nm=r.name.replace('Battery','').replace('Launcher','').replace('Projector','').replace('Cannon','').trim();
@@ -673,10 +797,22 @@ function renderRanges(S){
       '<div class="rngtrack"><div class="rngbar" style="width:'+w+'%"></div></div>'+
       '<span class="rngv">'+fmt(r.range)+' km</span></div>';
   }).join('');
+  // detection overlay
+  var det='';
+  if(S.detect>0){
+    var dw=clamp(S.detect/nice*100,0,100);
+    det='<div class="rngrow detrow"><span class="rn">Detection <em>sensors</em></span>'+
+      '<div class="rngtrack"><div class="rngbar det" style="width:'+dw+'%"></div></div>'+
+      '<span class="rngv">'+fmt(S.detect)+' km</span></div>';
+  }
   var ticks='<div class="rngscale"><span class="rngcap">◄ hull</span><span class="rngticks">'+
     '<span>0</span><span>'+fmt(nice/4)+'</span><span>'+fmt(nice/2)+'</span><span>'+fmt(nice*3/4)+'</span><span>'+fmt(nice)+' km</span></span></div>';
-  el.innerHTML='<div class="rng">'+bars+'</div>'+ticks+
-    '<p class="note" style="margin:11px 0 0;color:var(--ink3)">Each bar starts at the hull (0) and reaches to that gun’s max range. The <b style="color:var(--ink2)">stand-off envelope</b> is the longest bar (open with turbolasers); the short bars are knife-fight and point-defense guns. Real km — hexes are only a display ruler.</p>';
+  var detNote;
+  if(S.detect<=0){detNote='<b style="color:var(--warn)">⚠ No sensors — you fire blind.</b> Add a Sensor Array to set how far you can actually target.';}
+  else if(S.detect<maxR){detNote='<b style="color:var(--warn)">⚠ Your longest gun reaches '+fmt(maxR)+' km but sensors see only '+fmt(S.detect)+' km</b> — you can’t target the far edge of your own range. Add sensors, or don’t pay for that reach.';}
+  else {detNote='Sensors ('+fmt(S.detect)+' km) reach past every gun — you spot targets before they’re in range and <b style="color:var(--ink2)">shoot first</b>. That grey bar is the real engagement edge.';}
+  el.innerHTML='<div class="rng">'+bars+det+'</div>'+ticks+
+    '<p class="note" style="margin:11px 0 0;color:var(--ink3)">Each bar starts at the hull (0) and reaches that weapon’s max range; the grey <b style="color:var(--ink2)">Detection</b> bar is how far you can see. '+detNote+' Real km — hexes are only a display ruler.</p>';
 }
 
 /* ---------- render: handoff object ---------- */
@@ -713,7 +849,7 @@ function renderSplit(){
 function renderAll(){
   renderHosts();renderPresets();renderRoster();
   var S=compute();
-  renderBudgets(S);renderGates(S);renderGauges(S);renderWeapons(S);renderRanges(S);renderCost(S);renderResources(S);renderHandoff(S);renderSplit();
+  renderBudgets(S);renderGates(S);renderGauges(S);renderMobility(S);renderEndurance(S);renderWeapons(S);renderRanges(S);renderCost(S);renderResources(S);renderHandoff(S);renderSplit();
 }
 
 /* seed a clean starter warship so the page tells its story on open:
