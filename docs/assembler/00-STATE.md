@@ -89,6 +89,19 @@ All five phases delivered, committed, pushed to `claude/operation-ground-truth-p
 - Phase 5: DOCS-INDEX §4b + stamp; this close-out.
 Nothing implemented in engine/JSON/tests (design-only, as mandated). The 12 door HTMLs were not edited.
 
+## FOLLOW-ON (2026-08-02) — THE RESOURCE LEDGER (`03-RESOURCE-LEDGER.md`)
+The cradle rung, requested after the mission: the bill of materials the designers draw from.
+- Supply: the 15 defined minerals + 24 materials (from GameData JSON).
+- Demand: a 12-agent scan of every resource each door names (workflow wf_77b7a2d3-d92), verified against
+  source (Power/Propulsion/Logistical spot-checked).
+- Cross-check: large overlap (19 of ~24 concrete refs map to defined resources) — the whole metal/fuel/
+  power/structure economy is shared. Confirmed against the doors' own ResourceCost outputs (the census).
+- Gaps found: (demand w/o supply) ammunition + the broken **`gallicite`** ref, biomass, reactive/exotic
+  armour, myomer/nanite; (supply w/o demand) nickel-steel, lithium-battery, ree-magnetics-to-sensors, +5 more.
+- Developed: NEW-1 munitions chain (fixes gallicite), NEW-2 biomass, NEW-3 armour materials, NEW-4 augments,
+  NEW-5 exotic substrates (engine-pending), NEW-6 wire-ins — each with a mine→refine→spend acquisition path
+  grounded in existing minerals. DOCS-INDEX §4b row added. Design-only; no GameData JSON touched.
+
 ---
 
 ## RESUME NOTES (update on every commit — what's done, what's next, any gotcha)
