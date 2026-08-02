@@ -106,7 +106,7 @@ biology, and the exotic tail** — plus a set of materials that exist but nobody
 ### 4a · Demand WITHOUT supply — a designer needs it, nothing defines it
 | Missing resource | Who needs it | Why it's a real gap |
 |---|---|---|
-| **ammunition / ordnance charge** | Weapons (projectile/guided "eat ammo"), Logistical (magazine) | No material named `ammo`; worse, `ordnance.json:311` charges **`gallicite`** — a mineral **defined nowhere** → the missile's build cost points at a resource you can never mine (a broken chain) |
+| **ammunition / ordnance charge** | Weapons (projectile/guided "eat ammo"), Logistical (magazine) | No material named `ammo`; worse, `ordnance.json` charges **THREE undefined minerals — `gallicite`, `duranium`, `mercassium`** (a definitive scan of every component cost found all three; an earlier pass caught only gallicite). Each points at a resource you can never mine → the missile's build faults in `ConsumeResources` ("Cant build from non ICargoable Items"). **The single most broken chain in the game** |
 | **biomass** | Chassis (organic/cybernetic substrate "EATS biomass"), Logistical (refrigerated hold), life-support | Named in substrate upkeep + cargo descriptions; **undefined** as mineral or material. The organic-substrate door cannot be built cradle-to-grave without it |
 | **reactive armour compound** | Defense (Reactive Plating preset) | A distinct armour material; only `ablative-composite` exists — no material backs Reactive Plating |
 | **exotic-resist plating** | Defense (Null-Ward Plating, vs Exotic) | The door invents "Null-Ward"; no material and no mineral chain for exotic resistance |
@@ -146,12 +146,13 @@ chain, and it retires the one undefined reference in the whole game.
   design target already names tungsten for kinetic rounds) + `explosive-compound` + `stainless-steel` (casing) →
   **build** `tungsten + explosive-compound + stainless-steel` → **spent by** Weapons (projectile/guided "runs on
   ammo"), Logistical (magazine stock). *The Weapons door's "ammo" token finally points at something.*
-- **THE `gallicite` FIX.** `ordnance.json:311` (`"gallicite": "[Mass] * 8"`) points at nothing. **Recommended:**
-  replace that line with the ammunition/explosive chain above (a missile costs `explosive-compound` + a guidance
-  `electronics` + `stainless-steel` body). **Alternative** if the name is wanted: define `gallicite` as a new
-  rare mineral (Aurora's missile-engine material) with an abundance profile — but that adds a 16th mineral for
-  one reference, so redirecting to the buildable chain is cleaner and cradle-to-grave. Status: **NEW (near-term);
-  the gallicite reference is a live latent bug — `BaseModIntegrityTests` is the gauge.**
+- **THE ORDNANCE FIX (`gallicite` / `duranium` / `mercassium`).** `ordnance.json` charges three minerals defined
+  nowhere (a definitive cost-scan found all three, not just gallicite). **Recommended:** replace those lines with
+  the ammunition/explosive chain above (a missile costs `explosive-compound` + a guidance `electronics` +
+  `stainless-steel` body). **Alternative** if the Aurora names are wanted: define them as new minerals with
+  abundance profiles — but that adds three minerals for a handful of references, so redirecting to the buildable
+  chain is cleaner and cradle-to-grave. Status: **NEW (near-term); all three are live latent bugs — a missile
+  build faults on them; `BaseModIntegrityTests` is the gauge.**
 
 ### NEW-2 · Biomass — the biology chain (grown, not mined)
 - **`biomass`** — *raw living matter: the feedstock the organic economy runs on.* Unlike every other resource it

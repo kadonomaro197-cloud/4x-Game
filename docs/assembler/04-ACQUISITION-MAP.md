@@ -156,7 +156,7 @@ What's missing, stubbed, or gated-off in the acquisition chain — so nobody pla
 | **You can't BUY a resource** | `TradeIncomeProcessor.EnablePayout=false`; `ExchangeCatalog` has no executor | Cross-faction trade moves goods (with a treaty) but no money; the buy/gift/supply catalog is inert data |
 | **Capture is a bare ownership flip** | `GroundForcesProcessor` ("v1: ownership flip; deeper transfer later") | Taking a colony doesn't explicitly seize stockpiles/deposits; deposits live on the body. **What capture transfers is an OPEN developer ruling** — the same one the Assembler audit flagged as the MVP finish line |
 | **Salvage doesn't exist** | `DamageProcessor.SpawnWreck` is a stub | Destroyed ships create no wreck; no battlefield scavenging yields any resource |
-| **`gallicite` faults the build** | `ordnance.json:311` → `IndustryTools` | A build of that ordnance design would fault ("Cant build from non ICargoable Items") because gallicite is defined nowhere — the ledger's NEW-1 fix retires this |
+| **3 undefined minerals fault the ordnance build** | `ordnance.json` → `IndustryTools` | `gallicite`, `duranium`, `mercassium` are all charged as build costs and all defined nowhere; a build of those missile designs faults ("Cant build from non ICargoable Items"). A definitive cost-scan found all three (an earlier pass caught only gallicite). The ledger's NEW-1 fix retires them |
 
 ---
 
