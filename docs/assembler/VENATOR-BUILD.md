@@ -86,20 +86,27 @@ Load the **▲ Venator-class carrier** preset (host = Warship):
 
 | Readout | Value |
 |---|---|
-| Hull mass | 17,468 / 20,000 t ✓ |
-| Power | 398 / 480 MW ✓ |
-| **Firepower** | **2,236 dmg/s** (8 heavy + 2 medium turbolasers + 52 PD + 4 torpedoes) |
-| **Toughness** | **393** |
-| Shields | 7,500 J (+375/s) |
-| Evasion | 4% (a slow capital ship) |
-| FTL | warp-capable; 15 MW to sustain |
+| Hull mass | 18,958 / 20,000 t ✓ |
+| Power | 203 / 3,200 MW ✓ (huge headroom — beam guns barely tax a capital reactor; see the energy note) |
+| **Firepower** | **120 MJ/s** (8 heavy + 2 medium turbolasers + 52 PD + 4 torpedoes, ×1.40 targeting+fire-control) |
+| **Toughness** | **434** |
+| Shields | 25 MJ (+500 kJ/s regen) |
+| Evasion | 12% (a slow capital ship) |
+| FTL | warp-capable; 1.5 GJ battery to open the jump, 2.5 MW to sustain |
 | **Deployment** | **~500 d (~1.4 yr) on station** — capped by the reactor fuel core; food is a closed loop (hydroponics) |
 | Maneuver fuel | 67 h of full burn · Δv 3.9 km/s — a reserve spent in bursts (you coast between) |
 | **Detection** | **470 km** — reaches past the 400 km torpedoes (see-first) |
-| Crew provisions | **∞** — hydroponics feeds 1,200 ≥ 789 crew (closed loop) |
+| Crew provisions | **∞** — hydroponics feeds 1,200 ≥ 836 crew (closed loop) |
 | Heat margin | +20 MW (radiators clear it) |
 | **Ammo** | **61 min** of sustained fire (was 5 — fixed with ammo bunkers) |
 | Cost | ~24k build-points · ~2.7M credits · ~19k t across 10 materials |
+
+> ⚡ **Energy recalibrated to the engine (2026-08-02).** The firepower/shield/power numbers above are now in real engine
+> units — weapon damage in MJ/s, an energy weapon's reactor draw *equal to* that damage, shields as the engine's 5 MJ
+> deflector pool (off the reactor), warp gated on a 1.25 GJ battery charge. This is why Firepower dropped from a made-up
+> "2,236" to a physical **120 MJ/s** and Power reads 203 of 3,200 MW: a capital reactor vastly out-supplies its beam
+> guns (the real energy limits are the warp battery and heat, not generation). Nothing about the *design* changed — the
+> numbers just became honest.
 
 ## The litmus verdict — what's real, what's pending
 
@@ -147,9 +154,9 @@ and command side). Six components were added to close the worst of it; the rest 
 | **Life Support Plant** (air/water) | Civic | ⚠ same shape — colony `PopulationSupportAtbDB` is live, per-ship isn't; here it's a **gate** (support ≥ crew) |
 | **Medical Bay** | Civic | ⏳ the civic "+health" output is engine-**pending** (no consumer); a readiness readout, not a live number |
 | **Flag Command Suite** | Command | ⚠ seats a leader (`CommandBerthAtb` LIVE for site work); fleet-command scope (`AdminLevel`) is **dead** in the engine |
-| **Targeting Computer** (caliber) | Enhancers | ✅ **LIVE** — `UnitCaliberAtb.FirepowerMult`; `ShipCombatValueDB.Calculate` multiplies firepower by the best module (×1.25 → Firepower 2,236 → 2,795) |
+| **Targeting Computer** (caliber) | Enhancers | ✅ **LIVE** — `UnitCaliberAtb.FirepowerMult`; `ShipCombatValueDB.Calculate` multiplies firepower by the best module (×1.25 caliber, combined with the ×1.12 fire-control lifts base firepower 86 → 120 MJ/s) |
 | **Cargo Hold** | Logistical | ✅ **LIVE** — `CargoStorageAtb` general stores |
-| **Capacitor Bank** | Power | ✅ **LIVE** — `EnergyStoreAtb` → `EnergyStored`; the warp-departure buffer (4,000 MJ) |
+| **Capacitor Bank** | Power | ✅ **LIVE** — `EnergyStoreAtb` → `EnergyStored`; the warp-departure buffer (2 banks × 750 MJ = 1.5 GJ, ≥ the 1.25 GJ needed to open the jump bubble) |
 | **Fire-Control Sensor** | Sensors | ✅ **LIVE** (gated) — `BeamFireControlAtbDB` → `ShipCombatValueDB`; ×1.12 tracking on firepower |
 | **ECM Suite** | Sensors | ✅ **LIVE** (gated) — `JammerAtb` → `SensorTools`; +10% hit-avoidance (evasion) |
 
@@ -164,7 +171,7 @@ which is itself the finding: **the engine models a colony's civic life in depth 
 - **Nothing to fix — just add (done).** The **Capacitor Bank**, **Fire-Control Sensor**, and **ECM Suite** were
   each *already* designed AND read by the engine — `EnergyStoreAtb.cs`, `BeamFireControlAtbDB.cs` →
   `ShipCombatValueDB.cs`, and `JammerAtb.cs` → `SensorTools.cs`. So they were added and the gap is closed
-  (firepower ×1.40, +10% evasion from jamming, a 4,000 MJ warp buffer).
+  (firepower ×1.40, +10% evasion from jamming, a 1.5 GJ warp buffer).
 - **Needs ENGINE work, not a designer fix.** The rest can't be closed by adding a part, because the OUTPUT has no
   reader: an onboard **repair / damage-control** system (grep for `SelfRepair` / `RepairRate` / `DamageControl` =
   **zero** — the whole-or-dead model has no damaged state), a **recreation / crew-morale** facility (no

@@ -44,7 +44,7 @@ dodges; it doesn't need to.
 |---|---|---|
 | **Superlaser** | Weapons | ⏳ **PENDING** — the engine has no planetary-destruction mechanic; no reader for a "crack a world" output. **The headline.** |
 | **Ion Cannon** | Weapons | ✅ **LIVE** — Exotic weapon nature; shields can't soak Exotic at all (the weapon triangle), so it punches through |
-| **Hypermatter Reactor** | Power | ✅ **LIVE** — `EnergyGenerationAtb` at 20,000 MW; ~10-year fuel core |
+| **Hypermatter Reactor** | Power | ✅ **LIVE** — `EnergyGenerationAtb` at 8,000 MW each; ~10-year fuel core |
 | **Radiator Tower** | Power | ✅ **LIVE** — the heat-throttle mechanic at 4,000 MW each |
 | **Habitation Block** | Crew | ⚠ berths 25,000 — the crew-berthing gate at city scale (ship crew isn't engine-gated; modeled as the real need) |
 | **Life Support Complex** | Crew | ⚠ 30,000 air/water — colony `PopulationSupportAtbDB` is LIVE; per-hull modeled as the gate |
@@ -57,10 +57,10 @@ dodges; it doesn't need to.
 |---|---|
 | Structural budget | **23,986,810 / 50,000,000 t** ✓ |
 | Volume | 18,292,990 / 40,000,000 m³ ✓ |
-| Power | **410,716 / 500,000 MW** ✓ (25 hypermatter reactors, 89k headroom) |
+| Power | **187,563 / 200,000 MW** ✓ (25 hypermatter reactors — 94% loaded; the superlaser's 120 GW charge draw is the bulk, so the station is genuinely built around feeding it) |
 | Heat | **+190,000 MW** margin ✓ (90 radiator towers) |
-| **Firepower** | **1,785,000** dmg/s (5,000 heavy + 5,000 medium turbolasers + 2,500 ion cannons + 2,500 PD, ×1.40 targeting+fire-control — **the superlaser is *not* in this**, it's strategic) |
-| Toughness | ~44,000 (40,000 base hull + 500 armour plates) |
+| **Firepower** | **88,550 MJ/s** (5,000 heavy + 5,000 medium turbolasers + 2,500 ion cannons + 2,500 PD, ×1.40 targeting+fire-control — **the superlaser is *not* in this**, it's strategic) |
+| Toughness | ~66,900 (40,000 base hull + 500 armour plates + the mass of component HP) |
 | Crew | **304,266** — berths **625,000** ✓ · life support **600,000** ✓ |
 | **Deployment** | **3,650 d (~10 years)** on station — capped by the reactor core; **food is a closed loop** (9 agriculture domes feed 450,000 ≥ the crew) |
 | Mobility | immobile sublight · **hyperdrive** (FTL) ✓ |
@@ -69,6 +69,12 @@ dodges; it doesn't need to.
 
 *Crew (~304k) is the tool's ratio-model; canon is ~1.2M. Mass is abstract/ratio scale, not literal (a real DS-1 is
 ~10¹² t) — like every build here, the tool models **composition and the honesty ledger**, not a moon's physics.*
+
+> ⚡ **Energy recalibrated to the engine (2026-08-02).** Firepower/power are now real engine units. The interesting
+> result at this scale: on a small ship a reactor trivially out-supplies its guns (power headroom is huge), but the
+> Death Star's **superlaser charge draw (120 GW)** makes power *genuinely tight* — 94% of its 25 hypermatter reactors.
+> That's the honest story the recalibration tells: the whole station really is built around feeding the one weapon the
+> sim can't yet fire.
 
 ## Step 5 — The authenticity pass (the honest ledger)
 **LIVE — reaches the sim, verified:** all 15,000 conventional guns (firepower + saturation + the Exotic
@@ -88,8 +94,8 @@ crack-in-the-armour mechanic.
 
 ## The verdict
 **You can build the Death Star as a fortress-city today, cradle to grave — a self-sufficient, decade-enduring,
-1.79-million-firepower armed moon — and everything that makes it *terrifying* is an engine job that doesn't exist
-yet.** It can shoot any fleet to pieces and land an army; it cannot destroy a planet, launch its fighters, or drag
+88,550-MJ/s armed moon (real engine units, recalibrated 2026-08-02) — and everything that makes it *terrifying* is
+an engine job that doesn't exist yet.** It can shoot any fleet to pieces and land an army; it cannot destroy a planet, launch its fighters, or drag
 a ship in. That is the playbook's Law in its purest form: *a build works only through its LIVE wires, and the
 honest answer to "can the sim do this?" is worth more than a dial that writes to nothing.*
 

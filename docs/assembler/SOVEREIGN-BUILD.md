@@ -27,17 +27,26 @@ Rather than invent parallel systems, Trek tech maps onto the generic catalog by 
 the catalog with near-duplicates) is exactly what `CONVENTIONS.md` §6 demands — and it works.*
 
 ## It closes (all gates green)
-Hull **10,875 / 20,000 t** (light and elegant — half a Venator) · Firepower **2,150** (torpedo-led) · Crew **453**
-berthed/supported/**medically covered** · Shields the heaviest of any build here · **Deployment 500 days
+Hull **11,015 / 20,000 t** (light and elegant — half a Venator) · Firepower **43 MJ/s** (see the torpedo caveat) · Crew **455**
+berthed/supported/**medically covered** · Shields **40 MJ — the heaviest of any build here** · **Deployment 500 days
 (~1.4 yr), self-sufficient** (a closed food loop — a true long-range explorer) · Detection **490 km**, past its
 own torpedoes (it sees first, as an explorer should).
 
+> ⚡ **Energy recalibrated to the engine (2026-08-02) — and it surfaced an honest caveat for this ship.** Numbers are
+> now real engine units: shields are the engine's deflector pool (the Sovereign's 8 generators = **40 MJ**, the
+> heaviest here, off the reactor), warp gates on a battery charge (2 nacelles need 2.5 GJ, so it carries 4 capacitors).
+> **The torpedo caveat:** the auto-resolver *stubs* a missile/torpedo at a flat 0.1 MJ/s — so the resolver Firepower
+> (43 MJ/s) is **phaser-led, not torpedo-led**, even though the Sovereign is canonically a torpedo boat. Its real
+> torpedo punch (GJ-scale kinetic impact) lands in the *live* sim, not the auto-resolve total. That's an engine gap,
+> flagged on the launcher — the ship is designed right; the resolver just under-counts guided weapons.
+
 ## The honest ledger
-**Everything is LIVE.** Phasers/torpedoes/PD (firepower + saturation), the strong shields, sensors + fire-control +
-ECM, warp, and the self-sufficient crew city all reach the sim. **PENDING:** nothing — the Sovereign carries no
-strike fighters and no superweapon, so it has **no aspirational gaps**. It's the cleanest, most fully-LIVE build in
-the set: a ship whose whole doctrine (shields + torpedoes + sensors + endurance) is exactly what the engine models
-well.
+**Almost everything is LIVE.** Phasers/PD (firepower + saturation), the strong shields, sensors + fire-control +
+ECM, warp, and the self-sufficient crew city all reach the sim. **The one caveat:** torpedoes are LIVE as guided/PD-
+answerable weapons, but the auto-resolver stubs their *damage* (see the energy note) — so their firepower lands in
+live combat, not the resolver total. **PENDING:** nothing else — the Sovereign carries no strike fighters and no
+superweapon, so it has **no aspirational gaps**. It's still among the cleanest builds in the set: a ship whose whole
+doctrine (shields + torpedoes + sensors + endurance) is what the engine models well.
 
 **Verdict:** a Federation cruiser built cradle-to-grave from a Star-Wars-flavoured parts bin, entirely by mechanic
 — proof the assembler expresses *aspects* across franchises (the North-Star vision), not one universe.

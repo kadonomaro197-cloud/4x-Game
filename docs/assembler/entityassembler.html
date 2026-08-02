@@ -298,6 +298,7 @@ footer{padding:6px 0 60px}
 <div class="w"><footer>
   <p class="splitbar" id="splitProse"></p>
   <p class="foot"><b>What this is.</b> A design mock of the in-game Entity Assembler — the third piece of the designer suite, after the 12 component doors and their I/O matrix. The math here mirrors the real resolver contract (Firepower = Σ weapon damage/s · Toughness = Σ health + armour · Evasion 0–0.95 · Shield pool · per-weapon profiles). The honesty markers come from the 2026-08-02 source verification (<span class="mono">06-OUTPUTS-BY-DOOR.md</span>): every output traced to its live reader or proven dead. Design-only — nothing here is wired into the engine yet. No franchise IP.</p>
+  <p class="foot" style="margin-top:12px"><b>Energy is calibrated to the engine (2026-08-02).</b> Weapon damage is in real <span class="mono">MJ/s</span> (a laser 0.5, a heavy turbolaser 8, a railgun 1 — the engine's own values), and an energy weapon's reactor draw <b>equals</b> that damage (damage = the energy delivered = the energy drawn). Reactors are engine-scale MW (fusion ~75, capital ~800, hypermatter ~8,000). Shields are the engine's 5 MJ / 100 kJ&#8239;s deflector pool and draw <b>zero</b> reactor power (they self-regen). Warp's real cost is a one-time <b>1.25 GJ battery charge</b> to open the bubble (the new gate), then just 2.5 MW to hold it — not a big continuous draw. One honest caveat surfaced: the auto-resolver <b>stubs missile damage</b> at 0.1 MJ/s (real impact is GJ-scale, delivered in the live sim) — flagged on the launcher, not faked.</p>
 </footer></div>
 
 <script>
@@ -329,38 +330,38 @@ var HOSTORDER=['ship','ground','station','megastructure'];
    host output behaviour is encoded in weapon.fields[] state per host below. */
 var CAT=[
  {id:'railgun',cat:'Weapons',name:'Railgun Battery',hosts:['ship','ground'],
-   mass:120,vol:42,crew:6,hp:24,draw:2,supply:0,ammoUse:1.2,
-   weapon:{dps:46,nature:'Kinetic',delivery:'Projectile',pen:9,pershot:1.8,rate:26,range:80,vel:9000,track:0.55,ammo:true,pd:false},
+   mass:120,vol:42,crew:6,hp:24,supply:0,ammoUse:1.2,
+   weapon:{dps:1,nature:'Kinetic',delivery:'Projectile',pen:9,pershot:0.04,rate:26,range:80,vel:9000,track:0.55,ammo:true,pd:false},
    cost:{bp:180,cr:12,rp:2,steel:96,elec:14},
    honesty:'Kinetic → drains the ammo pool. Penetration/per-shot LIVE on ground, INERT on ship.'},
  {id:'laser',cat:'Weapons',name:'Laser Cannon',hosts:['ship','ground'],
-   mass:80,vol:26,crew:4,hp:18,draw:8,supply:0,heat:6,
-   weapon:{dps:31,nature:'Energy',delivery:'Beam',pen:0,pershot:0.9,rate:34,range:60,vel:299792,track:0.72,ammo:false,pd:false},
+   mass:80,vol:26,crew:4,hp:18,supply:0,heat:6,
+   weapon:{dps:0.5,nature:'Energy',delivery:'Beam',pen:0,pershot:0.015,rate:34,range:60,vel:299792,track:0.72,ammo:false,pd:false},
    cost:{bp:150,cr:16,rp:3,steel:40,elec:34},
-   honesty:'Energy → runs on reactor power, no ammo. Adds heat (a live throttle on ships).'},
+   honesty:'Energy → runs on reactor power, no ammo. Engine-exact: its grid draw (0.5 MW) EQUALS its delivered damage (0.5 MJ/s) — the damage IS the energy it puts out. Adds heat (a live throttle on ships).'},
  {id:'missile',cat:'Weapons',name:'Missile Launcher',hosts:['ship','ground'],
-   mass:100,vol:60,crew:5,hp:20,draw:1,supply:0,ammoUse:3.0,
-   weapon:{dps:58,nature:'Explosive',delivery:'Guided',pen:4,pershot:6.0,rate:1.2,range:400,vel:14000,track:0.9,ammo:true,pd:false},
+   mass:100,vol:60,crew:5,hp:20,supply:0,ammoUse:3.0,
+   weapon:{dps:0.1,nature:'Explosive',delivery:'Guided',pen:4,pershot:0.08,rate:1.2,range:400,vel:14000,track:0.9,ammo:true,pd:false},
    cost:{bp:200,cr:20,rp:4,steel:70,elec:40},
-   honesty:'Guided → the ONLY weapon point-defence can shoot down (a ship-only reader).'},
+   honesty:'Guided → the ONLY weapon point-defence can shoot down (a ship-only reader). ⚠ Damage caveat: the AUTO-RESOLVER stubs a missile at a flat 0.1 MJ/s (that\'s the real ShipCombatValueDB number, shown here) — but a real impact is GJ-scale kinetic energy delivered in the LIVE sim (MissileImpactProcessor), not the auto-resolve total. So a torpedo ship\'s resolver-firepower looks small; its true punch lands in live combat. An engine gap, flagged not faked.'},
  {id:'plasma',cat:'Weapons',name:'Plasma Bolt Projector',hosts:['ship','ground'],
-   mass:92,vol:34,crew:4,hp:19,draw:6,supply:0,heat:7,
-   weapon:{dps:40,nature:'Energy',delivery:'Bolt',pen:2,pershot:2.4,rate:16,range:55,vel:40000,track:0.6,ammo:false,pd:false},
+   mass:92,vol:34,crew:4,hp:19,supply:0,heat:7,
+   weapon:{dps:2,nature:'Energy',delivery:'Bolt',pen:2,pershot:0.125,rate:16,range:55,vel:40000,track:0.6,ammo:false,pd:false},
    cost:{bp:170,cr:18,rp:5,steel:44,elec:38},
    honesty:'Teaching case: the door LABELS a bolt "ammo", but the engine reads its NATURE (Energy) → it runs on POWER, drains no ammo.'},
  {id:'heavyturbo',cat:'Weapons',name:'Heavy Turbolaser Battery',hosts:['ship','station'],
-   mass:340,vol:120,crew:22,hp:42,draw:26,supply:0,heat:20,
-   weapon:{dps:140,nature:'Energy',delivery:'Beam',pen:0,pershot:14,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
+   mass:340,vol:120,crew:22,hp:42,supply:0,heat:20,
+   weapon:{dps:8,nature:'Energy',delivery:'Beam',pen:0,pershot:3.2,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
    cost:{bp:520,cr:70,rp:6,steel:240,elec:120},
    honesty:'Capital energy gun — huge power draw, slow tracking (weak vs fighters). Runs on the reactor. Adds heavy heat.'},
  {id:'medturbo',cat:'Weapons',name:'Medium Turbolaser',hosts:['ship','station'],
-   mass:200,vol:70,crew:12,hp:28,draw:14,supply:0,heat:10,
-   weapon:{dps:78,nature:'Energy',delivery:'Beam',pen:0,pershot:6,rate:4,range:140,vel:299792,track:0.50,ammo:false,pd:false},
+   mass:200,vol:70,crew:12,hp:28,supply:0,heat:10,
+   weapon:{dps:3,nature:'Energy',delivery:'Beam',pen:0,pershot:0.75,rate:4,range:140,vel:299792,track:0.50,ammo:false,pd:false},
    cost:{bp:300,cr:40,rp:5,steel:140,elec:70,mats:{'em-shielding-mesh':12}},
    honesty:'The mid-weight main gun — between the point-defense screen and the heavy batteries. Energy, runs on the reactor.'},
  {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
-   mass:38,vol:14,crew:3,hp:10,draw:1,supply:0,ammoUse:0.3,
-   weapon:{dps:14,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.3,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
+   mass:38,vol:14,crew:3,hp:10,supply:0,ammoUse:0.3,
+   weapon:{dps:0.3,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.0017,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
    cost:{bp:90,cr:8,rp:2,steel:44,elec:16},
    honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
  {id:'superlaser',cat:'Weapons',name:'Superlaser',hosts:['megastructure'],
@@ -368,8 +369,8 @@ var CAT=[
    cost:{bp:9000000,cr:1200000,rp:12,steel:3000000,elec:1200000,mats:{'antimatter':200000}},
    honesty:'The Concave Dish Composite Beam Superlaser — the station’s ENTIRE reason for being. PENDING: the engine has no planetary-destruction mechanic; no processor reads a "crack a world" output. It draws colossal power from the hypermatter reactors, and its vented heat is (canonically) the exhaust-port weakness. The one capability that makes this the Death Star is the one the sim cannot express — flagged, never faked.'},
  {id:'ioncannon',cat:'Weapons',name:'Ion Cannon',hosts:['ship','station','megastructure'],
-   mass:160,vol:60,crew:18,hp:24,draw:20,supply:0,heat:8,ammoUse:0,
-   weapon:{dps:60,nature:'Exotic',delivery:'Beam',pen:0,pershot:8,rate:3,range:160,vel:299792,track:0.45,ammo:false,pd:false},
+   mass:160,vol:60,crew:18,hp:24,supply:0,heat:8,ammoUse:0,
+   weapon:{dps:3,nature:'Exotic',delivery:'Beam',pen:0,pershot:1,rate:3,range:160,vel:299792,track:0.45,ammo:false,pd:false},
    cost:{bp:340,cr:44,rp:6,steel:120,elec:90,mats:{'em-shielding-mesh':16}},
    honesty:'Disables rather than destroys — ionized particles that fry systems. Maps to Exotic weapon nature, which is LIVE: shields can’t soak Exotic at all (the weapon triangle), so it punches straight through. The "disable vs kill" flavor is engine-simplified to raw Exotic damage.'},
  {id:'armour',cat:'Defense',name:'Composite Armour Plating',hosts:['ship','ground','station'],
@@ -377,29 +378,29 @@ var CAT=[
    cost:{bp:90,cr:6,rp:1,steel:60,elec:2,mats:{'tungsten-plating':20,'ablative-composite':40}},
    honesty:'Ship: thickness folds into one Toughness pool. Ground: soaked shot-by-shot vs each weapon nature.'},
  {id:'shield',cat:'Defense',name:'Shield Generator',hosts:['ship','ground','station'],
-   mass:74,vol:22,crew:3,hp:16,draw:4,supply:0,shield:{cap:1500,regen:0.05},
+   mass:74,vol:22,crew:3,hp:16,supply:0,shield:{cap:5000000,regen:0.02},
    cost:{bp:160,cr:22,rp:4,steel:30,elec:52,mats:{'em-shielding-mesh':30,'ree-magnetics':12}},
-   honesty:'A depleting pool laid over HP. Ship: drained through the kernel. Ground: drained inline — different code, same idea.'},
+   honesty:'A depleting pool laid over HP — engine-real 5 MJ capacity, 100 kJ/s regen (the default deflector). Ship: drained through the kernel. Ground: drained inline — different code, same idea. Engine-exact: shields DON\'T draw the reactor at all — they refill from their own internal pool (off the combat energy grid).'},
  {id:'reactor',cat:'Power',name:'Fusion Reactor',hosts:['ship','ground','station'],
-   mass:200,vol:52,crew:8,hp:28,draw:0,supply:20,loud:true,deployDays:200,
+   mass:200,vol:52,crew:8,hp:28,draw:0,supply:75,loud:true,deployDays:200,
    cost:{bp:240,cr:30,rp:5,steel:110,elec:60,fissile:40},
-   honesty:'Supplies power AND is a loud heat/EM source — it decides who gets detected first. Its fissile core runs ~200 days before refuel — one of the two deployment clocks.'},
+   honesty:'75 MW output (the engine\'s standard fusion plant, 50 kW/kg scaling). Supplies power AND is a loud heat/EM source — it decides who gets detected first. Note: a reactor vastly out-supplies its beam guns (one plant powers dozens of lasers), so power headroom is normal — the binding energy limits are the warp battery and heat, not raw generation. Its fissile core runs ~200 days before refuel — one of the two deployment clocks.'},
  {id:'capreactor',cat:'Power',name:'Capital Reactor',hosts:['ship','station'],
-   mass:900,vol:240,crew:40,hp:60,draw:0,supply:120,loud:true,deployDays:500,
+   mass:900,vol:240,crew:40,hp:60,draw:0,supply:800,loud:true,deployDays:500,
    cost:{bp:820,cr:110,rp:7,steel:420,elec:180,fissile:160},
-   honesty:'Capital-scale output — one feeds a whole wall of turbolasers. Very loud: a beacon on any sensor. Its fissile core runs ~500 days before refuel — the deployment clock for a big ship.'},
+   honesty:'Capital-scale output — 800 MW, one feeds a whole wall of turbolasers with room to spare. Very loud: a beacon on any sensor. Its fissile core runs ~500 days before refuel — the deployment clock for a big ship.'},
  {id:'radiator',cat:'Power',name:'Radiator Bank',hosts:['ship','station'],
    mass:40,vol:44,crew:1,hp:8,draw:0,supply:0,heatDissip:40,
    cost:{bp:80,cr:6,rp:2,steel:60,elec:8},
    honesty:'Sheds weapon heat. If energy guns make more heat than the radiators shed, the ship THROTTLES its own fire — a real live limit.'},
  {id:'capacitor',cat:'Power',name:'Capacitor Bank',hosts:['ship','station'],
-   mass:70,vol:40,crew:1,hp:12,draw:0,supply:0,energyStore:2000,
+   mass:70,vol:40,crew:1,hp:12,draw:0,supply:0,energyStore:750000,
    cost:{bp:140,cr:18,rp:4,steel:40,elec:60,mats:{'lithium-battery':20}},
-   honesty:'Stored charge — the warp-departure buffer and surge reserve for energy weapons. LIVE: EnergyStoreAtb → EnergyStored, which warp draws from at departure (WarpMoveCommand). No designer change needed — the Power door already builds this.'},
+   honesty:'Stored charge — 750 MJ per bank (the engine\'s Mass·500 battery scaling). THE warp-departure buffer: opening a jump bubble needs stored energy ≥ the drive\'s creation cost, so a warp ship must bank enough capacitors to jump at all. LIVE: EnergyStoreAtb → EnergyStored, which warp draws from at departure (WarpMoveCommand). The Power door already builds this.'},
  {id:'hyperreactor',cat:'Power',name:'Hypermatter Reactor',hosts:['station','megastructure'],
-   mass:400000,vol:200000,crew:2000,hp:3000,draw:0,supply:20000,loud:true,deployDays:3650,
+   mass:400000,vol:200000,crew:2000,hp:3000,draw:0,supply:8000,loud:true,deployDays:3650,
    cost:{bp:2000000,cr:400000,rp:9,steel:900000,elec:400000,fissile:600000,mats:{'antimatter':40000}},
-   honesty:'The station’s heart — a hypermatter annihilation core, 20,000 MW. LIVE as power (EnergyGenerationAtb), scaled to megastructure output. Its ~10-year fuel core means the station never really runs down — and it’s what the superlaser drains.'},
+   honesty:'The station’s heart — a hypermatter annihilation core, 8,000 MW each. LIVE as power (EnergyGenerationAtb), scaled to megastructure output. A battle station banks dozens of these to feed its superlaser and thousands of turbolasers. Its ~10-year fuel core means the station never really runs down.'},
  {id:'radtower',cat:'Power',name:'Radiator Tower',hosts:['station','megastructure'],
    mass:20000,vol:30000,crew:20,hp:200,draw:0,supply:0,heatDissip:4000,
    cost:{bp:30000,cr:2000,rp:3,steel:40000,elec:2000},
@@ -413,9 +414,9 @@ var CAT=[
    cost:{bp:60,cr:5,rp:1,steel:50,elec:2},
    honesty:'Holds propellant. Fuel is wet mass (raises Δv when full) — and the endurance clock: run dry and the ship is adrift.'},
  {id:'warp',cat:'Propulsion',name:'Warp Drive',hosts:['ship'],
-   mass:180,vol:50,crew:6,hp:20,draw:0,supply:0,warp:true,warpSustain:15,
+   mass:180,vol:50,crew:6,hp:20,draw:0,supply:0,warp:true,warpSustain:2.5,warpCreate:1250000,
    cost:{bp:260,cr:34,rp:6,steel:90,elec:70,mats:{'ree-magnetics':16}},
-   honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Creating the bubble needs a stored-energy buffer; sustaining it draws power the whole crossing.'},
+   honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Engine-exact energy: opening the bubble needs a 1.25 GJ stored-energy buffer (drawn from capacitors at departure — gated: no battery, no jump); sustaining it draws just 2.5 MW the whole crossing. So FTL\'s real cost is a big one-time BATTERY charge, not a big continuous draw.'},
  {id:'fighterbay',cat:'Carrier',name:'Fighter Bay',hosts:['ship','station'],
    mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
    cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
@@ -457,15 +458,15 @@ var CAT=[
    cost:{bp:120,cr:14,rp:3,steel:34,elec:30},
    honesty:'Sickbay — treats casualties, keeps the crew fit on a long cruise. The civic “+health” output is PENDING in the engine (no consumer yet), so this is the need flagged, not a live number.'},
  {id:'habblock',cat:'Crew',name:'Habitation Block',hosts:['station','megastructure'],
-   mass:60000,vol:120000,crew:0,hp:400,draw:200,supply:0,berths:25000,
+   mass:60000,vol:120000,crew:0,hp:400,draw:4,supply:0,berths:25000,
    cost:{bp:40000,cr:4000,rp:2,steel:30000,elec:4000,mats:{'space-crete':20000,'food':2000}},
    honesty:'A residential sector — barracks, mess, quarters for 25,000. Same berthing role as Crew Quarters, at city scale (a build gate: berths ≥ crew).'},
  {id:'lifecomplex',cat:'Crew',name:'Life Support Complex',hosts:['station','megastructure'],
-   mass:40000,vol:70000,crew:400,hp:300,draw:1200,supply:0,lifeSupport:30000,
+   mass:40000,vol:70000,crew:400,hp:300,draw:6,supply:0,lifeSupport:30000,
    cost:{bp:50000,cr:5000,rp:3,steel:24000,elec:14000,mats:{'em-shielding-mesh':2000}},
    honesty:'Atmosphere and water for 30,000. The colony-scale PopulationSupportAtbDB is LIVE; a station’s per-hull life support is modeled here (a build gate: support ≥ crew).'},
  {id:'agridome',cat:'Crew',name:'Agriculture Dome',hosts:['station','megastructure'],
-   mass:50000,vol:100000,crew:300,hp:300,draw:400,supply:0,foodOut:50000,
+   mass:50000,vol:100000,crew:300,hp:300,draw:3,supply:0,foodOut:50000,
    cost:{bp:60000,cr:6000,rp:3,steel:20000,elec:8000,mats:{'food':4000}},
    honesty:'A hydroponic agriculture sector — food for 50,000. The FoodProductionAtbDB output at city scale; enough of them close the food loop so the station feeds its own million and never runs down (deployment falls to the reactor’s ~10-year core).'},
  {id:'sensor',cat:'Sensors',name:'Sensor Array',hosts:['ship','ground','station'],
@@ -511,7 +512,7 @@ CAT.forEach(function(c){counts[c.id]=0;});
    a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
 var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
-    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,capacitor:1,magazine:1,
+    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,capacitor:2,magazine:1,
             provisions:1,cargo:1,quarters:1,lifesupport:1,targeting:1,sensor:1,firecontrol:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
     /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
@@ -529,14 +530,14 @@ var PRESETS=[
     counts:{medturbo:12,pdbattery:24,missile:4,vehiclebay:23,
             capreactor:3,radiator:4,shield:3,armour:6,drive:3,warp:1,fueltank:2,
             magazine:2,ammobunker:2,cargo:3,quarters:6,lifesupport:4,medbay:3,provisions:5,hydroponics:2,
-            sensor:2,searchsensor:1,firecontrol:1,targeting:1,capacitor:1,bridge:2}},
+            sensor:2,searchsensor:1,firecontrol:1,targeting:1,capacitor:2,bridge:2}},
   {id:'sovereign',name:'Sovereign-class (Enterprise-E)',host:'ship',
     /* CANON (Memory Alpha/reference): ~16 Type-XII phaser arrays · 10 photon/quantum torpedo tubes · the fleet's
        strongest regenerative shields · 2 warp nacelles (warp ~9.9) · ~855 crew · no ablative armour · 685 m.
        Trek mapping: phasers → energy beams (medium turbolaser + laser cannon), torpedoes → guided missiles.
        Leans shields + sensors, not armour — a self-sufficient explorer-cruiser. */
     counts:{medturbo:8,laser:8,missile:10,pdbattery:6,shield:8,armour:3,
-            capreactor:3,radiator:4,warp:2,drive:2,fueltank:2,capacitor:2,
+            capreactor:3,radiator:4,warp:2,drive:2,fueltank:2,capacitor:4,
             magazine:4,ammobunker:2,cargo:4,
             quarters:6,lifesupport:5,medbay:4,provisions:3,hydroponics:3,
             sensor:3,searchsensor:3,firecontrol:2,ecm:1,targeting:2,bridge:1,flagsuite:1}},
@@ -562,6 +563,10 @@ function hostAccepts(c){
 function actives(){return CAT.filter(function(c){return counts[c.id]>0 && hostAccepts(c);});}
 function fmt(n,d){if(!isFinite(n))n=0;return n.toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+/* energy formatter — joules → human units. The engine stores weapon/shield energy in J, the grid in kJ. */
+function fmtE(j){if(!isFinite(j)||j===0)return '0 J';var a=Math.abs(j);
+  if(a>=1e9)return fmt(j/1e9,2)+' GJ';if(a>=1e6)return fmt(j/1e6,1)+' MJ';
+  if(a>=1e3)return fmt(j/1e3,0)+' kJ';return fmt(j,0)+' J';}
 
 /* ---------- render: host selector ---------- */
 function renderHosts(){
@@ -603,11 +608,12 @@ function renderRoster(){
     var row=document.createElement('div');row.className='item'+(ok?'':' dis')+(n>0&&ok?' on':'');
     var meta=[];
     meta.push(c.mass+'t');
-    if(c.weapon)meta.push(c.weapon.dps+' dmg/s');
+    if(c.weapon){meta.push(c.weapon.dps+' MJ/s');
+      if(c.weapon.nature==='Energy'||c.weapon.nature==='Exotic')meta.push('−'+c.weapon.dps+'MW');}
     if(c.supply)meta.push('+'+c.supply+'MW');
     if(c.draw)meta.push('−'+c.draw+'MW');
     if(c.thrust)meta.push(c.thrust+'kN');
-    if(c.shield)meta.push(c.shield.cap+'J shield');
+    if(c.shield)meta.push(fmtE(c.shield.cap)+' shield');
     if(c.armour)meta.push(c.armour.thick+' armour');
     if(c.crew<0)meta.push((-c.crew)+' crew freed');else if(c.crew>0)meta.push(c.crew+' crew');
     var whyDis=ok?'':'<span class="mk">'+(c.hosts.join('/'))+' only</span>';
@@ -635,7 +641,7 @@ function compute(){
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
   var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0,superweapons=0;
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
-  var warpCap=false,warpSustain=0,speedFactor=0,reactorDays=Infinity;
+  var warpCap=false,warpSustain=0,warpCreateNeed=0,speedFactor=0,reactorDays=Infinity;
   var berths=0,lifeSupport=0,medical=0,cargo=0,caliber=1,hasFlag=false;
   var energyStore=0,fcMult=1,ecmBonus=0;
   A.forEach(function(c){
@@ -661,6 +667,7 @@ function compute(){
     if(c.detect)detect=Math.max(detect,c.detect+(n-1)*20);
     if(c.warp)warpCap=true;
     if(c.warpSustain)warpSustain+=c.warpSustain*n;
+    if(c.warpCreate)warpCreateNeed+=c.warpCreate*n;
     if(c.speedFactor)speedFactor=Math.max(speedFactor,c.speedFactor);
     if(c.deployDays)reactorDays=Math.min(reactorDays,c.deployDays);
     if(c.berths)berths+=c.berths*n;
@@ -674,9 +681,10 @@ function compute(){
     if(c.ecm)ecmBonus=Math.max(ecmBonus,c.ecm);
     if(c.weapon){
       firepower+=c.weapon.dps*n;
-      // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
-      if(c.weapon.nature==='Energy'){hasEnergyWeapon=true;draw+=(c.draw||0)*n;}
-      else {hasAmmoWeapon=true;draw+=(c.draw||0)*n;}
+      // ENGINE-EXACT: an energy/exotic weapon's grid draw (MW) EQUALS its delivered damage (MJ/s) —
+      // the damage IS the energy it puts out. Kinetic/explosive weapons run off the ammo pool: no grid draw at all.
+      if(c.weapon.nature==='Energy'||c.weapon.nature==='Exotic'){hasEnergyWeapon=true;draw+=c.weapon.dps*n;}
+      else {hasAmmoWeapon=true;}
     } else {
       draw+=(c.draw||0)*n;
     }
@@ -713,7 +721,7 @@ function compute(){
     roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
     fighters:fighters,hasFighterBay:hasFighterBay,vehicles:vehicles,hasVehicleBay:hasVehicleBay,tractors:tractors,superweapons:superweapons,
     accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
-    warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,
+    warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,warpCreateNeed:warpCreateNeed,
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
     reactorDays:reactorDays,deployDays:deployDays,deployLimiter:deployLimiter,
     berths:berths,lifeSupport:lifeSupport,medical:medical,cargo:cargo,caliber:caliber,hasFlag:hasFlag,
@@ -742,7 +750,8 @@ function renderBudgets(S){
     '<div class="budrow"><div class="bl"><span class="bn">Crew required</span><span class="bv">'+fmt(Math.max(0,S.crew))+' from the pool</span></div>'+
       '<div class="track"><div class="fill warn" style="width:'+clamp(Math.max(0,S.crew)/S.H.crewRef*100,0,100)+'%"></div></div></div>'+
     '<div class="budrow"><div class="bl"><span class="bn">Power draw vs reactor</span><span class="bv">'+fmt(powerUse)+' / '+fmt(powerCap)+' MW</span></div>'+
-      '<div class="track"><div class="fill '+pcls+'" style="width:'+ppct+'%"></div></div></div>';
+      '<div class="track"><div class="fill '+pcls+'" style="width:'+ppct+'%"></div></div></div>'+
+    '<p class="note" style="margin:11px 0 0;color:var(--ink3);font-size:11.5px;line-height:1.5">⚡ <b style="color:var(--ink2)">Energy is engine-real now.</b> An energy weapon\'s power draw (MW) <b style="color:var(--ink2)">equals its delivered damage (MJ/s)</b> — the damage <em>is</em> the energy it puts out. Shields and sublight drives run off their own pools (no reactor draw). A reactor out-supplies its beam guns many times over, so power <b style="color:var(--ink2)">headroom is normal</b> — the binding energy limits are the <b style="color:var(--ink2)">warp battery</b> (a gate below) and <b style="color:var(--ink2)">heat</b> (endurance), not raw generation.</p>';
 }
 
 /* ---------- render: gates ---------- */
@@ -769,6 +778,13 @@ function renderGates(S){
   var aState=!S.hasAmmoWeapon?'na':(S.ammoStore>0?'pass':'fail');
   gate(aState,'Ammo feed for kinetic/explosive',
     !S.hasAmmoWeapon?'no ammo weapons':(S.ammoStore>0?'a magazine is present':'ammo weapon with no magazine — it fires dry, then falls silent'));
+  // warp battery — a real engine gate: the jump bubble needs stored energy ≥ the drive's creation cost
+  if(S.warpCap){
+    var wbOK=S.energyStore>=S.warpCreateNeed;
+    gate(wbOK?'pass':'fail','Warp battery ≥ jump-bubble cost',
+      wbOK?(fmtE(S.energyStore*1000)+' stored ≥ '+fmtE(S.warpCreateNeed*1000)+' to open the bubble — it can jump')
+          :('only '+fmtE(S.energyStore*1000)+' stored — the drive needs '+fmtE(S.warpCreateNeed*1000)+' to jump. Add a Capacitor Bank (this is the real energy cost of FTL, not the reactor).'));
+  }
   // crew
   gate(!any?'na':'pass','Crew from the population pool',
     !any?'—':(S.crew<=0?'net crew freed by automation':fmt(S.crew)+' drawn from the colony pool (informational — the pool provides it)'));
@@ -813,10 +829,10 @@ function renderGauges(S){
     return '<div class="gauge'+(muted?' muted':'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+sub+'</s></div>';
   }
   el.innerHTML=
-    gauge('Firepower',fmt(S.firepower,1),'Σ damage / sec',S.firepower<=0)+
+    gauge('Firepower',fmt(S.firepower,1),'Σ MJ/s delivered (= MW)',S.firepower<=0)+
     gauge('Toughness',fmt(S.toughness,0),'health + armour',S.toughness<=12)+
     gauge('Evasion',(S.evasion*100).toFixed(0)+'%',host==='station'?'stations never dodge':'chance a shot misses',S.evasion<=0)+
-    gauge('Shield',S.shieldCap>0?fmt(S.shieldCap,0)+'J':'—','+'+fmt(S.shieldRegen,0)+' J/s regen',S.shieldCap<=0);
+    gauge('Shield',S.shieldCap>0?fmtE(S.shieldCap):'—','+'+fmtE(S.shieldRegen)+'/s regen',S.shieldCap<=0);
   var nt=document.getElementById('totalsNote');
   var bits=[];
   bits.push('Role: <b>'+(S.roleWeight>=1?'armed (weight 1.0)':'utility (weight 0.25)')+'</b>');
@@ -825,7 +841,7 @@ function renderGauges(S){
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
   if(S.caliber>1||S.fcMult>1)bits.push('<b style="color:var(--ac2)">Firepower ×'+(S.caliber*S.fcMult).toFixed(2)+'</b> (targeting + fire-control, LIVE)');
   if(S.ecmBonus>0)bits.push('<b style="color:var(--ac2)">ECM +'+(S.ecmBonus*100).toFixed(0)+'%</b> hit-avoidance (LIVE)');
-  if(S.energyStore>0)bits.push('Capacitors '+fmt(S.energyStore)+' MJ warp/weapon buffer');
+  if(S.energyStore>0)bits.push('Capacitors '+fmtE(S.energyStore*1000)+' stored (warp-jump buffer)');
   if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
   if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' fighters berthed — PENDING (can’t sortie yet).</b>');
   if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' vehicles/troops — invasion chain LIVE.</b>');
@@ -916,17 +932,19 @@ function renderWeapons(S){
     var groundOnly = (host==='ground')?'live':'inert';
     var pdState = w.pd || w.delivery==='Guided' ? (host==='ship'?'shiponly':'inert') : null;
     var g='';
-    g+=fld('damage/s',fmt(w.dps*n,0),'live');
+    var powered=(w.nature==='Energy'||w.nature==='Exotic');
+    g+=fld('damage/s',fmt(w.dps*n,1)+' MJ/s','live');
+    if(powered)g+=fld('grid draw',fmt(w.dps*n,1)+' MW','live'); // engine-exact: draw = damage
     g+=fld('nature',w.nature,'live');
     g+=fld('range',w.range+' km','live');
     g+=fld('velocity',fmt(w.vel,0),'live');
     g+=fld('tracking',(w.track*100).toFixed(0)+'%','live');
     g+=fld('saturation',fmt(w.rate*n,0)+'/s','live');
     g+=fld('penetration',w.pen,groundOnly);
-    g+=fld('per-shot',w.pershot,groundOnly);
+    g+=fld('per-shot',fmtE(w.pershot*1e6),groundOnly);
     if(w.delivery==='Guided') g+=fld('PD-answerable',w.pd||w.delivery==='Guided'?'yes':'no',pdState);
-    // runs-on (nature-decided, verified)
-    var runs=(w.nature==='Energy')?'power':(w.nature==='Kinetic'||w.nature==='Explosive')?'ammo':'none';
+    // runs-on (nature-decided, verified): energy/exotic beams draw the grid; kinetic/explosive draw ammo
+    var runs=powered?'power':'ammo';
     g+=fld('runs on',runs,'live');
     html+='<div class="wp"><div class="wphd"><span class="wpn">'+c.name+'</span>'+
       '<span class="wpc">×'+n+' · '+w.delivery+'</span></div><div class="wpgrid">'+g+'</div></div>';
@@ -1020,7 +1038,7 @@ function renderHandoff(S){
   }).join('\n');
   if(!wlines)wlines='    <span class="c">(none)</span>';
   el.innerHTML=
-    '<span class="c">// what ShipCombatValueDB.Calculate() emits for a '+S.H.name+':</span>\n'+
+    '<span class="c">// what ShipCombatValueDB.Calculate() emits for a '+S.H.name+' — Firepower MJ/s, shields J:</span>\n'+
     '<span class="k">Firepower</span>       = <span class="v">'+fmt(S.firepower,1)+'</span>\n'+
     '<span class="k">Toughness</span>       = <span class="v">'+fmt(S.toughness,0)+'</span>\n'+
     '<span class="k">Evasion</span>         = <span class="v">'+S.evasion.toFixed(2)+'</span>\n'+

@@ -23,10 +23,16 @@ force → ② break an orbital blockade (light guns) → ③ survive the drop.**
 starfighters** — it's a vehicle/troop carrier, not a fighter carrier.)*
 
 ## It closes (all gates green)
-Hull **17,055 / 20,000 t** · Volume **13,542 / 14,000 m³** (packed — it's a transport) · Firepower **2,106** ·
-Crew **658** berthed & supported · Power 315/360 MW · **Deployment 61 days — provisions-limited** (an assault
+Hull **17,125 / 20,000 t** · Volume **13,582 / 14,000 m³** (packed — it's a transport) · Firepower **61 MJ/s** ·
+Crew **659** berthed & supported · Power 129/2,400 MW · **Deployment 61 days — provisions-limited** (an assault
 dropship isn't self-sufficient; it resupplies from the task force — a nice contrast with the self-sufficient
 carriers).
+
+> ⚡ **Energy recalibrated to the engine (2026-08-02).** Firepower/power are now real engine units — weapon damage in
+> MJ/s, an energy weapon's draw equal to its damage, warp gated on a battery charge. The old made-up "2,106 firepower"
+> is now a physical **61 MJ/s**, and power reads 129 of 2,400 MW (a capital reactor out-supplies its guns many times
+> over). The design didn't change — the numbers became honest. One capacitor was added to pass the new warp-battery
+> gate (1.5 GJ ≥ the 1.25 GJ to open a jump).
 
 ## The honest ledger
 **LIVE:** the guns, armour, shields, sensors, crew sustainment, the hyperdrive — **and the headline: it lands
