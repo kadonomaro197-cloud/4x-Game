@@ -49,6 +49,14 @@ fight*, both fixed by **adding** parts (not changing the canon armament):
 Both are *live* systems (detection is a real reader; ammo is the real dry-magazine gate), so closing these gaps
 makes the ship genuinely combat-worthy, not just paper-accurate.
 
+**A third fix was a readout, not a part.** The tool showed "Fuel: 67 h" as if it were the deployment limit — but
+in Newtonian flight a patrol ship *coasts*, burning propellant only to change course. 67 h is a **maneuvering (Δv)
+reserve**, not a deployment clock. So endurance was split into the two clocks that actually govern a patrol:
+**Deployment** (~500 days on station — capped by the reactor fuel core, since hydroponics makes food a closed
+loop) and **Maneuver fuel** (the Δv reserve, spent in bursts). It's the nuclear-carrier distinction: steam for
+years on the core, limited by stores — and with a farm aboard, not even by stores. *(The escort, with no
+hydroponics, comes out provisions-limited at ~98 days — the limiter swaps with the build.)*
+
 ## The full mapping — every Venator system → a component → the count
 
 | Venator system | Assembler component | Count | Reaches the sim? |
@@ -85,7 +93,8 @@ Load the **▲ Venator-class carrier** preset (host = Warship):
 | Shields | 7,500 J (+375/s) |
 | Evasion | 4% (a slow capital ship) |
 | FTL | warp-capable; 15 MW to sustain |
-| Δv / fuel | 3.9 km/s · 67 h at full burn |
+| **Deployment** | **~500 d (~1.4 yr) on station** — capped by the reactor fuel core; food is a closed loop (hydroponics) |
+| Maneuver fuel | 67 h of full burn · Δv 3.9 km/s — a reserve spent in bursts (you coast between) |
 | **Detection** | **470 km** — reaches past the 400 km torpedoes (see-first) |
 | Crew provisions | **∞** — hydroponics feeds 1,200 ≥ 789 crew (closed loop) |
 | Heat margin | +20 MW (radiators clear it) |

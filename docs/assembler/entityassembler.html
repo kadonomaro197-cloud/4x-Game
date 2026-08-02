@@ -370,13 +370,13 @@ var CAT=[
    cost:{bp:160,cr:22,rp:4,steel:30,elec:52,mats:{'em-shielding-mesh':30,'ree-magnetics':12}},
    honesty:'A depleting pool laid over HP. Ship: drained through the kernel. Ground: drained inline — different code, same idea.'},
  {id:'reactor',cat:'Power',name:'Fusion Reactor',hosts:['ship','ground','station'],
-   mass:200,vol:52,crew:8,hp:28,draw:0,supply:20,loud:true,
+   mass:200,vol:52,crew:8,hp:28,draw:0,supply:20,loud:true,deployDays:200,
    cost:{bp:240,cr:30,rp:5,steel:110,elec:60,fissile:40},
-   honesty:'Supplies power AND is a loud heat/EM source — it decides who gets detected first.'},
+   honesty:'Supplies power AND is a loud heat/EM source — it decides who gets detected first. Its fissile core runs ~200 days before refuel — one of the two deployment clocks.'},
  {id:'capreactor',cat:'Power',name:'Capital Reactor',hosts:['ship','station'],
-   mass:900,vol:240,crew:40,hp:60,draw:0,supply:120,loud:true,
+   mass:900,vol:240,crew:40,hp:60,draw:0,supply:120,loud:true,deployDays:500,
    cost:{bp:820,cr:110,rp:7,steel:420,elec:180,fissile:160},
-   honesty:'Capital-scale output — one feeds a whole wall of turbolasers. Very loud: a beacon on any sensor.'},
+   honesty:'Capital-scale output — one feeds a whole wall of turbolasers. Very loud: a beacon on any sensor. Its fissile core runs ~500 days before refuel — the deployment clock for a big ship.'},
  {id:'radiator',cat:'Power',name:'Radiator Bank',hosts:['ship','station'],
    mass:40,vol:44,crew:1,hp:8,draw:0,supply:0,heatDissip:40,
    cost:{bp:80,cr:6,rp:2,steel:60,elec:8},
@@ -533,7 +533,7 @@ function compute(){
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
   var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0;
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
-  var warpCap=false,warpSustain=0,speedFactor=0;
+  var warpCap=false,warpSustain=0,speedFactor=0,reactorDays=Infinity;
   A.forEach(function(c){
     var n=counts[c.id];
     mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
@@ -557,6 +557,7 @@ function compute(){
     if(c.warp)warpCap=true;
     if(c.warpSustain)warpSustain+=c.warpSustain*n;
     if(c.speedFactor)speedFactor=Math.max(speedFactor,c.speedFactor);
+    if(c.deployDays)reactorDays=Math.min(reactorDays,c.deployDays);
     if(c.weapon){
       firepower+=c.weapon.dps*n;
       // energy weapons draw reactor power; kinetic/explosive draw ammo (nature decides — verified)
@@ -585,6 +586,10 @@ function compute(){
   var foodNet=Math.max(0,crew-foodProd); // crew-days consumed per day after homegrown food
   var selfSufficient=(crew>0&&foodProd>=crew);
   var provDays=foodNet>0?provisions/foodNet:(crew>0?Infinity:(provisions>0?Infinity:0));
+  // deployment (on-station) endurance — the PATROL clock: whichever continuous consumable runs out first,
+  // reactor fuel core or crew provisions. Propellant is NOT here — you coast, so it's a separate maneuver budget.
+  var deployDays=Math.min(reactorDays,provDays);
+  var deployLimiter=(reactorDays<provDays)?'reactor fuel core':((provDays<reactorDays)?'crew provisions':((reactorDays===Infinity)?'—':'reactor + provisions'));
   var ammoMin=ammoUse>0?ammoCap/ammoUse:(hasAmmoWeapon?0:Infinity);
   var heatBalance=heatDissip-heatGen; // MW; <0 = throttling
   return {A:A,H:H,mass:mass,vol:vol,crew:crew,supply:supply,draw:draw,thrust:thrust,
@@ -594,6 +599,7 @@ function compute(){
     accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
     warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
+    reactorDays:reactorDays,deployDays:deployDays,deployLimiter:deployLimiter,
     ammoCap:ammoCap,ammoUse:ammoUse,ammoMin:ammoMin,
     heatGen:heatGen,heatDissip:heatDissip,heatBalance:heatBalance,detect:detect,
     over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
@@ -713,18 +719,20 @@ function renderMobility(S){
 function renderEndurance(S){
   var el=document.getElementById('endurance');var note=document.getElementById('endNote');
   function g(label,val,s,cls){return '<div class="gauge'+(cls||'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+s+'</s></div>';}
-  // fuel (ship movement)
+  // DEPLOYMENT — the patrol clock: reactor fuel core + provisions (runs whether it moves or not)
+  var dV,dS,dC='';
+  if(S.deployDays===Infinity){dV='∞';dS=(S.crew<=0?'no crew, no reactor fuel to burn':'reactor + food both self-sustaining');dC=' okb';}
+  else{
+    var yr=S.deployDays>=365?' (~'+fmt(S.deployDays/365,1)+' yr)':'';
+    dV=fmt(S.deployDays,0)+' d';
+    dS='on station · capped by '+S.deployLimiter+(S.selfSufficient?' (food: closed loop)':'')+yr;
+    dC=(S.deployDays<30?' warnb':'');
+  }
+  // MANEUVER FUEL — a Δv reserve you spend in bursts, then coast (NOT the deployment clock)
   var fV,fS,fC='';
-  if(host!=='ship'){fV='—';fS='n/a — '+S.H.name.toLowerCase()+' doesn’t burn fuel';fC=' muted';}
-  else if(S.fuelStore<=0){fV=S.accel>0?'0':'—';fS=S.accel>0?'a drive with no fuel tank':'no fuel needed yet';fC=S.accel>0?' warnb':' muted';}
-  else if(S.fuelHrs===Infinity){fV=fmt(S.fuelStore,0)+' t';fS='fuel stored, nothing burning it';}
-  else {fV=fmt(S.fuelHrs,0)+' h';fS=fmt(S.fuelStore,0)+' t ÷ '+fmt(S.fuelHrs>0?S.fuelStore/S.fuelHrs:0,1)+' t/h burn';}
-  // crew provisions (stored food, offset by hydroponics)
-  var pV,pS,pC='';
-  if(S.crew<=0){pV='—';pS='no crew to feed';pC=' muted';}
-  else if(S.selfSufficient){pV='∞';pS='hydroponics feeds '+fmt(S.foodProd,0)+' ≥ '+fmt(S.crew,0)+' crew — closed loop';pC=' okb';}
-  else if(S.provisions<=0){pV='0 d';pS=fmt(S.crew,0)+' crew, no food aboard';pC=' warnb';}
-  else {pV=fmt(S.provDays,0)+' d';pS=fmt(S.provisions,0)+' cd ÷ '+fmt(S.foodNet,0)+'/day'+(S.foodProd>0?' (after '+fmt(S.foodProd,0)+' grown)':'');}
+  if(host!=='ship'){fV='—';fS=(host==='ground'?'ground units march, not burn':'immobile — holds station');fC=' muted';}
+  else if(S.fuelStore<=0){fV=S.accel>0?'0 h':'—';fS=S.accel>0?'a drive with no fuel tank':'no drive';fC=S.accel>0?' warnb':' muted';}
+  else {fV=fmt(S.fuelHrs,0)+' h';fS='full-burn reserve · Δv '+fmt(S.deltaV,1)+' km/s — spent in bursts, coast between';}
   // ammo
   var aV,aS,aC='';
   if(!S.hasAmmoWeapon){aV='—';aS='no ammo weapons';aC=' muted';}
@@ -735,13 +743,13 @@ function renderEndurance(S){
   if(S.heatGen<=0){hV='—';hS='no energy weapons';hC=' muted';}
   else if(S.heatBalance>=0){hV='+'+fmt(S.heatBalance,0)+' MW';hS='radiators clear the heat';hC=' okb';}
   else {hV=fmt(S.heatBalance,0)+' MW';hS='over-heats → throttles fire';hC=' warnb';}
-  el.innerHTML=g('Fuel',fV,fS,fC)+g('Crew provisions',pV,pS,pC)+g('Ammo',aV,aS,aC)+g('Heat margin',hV,hS,hC);
+  el.innerHTML=g('Deployment',dV,dS,dC)+g('Maneuver fuel',fV,fS,fC)+g('Ammo',aV,aS,aC)+g('Heat margin',hV,hS,hC);
   var w=[];
   if(host==='ship'&&S.accel>0&&S.fuelStore<=0)w.push('a drive with no fuel — it can’t maneuver');
   if(S.crew>0&&!S.selfSufficient&&S.provisions<=0)w.push('crew aboard with no food — add provisions or hydroponics');
   if(S.hasAmmoWeapon&&S.ammoMin<=0)w.push('ammo weapons with no magazine — they fire dry');
   if(S.heatBalance<0)w.push('energy guns out-heat the radiators — sustained fire throttles');
-  note.innerHTML=w.length?('⚠ '+w.join(' · ')):'Endurance keeps a unit in the fight after the first exchange — fuel to maneuver, food to man it, ammo to keep firing, radiators to not cook itself.';
+  note.innerHTML=w.length?('⚠ '+w.join(' · ')):'Two different clocks. <b>Deployment</b> is how long it stays on station — reactor fuel + food, burning whether it moves or not. <b>Maneuver fuel</b> is a Δv reserve spent in bursts, then coast (a patrol ship isn’t under thrust the whole time). Ammo + heat cap the fight itself.';
 }
 
 /* ---------- render: weapon profiles (the hero) ---------- */
