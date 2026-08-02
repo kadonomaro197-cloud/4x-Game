@@ -115,6 +115,32 @@ The cradle rung, requested after the mission: the bill of materials the designer
   DOES NOT EXIST (SpawnWreck is a stub). gallicite would FAULT the ordnance build.
 - New resources all ride the mining chain except biomass (grown, not mined). DOCS-INDEX §4b row added.
 
+## FOLLOW-ON (2026-08-02) — INPUTS + OUTPUTS VERIFICATION (`05` + `06`, the two ends)
+The inputs question (`05-MATERIAL-INPUTS-BY-DOOR.md`): a 13-input taxonomy verified per door — does the game
+**provide** everything a component consumes (build + run)? Answer: build side fully charged; run side mostly
+built with 3 "free" gaps. Surfaced 3 undefined ordnance minerals (`gallicite`/`duranium`/`mercassium`) — a live
+latent bug that faulted missile builds — and **FIXED** them (commit 76860c1: redirected to electronics/steel/
+aluminium; verified zero undefined component-cost refs remain; gauge `BaseModIntegrityTests`).
+Then the mirror — the outputs question (`06-OUTPUTS-BY-DOOR.md`): for every number a dial WRITES, does the game
+**read it back**? Verified by **12 per-door forensic source traces** (one verifier per door via the Agent tool;
+Aura by hand — grep `[Aa]ura` = zero engine files), each output cited file:line at its actual reader or proven
+dead. Findings:
+- **Combat + economy core fully read** (Weapons/Power/Industrial/Propulsion/Sensors/Defense).
+- **6 true dead-ends** (AdminLevel · ship-bridge Console Space · Fighter-Construction-Points · Enhancers iface
+  cooldown-cut · strike-launch `ParasiteLauncherReady` · Command hex-radius→save-unsafe blob) + ~12 pending.
+- **Load-bearing structural finding: ship vs ground resolvers read DIFFERENT output subsets** — a weapon's
+  penetration/per-shot/rate and a defense component's shields are LIVE on a ground unit, INERT on a ship (the ship
+  path folds armour into one Toughness pool). The Assembler must wire consumers PER HOST.
+- **Crack C1 confirmed at source**: the employment morale term is fully wired on the reader side and contributes
+  **zero forever** because nothing writes `EmploymentAtbDB.Jobs` (producer absent, consumer live).
+- **13 matrix mislabels** corrected in `06`'s corrections table → a `⚠` banner added to `02` Table A. None are
+  crashes; all are "which reader fires" (iface has no writer; Defense shields are ground-inline not the ship
+  kernel; ammo/troops feed dedicated `ShipMagazineAtb`/`GroundBayAtb`; `LogiBaseAtb` engine-dead/client-live).
+- Bonus source facts: Sensors **C7 band-match bug confirmed in engine** (a visible receiver detects an IR reactor,
+  `SensorTools.cs:147` ignores `rec.max`); Weapons `HeatPerSecond` is a live field the door forgot to emit.
+DOCS-INDEX §4b rows for `05`/`06` added; `02` Table A banner added; "As of" stamp refreshed. Design/verification
+only — the only code change in the whole follow-on was the ordnance-mineral data fix (already pushed).
+
 ---
 
 ## RESUME NOTES (update on every commit — what's done, what's next, any gotcha)

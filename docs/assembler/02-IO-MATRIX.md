@@ -35,6 +35,15 @@ One row per variable the simulation reads (plus the load-bearing pending ones). 
 list**: variable → which door owns it → the control that sets it → range/default → the engine consumer →
 build-state. Grouped by owning door.
 
+> **⚠ Reader-verified corrections (2026-08-02) — see `06-OUTPUTS-BY-DOOR.md`.** This table's `Consumer` and
+> `State` columns are the Phase-2 snapshot. A forensic per-door source trace (`06`) re-verified every output from
+> the reader's end and found **13 mislabels** — not crashes, but *which* reader fires. The load-bearing ones:
+> **Enhancers iface `SwitchableAfter`** is DEAD (no component writes the cut), not "live"; **Defense shield/regen**
+> are drained **inline in the ground resolver**, not `CombatKernel.ResolveShield`; **Logistical ammo/troops** feed
+> dedicated `ShipMagazineAtb`/`GroundBayAtb`, not the cargo store; **`LogiBaseAtb`** is engine-dead but
+> **client-live**; **Chassis Structure→HP and several Weapons outputs (penetration/per-shot/rate)** are
+> **ground-only** — inert on a ship. Read `06`'s corrections table before wiring a consumer.
+
 ### A1 · Weapons  *(proposed door; the ten variables ARE the resolver's `WeaponProfile` — `01-IO-weapons.md`)*
 | Variable (engine name) | Control that sets it | Range / default | Consumer | State |
 |---|---|---|---|---|
