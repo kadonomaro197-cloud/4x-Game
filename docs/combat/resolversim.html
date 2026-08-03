@@ -175,10 +175,13 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
       <select id="scenario"></select>
     </label>
     <label class="inl A">A doctrine
-      <select id="stanceA"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option></select>
+      <select id="stanceA"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option><option value="withdraw">Withdraw</option></select>
     </label>
     <label class="inl B">B doctrine
-      <select id="stanceB"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option></select>
+      <select id="stanceB"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option><option value="withdraw">Withdraw</option></select>
+    </label>
+    <label class="inl">Step
+      <select id="dtsel"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="5">5 s</option></select>
     </label>
     <span class="spacer"></span>
     <button class="ctl" id="btnStep">Step ▸</button>
@@ -390,8 +393,8 @@ const CE = {
   SalvoDamageScale:      0.1,      // CombatEngagement.cs:103  — the combat-pace dial
   PointDefenseMaxIntercept:0.95,   // CombatEngagement.cs:1459
   RetreatCasualtyThreshold:0.5,    // CombatEngagement.cs:48
-  MaxSteps:              5000,     // CombatEngagement.cs:43
-  DtStep_s:              5.0,      // BattleTriggerProcessor cadence (5 s) — the salvo dt
+  MaxSteps:              20000,    // CombatEngagement.cs:43 (raised — finer steps = more salvos)
+  DtStep_s:              2.0,      // sim step granularity — the engine samples 5 s, but the arena math is per-second, so a finer step changes PACE, not outcome (settable 1/2/5 s)
 };
 const SCV = { MissileLauncherFirepowerStub:100_000.0, UtilityRoleWeight:0.25, EvasionCap:0.95, LightSpeed_mps:299_792_458.0 };
 
@@ -441,11 +444,11 @@ function profileFor(key, count, fpScale){
       so Σ weapon dps == Firepower.
    ================================================================== */
 const SHIP_TYPES = {
-  venator:   {label:"Venator",   toughness:463, evasion:0.12, shieldCap:25,  shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:2000,
+  venator:   {label:"Venator",   toughness:463, evasion:0.12, shieldCap:25,  shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:4000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:10, medturbo:2, pdbattery:52, missile:4}},
-  acclamator:{label:"Acclamator",toughness:286, evasion:0.00, shieldCap:15,  shieldRegen:0.3, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:3000,
+  acclamator:{label:"Acclamator",toughness:286, evasion:0.00, shieldCap:15,  shieldRegen:0.3, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:6000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:3, medturbo:12, pdbattery:24, missile:4}},
-  sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:2600,
+  sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:5000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{medturbo:16, laser:14, missile:16, pdbattery:12}},
 };
 function buildShip(typeKey, name){
@@ -533,26 +536,28 @@ function newSpaceState(scen){
 // MOVEMENT — the fight resolved by movement (LD-30): each fleet closes/kites
 // at its real speed toward its doctrine's preferred gap; the circle is fixed.
 function advanceArena(live, dt){
-  const R = state.arenaR;
   for(const f of live){
     const enemy = nearestEnemy(f, live); if(!enemy) continue;
     const gap = fleetSep(f, enemy);
     let want = f.stance==="hold" ? gap
+             : f.stance==="withdraw" ? state.sep0*4                     // run for it — open the gap as far as you can
              : f.stance==="standoff" ? Math.min(dominantRange(f)*ARENA.KiteMargin, state.sep0)
-             : ARENA.MinGap_m;                          // "close" → drive to knife range
-    const dir = Math.sign(enemy.pos.x - f.pos.x) || 1;  // +dir points at the enemy
+             : ARENA.MinGap_m;                                          // "close" → drive to knife range
+    const dir = Math.sign(enemy.pos.x - f.pos.x) || 1;                  // +dir points at the enemy
     const step = fleetSpeed(f)*dt;
-    if(gap > want+1) f.pos.x += dir*step;               // close in
-    else if(gap < want-1) f.pos.x -= dir*step;          // open up (kite)
-    f.pos.x = clamp(f.pos.x, -R, R);                    // never leave the arena
+    if(gap > want+1) f.pos.x += dir*step;                               // close in
+    else if(gap < want-1) f.pos.x -= dir*step;                          // open up (kite / run)
+    // NOTE: no arena clamp — "close/stand-off/hold" are already bounded by `want`,
+    // and a "withdraw" fleet must be able to run PAST the edge to break contact.
   }
-  // no crossing + a knife-range floor (A starts left, B right)
+  // no crossing + a knife-range floor (A starts left, B right) — but a fleet that is
+  // WITHDRAWING is allowed to slip past, otherwise it could never disengage.
   const A=live.filter(f=>f.side==="A"), B=live.filter(f=>f.side==="B");
   if(A.length && B.length){
     const ax=Math.max(...A.map(f=>f.pos.x)), bx=Math.min(...B.map(f=>f.pos.x));
     if(bx-ax < ARENA.MinGap_m){ const mid=(ax+bx)/2;
-      A.forEach(f=>f.pos.x=Math.min(f.pos.x, mid-ARENA.MinGap_m/2));
-      B.forEach(f=>f.pos.x=Math.max(f.pos.x, mid+ARENA.MinGap_m/2)); }
+      A.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.min(f.pos.x, mid-ARENA.MinGap_m/2); });
+      B.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.max(f.pos.x, mid+ARENA.MinGap_m/2); }); }
   }
   // each fleet's separation = distance to its nearest enemy (what the range gate + falloff read)
   for(const f of live){ const e=nearestEnemy(f, live); f.Separation_m = e ? fleetSep(f,e) : 0; }
@@ -695,16 +700,28 @@ function stepSpace(){
   }
   const gapNow = live[0].Separation_m;
   nl(`<span class="sys">— salvo ${st.salvo} · <span class="rng">gap ${fmtKm(gapNow)}</span> (dt ${dt}s, ×${CE.SalvoDamageScale} pace) —</span>`,"sys");
+  // announce each weapon TYPE the first time it comes into range — missiles first, PD last
+  st.firedKeys = st.firedKeys || new Set();
+  const inRangeNow = new Map();
+  for(const fm of fire) for(const w of fm){ if(w.dps>0) inRangeNow.set(w.key, w.range); }
+  [...inRangeNow].sort((a,b)=>b[1]-a[1]).forEach(([key,rng])=>{
+    if(!st.firedKeys.has(key)){ st.firedKeys.add(key);
+      nl(`<span class="rng">▸ ${WEAPONS[key].label} opens up — reaches ${fmtKm(rng)}, gap now ${fmtKm(gapNow)}</span>`,"rng"); }
+  });
   salvoEvents.forEach(l=>nl(l));
-  // (2) MOVE — the units close/kite at their real speeds for the next salvo (LD-30)
+  // (2) MOVE — the units close / kite / run at their real speeds for the next salvo (LD-30)
   advanceArena(live, dt);
-  // (3) resolution: retreat threshold + wipe drop
-  for(const fl of st.fleets){
-    if(fl.retreated) continue;
-    const cnt=liveShips(fl).length;
-    if(cnt>0 && cnt <= fl.InitialShipCount*(1-CE.RetreatCasualtyThreshold) && cnt<fl.InitialShipCount){
+  // (3) resolution: a WITHDRAW fleet disengages once it has broken past the longest
+  //     weapon range (you can only outrun a SLOWER enemy). NO automatic casualty
+  //     retreat — everyone stays until the battle is decided, unless ORDERED to break
+  //     off via the Withdraw doctrine.
+  const inCombat0=st.fleets.filter(f=>liveShips(f).length>0 && !f.retreated);
+  for(const fl of inCombat0){
+    if(fl.stance!=="withdraw") continue;
+    const e = nearestEnemy(fl, inCombat0);
+    if(e && fleetSep(fl,e) > st.sep0){                        // outran a LIVE enemy past its longest range — broke contact
       fl.retreated=true;
-      nl(`<b class="${fl.side==="A"?"A":"B"}">${fl.name}</b> <span class="sys">broke off — lost ≥${pct(CE.RetreatCasualtyThreshold)} of its ships (retreat)</span>`,"sys");
+      nl(`<b class="${fl.side==="A"?"A":"B"}">${fl.name}</b> <span class="sys">broke off and cleared the engagement (Withdraw order — it outran the enemy)</span>`,"sys");
     }
   }
   const stillIn=st.fleets.filter(f=>liveShips(f).length>0 && !f.retreated);
@@ -797,16 +814,19 @@ function drawArena(){
     const fl = st.fleets.find(f=>f.side===side); if(!fl) continue;
     const cxm = sideCentroidX(side);
     const enemyDir = side==="A"?1:-1;                    // side A reaches to the right, B to the left
-    const clusterX = X(cxm);
-    const lr = longestRange(fl), dr = dominantRange(fl);
-    for(const [rng,op] of [[lr,0.10],[dr,0.20]]){
-      const reachPx = Math.min(rng*k, 2*rPx);
-      const x0 = clusterX, x1 = clusterX + enemyDir*reachPx;
-      const rx0=Math.min(x0,x1), rw=Math.abs(x1-x0);
-      svg+=`<rect x="${rx0}" y="${cy-26}" width="${rw}" height="52" fill="${col}" opacity="${op}"/>`;
-    }
-    const drx = clusterX + enemyDir*Math.min(dr*k,2*rPx);
-    svg+=`<line x1="${drx}" y1="${cy-28}" x2="${drx}" y2="${cy+28}" stroke="${col}" stroke-width="1.5" opacity="0.8"/>`;
+    const clusterX = clamp(X(cxm), padX, W-padX);        // keep a running (withdrawing) fleet visible at the edge
+    const dr = dominantRange(fl);
+    // one translucent band + labeled edge per DISTINCT weapon range — so you SEE that a
+    // missile reaches farther than a laser (widest band = faintest/outermost, layered inward)
+    const uniqR = [...new Map(fl.ships.filter(s=>s.alive).flatMap(s=>s.weapons).map(w=>[w.range,w.label])).entries()].sort((a,b)=>b[0]-a[0]);
+    uniqR.forEach(([rng,label],idx)=>{
+      const x1 = clusterX + enemyDir*Math.min(rng*k, 2.2*rPx);
+      const rx0=Math.min(clusterX,x1), rw=Math.abs(x1-clusterX);
+      svg+=`<rect x="${rx0}" y="${cy-22}" width="${rw}" height="44" fill="${col}" opacity="${(0.06+0.055*idx).toFixed(3)}"/>`;
+      svg+=`<line x1="${x1}" y1="${cy-22}" x2="${x1}" y2="${cy+22}" stroke="${col}" stroke-width="1" opacity="0.6"/>`;
+      const ly = (side==="A"? cy-27 : cy+34) - (idx%2)*10;   // stagger so range labels don't collide
+      svg+=`<text x="${x1}" y="${ly}" fill="${col}" font-size="8" text-anchor="middle" font-family="monospace" opacity="0.85">${(rng/1000).toFixed(0)}</text>`;
+    });
     const ships=fl.ships, n=ships.length;
     ships.forEach((s,i)=>{
       const yy = cy + (i-(n-1)/2)*15;
@@ -820,7 +840,7 @@ function drawArena(){
     svg+=`<text x="${lx}" y="32" fill="${muted}" font-size="9.5" text-anchor="${side==='A'?'start':'end'}" font-family="monospace">${liveShips(fl).length}/${fl.ships.length} · ${fmtKm(dr)} reach · ${(fleetSpeed(fl)/1000).toFixed(1)} km/s</text>`;
   }
   // the gap marker between the two clusters
-  const ax=X(sideCentroidX("A")), bx=X(sideCentroidX("B"));
+  const ax=clamp(X(sideCentroidX("A")),padX,W-padX), bx=clamp(X(sideCentroidX("B")),padX,W-padX);
   const midx=(ax+bx)/2;
   svg+=`<line x1="${ax}" y1="${cy-34}" x2="${bx}" y2="${cy-34}" stroke="${gapc}" stroke-width="1" opacity="0.7"/>`;
   svg+=`<line x1="${ax}" y1="${cy-38}" x2="${ax}" y2="${cy-30}" stroke="${gapc}" stroke-width="1"/>`;
@@ -841,7 +861,7 @@ function fleetCard(fl){
   const fp=fleetFirepower(fl), sh=fleetShield(fl);
   const live=liveShips(fl).length;
   const shPct = sh.cap>0 ? clamp((fl.ShieldPool<0?sh.cap:fl.ShieldPool)/sh.cap,0,1) : 0;
-  const stanceLbl = fl.stance==="close"?"closing in":fl.stance==="standoff"?"standing off":"holding";
+  const stanceLbl = fl.stance==="close"?"closing in":fl.stance==="standoff"?"standing off":fl.stance==="withdraw"?"withdrawing":"holding";
   return `<div class="side ${fl.side}">
     <h3><span>${fl.name}${fl.retreated?' <span class="src">(broke off)</span>':''}</span><span class="fp">Σfp ${fmtMJ(fp)}/s</span></h3>
     <div class="fleetmeta">
@@ -934,8 +954,12 @@ function renderHonesty(){
     <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead</div>
     <p>No partial-hull tracking — a ship is full value or gone. Combat value is frozen at build (<span class="src">Combat/CLAUDE.md gotcha #2</span>), the direct consequence.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Break-off is an ORDER, not an auto-reflex</div>
+    <p>There is <b>no automatic casualty retreat</b> — a fleet fights until the battle is decided unless you <i>order</i> it to <b>Withdraw</b>. A withdrawing fleet runs from the enemy and only breaks contact once it has opened the gap past the longest weapon range — so it escapes <b>only if it is faster</b> than its pursuers; a slower fleet ordered to run gets caught and ground down as it flees. That mirrors the engine's real rule: retreat is a withdraw <i>doctrine</i>, not a threshold.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Each weapon engages at its OWN range</div>
+    <p>Every weapon fires only when the gap is inside <i>its</i> range, so as the two sides close the guns light up longest-first — the log calls out each one as it "opens up" and the arena draws a labelled band per weapon range. A missile reaching 400 km opens the fight; the point-defense at 12 km is the last thing to speak.</p></div>
   <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Everything else</div>
-    <p>The dodge/hit curve, the range-accuracy falloff over the closing flight (beams immune, slugs/torpedoes degrade), the true weapon-range gate, shield nature-matchup + drain/regen, point-defense interception, fire-split conservation, the retreat threshold, doctrine (Close / Stand-off / Hold) driving the movement, and bucketed whole-or-dead casualties are all shown engine-true.</p></div>`;
+    <p>The dodge/hit curve, the range-accuracy falloff over the closing flight (beams immune, slugs/torpedoes degrade), shield nature-matchup + drain/regen, point-defense interception, fire-split conservation, doctrine (Close / Stand-off / Hold / Withdraw) driving the movement, and bucketed whole-or-dead casualties are all shown engine-true. Step size (1/2/5 s) sets only the pace — the math is per-second, so the outcome is identical.</p></div>`;
 }
 function renderConst(){
   const kernel=[
@@ -949,7 +973,6 @@ function renderConst(){
     ["CombatKernel.cs:103","ArmourMinPassFraction","0.1","a source always lands ≥ this fraction (×10 armour ceiling)"],
     ["CombatEngagement.cs:103","SalvoDamageScale","0.1","the combat-pace dial"],
     ["CombatEngagement.cs:1459","PointDefenseMaxIntercept","0.95","hard cap on the missile fraction PD can intercept"],
-    ["CombatEngagement.cs:48","RetreatCasualtyThreshold","0.5","ship-loss fraction that breaks a fleet off"],
     ["ShipCombatValueDB.cs:38","MissileLauncherFirepowerStub","100,000 J/s","flat missile firepower = 0.1 MJ/s (the stub)"],
     ["ShipCombatValueDB.cs:96","EvasionCap","0.95","hard ceiling on evasion"],
     ["ShipCombatValueDB.cs:100","LightSpeed_mps","299,792,458","the real beam muzzle velocity (undodgeable)"],
@@ -960,8 +983,10 @@ function renderConst(){
     ["§5 LD-30","closing = movement","units at real speeds","the fight is resolved by units moving, not by one shrinking gap"],
     ["ARENA (sim)","MinGap_m","3,000","knife-range floor — clusters never fully overlap"],
     ["ARENA (sim)","KiteMargin","0.9","'stand off' holds at its dominant-weapon range × this"],
-    ["WeaponProfile.cs","true weapon ranges","torpedo 400 / heavy-turbo 220 / ion 160 / med-turbo 140 / railgun 80 / laser 60 / PD 12 km","the engagement bands the arena closes through"],
-    ["NewtonThrustAbilityDB (stand-in)","closing speed","2,000–3,000 m/s","per-class editable — the one input not on a spec sheet"],
+    ["ARENA (sim)","step size","1 / 2 / 5 s","time per salvo — finer = smoother; per-second math, so pace only, not outcome"],
+    ["doctrine order","break-off","Withdraw","no auto-retreat — a fleet leaves only when ordered, and escapes only if it outruns the enemy"],
+    ["WeaponProfile.cs","true weapon ranges","torpedo 400 / heavy-turbo 220 / ion 160 / med-turbo 140 / railgun 80 / laser 60 / PD 12 km","each fires only at its own range — missiles open, PD closes"],
+    ["NewtonThrustAbilityDB (stand-in)","closing speed","4,000–6,000 m/s","per-class editable — the one input not on a spec sheet"],
   ];
   const t=(rows)=>`<table><thead><tr><th>Source</th><th>Constant</th><th class="n">Value</th><th>What it does</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td class="src">${r[0]}</td><td class="mono">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`;
@@ -1027,6 +1052,7 @@ function init(){
   document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; stop(); rebuild(); });
   document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
   document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
+  document.getElementById("dtsel").addEventListener("change",e=>{ CE.DtStep_s=+e.target.value; if(state) render(); });
   document.getElementById("btnStep").addEventListener("click",()=>{ stop(); stepOnce(); });
   document.getElementById("btnPlay").addEventListener("click",()=>{ playing?stop():play(); });
   document.getElementById("btnFf").addEventListener("click",resolveAll);

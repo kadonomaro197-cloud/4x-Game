@@ -32,6 +32,7 @@ they merge. The damage underneath the movement is the engine's **real** combat k
    - **Stand off** — hold at your **dominant weapon's range** (where the bulk of your firepower lives) and kite if
      you're faster.
    - **Hold** — don't move.
+   - **Withdraw** — break off and run: open the gap and try to clear the fight (see step 6).
    The faster fleet dictates the range; a faster long-gun fleet can kite a slower brawler it out-ranges.
 4. **Fire at true range.** Each salvo, a weapon shoots **only if the current gap is inside its range**
    (`WeaponReaches`). Long weapons open the fight; short ones wait for the merge. A **beam** (light-speed) is
@@ -40,8 +41,17 @@ they merge. The damage underneath the movement is the engine's **real** combat k
    it at range, point-defense and lasers finish it up close.
 5. **Resolve the damage with the real kernel** — dodge, shield nature-matchup, point-defense interception of guided
    fire, fire-split conservation (an attacker facing two targets divides its guns, never doubles them), the flat
-   armour bounce, and **whole-or-dead** casualties. A fleet **breaks off** once it has lost half the ships it
-   started with.
+   armour bounce, and **whole-or-dead** casualties.
+6. **Break off only on an order.** There is **no automatic casualty retreat** — everyone fights until the battle is
+   decided. A fleet leaves only when you set its doctrine to **Withdraw**, and then it runs from the enemy and clears
+   the fight *only if it can open the gap past the longest weapon range* — i.e. **only if it is faster** than its
+   pursuers. Order a slower fleet to withdraw and it gets caught and ground down as it flees. (That mirrors the
+   engine: retreat is a withdraw *doctrine*, not a threshold.)
+
+Each weapon fires at its **own** range, so as the sides close the guns light up **longest-first** — the log calls out
+each one as it "opens up," and the arena draws a labelled range band per weapon. The **step size** (1 / 2 / 5 s) sets
+only how finely time is sliced; because the kernel math is per-second, a finer step is smoother but changes **no**
+outcome.
 
 **The whole point is fidelity.** Every damage formula and tuning number is copied from the engine source, cited to
 its file and line, and cross-checked on load. Where the engine has a **deliberate gap** (the torpedo stub, the
@@ -86,10 +96,12 @@ So: **the formulas and fraction-constants are byte-ported; the absolute magnitud
 ## The honesty ledger — what the sim shows straight, and what it flags
 
 **Shown engine-true (trust these):** the dodge/hit curve, the **range-accuracy falloff over the closing flight**
-(beams immune, slugs/torpedoes degrade), the **true weapon-range gate**, the shield nature-matchup and drain/regen,
-flat armour with penetration and the burst (alpha-vs-chip) split, the multi-fleet fire-split (`1/N`, firepower
-conserved), point-defense interception of guided fire, the retreat threshold, doctrine (Close / Stand-off / Hold)
-driving the movement, and whole-or-dead casualties bucketed by combat value.
+(beams immune, slugs/torpedoes degrade), the **per-weapon true-range gate** (each gun fires only inside its own
+range — missiles open the fight, PD closes it), the shield nature-matchup and drain/regen, flat armour with
+penetration and the burst (alpha-vs-chip) split, the multi-fleet fire-split (`1/N`, firepower conserved),
+point-defense interception of guided fire, **doctrine-ordered break-off** (Withdraw — no auto-retreat; you escape
+only if you outrun the enemy), doctrine (Close / Stand-off / Hold / Withdraw) driving the movement, and whole-or-dead
+casualties bucketed by combat value.
 
 **Flagged (the engine is like this — the sim shows it and says so):**
 - 🔵 **MODEL — this is the arena TARGET, not the shipped default.** The sim implements LD-30, the opposing-sides arena
@@ -199,13 +211,19 @@ goes red. This is the Visibility Gate applied to the simulator itself.
 ## The handoff battle, as the arena resolves it
 
 Default-open: **Republic (1 Venator + 2 Acclamators) vs Federation (2 Sovereigns)**, both closing. The fight opens
-400 km apart with only torpedoes reaching (the stub — near-harmless plinking, shields holding), the gap counts down,
-the Republic's **heavy turbolasers open at 220 km** — 80 km before the Federation's medium turbolasers bear — and that
-range-and-firepower advantage tells: the Republic holds all three hulls while a Sovereign dies and the Federation
-**breaks off** at 50% losses (≈15 salvos). Change the Federation to **Stand off** and it tries to hold at its 140 km
-band; change the Republic to **Stand off** and, being slower, it can't kite — the doctrine lever is the fight.
+400 km apart with **only the Proton Torpedoes reaching** (the stub — near-harmless plinking, shields holding); the
+gap counts down ~18 km a salvo; at **220 km the Republic's heavy turbolasers open up** and start hammering the
+Federation for ~18 MJ a salvo *while the Federation can still only answer with torpedoes* — its medium turbolasers
+don't bear until 140 km. That 80 km of one-sided fire is the whole game. With no auto-retreat, the Federation **fights
+to the end and is wiped** (both Sovereigns), the Republic losing one Acclamator (≈33 salvos at the 2 s step).
+Now try the doctrine lever: order the **Federation to Withdraw** and — being *faster* (5 vs 4 km/s) — it breaks
+contact and escapes intact; order the slower **Republic to Withdraw** and it can't shake the Federation, so it fights
+anyway. The doctrine is the fight.
 
 *(Verified 2026-08-03: `CombatKernel.cs` read end-to-end; every constant/formula re-verified at its cited line; the JS
-port asserted against the C# by the T1–T8 cross-check on every load; a headless DOM-stub run drives the arena to
-completion across all scenarios with **0 throws** (kernel 8/8, gap closes 400→78 km, Republic wins); a Playwright pass
-renders both themes and runs the battle to completion with **0 console errors**.)*
+port asserted against the C# by the T1–T8 cross-check on every load. Headless DOM-stub runs confirm **0 throws** and
+kernel **8/8**, and assert the four behaviours: the default fight runs **to destruction with no auto-retreat**
+(Federation wiped); each weapon **announces as it enters range** (5 "opens up" lines); a faster fleet ordered to
+**Withdraw escapes intact** while a slower one is caught; and a **finer step gives more salvos with the same winner**
+(dt 1 s → 67 salvos, dt 5 s → 13). A Playwright pass renders both themes and runs the battle to completion with **0
+console errors**.)*
