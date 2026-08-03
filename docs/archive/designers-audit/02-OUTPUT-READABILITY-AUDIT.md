@@ -1,3 +1,7 @@
+> # 🗄 ARCHIVED 2026-08-03 — DO NOT FOLLOW AS THE LIVE DESIGNER SPEC
+>
+> **This is the earlier "Designer Interconnection Audit" (2026-08-01), moved to `docs/archive/` on 2026-08-03 in the designer-docs cleanup.** The CANONICAL component-designer source of truth is now the **12 door HTMLs** in `docs/Actual HTMLs Of designers/` + **`docs/economy/DESIGNER-NORTH-STAR.md`** (the derive-a-dial method) + the **assembler suite** in `docs/assembler/`. Read those to design; read this for history. **STILL LIVE from this audit:** its six open developer rulings **R1–R6** (`06-FINAL-REPORT.md` → "The open developer rulings") remain UNDECIDED — the cleanup did not resolve them. Locked decisions live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.
+
 # 02 — OUTPUT READABILITY AUDIT (Phase 2 deliverable)
 
 > **What this is, in one breath:** Phase 1 drew the wiring diagram from what the designs *claim*. This

@@ -1,6 +1,6 @@
 # The Capability Build Plan — from dead dials to a brain that uses them
 
-**As of 2026-07-13.** The single, ordered implementation plan that **consolidates `docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` (what's built) + `docs/ai/AI-CAPABILITY-CATALOG.md` (what the AI can choose)** into one step-by-step build, sliced as few ways as possible. Produced from a 7-agent deep code audit (build→wire→test, file:line verified). This is the doc we build from.
+**As of 2026-07-13.** The single, ordered implementation plan that **consolidates `docs/archive/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` (what's built) + `docs/ai/AI-CAPABILITY-CATALOG.md` (what the AI can choose)** into one step-by-step build, sliced as few ways as possible. Produced from a 7-agent deep code audit (build→wire→test, file:line verified). This is the doc we build from.
 
 ---
 
@@ -31,7 +31,7 @@ TRACKS 1–4 can proceed in any order / in parallel (each is its own subsystem, 
 
 ## Ledger corrections the deep pass caught (fixed in this pass)
 
-The dial ledger was stale in two rows (both now flipped in `docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`):
+The dial ledger was stale in two rows (both now flipped in `docs/archive/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`):
 
 1. **Chassis ▸ Hull mass-cap already BITES.** The ledger said "1/4, enforcement OFF." In code every base-mod ship mounts a hull, `ShipDesign.EnforceMassBudget` is set **true** in the client (`PulsarMainWindow.cs:139`), and two enforcement gauges pass in CI. The cap is live; what's left is the *hardpoint + hull-HP extension*, not "make it bite."
 2. **Power ▸ Generation reactor-heat→EMCON already BUILT.** The ledger said "hook flagged, unread." In code `EmconActivityProcessor.cs:115` reads reactor `Load` into the signature (behind `EnableReactorHeat`), gauged by `ReactorHeatTests`. Only the client flag-flip remains.

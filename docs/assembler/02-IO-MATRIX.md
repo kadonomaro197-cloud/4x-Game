@@ -10,7 +10,7 @@
 >
 > Built from the twelve verified census records (`01-IO-<door>.md`, Phase 2 pass), the resolver's own input
 > surface (`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §6.1), and the interconnection map's edge ledger
-> (`docs/designers-audit/01-INTERCONNECTION-MAP.md` §4). Every row traces to a cited census.
+> (`docs/archive/designers-audit/01-INTERCONNECTION-MAP.md` §4). Every row traces to a cited census.
 
 ## How to read the build-state column (used in all three tables)
 

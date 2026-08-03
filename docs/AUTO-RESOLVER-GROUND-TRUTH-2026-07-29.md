@@ -1456,7 +1456,7 @@ Nothing was lost. Each row is a deleted file; the right column says where its co
 
 ### 20.1 What was deliberately NOT carried over
 
-- **The `docs/economy/COMPONENT-DESIGNER-DIALS.md` cross-references** from the dial-insertion map — dials are the
+- **The `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` cross-references** from the dial-insertion map — dials are the
   **designer's** subject and live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`. This file records only where
   a dial **lands on the resolver's input surface** (§6.2).
 - **The provenance/how-we-got-here paragraphs** of each source doc (which workflow produced them, which agent hit a

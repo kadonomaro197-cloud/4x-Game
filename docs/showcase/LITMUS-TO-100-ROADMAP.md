@@ -4,7 +4,7 @@
 > Angels Assault Marine (`LITMUS-BLOOD-ANGELS-BUILD.md`, ~70%) and the Venator-class Star Destroyer
 > (`LITMUS-VENATOR-BUILD.md`, ~65%) — to **100%**, deduplicated into one list, with recommendations. Several
 > gaps are **shared** — one fix lifts both. Every item maps to the interconnection audit's plan
-> (`docs/designers-audit/03-CORRECTION-PLAN.md`) or the ground gap ledger
+> (`docs/archive/designers-audit/03-CORRECTION-PLAN.md`) or the ground gap ledger
 > (`docs/LITMUS-BLOOD-ANGELS-SQUAD.md`) — this is not net-new work, it's the *franchise-accuracy view* of the
 > same backlog.
 >
@@ -98,4 +98,4 @@ abstractions, so only spend on them if the developer wants literal scale fidelit
 ---
 
 *Consolidated from `docs/showcase/LITMUS-BLOOD-ANGELS-BUILD.md`, `docs/showcase/LITMUS-VENATOR-BUILD.md`,
-`docs/LITMUS-BLOOD-ANGELS-SQUAD.md`, and `docs/designers-audit/03-CORRECTION-PLAN.md`, 2026-08-01.*
+`docs/LITMUS-BLOOD-ANGELS-SQUAD.md`, and `docs/archive/designers-audit/03-CORRECTION-PLAN.md`, 2026-08-01.*

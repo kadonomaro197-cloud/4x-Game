@@ -211,7 +211,7 @@ environment. A verified base is worth the ~30-minute wait.
 
 ## 5. DESIGNER REPORT CARD — the 12 known holes, graded per battle
 
-From `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md §5`. For each hole: which battles hit it, and whether it's
+From `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md §5`. For each hole: which battles hit it, and whether it's
 **cosmetic** (skip it, the fight is still recognizable) or **load-bearing** (the battle needs it).
 
 | Hole | What it is | Geonosis | DS9 | Ori | Cold Steel | Verdict |

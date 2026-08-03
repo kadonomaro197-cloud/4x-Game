@@ -21,7 +21,7 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
   (`ShipCombatValueDB.Calculate`): Firepower = Σ weapon.DamagePerSecond; Toughness = Σ health×100kJ +
   armour×100kJ; Evasion; RoleWeight; ShieldCapacity_J/Regen; Weapons = List<WeaponProfile> (10 fields).
   **This is the Assembler's output contract.**
-- `docs/designers-audit/01-INTERCONNECTION-MAP.md` — §2 per-door capsules, §3 producer→consumer matrix,
+- `docs/archive/designers-audit/01-INTERCONNECTION-MAP.md` — §2 per-door capsules, §3 producer→consumer matrix,
   §4 directed-edge ledger. Head start for the matrix — but VERIFY against the current HTMLs (it predates
   the aura door and the weapons/defense single-file rebuilds).
 

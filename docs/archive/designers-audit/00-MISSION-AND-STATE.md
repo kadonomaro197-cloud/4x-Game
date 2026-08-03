@@ -1,7 +1,11 @@
+> # 🗄 ARCHIVED 2026-08-03 — DO NOT FOLLOW AS THE LIVE DESIGNER SPEC
+>
+> **This is the earlier "Designer Interconnection Audit" (2026-08-01), moved to `docs/archive/` on 2026-08-03 in the designer-docs cleanup.** The CANONICAL component-designer source of truth is now the **12 door HTMLs** in `docs/Actual HTMLs Of designers/` + **`docs/economy/DESIGNER-NORTH-STAR.md`** (the derive-a-dial method) + the **assembler suite** in `docs/assembler/`. Read those to design; read this for history. **STILL LIVE from this audit:** its six open developer rulings **R1–R6** (`06-FINAL-REPORT.md` → "The open developer rulings") remain UNDECIDED — the cleanup did not resolve them. Locked decisions live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.
+
 # 00 — MISSION AND STATE (the resilience anchor — re-read this at the start of every phase)
 
 > **If you are a future context window of this mission: THIS FILE IS THE MISSION.** Re-read it in
-> full, then read the latest committed deliverables under `docs/designers-audit/`, then continue from
+> full, then read the latest committed deliverables under `docs/archive/designers-audit/`, then continue from
 > the STATE section's "NEXT". Nothing lives only in chat or in a model's head — if it matters, it is
 > committed here or in a sibling file.
 
@@ -18,12 +22,12 @@ CONNECTED WHOLE on paper, or find every place it does not.
 
 ── STEP 0 — PERMISSIONS AND PERSISTENCE (do this before anything else) ─────────────────────────────
 1. In your FIRST reply, list every permission you will need for the whole mission (writing files under
-   docs/designers-audit/, running git add/commit/push, spawning subagents and workflows, reading the
+   docs/archive/designers-audit/, running git add/commit/push, spawning subagents and workflows, reading the
    whole repo) and ask me to approve them ALL NOW — e.g. by switching to auto-accept edits — so you
    never have to stop and ask again. After this single ask, you never block on me. The
    AskUserQuestion tool is BROKEN in this environment — never call it; when a decision is needed,
    pick the most sensible default, say in chat what you chose and why, and keep moving.
-2. Create docs/designers-audit/00-MISSION-AND-STATE.md. Paste THIS ENTIRE PROMPT into it verbatim at
+2. Create docs/archive/designers-audit/00-MISSION-AND-STATE.md. Paste THIS ENTIRE PROMPT into it verbatim at
    the top, then a "STATE" section below it: current phase, what is done, what is next, and a log of
    every commit you make. Commit and push it immediately.
 3. RESILIENCE PROTOCOL: your context window will fill and be compacted. Re-read
@@ -43,12 +47,12 @@ CONNECTED WHOLE on paper, or find every place it does not.
   developer explicitly authorized follow-on edits — see the STATE addendum dated 2026-08-02.)
 - DO NOT modify ANY file under Pulsar4X/ — no engine code, no JSON data, no tests. The entire point
   is to find design problems BEFORE code is written. You are read-only everywhere except
-  docs/designers-audit/ (and the required DOCS-INDEX.md row updates).
+  docs/archive/designers-audit/ (and the required DOCS-INDEX.md row updates).
 - Ground every claim in source. A statement about what the game reads must carry a file:line citation
   from the engine (GameEngine/...). The method is docs/economy/DESIGNER-NORTH-STAR.md: a dial is real
   only if it writes a variable the simulation actually reads; the intrinsic test separates component
   dials from assembly decisions; every option must win an axis (§39.8). Read that doc, the root
-  CLAUDE.md, docs/SYSTEM-CONNECTION-MAP.md, and docs/economy/COMPONENT-DESIGNER-DIALS.md before
+  CLAUDE.md, docs/SYSTEM-CONNECTION-MAP.md, and docs/archive/economy/COMPONENT-DESIGNER-DIALS.md before
   writing a word.
 - You are EXPLICITLY AUTHORIZED to spawn subagents (Agent tool) and multi-agent workflows (Workflow
   tool) as much as the work requires, for as long as it requires. Fan out for coverage; verify
@@ -143,7 +147,7 @@ Path (note the spaces): `docs/Actual HTMLs Of designers/`
 > `_files/` folders were deleted). The `logisticaldesigner20260730.html` frozen snapshot was also deleted
 > at the developer's request, leaving **12 files = 12 doors** on disk. Table repointed to match.
 
-Method doc: `docs/economy/DESIGNER-NORTH-STAR.md`. Blueprint: `docs/economy/COMPONENT-DESIGNER-DIALS.md`.
+Method doc: `docs/economy/DESIGNER-NORTH-STAR.md`. Blueprint: `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md`.
 Connection graph: `docs/SYSTEM-CONNECTION-MAP.md`. Landmines & idioms: root `CLAUDE.md`.
 
 ---

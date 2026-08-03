@@ -388,8 +388,8 @@ Family and setting checked against what `ShipCombatValueDB` and the base-mod gro
 | **Exotic's non-damage effects** | Mind control, jump inhibition, conversion **write none of the ten**. They are not weapons. Calling them a weapon door hid that they need an effects system that does not exist. |
 | **Four of the six delivery values** | Beam · Bolt · Slug · Cloud · Guided · Blast — the engine asks them one question: *can point-defence shoot this down?* Bolt, Slug and Cloud all answer no, identically. Three names for one row. |
 
-**Superseded documents:** `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` §2 (the five Weapons doors) and
-`docs/economy/COMPONENT-DESIGNER-DIALS.md` §1 (all of Weapons, 41 dial groups). Their *content* is preserved — every
+**Superseded documents:** `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` §2 (the five Weapons doors) and
+`docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` §1 (all of Weapons, 41 dial groups). Their *content* is preserved — every
 option is captured in the live reference above — but the **five-door structure is superseded by this derivation.**
 
 ---
@@ -816,7 +816,7 @@ combat multiplier (`LocomotionTerrainMult`).
 
 **Yes — and the design already says group them. The code never did.**
 
-`docs/economy/COMPONENT-DESIGNER-CATEGORIES.md:36` already lists **ground-locomotion under Propulsion**, and `:60`
+`docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md:36` already lists **ground-locomotion under Propulsion**, and `:60`
 already rules the parallel ground `*Atb`s are *"absorbed into the universal doors … resolved by deletion not merger."*
 **But the engine carries two unrelated implementations of one verb:**
 

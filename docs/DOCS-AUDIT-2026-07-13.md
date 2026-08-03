@@ -27,7 +27,7 @@
 | **ARCHIVE** | 3 | Superseded snapshots — banner them and move to `archive/` |
 | **DELETE** | 0 | Nothing is pure garbage — the design intent is real everywhere |
 
-Bloat: **4 BLOATED · 19 VERBOSE · 47 OK · 14 LEAN.** The bloat is concentrated in the giant files — `SESSION_STATE.md` (117 KB), `DOCS-INDEX.md` (69 KB), `TESTING-TRACKER.md` (62 KB), `docs/economy/COMPONENT-DESIGNER-DIALS.md` (580 KB) — and in the `CLAUDE.md` reference tables (paragraph-long rows).
+Bloat: **4 BLOATED · 19 VERBOSE · 47 OK · 14 LEAN.** The bloat is concentrated in the giant files — `SESSION_STATE.md` (117 KB), `DOCS-INDEX.md` (69 KB), `TESTING-TRACKER.md` (62 KB), `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` (580 KB) — and in the `CLAUDE.md` reference tables (paragraph-long rows).
 
 **The headline: this is a staleness-and-duplication problem, not a bad-docs problem.** Only 3 docs get archived; the rest all survive. The work is correcting drift and merging near-duplicates.
 
@@ -120,13 +120,13 @@ Three docs all try to be the status board and all three rot: `DOCS-INDEX` (69 KB
 - **`TESTING-TRACKER.md` owns test-and-build status.** Fix the CI shard count (3 → 4) and absorb `CLIENT-TEST-CHECKLIST`'s detail so there's one test home (but keep the checklist alive as the live runtime backlog).
 - **`SYSTEM-CONNECTION-MAP.md` (new) owns the connection graph** — one row per system, just its connections.
 - **`SESSION_STATE.md`** keeps only the recent-session narrative + the durable Lessons section; delete its status tables (it already defers to the dashboards, and it currently lists the already-fixed missile bug as broken).
-- The 580 KB **`docs/economy/COMPONENT-DESIGNER-DIALS.md`** is a design authority, not a status doc — leave it, but trim its folded-in origin/rationale appendices now that `DIAL-LEDGER` owns build-state.
+- The 580 KB **`docs/archive/economy/COMPONENT-DESIGNER-DIALS.md`** is a design authority, not a status doc — leave it, but trim its folded-in origin/rationale appendices now that `DIAL-LEDGER` owns build-state.
 
 ---
 
 ## 4. The healthy core (keep as-is)
 
-The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/archive/DESIGNER-AUDIT-2026-07-08/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
+The load-bearing docs that are accurate and must stay: **`CLAUDE.md`** (with two fact-fixes), **`CONVENTIONS.md`**, **`LIVING-GALAXY-DESIGN.md`** (uniquely forbids building an event-engine/director — has already prevented a wrong build twice), **`docs/archive/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md`** (the model doc for the build-vs-designed distinction), **`PLAY-TO-MARS-WALKTHROUGH.md`** (unusually accurate — pinpoints the three real MVP blockers), **`docs/explore/SITE-ENGINE-DESIGN.md`**, **`NORTH-STAR-VISION.md`**, the **`docs/aurora/`** family (once the status columns are stripped), the **`docs/archive/DESIGNER-AUDIT-2026-07-08/`** folder, and the shipped-subsystem specs **`MORALE-AND-POPULATION` / `GOVERNMENT-AND-POLITICS` / `GOVERNANCE-AND-DELEGATION`** (design bodies stay; only the status layer refreshes).
 
 ---
 
@@ -175,10 +175,10 @@ Verdicts: **KEEP** (healthy) · **KEEP-TRIM** (small fix/trim) · **STALE-FIX** 
 | GROUND | `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md` | STALE-FIX | VERBOSE | Keep in place as the ground-unit-designer SoT, but refresh the As-of stamp and flip the bu |
 | GROUND | `docs/ground/GROUND-ORDERS-CATALOG-DESIGN.md` | KEEP-TRIM | OK | Split by track. Fold the H (hex-ground) sections into docs/ground/GROUND-SURFACE-MAP-DESIGN.md as th |
 | DESIGNER | `docs/economy/CAPABILITY-BUILD-PLAN.md` | STALE-FIX | OK | Keep as the build spine but do a reconciliation pass against reality: mark slice 4.6 (espi |
-| DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | KEEP-TRIM | OK | Keep as the map half of the two-doc designer reference, but add a short 'Build state as of |
-| DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` | KEEP | OK | Keep as the canonical 'what's actually wired' ledger for the component designer and cross- |
-| DESIGNER | `docs/economy/COMPONENT-DESIGNER-DIALS.md` | KEEP-TRIM | BLOATED | Keep as the DESIGNER design authority but shrink it: (1) delete or archive the folded-in o |
-| DESIGNER | `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` | CONSOLIDATE | OK | Fold the Part 3 hole→plug ledger and the Part 2 'shared EFFECT bus / gear=designer vs bein |
+| DESIGNER | `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` | KEEP-TRIM | OK | Keep as the map half of the two-doc designer reference, but add a short 'Build state as of |
+| DESIGNER | `docs/archive/economy/COMPONENT-DESIGNER-DIAL-LEDGER.md` | KEEP | OK | Keep as the canonical 'what's actually wired' ledger for the component designer and cross- |
+| DESIGNER | `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` | KEEP-TRIM | BLOATED | Keep as the DESIGNER design authority but shrink it: (1) delete or archive the folded-in o |
+| DESIGNER | `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` | CONSOLIDATE | OK | Fold the Part 3 hole→plug ledger and the Part 2 'shared EFFECT bus / gear=designer vs bein |
 | DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/00-EXECUTIVE-SUMMARY.md` | KEEP-TRIM | OK | Keep in place as the DESIGNER-AUDIT front page. Update line 136 to drop/repoint the non-ex |
 | DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/01-DESIGNER-UIS.md` | KEEP-TRIM | OK | Keep in place as part 1 of the DESIGNER-AUDIT series. Add a dated staleness banner at top  |
 | DESIGNER | `docs/archive/DESIGNER-AUDIT-2026-07-08/02-DESIGNABLE-TYPES.md` | KEEP | OK | Keep in place within docs/archive/DESIGNER-AUDIT-2026-07-08/. Add a one-line cross-link from the Open-Questio |
