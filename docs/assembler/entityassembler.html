@@ -512,8 +512,8 @@ CAT.forEach(function(c){counts[c.id]=0;});
    a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
 var PRESETS=[
   {id:'escort',name:'Escort destroyer',host:'ship',
-    counts:{reactor:1,laser:1,railgun:1,missile:1,armour:2,shield:1,drive:1,warp:1,fueltank:1,radiator:1,capacitor:2,magazine:1,
-            provisions:1,cargo:1,quarters:1,lifesupport:1,targeting:1,sensor:1,firecontrol:1}},
+    counts:{reactor:3,laser:3,railgun:2,missile:3,pdbattery:6,armour:8,shield:4,drive:2,warp:1,fueltank:3,radiator:2,capacitor:2,magazine:2,ammobunker:1,
+            provisions:2,cargo:2,quarters:2,lifesupport:2,medbay:1,targeting:1,sensor:2,searchsensor:1,firecontrol:2,ecm:1,bridge:1}},
   {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
     /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
        laser cannons · 4 heavy proton torpedo tubes · 6 tractor beam projectors · 420 starfighters ·
@@ -536,11 +536,11 @@ var PRESETS=[
        strongest regenerative shields · 2 warp nacelles (warp ~9.9) · ~855 crew · no ablative armour · 685 m.
        Trek mapping: phasers → energy beams (medium turbolaser + laser cannon), torpedoes → guided missiles.
        Leans shields + sensors, not armour — a self-sufficient explorer-cruiser. */
-    counts:{medturbo:8,laser:8,missile:10,pdbattery:6,shield:8,armour:3,
-            capreactor:3,radiator:4,warp:2,drive:2,fueltank:2,capacitor:4,
-            magazine:4,ammobunker:2,cargo:4,
-            quarters:6,lifesupport:5,medbay:4,provisions:3,hydroponics:3,
-            sensor:3,searchsensor:3,firecontrol:2,ecm:1,targeting:2,bridge:1,flagsuite:1}},
+    counts:{medturbo:10,laser:14,missile:16,pdbattery:12,shield:14,armour:8,
+            capreactor:4,radiator:5,warp:2,drive:3,fueltank:4,capacitor:4,
+            magazine:5,ammobunker:3,cargo:10,
+            quarters:9,lifesupport:7,medbay:5,provisions:5,hydroponics:5,
+            sensor:5,searchsensor:5,firecontrol:3,ecm:2,targeting:2,bridge:1,flagsuite:1}},
   {id:'deathstar',name:'★ DS-1 Death Star',hero:true,host:'megastructure',
     /* CANON (Wookieepedia): Concave Dish Composite Beam Superlaser · 5,000 heavy turbolasers · 5,000 turbolaser
        batteries · 2,500 ion cannons · 2,500 laser cannons · 768 tractor beams · ~7,000 TIE fighters ·

@@ -13,13 +13,13 @@ Sacrifice: light hull — it trusts shields and sensors, not armour.
 Rather than invent parallel systems, Trek tech maps onto the generic catalog by **mechanic**:
 | Canon | Maps to | Count |
 |---|---|---|
-| ~16 Type-XII phaser arrays | energy beams: Medium Turbolaser + Laser Cannon | 8 + 8 |
-| 10 photon/quantum torpedo tubes | Missile Launcher (guided) | 10 |
-| phaser point-defense | Point-Defense Battery | 6 |
-| the fleet's strongest **regenerative shields** | Shield Generator | **8** (its primary defense) |
-| no ablative armour (canon) | Composite Armour | 3 (minimal) |
+| ~16 Type-XII phaser arrays | energy beams: Medium Turbolaser + Laser Cannon | 10 + 14 |
+| 10 photon/quantum torpedo tubes | Missile Launcher (guided) | 16 |
+| phaser point-defense | Point-Defense Battery | 12 |
+| the fleet's strongest **regenerative shields** | Shield Generator | **14** (its primary defense) |
+| no ablative armour (canon) | Composite Armour | 8 (light — still trusts shields) |
 | 2 warp nacelles (warp ~9.9) | Warp Drive | 2 |
-| twin impulse | Ion Drive | 2 |
+| twin impulse | Ion Drive | 3 |
 | ~855 crew, superb medical | Quarters/Life-support/Medical | sized (medical covers the crew) |
 | deep-space sensors | Sensor + Long-Range + Fire-Control + ECM | strong |
 
@@ -27,10 +27,12 @@ Rather than invent parallel systems, Trek tech maps onto the generic catalog by 
 the catalog with near-duplicates) is exactly what `CONVENTIONS.md` §6 demands — and it works.*
 
 ## It closes (all gates green)
-Hull **11,015 / 20,000 t** (light and elegant — half a Venator) · Firepower **43 MJ/s** (see the torpedo caveat) · Crew **455**
-berthed/supported/**medically covered** · Shields **40 MJ — the heaviest of any build here** · **Deployment 500 days
-(~1.4 yr), self-sufficient** (a closed food loop — a true long-range explorer) · Detection **490 km**, past its
-own torpedoes (it sees first, as an explorer should).
+Hull **16,149 / 20,000 t** (a full capital cruiser — 81% of the chassis, filled out 2026-08-03) · Firepower **59 MJ/s**
+(see the torpedo caveat) · Crew **652** berthed/supported/**medically covered** · Shields **70 MJ — by far the heaviest
+of any build here** (14 generators, its whole doctrine) · **Deployment 500 days (~1.4 yr), self-sufficient** (a closed
+food loop — a true long-range explorer) · Detection **490 km**, past its own torpedoes (it sees first, as an explorer
+should). *Filled in its own idiom — more shields, phasers, torpedoes, sensors and endurance, still deliberately light on
+armour — not turned into a brawler.*
 
 > ⚡ **Energy recalibrated to the engine (2026-08-02) — and it surfaced an honest caveat for this ship.** Numbers are
 > now real engine units: shields are the engine's deflector pool (the Sovereign's 8 generators = **40 MJ**, the
