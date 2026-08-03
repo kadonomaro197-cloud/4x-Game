@@ -257,7 +257,7 @@ footer{padding:24px 0 50px}
 </div>
 <div class="mu">
 <p class="blab" style="margin:15px 0 3px">What this power actually buys</p>
-<p class="muN">The four live consumers, from the real call sites. <b>Warp</b> figures are against the shipped 2 t Alcubierre drive.</p>
+<p class="muN">The four live consumers, from the real call sites. <b>Warp</b> figures are against the engine default warp drive (1.25 GJ to open the bubble, 2.5 MW to hold).</p>
 <div class="mus">
 <div class="mt"><i>Can it leave?</i><b id="m_leave"></b><s>stored ≥ bubble creation</s></div>
 <div class="mt"><i>Warp endurance</i><b id="m_warp"></b><s>sustain charged per second</s></div>
@@ -338,7 +338,7 @@ That figure feeds the colony power-shortage term that drives morale. <b>The cons
 //  battery   Energy Storage = Mass x 500 x tech-battery-capacity
 //  solar     Best Efficiency = tech-panel-efficiency x (tech-panel-bandwidth x 0.5 / Bandwidth)
 const T_COND=1, T_BATT=1, T_PANEL_EFF=0.2, T_PANEL_BW=600;   // level-0 tech
-const WARP_CREATE=3342250, WARP_SUSTAIN=3179.31;             // the shipped 2 t Alcubierre drive (kJ, kW)
+const WARP_CREATE=1250000, WARP_SUSTAIN=2500;                // engine default warp drive: 1.25 GJ to open the bubble, 2.5 MW to hold (kJ, kW)
 const GROUND_LASER_W=250000;                                 // one ground laser's draw, illustrative
 const BASE_SIG=1.125e7;                                      // the stock reactor's signature magnitude
 let job='burn', gen='reactor';
@@ -494,9 +494,9 @@ function render(){
    $('verdict').innerHTML='✅ <b>Honest, and silent.</b> No fuel chain, no signature. 🔴 <b>And it cannot be built on a colony</b> — the one generator a player would obviously want there.';
    $('jobnote').textContent='Collect starlight. Band-matched absorption, sharing its code with detection — so the Sensors band ruling changes this number too.';
  } else {
-   const mass=2000+d1*230;                           // 2000 (the SHIPPED battery-2t) .. 25000
+   const mass=1500+d1*235;                           // 1500 (the SHIPPED bank, = engine default 750,000 kJ) .. 25000
    const store=mass*500*T_BATT;
-   set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','2,000 — the shipped bank'); set('e1b','25,000 kg');
+   set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','1,500 — the shipped bank (750 MJ)'); set('e1b','25,000 kg');
    set('l_a1','Energy storage — emergent'); set('v_a1',fmt(store)+' kJ');
    set('l_a2','Per kg — fixed');            set('v_a2','500 kJ');
    set('l_a3','Warp departures it holds');  set('v_a3',(store/WARP_CREATE).toFixed(2)+'');

@@ -44,7 +44,7 @@ dodges; it doesn't need to.
 |---|---|---|
 | **Superlaser** | Weapons | ⏳ **PENDING** — the engine has no planetary-destruction mechanic; no reader for a "crack a world" output. **The headline.** |
 | **Ion Cannon** | Weapons | ✅ **LIVE** — Exotic weapon nature; shields can't soak Exotic at all (the weapon triangle), so it punches through |
-| **Hypermatter Reactor** | Power | ✅ **LIVE** — `EnergyGenerationAtb` at 8,000 MW each; ~10-year fuel core |
+| **Hypermatter Reactor** | Power | ✅ **LIVE** — `EnergyGenerationAtb` at **2,500 MW each — the engine's real single-reactor ceiling** (2.5 GW); ~10-year fuel core. No engine reactor exceeds this, so a megastructure banks ~80 of them |
 | **Radiator Tower** | Power | ✅ **LIVE** — the heat-throttle mechanic at 4,000 MW each |
 | **Habitation Block** | Crew | ⚠ berths 25,000 — the crew-berthing gate at city scale (ship crew isn't engine-gated; modeled as the real need) |
 | **Life Support Complex** | Crew | ⚠ 30,000 air/water — colony `PopulationSupportAtbDB` is LIVE; per-hull modeled as the gate |
@@ -55,31 +55,32 @@ dodges; it doesn't need to.
 ## Step 4 — It closes (every supporting gate green)
 | Readout | Value |
 |---|---|
-| Structural budget | **23,986,810 / 50,000,000 t** ✓ |
-| Volume | 18,292,990 / 40,000,000 m³ ✓ |
-| Power | **187,563 / 200,000 MW** ✓ (25 hypermatter reactors — 94% loaded; the superlaser's 120 GW charge draw is the bulk, so the station is genuinely built around feeding it) |
+| Structural budget | **29,986,810 / 50,000,000 t** ✓ |
+| Volume | 21,292,990 / 40,000,000 m³ ✓ |
+| Power | **187,563 / 200,000 MW** ✓ (**80 hypermatter reactors** at the engine's 2.5 GW ceiling — 94% loaded; the superlaser's 120 GW charge draw is the bulk, so the station is genuinely built around feeding it) |
 | Heat | **+190,000 MW** margin ✓ (90 radiator towers) |
 | **Firepower** | **88,550 MJ/s** (5,000 heavy + 5,000 medium turbolasers + 2,500 ion cannons + 2,500 PD, ×1.40 targeting+fire-control — **the superlaser is *not* in this**, it's strategic) |
-| Toughness | ~66,900 (40,000 base hull + 500 armour plates + the mass of component HP) |
-| Crew | **304,266** — berths **625,000** ✓ · life support **600,000** ✓ |
+| Toughness | ~83,400 (40,000 base hull + 500 armour plates + the mass of component HP) |
+| Crew | **414,266** — berths **625,000** ✓ · life support **600,000** ✓ |
 | **Deployment** | **3,650 d (~10 years)** on station — capped by the reactor core; **food is a closed loop** (9 agriculture domes feed 450,000 ≥ the crew) |
 | Mobility | immobile sublight · **hyperdrive** (FTL) ✓ |
 | Ammo | 82 min sustained |
 | Detection | 830 km — sees past every gun ✓ |
 
-*Crew (~304k) is the tool's ratio-model; canon is ~1.2M. Mass is abstract/ratio scale, not literal (a real DS-1 is
+*Crew (~414k) is the tool's ratio-model; canon is ~1.2M. Mass is abstract/ratio scale, not literal (a real DS-1 is
 ~10¹² t) — like every build here, the tool models **composition and the honesty ledger**, not a moon's physics.*
 
-> ⚡ **Energy recalibrated to the engine (2026-08-02).** Firepower/power are now real engine units. The interesting
-> result at this scale: on a small ship a reactor trivially out-supplies its guns (power headroom is huge), but the
-> Death Star's **superlaser charge draw (120 GW)** makes power *genuinely tight* — 94% of its 25 hypermatter reactors.
-> That's the honest story the recalibration tells: the whole station really is built around feeding the one weapon the
-> sim can't yet fire.
+> ⚡ **Energy recalibrated to the engine (2026-08-02, refined 2026-08-03).** Firepower/power are now real engine
+> units. Two honest results surfaced at this scale: (1) on a small ship a reactor trivially out-supplies its guns
+> (power headroom is huge), but the Death Star's **superlaser charge draw (120 GW)** makes power *genuinely tight* —
+> 94% loaded. (2) The engine caps **every** reactor at 2.5 GW (50 kW/kg × 25 t × 2.0 overload), so there is no single
+> "8 GW hypermatter core" the engine could build — the honest model is **80 max-scale reactors banked together**. The
+> whole station really is built around feeding the one weapon the sim can't yet fire.
 
 ## Step 5 — The authenticity pass (the honest ledger)
 **LIVE — reaches the sim, verified:** all 15,000 conventional guns (firepower + saturation + the Exotic
 shield-bypass of the ion cannons) · armour · shields · ECM (+10% hit-avoidance) · fire-control & targeting (×1.40) ·
-detection · the 25 hypermatter reactors + 90 radiator towers (power & heat gates) · the crew city (berths + life
+detection · the 80 hypermatter reactors + 90 radiator towers (power & heat gates) · the crew city (berths + life
 support + a closed food loop) · the 10-year deployment · the hyperdrive · **the vehicle/troop delivery** (it can
 land its garrison — the invasion chain is LIVE).
 

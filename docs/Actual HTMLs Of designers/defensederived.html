@@ -267,14 +267,16 @@ const NAT={
  explos: {n:'Explosive',soak:0.75,key:'vx'},
  exotic: {n:'Exotic', soak:0.00,key:'vo'}
 };
-const ARMSOAK=1.5, MINPASS=0.1, DPS=8000;
+const ARMSOAK=1.5, MINPASS=0.1, DPS=500000;     // incoming reference = 0.5 MJ/s in J/s (the weapons-door / assembler laser)
 const EVA_READ=3.2, EVA_MAX=20, HP_READ=4000;   // read from chassis + propulsion (illustrative baseline)
 const CAP_MAX=1500, REGEN_MAX=5, DEF_MAX=50;
+// SI shield scale — the engine/assembler runtime unit is JOULES. Default slider (cap=10) -> 5 MJ = the engine deflector.
+const CAP_MAX_J=50000000, REGEN_MAX_J=1000000;
 
 // the two buildable layers — the forced choice
 const LAYER={
  shield:{
-  a1:'Shield pool', a2:'Regen fraction',
+  a1:'Shield pool', a2:'Regen (J/s)',
   desc:'A recharging buffer taken before HP. It soaks a fraction of the incoming set by the ATTACKER’s weapon nature — you do not get to choose it — and it is the only layer that comes back on its own.'},
  armour:{
   a1:'Armour points (Defense)', a2:'Tuned toward',
@@ -343,9 +345,11 @@ function render(){
 
  // ── shield readout values
  const capV=+$('cap').value, regenV=+$('regen').value;
- const pool = lin(capV,0,CAP_MAX);
- const regenFrac = lin(regenV,0,REGEN_MAX);
- const regenPts = regenFrac*300;                 // fraction -> points/s (illustrative)
+ const pool = lin(capV,0,CAP_MAX);               // points — kept only for the naming/reproduce thresholds
+ const regenFrac = lin(regenV,0,REGEN_MAX);      // 0..5 — kept only for naming/reproduce
+ const regenPts = regenFrac*300;
+ const poolJ = lin(capV,0,CAP_MAX_J);            // Joules — the engine/assembler runtime unit (cap=10 default -> 5 MJ deflector)
+ const regenJps = lin(regenV,0,REGEN_MAX_J);     // J/s — engine-real regen (regenV=10 -> 100 kJ/s, the deflector's)
 
  // ── armour readout values
  const armV=+$('arm').value;
@@ -359,8 +363,8 @@ function render(){
  ['vk','ve','vx','vo'].forEach(k=>set('s_'+k, r[k].toFixed(2)+'×'));
 
  // slider readouts
- set('s_cap', fmt(pool)+' pts'); set('e_cap0','0 pts'); set('e_cap1','1,500 pts · gen = 150');
- set('s_regen', regenFrac.toFixed(2)+' /s'); set('e_reg0','0 · generator'); set('e_reg1','5.0 · ward');
+ set('s_cap', fmt(poolJ)+' J'); set('e_cap0','0 J'); set('e_cap1','50 MJ · deflector = 5 MJ');
+ set('s_regen', fmt(regenJps)+' J/s'); set('e_reg0','0 · generator'); set('e_reg1','1 MJ/s · ward');
  set('s_arm', 'Defense '+Defense.toFixed(0));
  set('s_shot', (+$('shot').value)+' / 100');
 
@@ -370,9 +374,9 @@ function render(){
 
  // ── the shared-kernel resolution (spec formula)
  const soakFrac=nt.soak;
- const soakable=DPS*soakFrac;
- const shieldHolds = pool>0 && regenPts>=soakable && soakFrac>0;
- const shieldEHP = soakFrac<=0 ? 0 : (shieldHolds? Infinity : pool);   // exotic -> shield worthless
+ const soakable=DPS*soakFrac;                    // J/s the shield must absorb
+ const shieldHolds = poolJ>0 && regenJps>=soakable && soakFrac>0;
+ const shieldEHP = soakFrac<=0 ? 0 : (shieldHolds? Infinity : poolJ);  // exotic -> shield worthless
  const resistNat = r[nt.key];
  const fracPast = Defense<=0 ? 1 : Math.max(perShot - Defense*ARMSOAK*resistNat, perShot*MINPASS)/perShot;
  const armourMult = 1/Math.max(fracPast,1e-4);
@@ -387,9 +391,9 @@ function render(){
   sub='capacity ← pool size · regen ← refill rate · soak ← the ATTACKER (fixed)';
   repro=reproShield(pool,regenFrac);
   mass = Math.max(1, pool/9 + regenFrac*40);     // CarryMass-scale, illustrative
-  set('l_a1', LAYER.shield.a1); a1v=fmt(pool)+' pts';
-  set('l_a2', LAYER.shield.a2); a2v=regenFrac.toFixed(2)+' /s';
-  oname = fmt(pool)+'-pt pool'+(regenFrac>=0.5?' @ '+regenFrac.toFixed(1)+'/s regen':', no regen')+' for '+fmt(mass)+' kg';
+  set('l_a1', LAYER.shield.a1); a1v=fmt(poolJ)+' J';
+  set('l_a2', LAYER.shield.a2); a2v=fmt(regenJps)+' J/s';
+  oname = fmt(poolJ)+' J pool'+(regenFrac>=0.5?' @ '+fmt(regenJps)+' J/s regen':', no regen')+' for '+fmt(mass)+' kg';
  } else {
   name=armourName(Defense,r);
   sub='thickness ← total protection (mass) · tuning ← zero-sum, sums to 4.0 (free)';

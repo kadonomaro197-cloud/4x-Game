@@ -398,9 +398,9 @@ var CAT=[
    cost:{bp:140,cr:18,rp:4,steel:40,elec:60,mats:{'lithium-battery':20}},
    honesty:'Stored charge — 750 MJ per bank (the engine\'s Mass·500 battery scaling). THE warp-departure buffer: opening a jump bubble needs stored energy ≥ the drive\'s creation cost, so a warp ship must bank enough capacitors to jump at all. LIVE: EnergyStoreAtb → EnergyStored, which warp draws from at departure (WarpMoveCommand). The Power door already builds this.'},
  {id:'hyperreactor',cat:'Power',name:'Hypermatter Reactor',hosts:['station','megastructure'],
-   mass:400000,vol:200000,crew:2000,hp:3000,draw:0,supply:8000,loud:true,deployDays:3650,
+   mass:200000,vol:100000,crew:2000,hp:3000,draw:0,supply:2500,loud:true,deployDays:3650,
    cost:{bp:2000000,cr:400000,rp:9,steel:900000,elec:400000,fissile:600000,mats:{'antimatter':40000}},
-   honesty:'The station’s heart — a hypermatter annihilation core, 8,000 MW each. LIVE as power (EnergyGenerationAtb), scaled to megastructure output. A battle station banks dozens of these to feed its superlaser and thousands of turbolasers. Its ~10-year fuel core means the station never really runs down.'},
+   honesty:'The station’s heart — a hypermatter core at the engine’s MAXIMUM single-reactor output: 2,500 MW (2.5 GW = 50 kW/kg × 25 t × 2.0 overload — no engine reactor exceeds this). A battle station can’t mount one giant reactor; the engine caps every reactor at 2.5 GW, so it banks DOZENS of max-scale cores (~80 here) to feed its superlaser and thousands of turbolasers. Its ~10-year fuel core means the station never really runs down. (Capping at the real engine ceiling is the LAW — don’t show a reactor the engine can’t build.)'},
  {id:'radtower',cat:'Power',name:'Radiator Tower',hosts:['station','megastructure'],
    mass:20000,vol:30000,crew:20,hp:200,draw:0,supply:0,heatDissip:4000,
    cost:{bp:30000,cr:2000,rp:3,steel:40000,elec:2000},
@@ -547,7 +547,7 @@ var PRESETS=[
        ~1,200,000 crew · hypermatter reactor · Class-4 hyperdrive. Support (reactors/radiators/habitation/
        life-support/agriculture) sized to power, cool, house and feed a city that never runs down. */
     counts:{superlaser:1,heavyturbo:5000,medturbo:5000,ioncannon:2500,pdbattery:2500,tractor:768,
-            fighterbay:100,vehiclebay:50,hyperreactor:25,radtower:90,capacitor:40,shield:200,armour:500,
+            fighterbay:100,vehiclebay:50,hyperreactor:80,radtower:90,capacitor:40,shield:200,armour:500,
             warp:1,drive:20,fueltank:100,magazine:50,ammobunker:200,cargo:100,
             habblock:25,lifecomplex:20,agridome:9,medbay:100,provisions:50,
             sensor:20,searchsensor:20,firecontrol:20,ecm:10,targeting:20,bridge:10,flagsuite:4}},
