@@ -199,6 +199,30 @@ fill with more of what the ship already IS.
 
 ---
 
+## DOCUMENTED GAPS — the assembler mounts it, but no door builds it yet (deferred, not blocking)
+
+*Surfaced 2026-08-03 by the cradle-to-grave check — every mounted component must be designable in a door. Three fail
+that test today. Left DOCUMENTED, not built, so they aren't lost when work resumes.*
+
+- **Tractor beam → belongs in an ENHANCERS / utility dial.** Mounted on the Venator (×6) and Death Star (×768), but
+  **zero doors produce it** (it deals no damage, so it's not a weapon; there is no utility door for it to live in). Its
+  home is an Enhancers/utility dial — grip-and-drag. Its battlefield payoff (docking / salvage / capture) is *also*
+  engine-PENDING, so it's a gap at both the design and the engine layer.
+- **Superlaser → a megastructure superweapon BEYOND the weapons door.** The weapons door tops out at a "Spinal Lance"
+  (8 MJ/s, ship-to-ship). A planet-cracker is a category the door doesn't model, and the engine has no
+  planetary-destruction reader either — PENDING at both layers. Death Star only.
+- **Capital-beam + missile RANGES exceed the weapons-door range ceilings.** The door caps beam range at 60 km and
+  guided at 100 km, but the assembler mounts Medium Turbolaser 140, Ion Cannon 160, Heavy Turbolaser 220, Missile
+  400 km. Same shape as the (already-fixed) damage ceiling. Fix when picked up: raise the door beam ceiling to ~250 km
+  and guided to ~450 km — closes the gap AND is more physically honest (space beams/missiles reach far), keeping
+  laser ≥ plasma (correct vacuum physics — a plasma bolt disperses faster than a laser diffracts).
+
+*A weapon-NAMING note (not a gap): the assembler uses franchise labels (Turbolaser, Laser Cannon); the weapons door
+deliberately uses generic ordnance names, so a beam-energy weapon it designs is a Laser / Beam Projector / **Lance** —
+same weapon, franchise skin. The Sovereign's "turbolasers" are the door's Lances.*
+
+---
+
 ## THE HONESTY VOCABULARY (mark every output as exactly one)
 **LIVE** · **LIVE-gated** (default-off flag, client-on) · **host-split** (live on ground, inert on ship, or vice
 versa) · **READ** (this door only displays it; another owns it) · **EMERGENT** (computed from the finished entity,
