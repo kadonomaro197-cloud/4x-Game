@@ -1,177 +1,189 @@
-# The Resolver Simulator — what it is, what it models, and every number it borrows from the engine
+# The Resolver Simulator — the Arena: what it models, and every number it borrows from the engine
 
-**Companion to `docs/combat/resolversim.html`.** *(As of 2026-08-03. Author: the resolver-sim build pass.)*
+**Companion to `docs/combat/resolversim.html`.** *(As of 2026-08-03. Rebuilt to the LD-30 arena model on the
+developer's ruling: the sim shows the opposing-sides battle at true engagement ranges — nothing else.)*
 
 ---
 
 ## What it is, in one breath
 
-The game's **auto-resolver** — the thing that fights fleet battles — runs **invisibly, in the background**. You press
-play, and somewhere off-screen ships trade fire and die by the math in `Combat/CombatKernel.cs` and
-`Combat/CombatEngagement.cs`. `resolversim.html` is a **window into that black box**: it runs the engine's *real*
-combat arithmetic, on the screen, one salvo at a time, so you can watch a battle unfold, pause it, replay it, and see
-exactly why one side won. It is the third tool in the chain — **the 12 door designers make components → the Entity
-Assembler mounts them into a ship's totals → this simulator fights those totals** — and it reads the same handoff the
-real resolver reads (`ShipCombatValueDB`: Firepower, Toughness, Evasion, Shields, per-weapon profiles).
+A battle is **two fleets that start on opposite sides and close**. The simulator draws exactly that: an **arena**
+(`AUTO-RESOLVER-GROUND-TRUTH §5, the LD-30 model`) — the two sides open at opposite ends of a diameter, the diameter
+is **the longest weapon range in the fight**, and then they **close at their real speeds**, firing each weapon only
+when the enemy is inside that weapon's **true range**. You watch the gap count down from 400 km through the weapon
+bands — torpedo → heavy turbolaser → ion → medium turbolaser → laser → point-defense — and see the fight decided as
+they merge. The damage underneath the movement is the engine's **real** combat kernel, copied line-for-line.
 
-**The whole point is fidelity.** Every formula and every tuning number in the simulator is copied from the engine
-source, cited to its file and line. Where the engine has a **known bug or a deliberate gap**, the simulator shows the
-engine-true (buggy) result and **flags it on screen** — it never quietly "fixes" the engine, because then you'd be
-watching a game that doesn't exist. A red **BUG** or amber **GAP** badge is the honest thing.
+**The one rule the arena is built on (LD-30, the developer's words, 2026-07-29):**
+> "the circle doesn't close. It is the arena, not a gap. Inside it the resolver is a live simulation — units move at
+> their own real speeds, as though it was an RTS." **The arena is bounded by RANGE; the fight is resolved by MOVEMENT.**
 
 ---
 
-## The engine in seven plain sentences (so the sim makes sense)
+## How the arena works — the model, step by step
 
-1. **A ship is whole-or-dead.** There's no "60%-wrecked but still fighting" — the per-component damage sim is parked, so
-   a ship is either at full value or gone. This is the single biggest limitation, and the simulator honors it.
-2. **There are two resolvers sharing one damage kernel.** The *arithmetic* (does the shot land, does a shield soak it,
-   does armour bounce it) lives once in `CombatKernel.cs`; everything *around* it (range, fog, retreat, stats,
-   multi-fleet fire-splitting) is two separate harnesses — space and ground.
-3. **"AutoResolve" is a trap name.** `AutoResolve.cs` is the *stripped instant* path (no dodge, no shields, no retreat) —
-   the off-screen quick-math. The watchable engine is `CombatEngagement.StepEngagementGroup`.
-4. **Combat value is frozen at build.** A damaged-but-alive ship still rates at full strength — the direct consequence
-   of whole-or-dead.
-5. **The kernel is pure math** — no randomness, no clock — which is what makes a fast-forwarded battle come out
-   identical to a watched one. The simulator is seeded and deterministic for the same reason.
-6. **Missiles are stubbed.** In the auto-resolver a missile/torpedo counts for a flat **0.1 MJ/s** — the real
-   GJ-scale impact only happens in the live-flight sim, which the auto-resolver doesn't run. A torpedo boat therefore
-   *under-counts* here. The simulator flags this.
-7. **The damage math is good; the gaps are all in the harness.** Across 14 combat scenarios, the kernel is uniformly
-   correct — every GAP/PARTIAL is in the plumbing around it (range, fog, retreat, per-weapon stats, conservation,
-   performance). That's the map of what to trust and what to flag.
+1. **Size the arena by range.** The diameter = the longest weapon range present. In the handoff battle that's the
+   **Proton Torpedo at 400 km**, so the two fleets open 400 km apart. (A joiner with a longer weapon would *expand*
+   the arena, never shrink it — LD-30. The circle never closes.)
+2. **Deploy on opposite ends.** Side A's ships cluster at one end of the diameter, side B's at the other.
+3. **Close at real speed.** Each fleet moves as one, at its **slowest ship's speed** (a fleet is only as fast as its
+   slowest hull — the engine's `FleetCombat.DeltaVFloor`), toward the gap its **doctrine** wants:
+   - **Close in** (default) — drive to knife range.
+   - **Stand off** — hold at your **dominant weapon's range** (where the bulk of your firepower lives) and kite if
+     you're faster.
+   - **Hold** — don't move.
+   The faster fleet dictates the range; a faster long-gun fleet can kite a slower brawler it out-ranges.
+4. **Fire at true range.** Each salvo, a weapon shoots **only if the current gap is inside its range**
+   (`WeaponReaches`). Long weapons open the fight; short ones wait for the merge. A **beam** (light-speed) is
+   undodgeable and loses **no** accuracy at range; a **slug or torpedo** loses accuracy the longer it has to fly
+   (the flight-time term). So the closing fight has a real shape: torpedoes plink from far out, turbolasers decide
+   it at range, point-defense and lasers finish it up close.
+5. **Resolve the damage with the real kernel** — dodge, shield nature-matchup, point-defense interception of guided
+   fire, fire-split conservation (an attacker facing two targets divides its guns, never doubles them), the flat
+   armour bounce, and **whole-or-dead** casualties. A fleet **breaks off** once it has lost half the ships it
+   started with.
+
+**The whole point is fidelity.** Every damage formula and tuning number is copied from the engine source, cited to
+its file and line, and cross-checked on load. Where the engine has a **deliberate gap** (the torpedo stub, the
+proportional space armour, whole-or-dead), the sim shows the engine-true result and **flags it** — it never quietly
+"fixes" the engine.
 
 ---
 
-## The three modes it runs
+## The one honest seam: ranges are engine-true, speed is a stand-in
 
-| Mode | Engine source | What it is |
-|---|---|---|
-| **Space — stepped** (the hero) | `CombatEngagement.StepEngagementGroup` (`:640`) | The real, watchable, salvo-by-salvo fleet battle: dodge, shields, ammo, heat, point-defense, doctrine, fire-splitting, retreat. This is "the auto-resolver" in practice. |
-| **Space — instant** (compare) | `AutoResolve.Resolve` (`:74`) | The stripped off-screen quick-math: pure Firepower×time vs Toughness, combatants die first. **No dodge, no shields, and — verified — no SalvoDamageScale.** Run it on the same forces to see how much the stepped harness adds. |
-| **Ground — region** | `GroundForcesProcessor.ResolveRegionCombat` (`:370`) | The planet-surface fight: terrain/cover/fortification divisors, ROE march stances, per-mount weapons. Carries the engine's **live 3-way double-count bug**, flagged. |
+Everything about *who can hit whom* is the engine's: the **weapon ranges** are the real authentic-closing ranges from
+`WeaponProfile.cs` (torpedo 400 · heavy-turbo 220 · ion 160 · med-turbo 140 · railgun 80 · laser 60 · PD 12 km), and
+the **damage kernel** is byte-ported. The one thing the engine does **not** expose as a spec-sheet field is a ship's
+sublight **closing speed** — the engine derives it from `NewtonThrustAbilityDB` (thrust ÷ mass). Rather than fake a
+`ShipCombatValueDB` field that isn't there, the sim uses an **editable per-class stand-in** (Venator 2.0, Acclamator
+3.0, Sovereign 2.6 km/s), shown on every ship card and tunable in the **Forces** tab. That is the single number in the
+whole tool that isn't read straight off the engine's combat contract, and it is flagged as such on screen.
 
 ---
 
 ## The unit model (read this before trusting a number)
 
-The engine measures damage and toughness in **joules** and firepower in **joules/second**, with a ship's toughness
-being the sum of its components (100,000 J each). The Entity Assembler — the tool that produces the ship totals this
-sim reads — works in a **game-scale abstraction**: firepower in **MJ/s**, shields in **MJ**, and a compact
-**toughness** number (health + armour). So the simulator works in that same **MJ scale**:
+The engine measures damage and toughness in **joules** and firepower in **joules/second**. The Entity Assembler — the
+tool that produces the ship totals this sim reads — works in a game-scale abstraction: firepower in **MJ/s**, shields
+in **MJ**, a compact **toughness** number. So the simulator works in that same **MJ scale**:
 
-- **Damage, toughness, shields → MJ** (this is the engine's joules ÷ 1,000,000). Because every damage formula in the
-  kernel is *linear* in damage, scaling all three by the same factor changes **no** outcome — it's purely a display
-  unit. Who wins, the dodge fractions, the shield-drain timing, the salvo count are all identical.
-- **Velocities → m/s** and **ranges → metres**, exactly as the engine reads them. These are **not** scaled, because the
+- **Damage, toughness, shields → MJ** (the engine's joules ÷ 1,000,000). Because every damage formula in the kernel is
+  *linear* in damage, scaling all three by the same factor changes **no** outcome — it's purely a display unit. Who
+  wins, the dodge fractions, the shield-drain timing, the salvo count are all identical.
+- **Velocities → m/s** and **ranges → metres**, exactly as the engine reads them — **not** scaled, because the
   dodge/closing math compares them against fixed engine references (a 1,000,000 m/s velocity reference, a 10-second
-  flight-time reference). **One reconciliation:** the assembler writes a beam's velocity as `299792` (that's the speed
-  of light in *km/s*); the kernel needs *m/s*, where a beam must sit far above the million-m/s reference to be
-  undodgeable. So the sim uses engine-native **~3×10⁸ m/s** for beam-delivery weapons (light speed) and keeps the
-  finite weapons (railgun 9,000, missile 14,000, plasma 40,000, flak 6,000 m/s) as authored. Source outranks the
-  assembler wherever they would *behave* differently.
-- **All the pure fraction/ratio constants** — the shield soak fractions, the armour 1.5/0.1, the 0.95 evasion cap, the
-  0.1 salvo-damage scale, the 0.5 retreat threshold, the 0.95 point-defense cap — are used **exactly** as the source
-  has them.
+  flight-time reference). Beam-delivery weapons run at engine-native **~3×10⁸ m/s** (light speed) so they sit far above
+  the velocity reference and are undodgeable; the finite weapons keep their authored m/s.
+- **All the pure fraction/ratio constants** — shield soak fractions, armour 1.5/0.1, the 0.95 evasion cap, the 0.1
+  salvo-damage scale, the 0.5 retreat threshold, the 0.95 point-defense cap — are used **exactly** as the source has
+  them.
 
 So: **the formulas and fraction-constants are byte-ported; the absolute magnitudes are the assembler's game scale.**
-The behavior is engine-true; the numbers read in MJ.
 
 ---
 
 ## The honesty ledger — what the sim shows straight, and what it flags
 
-**Shown engine-true (trust these):** the dodge/hit curve, the shield nature-matchup and drain/regen, flat armour with
-penetration and the burst (alpha-vs-chip) split, the multi-fleet fire-split (`1/N`, firepower conserved), point-defense
-interception of guided fire, ammo drain to silence, heat throttle, doctrine multipliers, the retreat threshold, the
-closing-range accuracy falloff, and whole-or-dead casualties bucketed by combat value.
+**Shown engine-true (trust these):** the dodge/hit curve, the **range-accuracy falloff over the closing flight**
+(beams immune, slugs/torpedoes degrade), the **true weapon-range gate**, the shield nature-matchup and drain/regen,
+flat armour with penetration and the burst (alpha-vs-chip) split, the multi-fleet fire-split (`1/N`, firepower
+conserved), point-defense interception of guided fire, the retreat threshold, doctrine (Close / Stand-off / Hold)
+driving the movement, and whole-or-dead casualties bucketed by combat value.
 
-**Flagged GAP/BUG (the engine is like this — the sim shows it and says so):**
-- 🔴 **BUG — ground 3-way double-count.** On the surface, a unit facing two enemy factions applies its *full* damage
-  pool to *each* — 2× in a 3-way fight (the pool is rebuilt inside the nested faction loops). Space is conserved; ground
-  is not. Flagged in ground mode.
-- 🟠 **GAP — missile damage stub.** 0.1 MJ/s in the auto-resolver; the real impact is live-flight only. A torpedo-heavy
-  ship (the Sovereign) reads weaker here than it fights.
-- 🟠 **GAP — space armour is proportional, not per-shot.** On a ship, armour folds into toughness and soaks a *fraction*;
-  the flat per-shot bounce (one big alpha punches, a swarm bounces) only actually happens on the **ground** — the space
-  path hard-zeros per-shot energy. A deliberate v1 deferral.
-- 🟠 **GAP — ground has no retreat and no battle log.** Its only stances are Hold / Close / Stand-off; it can't break off,
-  and it records no play-by-play.
-- 🟠 **GAP — ground has no detection gate.** Space can shoot a blind target that can't reply (fog-of-war first-strike);
-  ground's first-strike is range-only.
-- 🟠 **GAP — whole-or-dead.** No partial-hull tracking, in any mode. A ship is full value or gone.
+**Flagged (the engine is like this — the sim shows it and says so):**
+- 🔵 **MODEL — this is the arena TARGET, not the shipped default.** The sim implements LD-30, the opposing-sides arena
+  the developer ruled the resolver *must* become. The shipped default resolver still fights at **point-blank** (its
+  closing model collapses to one shrinking scalar and is off by default). That model is superseded here, deliberately.
+  The **damage math** below the movement is the engine's real kernel, byte-for-byte.
+- 🟠 **GAP — closing speed is the one non-spec-sheet input** (see the seam above).
+- 🟠 **GAP — missile/torpedo damage is a stub.** 0.1 MJ/s in the auto-resolver (`MissileLauncherFirepowerStub =
+  100,000 J/s`); the real GJ-scale impact is live-flight only. The torpedo-heavy Sovereign — which opens the fight at
+  400 km — reads *weaker* here than it fights.
+- 🟠 **GAP — space armour is proportional, not per-shot.** On a ship, armour folds into toughness and soaks a
+  *fraction*; the flat per-shot bounce only actually runs on the ground (the space path hard-zeros per-shot energy). A
+  deliberate v1 deferral.
+- 🟠 **GAP — whole-or-dead.** No partial-hull tracking. A ship is full value or gone (combat value frozen at build).
 
-**Never faked:** if the engine can't do a thing (crack a planet, launch a strike wing, model per-component wounds), the
-sim does not pretend it can — it flags it.
+**Never faked:** if the engine can't do a thing, the sim does not pretend it can — it flags it.
 
 ---
 
 ## How to drive it
 
-Pick a **scenario** (or the default handoff battle), pick a **mode**, then **Step** one salvo at a time or **Play** to
-watch it run; **Fast-forward** resolves it; **Replay** re-runs the same seed identically. The **event log** narrates each
-salvo in plain English ("Republic fleet took heavy-turbolaser + torpedo fire — 41% on target, 62 MJ dealt; destroyed
-'Acclamator #2'"), the **damage ledger** totals what each side dealt / soaked / landed, and the **weapon table** shows the
-per-weapon ten-field profile the kernel reads. Every gauge with a flagged caveat carries its badge.
+Pick a **scenario** (default: the handoff battle), set each side's **doctrine** (Close / Stand-off / Hold), then
+**Step** one salvo at a time or **Play** to watch it close and fight; **Resolve** fast-forwards to the result;
+**Replay** re-runs the same seed identically. Watch the **arena** up top — the two clusters closing, the shaded
+weapon-reach bars, the **gap** counting down. The **battle log** narrates each salvo with the current gap; the
+**Weapons & ranges** tab shows every weapon sorted by range with an **IN RANGE** flag as the gap crosses it; the
+**Forces** tab lets you edit any stat (including speed) and **Replay**. It is deterministic — Resolve and Play reach
+the identical result, because the kernel has no RNG and no clock.
 
 ---
 
 ## Ported constants — every number, cited to the source line it was re-verified against
 
-These are the tuning numbers the simulator runs on. Each was read in the C# source at the line shown (Phase 2 of the
-build — the whole `CombatKernel.cs` end-to-end, plus the specific lines in the other files). The simulator uses each
-one **exactly** as written.
+The simulator uses each one **exactly** as written in the C# source (re-verified at the cited line).
+
+### The damage kernel (ported, verified)
 
 | Source | Constant | Value | What it does |
 |---|---|---|---|
-| `CombatKernel.cs:38` | `VelocityReference_mps` | 1,000,000 | shot speed at which a weapon half-defeats evasion (a beam is far above → always hits; a slug far below → dodgeable) |
-| `CombatKernel.cs:42` | `SaturationReference` | 50 | rate-of-fire at which volume half-guarantees a hit regardless of dodge (flak is far above) |
-| `CombatKernel.cs:71` | `MinLandedFraction` | 0.05 | floor on the fraction of fire that lands — enough volume kills any dodger (kept = 1 − EvasionCap, the ×20 ceiling) |
-| `CombatKernel.cs:76` | `FlightTimeReference_s` | 10 | the "accuracy falls off with distance" half-time; inert at separation 0 |
+| `CombatKernel.cs:38` | `VelocityReference_mps` | 1,000,000 | shot speed at which a weapon half-defeats evasion (beam far above → always hits; slug far below → dodgeable) |
+| `CombatKernel.cs:42` | `SaturationReference` | 50 | rate-of-fire at which volume half-guarantees a hit regardless of dodge (flak far above) |
+| `CombatKernel.cs:71` | `MinLandedFraction` | 0.05 | floor on the fraction of fire that lands (= 1 − EvasionCap, the ×20 ceiling) |
+| `CombatKernel.cs:76` | `FlightTimeReference_s` | 10 | the range-accuracy half-falloff time over the shot's flight |
 | `CombatKernel.cs:82` | `RangeBaseMiss` | 0.9 | evasion-independent base miss at range (the one mutable dial — the kernel's single purity break) |
-| `CombatKernel.cs:87–93` | `ShieldSoakVs` K / E / X / Exotic | 1.0 / 0.5 / 0.75 / 0.0 | the shield **nature matchup**: kinetic stopped best, energy bleeds through, explosive partly bypasses, exotic ignores the shield entirely |
-| `CombatKernel.cs:100` | `ArmourSoakPerPoint` | 1.5 | damage soaked off **each** incoming source, per point of armour (flat-per-source = the swarm-vs-alpha identity) |
-| `CombatKernel.cs:103` | `ArmourMinPassFraction` | 0.1 | a source always lands ≥ this fraction — armour is never total immunity (the ×10 armour ceiling) |
+| `CombatKernel.cs:87–93` | `ShieldSoakVs` K / E / X / Exotic | 1.0 / 0.5 / 0.75 / 0.0 | the shield **nature matchup**: kinetic stopped, energy bleeds, explosive partly bypasses, exotic ignores it |
+| `CombatKernel.cs:100` | `ArmourSoakPerPoint` | 1.5 | damage soaked off **each** incoming source, per point of armour (the swarm-vs-alpha identity) |
+| `CombatKernel.cs:103` | `ArmourMinPassFraction` | 0.1 | a source always lands ≥ this fraction — armour is never total immunity (the ×10 ceiling) |
 | `CombatKernel.cs:308` | `BurstSoakMaxShots` | 1000 | cap on how many shots a burst is split into for the per-shot soak |
-| `CombatEngagement.cs:103` | `SalvoDamageScale` | 0.1 | **the combat-pace dial** — only a tenth of a salvo's raw energy counts toward kills, so a fight plays out over ~10× more salvos. Stepped path **only** |
-| `CombatEngagement.cs:110` | `AmmoBurnKgPerJoule` | 1e-4 | magazine kilograms drained per joule of ammo-fed (kinetic/explosive) fire |
-| `CombatEngagement.cs:115` | `HeatDissipationFraction` | 0.5 | fraction of radiator capacity shed as cooling each salvo |
-| `CombatEngagement.cs:120` | `HeatThrottleFloor` | 0.1 | an overheating fleet still fires at least this fraction of its energy weapons |
+| `CombatEngagement.cs:103` | `SalvoDamageScale` | 0.1 | **the combat-pace dial** — a tenth of a salvo's raw energy counts toward kills, so a fight plays out watchably |
 | `CombatEngagement.cs:1459` | `PointDefenseMaxIntercept` | 0.95 | hard cap on the missile fraction point-defense can shoot down — a big enough swarm always leaks |
 | `CombatEngagement.cs:48` | `RetreatCasualtyThreshold` | 0.5 | a fleet breaks off after losing this fraction of the ships it started with |
-| `CombatEngagement.cs:81` | `FallbackBeamVelocity_mps` | 1e8 | an old-style (profile-less) ship fires as this light-speed always-hit beam |
-| `AutoResolve.cs` | `RoundSeconds` / `MaxRounds` | 5.0 / 2000 | instant path: seconds of fire per round; the round cap |
 | `ShipCombatValueDB.cs:38` | `MissileLauncherFirepowerStub` | 100,000 J/s | a missile launcher's flat firepower = **0.1 MJ/s** (the flagged torpedo stub) |
 | `ShipCombatValueDB.cs:96` | `EvasionCap` | 0.95 | hard ceiling on how hard a ship is to hit |
-| `ShipCombatValueDB.cs:100` | `LightSpeed_mps` | 299,792,458 | the real beam muzzle velocity — this is what makes a beam undodgeable |
-| `GroundForcesProcessor.cs:35` | `SalvoScale` (ground) | 1.0 | ground combat-pace dial — **full**, vs space's 0.1 (ground fights resolve faster) |
-| `GroundForcesProcessor.cs:40` | `AmmoPerSalvo_kg` | 1.0 | ammo a magazine-fed unit burns per salvo it fires |
+| `ShipCombatValueDB.cs:100` | `LightSpeed_mps` | 299,792,458 | the real beam muzzle velocity — what makes a beam undodgeable |
 | `WeaponClassifier.cs:19 / 23` | Beam / Flak thresholds | 1e7 m/s / 50 sat | split the Bolt/Slug family into the computed weapon **Class** readout |
+
+### The arena model (LD-30)
+
+| Source | What | Value | Meaning |
+|---|---|---|---|
+| `AUTO-RESOLVER-GROUND-TRUTH §5` | LD-30 arena | opposite ends of a diameter | the two sides open on a diameter bounded by the longest weapon range; the circle does **not** close |
+| `§5 LD-30` | closing = movement | units at real speeds | the fight is resolved by units moving, not by one shrinking gap |
+| `WeaponProfile.cs` | true weapon ranges | torpedo 400 / heavy-turbo 220 / ion 160 / med-turbo 140 / railgun 80 / laser 60 / PD 12 km | the engagement bands the arena closes through |
+| `FleetCombat.DeltaVFloor` | fleet speed | min over ships | a fleet moves as one, bound by its slowest hull |
+| `NewtonThrustAbilityDB` (stand-in) | closing speed | 2,000–3,000 m/s | per-class editable — the one input not on a spec sheet |
+| `ARENA` (sim) | `MinGap_m` / `KiteMargin` | 3,000 m / 0.9 | knife-range floor; "stand off" holds at its dominant range × this |
+
+---
 
 ## Ported formulas — the arithmetic, in plain English
 
-Each of these is a one-to-one copy of the C# function at the cited line. The simulator's JavaScript is the same math.
+Each is a one-to-one copy of the C# function at the cited line.
 
-- **Does the shot land?** `HitFraction` (`CombatKernel.cs:196`). A fast or well-tracking weapon defeats evasion (a
-  beam ignores it entirely); a slow ballistic slug is dodged by a nimble target; high rate-of-fire (flak) floors the
-  result so *something* always lands; and once a closing separation is in play, accuracy falls off with distance for
-  anything that isn't a beam or guided. Point-blank (separation 0) the distance term is inert.
-- **How much of a mixed salvo lands?** `LandedFraction` (`:223`) — the damage-weighted average of `HitFraction` over
-  every weapon in the incoming fire.
-- **How much does a shield stop?** `SoakFractionOf` (`:237`) rolls the nature matchup up over the salvo; `ResolveShield`
-  (`:253`) drains the pool by the soakable part (up to its charge), then regenerates it toward capacity.
-- **How much does armour bounce?** `ArmourSoak` (`:294`) subtracts a flat amount per source (penetration cancels armour
-  first, point-for-point; an out-penned shot passes in full); `BurstShotCount` (`:315`) + `ArmourSoakBurst` (`:331`)
-  split one weapon's fire into N equal shots and soak each flat — so a swarm of chips bounces where one big alpha of the
-  same total punches through.
-- **Which weapon reaches?** `WeaponReaches` (`:174`) — a 0-range weapon is unbounded (the beam convention); a finite
-  one fires only once the gap is within its range.
+- **Does the shot land?** `HitFraction` (`CombatKernel.cs:196`). A fast/well-tracking weapon defeats evasion (a beam
+  ignores it); a slow ballistic slug is dodged; high rate-of-fire (flak) floors the result so *something* always
+  lands; and once a closing separation is in play, accuracy falls off with distance for anything that isn't a beam or
+  guided.
+- **How much of a mixed salvo lands?** `LandedFraction` (`:223`) — the damage-weighted average of `HitFraction`.
+- **How much does a shield stop?** `SoakFractionOf` (`:237`) rolls the nature matchup over the salvo; `ResolveShield`
+  (`:253`) drains the pool by the soakable part, then regenerates toward capacity.
+- **How much does armour bounce?** `ArmourSoak` (`:294`) subtracts a flat amount per source (penetration cancels
+  armour first; an out-penned shot passes in full); `BurstShotCount` (`:315`) + `ArmourSoakBurst` (`:331`) split one
+  weapon's fire into N equal shots and soak each flat — a swarm of chips bounces where one alpha of the same total
+  punches through.
+- **Which weapon reaches?** `WeaponReaches` (`:174`) — a finite weapon fires only once the gap is within its range;
+  this is the gate the whole arena is built on.
+
+---
 
 ## Kernel cross-check — hand-computed from the C# source, asserted against the JS on every load
 
-The simulator runs these eight checks the instant it loads (the badge on the battlefield header shows the result — a
-green `kernel ✓ 8/8`). Each expected value was worked out by hand from the C# source; if the JavaScript port ever
-drifts from the engine math, the badge goes red. This is the Visibility Gate applied to the simulator itself.
+The simulator runs these eight checks the instant it loads (the badge on the battlefield header shows `kernel ✓ 8/8`).
+Each expected value was worked out by hand from the C# source; if the port ever drifts from the engine math, the badge
+goes red. This is the Visibility Gate applied to the simulator itself.
 
 | # | Call | Expected | Proves |
 |---|---|---|---|
@@ -184,29 +196,16 @@ drifts from the engine math, the badge goes red. This is the Visibility Gate app
 | T7 | `ArmourSoak(armour 10, src 100, pen 10)` | 100 | an out-penned shot passes in full (armour cancelled) |
 | T8 | `ArmourSoakBurst(armour 10, src 100, shots 10)` | 10 | the same 100 as ten chips is almost entirely bounced (alpha-vs-chip) |
 
-## The 14-row fidelity walk — how the sim handles each combat scenario
+## The handoff battle, as the arena resolves it
 
-The auto-resolver ground-truth doc (`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` §8) grades the engine against 14
-"can it handle X?" scenarios. Here is how the **simulator** handles each — i.e. whether watching the sim is watching
-the engine for that case:
+Default-open: **Republic (1 Venator + 2 Acclamators) vs Federation (2 Sovereigns)**, both closing. The fight opens
+400 km apart with only torpedoes reaching (the stub — near-harmless plinking, shields holding), the gap counts down,
+the Republic's **heavy turbolasers open at 220 km** — 80 km before the Federation's medium turbolasers bear — and that
+range-and-firepower advantage tells: the Republic holds all three hulls while a Sovereign dies and the Federation
+**breaks off** at 50% losses (≈15 salvos). Change the Federation to **Stand off** and it tries to hold at its 140 km
+band; change the Republic to **Stand off** and, being slower, it can't kite — the doctrine lever is the fight.
 
-| # | Scenario | In the sim |
-|---|---|---|
-| 1 | One ship vs one ship | ✅ n=2 stepped path (mirror/screen scenarios reduce to it) |
-| 2 | Fleet vs fleet | ✅ the handoff battle — multi-ship fleets, bucketed casualties |
-| 3 | Multi-party (3+ sides) | ✅ space fire-split (÷ targets); ground shows the **double-count BUG** (3-way scenario) |
-| 4 | Dodge (evasion decides who's hit) | ✅ `HitFraction` per bucket; the Acclamators (ev 0) are hit more than the Venator (ev 0.12) |
-| 5 | Shields (nature matchup) | ✅ `ApplyShield` — the Sovereign's 120 MJ shield half-bleeds vs the Republic's energy beams |
-| 6 | Point-defense vs missiles | ✅ `InterceptMissiles` (0 on the presets — add PD in the Forces tab to see it engage) |
-| 7 | Ammo depletion | ✅ implemented (0 magazine on the presets → no-op; engine-faithful) |
-| 8 | Heat / sustained-fire throttle | ✅ implemented (0 heat on the presets → no-op; engine-faithful) |
-| 9 | Doctrine multipliers | ➖ folded into firepower; per-fleet posture is a Forces-tab extension |
-| 10 | Retreat (break off) | ✅ the 0.5 casualty threshold ends a fleet (space); ➖ ground has none (flagged GAP) |
-| 11 | Closing range / accuracy falloff | ✅ the range term is in `HitFraction` (separation 0 by default = point-blank) |
-| 12 | Instant vs stepped divergence | ✅ the two space modes on the same forces — instant resolves in 1 round, stepped over many salvos |
-| 13 | Ground region combat | ✅ the ground mode — terrain/cover/fortification divisor, per-mount weapons, flat armour |
-| 14 | Whole-or-dead casualties | ✅ every mode — ship bars are binary (full value or gone); only ground-unit *health* drains |
-
-*(Verified: `CombatKernel.cs` read end-to-end; every constant/formula above re-verified at its cited line; the JS
-port asserted against the C# by the T1–T8 cross-check on every load, plus a headless run of all three modes across
-every scenario with zero throws, and a browser pass in both themes with zero console errors.)*
+*(Verified 2026-08-03: `CombatKernel.cs` read end-to-end; every constant/formula re-verified at its cited line; the JS
+port asserted against the C# by the T1–T8 cross-check on every load; a headless DOM-stub run drives the arena to
+completion across all scenarios with **0 throws** (kernel 8/8, gap closes 400→78 km, Republic wins); a Playwright pass
+renders both themes and runs the battle to completion with **0 console errors**.)*

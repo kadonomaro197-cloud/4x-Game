@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Resolver Simulator — Pulsar4X auto-resolve, made visible</title>
+<title>Resolver Simulator — the Arena (Pulsar4X auto-resolve, made visible)</title>
+</head>
+<body>
 <style>
 /* ================================================================
    THEME TOKENS — the whole palette lives here; components read tokens,
@@ -18,7 +20,7 @@
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px rgba(0,0,0,.4);
-  --hbar:#2b6b3a; --hbar-bg:#231a1c; --shbar:#2a6a86;
+  --hbar:#2b6b3a; --hbar-bg:#231a1c; --shbar:#2a6a86; --arena:#0a1017;
 }
 @media (prefers-color-scheme:light){
   :root{
@@ -27,7 +29,7 @@
     --sideA:#0e7c90; --sideA-dim:#a9dde6; --sideB:#a9701a; --sideB-dim:#e6d3a8;
     --ok:#2e8b45; --gap:#a9701a; --bug:#c23934; --accent:#0e7c90;
     --shadow:0 1px 2px rgba(40,40,40,.08),0 6px 18px rgba(60,55,45,.10);
-    --hbar:#57b06b; --hbar-bg:#e7e1d3; --shbar:#7bbcd6;
+    --hbar:#57b06b; --hbar-bg:#e7e1d3; --shbar:#7bbcd6; --arena:#eef1ec;
   }
 }
 :root[data-theme="dark"]{
@@ -36,7 +38,7 @@
   --sideA:#38c1d8; --sideA-dim:#1c5b66; --sideB:#e6a13a; --sideB-dim:#6a4c1a;
   --ok:#42b95a; --gap:#e0a13a; --bug:#e5544d; --accent:#38c1d8;
   --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px rgba(0,0,0,.4);
-  --hbar:#2b6b3a; --hbar-bg:#231a1c; --shbar:#2a6a86;
+  --hbar:#2b6b3a; --hbar-bg:#231a1c; --shbar:#2a6a86; --arena:#0a1017;
 }
 :root[data-theme="light"]{
   --bg:#eceae3; --panel:#faf9f5; --panel2:#f2f0e9; --edge:#d6d1c4; --edge2:#e3ded2;
@@ -44,7 +46,7 @@
   --sideA:#0e7c90; --sideA-dim:#a9dde6; --sideB:#a9701a; --sideB-dim:#e6d3a8;
   --ok:#2e8b45; --gap:#a9701a; --bug:#c23934; --accent:#0e7c90;
   --shadow:0 1px 2px rgba(40,40,40,.08),0 6px 18px rgba(60,55,45,.10);
-  --hbar:#57b06b; --hbar-bg:#e7e1d3; --shbar:#7bbcd6;
+  --hbar:#57b06b; --hbar-bg:#e7e1d3; --shbar:#7bbcd6; --arena:#eef1ec;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
@@ -61,11 +63,6 @@ header{position:sticky;top:0;z-index:20;background:linear-gradient(var(--panel),
 .titlerow h1{font-size:18px;letter-spacing:.2px}
 .titlerow .sub{color:var(--muted);font-size:12.5px}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:11px}
-.seg{display:inline-flex;border:1px solid var(--edge);border-radius:8px;overflow:hidden;background:var(--panel2)}
-.seg button{background:transparent;border:0;color:var(--ink2);padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:var(--sans)}
-.seg button[aria-pressed="true"]{background:var(--accent);color:#04121a;font-weight:600}
-:root[data-theme="light"] .seg button[aria-pressed="true"]{color:#fff}
-@media (prefers-color-scheme:light){.seg button[aria-pressed="true"]{color:#fff}}
 select,input[type="number"]{background:var(--panel2);color:var(--ink);border:1px solid var(--edge);border-radius:7px;
   padding:6px 9px;font-size:12.5px;font-family:var(--sans)}
 button.ctl{background:var(--panel2);color:var(--ink);border:1px solid var(--edge);border-radius:7px;padding:6px 12px;
@@ -74,8 +71,9 @@ button.ctl:hover{border-color:var(--accent)}
 button.ctl.primary{background:var(--accent);color:#04121a;border-color:transparent;font-weight:600}
 :root[data-theme="light"] button.ctl.primary,@media (prefers-color-scheme:light){button.ctl.primary{color:#fff}}
 button.ctl:disabled{opacity:.4;cursor:default}
-button.ctl:focus-visible,select:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.ctl:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 label.inl{color:var(--muted);font-size:12px;display:inline-flex;align-items:center;gap:6px}
+label.inl.A{color:var(--sideA)} label.inl.B{color:var(--sideB)}
 .spacer{flex:1 1 auto}
 .themebtn{background:transparent;border:1px solid var(--edge);color:var(--ink2);border-radius:7px;padding:6px 10px;cursor:pointer;font-size:12.5px}
 
@@ -93,6 +91,12 @@ label.inl{color:var(--muted);font-size:12px;display:inline-flex;align-items:cent
 .pill{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--edge);color:var(--ink2);white-space:nowrap}
 .pill.live{border-color:var(--ok);color:var(--ok)}
 .pill.done{border-color:var(--accent);color:var(--accent)}
+.pill.gap{border-color:var(--gap);color:var(--gap);font-family:var(--mono)}
+
+/* the arena */
+.arena{margin:10px 0 4px;border:1px solid var(--edge2);border-radius:10px;background:var(--arena);overflow:hidden}
+.arena svg{display:block;width:100%;height:auto}
+
 .sides{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;margin-top:12px}
 @media (max-width:560px){.sides{grid-template-columns:1fr;}.sides .vs{display:none}}
 .side{border:1px solid var(--edge);border-radius:10px;padding:10px;background:var(--panel2)}
@@ -110,8 +114,6 @@ label.inl{color:var(--muted);font-size:12px;display:inline-flex;align-items:cent
 .ship .val{font-size:10.5px;color:var(--ink2);font-family:var(--mono)}
 .bar{height:6px;border-radius:4px;background:var(--hbar-bg);margin-top:6px;overflow:hidden;position:relative}
 .bar>i{display:block;height:100%;background:var(--hbar);border-radius:4px;transition:width .18s ease}
-.bar.sh{height:4px;margin-top:3px;background:transparent}
-.bar.sh>i{background:var(--shbar);opacity:.9}
 .deadtag{position:absolute;right:8px;top:7px;font-size:10px;color:var(--bug);font-weight:700;letter-spacing:1px}
 
 /* right column tabs */
@@ -124,7 +126,7 @@ label.inl{color:var(--muted);font-size:12px;display:inline-flex;align-items:cent
 .log .ln{padding:2px 0;border-bottom:1px dashed var(--edge2);white-space:pre-wrap;color:var(--ink2)}
 .log .ln b{color:var(--ink)}
 .log .A{color:var(--sideA)} .log .B{color:var(--sideB)}
-.log .kill{color:var(--bug)} .log .sys{color:var(--muted)}
+.log .kill{color:var(--bug)} .log .sys{color:var(--muted)} .log .rng{color:var(--accent)}
 table{width:100%;border-collapse:collapse;font-size:11.6px}
 th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--edge2);vertical-align:top}
 th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px;position:sticky;top:-12px;background:var(--panel)}
@@ -139,6 +141,7 @@ td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 .badge.bug{background:color-mix(in srgb,var(--bug) 22%,transparent);color:var(--bug);border:1px solid var(--bug)}
 .badge.gap{background:color-mix(in srgb,var(--gap) 20%,transparent);color:var(--gap);border:1px solid var(--gap)}
 .badge.live{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok);border:1px solid var(--ok)}
+.badge.plan{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);border:1px solid var(--accent)}
 .hitem{border:1px solid var(--edge2);border-radius:9px;padding:10px 11px;margin-bottom:9px}
 .hitem .ht{font-size:12.5px;font-weight:600;margin:5px 0 4px;display:flex;gap:8px;align-items:center}
 .hitem p{margin:3px 0 0;font-size:12px;color:var(--ink2)}
@@ -161,21 +164,21 @@ details.foot{margin-top:6px}
 details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
 .hidden{display:none!important}
 </style>
-</head>
-<body>
+
 <header>
   <div class="titlerow">
-    <h1>Resolver Simulator</h1>
-    <span class="sub">the game's <b>auto-resolver</b> — which fights every battle invisibly in the background — run on screen, one salvo at a time, on the engine's real math.</span>
+    <h1>Resolver Simulator — the Arena</h1>
+    <span class="sub">the <b>opposing-sides battle</b> the way it is meant to work: two fleets at opposite ends of an arena, closing at their real speeds, firing only at their <b>true weapon ranges</b>.</span>
   </div>
   <div class="controls">
-    <div class="seg" role="tablist" aria-label="Resolver mode">
-      <button id="mode-spaceStepped" aria-pressed="true">Space · stepped</button>
-      <button id="mode-spaceInstant" aria-pressed="false">Space · instant</button>
-      <button id="mode-ground" aria-pressed="false">Ground · region</button>
-    </div>
     <label class="inl">Scenario
       <select id="scenario"></select>
+    </label>
+    <label class="inl A">A doctrine
+      <select id="stanceA"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option></select>
+    </label>
+    <label class="inl B">B doctrine
+      <select id="stanceB"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option></select>
     </label>
     <span class="spacer"></span>
     <button class="ctl" id="btnStep">Step ▸</button>
@@ -183,7 +186,7 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
     <button class="ctl" id="btnFf">⏩ Resolve</button>
     <button class="ctl" id="btnReplay">↻ Replay</button>
     <label class="inl">Speed
-      <input id="speed" type="range" min="60" max="900" step="30" value="360" style="width:80px">
+      <input id="speed" type="range" min="60" max="900" step="30" value="420" style="width:80px">
     </label>
     <button class="themebtn" id="themeBtn" title="Toggle light/dark">◐ Theme</button>
   </div>
@@ -193,22 +196,24 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
   <!-- LEFT: the battlefield -->
   <section class="card" id="fieldCard">
     <div class="hd">
-      <h2 id="fieldTitle">Battlefield</h2>
+      <h2 id="fieldTitle">The arena</h2>
       <span class="selftest" id="selftest">kernel self-test…</span>
     </div>
     <div class="bd">
       <div class="status">
         <div><div class="big tnum" id="salvoNo">0</div><div class="src" id="salvoLbl">salvos</div></div>
         <span class="pill live" id="statePill">ready</span>
+        <span class="pill gap" id="gapPill">gap —</span>
         <span class="pill" id="dtPill"></span>
-        <span class="pill" id="sepPill" style="display:none"></span>
       </div>
+      <div class="arena" id="arena"></div>
       <div id="sides" class="sides"></div>
       <div class="legend">
         <span><i class="sw" style="background:var(--hbar)"></i> hull</span>
         <span><i class="sw" style="background:var(--shbar)"></i> shield</span>
-        <span><i class="sw" style="background:var(--sideA)"></i> side A</span>
+        <span><i class="sw" style="background:var(--sideA)"></i> side A (closes ←→)</span>
         <span><i class="sw" style="background:var(--sideB)"></i> side B</span>
+        <span>shaded bar = a side's weapon reach toward the enemy</span>
       </div>
       <p class="note" id="modeNote" style="margin-top:12px"></p>
     </div>
@@ -219,7 +224,7 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
     <div class="tabs" role="tablist" aria-label="Instruments">
       <button id="tab-log" role="tab" aria-selected="true">Battle log</button>
       <button id="tab-ledger" role="tab" aria-selected="false">Damage ledger</button>
-      <button id="tab-weapons" role="tab" aria-selected="false">Weapons</button>
+      <button id="tab-weapons" role="tab" aria-selected="false">Weapons &amp; ranges</button>
       <button id="tab-forces" role="tab" aria-selected="false">Forces (edit)</button>
       <button id="tab-honesty" role="tab" aria-selected="false">Honesty</button>
       <button id="tab-const" role="tab" aria-selected="false">Constants</button>
@@ -236,16 +241,20 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
 <footer>
   <div>Deterministic by construction — the engine's damage math has no RNG and no clock, so <b>Resolve</b> (fast-forward) and <b>Play</b> (watched) reach the identical result, and <b>Replay</b> re-runs a scenario bit-for-bit. Seed / iteration order are fixed.</div>
   <details class="foot"><summary>What this is, and how faithful it is</summary>
-    <p class="note" style="margin-top:8px">Every formula and tuning number below is copied from the engine source and cited to its file &amp; line (see the <b>Constants</b> tab). Damage, toughness and shields are shown in <b>MJ</b> (the engine's joules ÷ 1,000,000; the kernel is linear so this changes no outcome). Velocities are m/s and ranges metres, exactly as the engine reads them. Where the engine has a real <b>bug</b> or a deliberate <b>gap</b>, the sim reproduces the engine-true result and flags it — it never quietly "fixes" the engine. Companion dossier: <span class="mono">docs/combat/RESOLVER-SIM.md</span>.</p>
+    <p class="note" style="margin-top:8px">This is the <b>LD-30 arena model</b> (<span class="mono">AUTO-RESOLVER-GROUND-TRUTH §5</span>): the two sides open at opposite ends of a diameter of an arena bounded by the longest weapon range, the circle does <b>not</b> shrink, and the fight is resolved by the <b>units moving at their real speeds</b>. Every damage formula and tuning number is copied from the engine's real kernel and cited to its file &amp; line (see the <b>Constants</b> tab); the kernel cross-check runs on load. Weapon <b>ranges</b> are engine-true; the one thing the engine doesn't expose as a spec-sheet field — a ship's closing <b>speed</b> — is an editable per-class stand-in (flagged in <b>Honesty</b>). Damage, toughness and shields are in <b>MJ</b> (joules ÷ 1,000,000; the kernel is linear so this changes no outcome). Companion dossier: <span class="mono">docs/combat/RESOLVER-SIM.md</span>.</p>
   </details>
 </footer>
 
 <script>
 "use strict";
 /* ==================================================================
-   RESOLVER SIMULATOR — a 1:1 JS port of the Pulsar4X auto-resolver.
-   Each ported block cites the engine file + line it mirrors. Re-verified
-   against source at those lines (Operation Visible Battle, Phase 2).
+   RESOLVER SIMULATOR — THE ARENA (LD-30)
+   A 1:1 JS port of the Pulsar4X auto-resolver's damage kernel, driven
+   by the governing ARENA model (AUTO-RESOLVER-GROUND-TRUTH §5 LD-30):
+   two sides open at opposite ends of a diameter of an arena bounded by
+   the LONGEST weapon range; the circle does NOT close; the fight is
+   resolved by the units moving at their real speeds, firing only at
+   their true weapon ranges. Each ported block cites the engine file+line.
    ================================================================== */
 
 /* ---- number helpers ---- */
@@ -256,6 +265,7 @@ const fmtMJ=v=>{const a=Math.abs(v);
   if(a>=0.001)return (v*1000).toFixed(0)+" kJ";
   return v.toFixed(3)+" MJ";};
 const pct=v=>(v*100).toFixed(v>=0.995?0:1)+"%";
+const fmtKm=m=> m>=1000 ? (m/1000).toFixed(m>=100000?0:1)+" km" : Math.round(m)+" m";
 
 /* ==================================================================
    1) CombatKernel.cs — THE shared pure salvo kernel (read in full).
@@ -374,30 +384,35 @@ function classify(delivery, velocity, tracking, saturation){                    
 }
 
 /* ==================================================================
-   3) CombatEngagement.cs / AutoResolve.cs / ShipCombatValueDB.cs constants
+   3) CombatEngagement.cs / ShipCombatValueDB.cs constants (the DAMAGE path)
    ================================================================== */
 const CE = {
-  SalvoDamageScale:      0.1,      // CombatEngagement.cs:103  — the combat-pace dial (stepped only)
-  AmmoBurnKgPerJoule:    1e-4,     // CombatEngagement.cs:110
-  HeatDissipationFraction:0.5,     // CombatEngagement.cs:115
-  HeatThrottleFloor:     0.1,      // CombatEngagement.cs:120
+  SalvoDamageScale:      0.1,      // CombatEngagement.cs:103  — the combat-pace dial
   PointDefenseMaxIntercept:0.95,   // CombatEngagement.cs:1459
   RetreatCasualtyThreshold:0.5,    // CombatEngagement.cs:48
-  FallbackBeamVelocity_mps:1e8,    // CombatEngagement.cs:81
-  MaxSteps:              5000,      // CombatEngagement.cs:43
-  DtStep_s:              5.0,       // BattleTriggerProcessor cadence (5 s) — the salvo dt
+  MaxSteps:              5000,     // CombatEngagement.cs:43
+  DtStep_s:              5.0,      // BattleTriggerProcessor cadence (5 s) — the salvo dt
 };
-const AR = { RoundSeconds:5.0, MaxRounds:2000 };                 // AutoResolve.cs
 const SCV = { MissileLauncherFirepowerStub:100_000.0, UtilityRoleWeight:0.25, EvasionCap:0.95, LightSpeed_mps:299_792_458.0 };
-const GP = { SalvoScale:1.0, AmmoPerSalvo_kg:1.0 };              // GroundForcesProcessor.cs:35,40
 
 /* ==================================================================
-   4) WEAPON CATALOG — the ten-field WeaponProfile per weapon type.
-      dps in MJ/s (engine J/s ÷ 1e6). Beam-delivery weapons use the
-      engine's real beam speed (LightSpeed_mps) so they are undodgeable
-      (velocityTerm ≫ the 1e6 reference); finite weapons keep their m/s.
-      The torpedo's 0.1 MJ/s IS the engine's MissileLauncherFirepowerStub
-      (100,000 J/s) — flagged as a GAP.
+   4) THE ARENA MODEL (LD-30) — the sim's governing layer, NOT a ported
+      kernel constant. AUTO-RESOLVER-GROUND-TRUTH §5: "the two combatants
+      sit at opposite ends of a diameter … THE CIRCLE DOES NOT CLOSE …
+      closing is the UNITS moving at their real speeds."  The arena is
+      bounded by RANGE; the fight is resolved by MOVEMENT.
+   ================================================================== */
+const ARENA = {
+  MinGap_m:   3000,     // knife-range floor — clusters never fully overlap
+  KiteMargin: 0.9,      // "stand off" holds at its dominant-weapon range × this
+};
+
+/* ==================================================================
+   5) WEAPON CATALOG — the ten-field WeaponProfile per weapon type.
+      Ranges are engine-true (WeaponProfile.cs authentic-closing ranges);
+      the torpedo's 0.1 MJ/s IS the engine's MissileLauncherFirepowerStub
+      (100,000 J/s) — flagged as a GAP. Beam-delivery weapons run at the
+      real light-speed so they are undodgeable and range-accuracy-immune.
    ================================================================== */
 const C = SCV.LightSpeed_mps;
 const WEAPONS = {
@@ -410,8 +425,6 @@ const WEAPONS = {
   pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0},
   missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true},
 };
-// One aggregated WeaponProfile per weapon TYPE on a ship (the engine keeps one
-// per component but BuildFireMix aggregates by class — identical after roll-up).
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
   return {key, label:w.label, dps:w.dps*count*fpScale, vel:w.vel, track:w.track, sat:w.sat,
@@ -420,18 +433,19 @@ function profileFor(key, count, fpScale){
 }
 
 /* ==================================================================
-   5) SHIP SPEC SHEETS (ShipCombatValueDB shape) + the handoff scenario.
+   6) SHIP SPEC SHEETS (ShipCombatValueDB shape) + speed for the arena.
+      `speed` = the ship's sublight CLOSING speed (m/s). This is the one
+      input NOT on a ShipCombatValueDB field — the engine derives it from
+      NewtonThrustAbilityDB; here it is an editable per-class stand-in.
       fpScale folds the elite UnitCaliber stamp uniformly into weapon dps
-      so Σ weapon dps == Firepower (caliber hits the Firepower scalar at
-      ShipCombatValueDB.cs:529, NOT the per-weapon profiles — folding it in
-      keeps the two space paths comparing on model, not on caliber routing).
+      so Σ weapon dps == Firepower.
    ================================================================== */
 const SHIP_TYPES = {
-  venator:   {label:"Venator",   toughness:463, evasion:0.12, shieldCap:25,  shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40,
+  venator:   {label:"Venator",   toughness:463, evasion:0.12, shieldCap:25,  shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:2000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:10, medturbo:2, pdbattery:52, missile:4}},
-  acclamator:{label:"Acclamator",toughness:286, evasion:0.00, shieldCap:15,  shieldRegen:0.3, pd:0, ammoCap:0, heatCap:0, fpScale:1.40,
+  acclamator:{label:"Acclamator",toughness:286, evasion:0.00, shieldCap:15,  shieldRegen:0.3, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:3000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:3, medturbo:12, pdbattery:24, missile:4}},
-  sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40,
+  sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:2600,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{medturbo:16, laser:14, missile:16, pdbattery:12}},
 };
 function buildShip(typeKey, name){
@@ -439,75 +453,39 @@ function buildShip(typeKey, name){
   const weapons = Object.entries(t.loadout).map(([k,c])=>profileFor(k,c,t.fpScale));
   const firepower = weapons.reduce((s,w)=>s+w.dps,0);          // = Σ weapon dps (ShipCombatValueDB.cs:524 × caliber :529)
   return {name, type:typeKey, label:t.label, alive:true,
-    firepower, toughness:t.toughness, evasion:t.evasion,
+    firepower, toughness:t.toughness, evasion:t.evasion, speed:t.speed,
     roleWeight: firepower>0?1.0:SCV.UtilityRoleWeight,          // ShipCombatValueDB RoleWeight
     shieldCap:t.shieldCap, shieldRegen:t.shieldRegen, pd:t.pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
     armour:Object.assign({},t.armour), weapons};
 }
 
-/* ---- GROUND unit types (base-mod stats: Attack/Defense/MaxHealth, pen, per-shot) ---- */
-const UNIT_TYPES = {
-  infantry: {label:"Infantry", attack:100, defense:10, maxHealth:500, range:1, evasion:0.05, shield:0, shieldRegen:0, pen:0,  pershot:10,  nature:"Kinetic", delivery:"Slug"},
-  armor:    {label:"Armor",    attack:140, defense:15, maxHealth:700, range:1, evasion:0.02, shield:0, shieldRegen:0, pen:20, pershot:140, nature:"Kinetic", delivery:"Slug"},
-  artillery:{label:"Artillery",attack:160, defense:5,  maxHealth:400, range:3, evasion:0.03, shield:0, shieldRegen:0, pen:8,  pershot:80,  nature:"Explosive",delivery:"Blast"},
-};
-function buildUnit(typeKey, name, faction){
-  const t = UNIT_TYPES[typeKey];
-  return {name, type:typeKey, label:t.label, faction, alive:true,
-    attack:t.attack, defense:t.defense, health:t.maxHealth, maxHealth:t.maxHealth,
-    range:t.range, evasion:t.evasion, shield:t.shield, shieldCap:t.shield, shieldRegen:t.shieldRegen,
-    pen:t.pen, pershot:t.pershot, nature:t.nature, delivery:t.delivery};
-}
-// a ground unit's WeaponProfile (GroundCombatant.ToWeaponProfile shape)
-function unitProfile(u){
-  // ballistic ≈ dodgeable finite; artillery/blast ≈ undodgeable. velocity picked so the
-  // kernel's dodge semantics fall out (a Slug is dodgeable, a Blast lands ~fully).
-  const vel = u.delivery==="Blast" ? 1e8 : 9000;
-  const track = u.delivery==="Blast" ? 1.0 : 0.4;
-  const sat = u.delivery==="Blast" ? 5 : 12;
-  return {dps:u.attack, vel, track, sat, range:u.range, nature:u.nature, delivery:u.delivery, pen:u.pen, pershot:u.pershot};
-}
-
 /* ==================================================================
-   SCENARIOS
+   SCENARIOS — space fleet engagements only (the arena is a space battle;
+   ground is the same model on a surface, a follow-up).
    ================================================================== */
 const SCENARIOS = {
-  handoff:{ kind:"space", label:"Handoff — 1 Venator + 2 Acclamators vs 2 Sovereigns", defaultMode:"spaceStepped",
+  handoff:{ label:"Handoff — 1 Venator + 2 Acclamators vs 2 Sovereigns",
     fleets:[
       {side:"A", name:"Republic", ships:[["venator","Venator"],["acclamator","Acclamator I"],["acclamator","Acclamator II"]]},
       {side:"B", name:"Federation", ships:[["sovereign","Sovereign I"],["sovereign","Sovereign II"]]},
     ]},
-  mirror:{ kind:"space", label:"Mirror — 2 Sovereigns vs 2 Sovereigns", defaultMode:"spaceStepped",
+  mirror:{ label:"Mirror — 2 Sovereigns vs 2 Sovereigns",
     fleets:[
       {side:"A", name:"Blue Fleet", ships:[["sovereign","Sovereign A1"],["sovereign","Sovereign A2"]]},
       {side:"B", name:"Red Fleet", ships:[["sovereign","Sovereign B1"],["sovereign","Sovereign B2"]]},
     ]},
-  screen:{ kind:"space", label:"Line vs screen — 1 Venator vs 3 Acclamators", defaultMode:"spaceStepped",
+  screen:{ label:"Line vs screen — 1 Venator vs 3 Acclamators",
     fleets:[
       {side:"A", name:"Venator group", ships:[["venator","Venator"]]},
       {side:"B", name:"Acclamator wing", ships:[["acclamator","Acclamator I"],["acclamator","Acclamator II"],["acclamator","Acclamator III"]]},
-    ]},
-  ground2:{ kind:"ground", label:"Ground — assault (attacker vs dug-in defender)", defaultMode:"ground",
-    defender:"Defender", coverFort:1.6,
-    factions:[
-      {name:"Defender", isDefender:true, units:[["infantry","Guard I"],["infantry","Guard II"],["armor","Tank"]]},
-      {name:"Attacker", isDefender:false, units:[["armor","Assault I"],["armor","Assault II"],["artillery","Battery"]]},
-    ]},
-  ground3:{ kind:"ground", label:"Ground — THREE-WAY (shows the double-count BUG)", defaultMode:"ground",
-    defender:"Green", coverFort:1.0,
-    factions:[
-      {name:"Green", isDefender:true, units:[["armor","Green Tank"],["infantry","Green Guard"]]},
-      {name:"Red",  isDefender:false, units:[["armor","Red Tank"],["artillery","Red Battery"]]},
-      {name:"Blue", isDefender:false, units:[["armor","Blue Tank"],["artillery","Blue Battery"]]},
     ]},
 };
 
 /* ==================================================================
    STATE
    ================================================================== */
-let mode = "spaceStepped";
 let scenKey = "handoff";
-let state = null;         // the live battle state
+let state = null;
 let playing = false, playTimer = null;
 const logLines = [];
 
@@ -519,29 +497,76 @@ function flushLog(){
 }
 
 /* ==================================================================
-   SPACE — STEPPED  (CombatEngagement.StepEngagementGroup :640)
+   ARENA GEOMETRY (LD-30) — sizing, doctrine range, fleet speed, closing.
    ================================================================== */
+function liveShips(fl){ return fl.ships.filter(s=>s.alive); }
+function longestRange(fl){ let m=0; for(const s of fl.ships) if(s.alive) for(const w of s.weapons){ const r=w.range<=0?1e9:w.range; if(r>m) m=r; } return m||ARENA.MinGap_m; }
+function dominantRange(fl){ // range of the highest-Σdps weapon key — where the fleet's bulk fire lives
+  const by={}; for(const s of fl.ships) if(s.alive) for(const w of s.weapons){ (by[w.key]||(by[w.key]={dps:0,range:w.range})).dps+=w.dps; }
+  let best=null; for(const k in by){ if(!best||by[k].dps>best.dps) best=by[k]; }
+  return best ? (best.range<=0?1e9:best.range) : ARENA.MinGap_m;
+}
+function fleetSpeed(fl){ let m=Infinity; for(const s of fl.ships) if(s.alive) m=Math.min(m, s.speed); return isFinite(m)?m:0; } // fleet moves as one (min)
+function fleetSep(a,b){ return Math.abs(a.pos.x - b.pos.x); }
+function nearestEnemy(f, live){ let best=null, bd=Infinity; for(const g of live){ if(g.side===f.side) continue; const d=fleetSep(f,g); if(d<bd){bd=d;best=g;} } return best; }
+function fleetShield(fl){ let cap=0,regen=0; for(const s of fl.ships) if(s.alive){cap+=s.shieldCap; regen+=s.shieldRegen;} return {cap,regen}; }
+function fleetPD(fl){ let pd=0; for(const s of fl.ships) if(s.alive) pd+=s.pd; return pd; }
+function fleetFirepower(fl){ let f=0; for(const s of fl.ships) if(s.alive) f+=s.firepower; return f; }
+function avgEvasion(fl){ const s=liveShips(fl); if(!s.length) return 0; return s.reduce((a,x)=>a+x.evasion,0)/s.length; }
+
 function newSpaceState(scen){
   const fleets = scen.fleets.map(f=>{
     const ships = f.ships.map(([ty,nm])=>buildShip(ty,nm));
     return {side:f.side, name:f.name, ships,
-      DamageTakenPool:0, ShieldPool:-1, AmmoPool:-1, HeatPool:0, StepsFought:0,
+      DamageTakenPool:0, ShieldPool:-1, StepsFought:0,
       Separation_m:0, InitialShipCount:ships.length, retreated:false,
-      dealt:0, soaked:0, landedSum:0, landedW:0};
+      stance:"close", pos:{x:0,y:0},
+      dealt:0, soaked:0};
   });
-  return {kind:"space", fleets, salvo:0, over:false, outcome:"", ledger:{}};
+  // arena bounded by the LONGEST weapon range in the whole battle
+  const maxR = Math.max(...fleets.map(longestRange));
+  const R = maxR/2;                                    // arena radius; diameter = maxR = the opening gap
+  fleets.forEach(f=>{ f.pos = {x:(f.side==="A"?-R:R), y:0}; f.Separation_m = maxR; });  // opposite ends of a diameter
+  return {kind:"space", fleets, salvo:0, over:false, outcome:"", arenaR:R, sep0:maxR};
 }
-function fleetShield(fl){ let cap=0,regen=0; for(const s of fl.ships) if(s.alive){cap+=s.shieldCap; regen+=s.shieldRegen;} return {cap,regen}; }
-function fleetPD(fl){ let pd=0; for(const s of fl.ships) if(s.alive) pd+=s.pd; return pd; }
-function liveShips(fl){ return fl.ships.filter(s=>s.alive); }
-function fleetFirepower(fl){ let f=0; for(const s of fl.ships) if(s.alive) f+=s.firepower; return f; }
 
+// MOVEMENT — the fight resolved by movement (LD-30): each fleet closes/kites
+// at its real speed toward its doctrine's preferred gap; the circle is fixed.
+function advanceArena(live, dt){
+  const R = state.arenaR;
+  for(const f of live){
+    const enemy = nearestEnemy(f, live); if(!enemy) continue;
+    const gap = fleetSep(f, enemy);
+    let want = f.stance==="hold" ? gap
+             : f.stance==="standoff" ? Math.min(dominantRange(f)*ARENA.KiteMargin, state.sep0)
+             : ARENA.MinGap_m;                          // "close" → drive to knife range
+    const dir = Math.sign(enemy.pos.x - f.pos.x) || 1;  // +dir points at the enemy
+    const step = fleetSpeed(f)*dt;
+    if(gap > want+1) f.pos.x += dir*step;               // close in
+    else if(gap < want-1) f.pos.x -= dir*step;          // open up (kite)
+    f.pos.x = clamp(f.pos.x, -R, R);                    // never leave the arena
+  }
+  // no crossing + a knife-range floor (A starts left, B right)
+  const A=live.filter(f=>f.side==="A"), B=live.filter(f=>f.side==="B");
+  if(A.length && B.length){
+    const ax=Math.max(...A.map(f=>f.pos.x)), bx=Math.min(...B.map(f=>f.pos.x));
+    if(bx-ax < ARENA.MinGap_m){ const mid=(ax+bx)/2;
+      A.forEach(f=>f.pos.x=Math.min(f.pos.x, mid-ARENA.MinGap_m/2));
+      B.forEach(f=>f.pos.x=Math.max(f.pos.x, mid+ARENA.MinGap_m/2)); }
+  }
+  // each fleet's separation = distance to its nearest enemy (what the range gate + falloff read)
+  for(const f of live){ const e=nearestEnemy(f, live); f.Separation_m = e ? fleetSep(f,e) : 0; }
+}
+
+/* ==================================================================
+   THE DAMAGE PATH — ported from CombatEngagement.cs / CombatKernel.cs
+   ================================================================== */
 // BuildFireMix (CombatEngagement.cs:1317) — aggregate a fleet's weapons, range-gated
 function buildFireMix(fl, separation_m){
   const byKey = {};
   for(const s of fl.ships){ if(!s.alive) continue;
     for(const w of s.weapons){
-      if(!weaponReaches(w, separation_m)) continue;                       // WeaponReaches gate
+      if(!weaponReaches(w, separation_m)) continue;                       // WeaponReaches gate — TRUE ranges
       const k = w.key;
       if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub};
       byKey[k].dps += w.dps;
@@ -593,8 +618,7 @@ function applyShield(fl, incoming, dt, dmg){
   fl.ShieldPool = r.newPool;
   return {dmg: dmg - r.absorbed, absorbed:r.absorbed, poolPct: cap>0?r.newPool/cap:0, cap};
 }
-// ApplyCasualties (CombatEngagement.cs ApplyCasualties) — bucket by combat value,
-// combatants-first then most-hittable-first, whole-or-dead, pool carries.
+// ApplyCasualties — bucket by combat value, combatants-first then most-hittable-first, whole-or-dead.
 function applyCasualties(fl, incoming, separation_m){
   const ships = liveShips(fl);
   if(!ships.length) return [];
@@ -607,11 +631,10 @@ function applyCasualties(fl, incoming, separation_m){
     const landed = landedFraction(incoming, b.evasion, separation_m);
     return {...b, landed, eff: landed>0 ? b.toughness/landed : Infinity};
   });
-  // combatants first (role desc), then most-hittable (landed desc)
   arr.sort((a,b)=> b.role-a.role || b.landed-a.landed);
   const destroyed=[];
   for(const b of arr){
-    if(fl.DamageTakenPool < b.eff) break;                                 // stop at first unfinished bucket
+    if(fl.DamageTakenPool < b.eff) break;
     let kills = Math.floor(fl.DamageTakenPool / b.eff);
     if(kills > b.ships.length) kills = b.ships.length;
     if(kills<=0) continue;
@@ -625,50 +648,41 @@ function describeFireMix(mix){
   const uniq=[...new Set(names)];
   return uniq.slice(0,3).join(" + ") + (uniq.length>3?` + ${uniq.length-3} more`:"");
 }
-// one STEP of the multi-party stepped resolver
+
+/* ==================================================================
+   ONE STEP of the arena battle — fire at the current range, then close.
+   ================================================================== */
 function stepSpace(){
   const st=state; if(st.over) return;
   const dt=CE.DtStep_s;
   const live=st.fleets.filter(f=>liveShips(f).length>0 && !f.retreated);
   if(live.length<2){ endSpace(); return; }
   st.salvo++;
-  // (1) snapshot fire + directed targets (fog off → each fleet targets every enemy fleet)
+  // (1) FIRE at the CURRENT separation (true weapon ranges gate who can shoot)
   const fire = live.map(f=>buildFireMix(f, f.Separation_m));
   const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> live[j].side!==f.side && liveShips(live[j]).length>0));
-  // (4) DAMAGE phase
   const salvoEvents=[];
   for(let i=0;i<live.length;i++){
     const fl=live[i]; fl.StepsFought++;
     const attackers = live.map((g,j)=>j).filter(j=> j!==i && live[j].side!==fl.side && liveShips(live[j]).length>0);
     if(!attackers.length) continue;
-    // incoming = Σ attacker fire × 1/(targets that attacker can engage)  — fire-split (conserved)
     const incoming=[];
     for(const g of attackers){
       const split = enemies[g].length; if(split<=0) continue;
-      for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});
+      for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});             // fire-split, conserved
     }
-    // point-defense intercept of guided (missile) fire
     const pd=fleetPD(fl);
     let intercepted=0; if(pd>0) intercepted=interceptMissiles(incoming, pd);
-    // SalvoDamageScale — the pace dial (stepped only)
     let dmg = totalDamage(incoming)*dt*CE.SalvoDamageScale;
-    const grossRaw = totalDamage(incoming);
-    // shield soak (nature matchup)
     const sh = applyShield(fl, incoming, dt, dmg); dmg = sh.dmg;
-    // nature-hardened armour soak (after shield)
     const armourFrac = fleetArmourSoakFraction(fl, incoming);
     if(armourFrac>0) dmg *= (1-armourFrac);
     fl.DamageTakenPool += dmg;
-    fl.dealtTo = (fl.dealtTo||0); // marker
-    // book ledger on the ATTACKING side(s)
     const landed = landedFraction(incoming, avgEvasion(fl), fl.Separation_m);
-    for(const g of attackers){ const af=live[g]; af.dealt += dmg/attackers.length; af.soakedByEnemy=(af.soakedByEnemy||0)+sh.absorbed/attackers.length; }
+    for(const g of attackers){ const af=live[g]; af.dealt += dmg/attackers.length; }
     fl.soaked += sh.absorbed;
-    // casualties
-    const before = liveShips(fl).length;
     const destroyed = applyCasualties(fl, incoming, fl.Separation_m);
     const after = liveShips(fl).length;
-    // event line
     const atkLabels = attackers.map(g=>live[g].name);
     const cls = fl.side==="A"?"A":"B";
     let line = `<b class="${cls}">${fl.name}</b> took ${describeFireMix(incoming)||"fire"} from ${atkLabels.join(", ")} — `
@@ -679,14 +693,16 @@ function stepSpace(){
     line += `; ${after} left`;
     salvoEvents.push(line);
   }
-  nl(`<span class="sys">— salvo ${st.salvo} (dt ${dt}s, ×${CE.SalvoDamageScale} pace) —</span>`,"sys");
+  const gapNow = live[0].Separation_m;
+  nl(`<span class="sys">— salvo ${st.salvo} · <span class="rng">gap ${fmtKm(gapNow)}</span> (dt ${dt}s, ×${CE.SalvoDamageScale} pace) —</span>`,"sys");
   salvoEvents.forEach(l=>nl(l));
-  // (6) resolution: retreat check + wipe drop
+  // (2) MOVE — the units close/kite at their real speeds for the next salvo (LD-30)
+  advanceArena(live, dt);
+  // (3) resolution: retreat threshold + wipe drop
   for(const fl of st.fleets){
     if(fl.retreated) continue;
     const cnt=liveShips(fl).length;
     if(cnt>0 && cnt <= fl.InitialShipCount*(1-CE.RetreatCasualtyThreshold) && cnt<fl.InitialShipCount){
-      // lost >= threshold of starting ships → break off
       fl.retreated=true;
       nl(`<b class="${fl.side==="A"?"A":"B"}">${fl.name}</b> <span class="sys">broke off — lost ≥${pct(CE.RetreatCasualtyThreshold)} of its ships (retreat)</span>`,"sys");
     }
@@ -696,7 +712,6 @@ function stepSpace(){
   if(sidesLeft.size<2 || st.salvo>=CE.MaxSteps){ endSpace(); }
   render();
 }
-function avgEvasion(fl){ const s=liveShips(fl); if(!s.length) return 0; return s.reduce((a,x)=>a+x.evasion,0)/s.length; }
 function endSpace(){
   const st=state; st.over=true;
   const alive = st.fleets.filter(f=>liveShips(f).length>0 && !f.retreated);
@@ -709,206 +724,116 @@ function endSpace(){
 }
 
 /* ==================================================================
-   SPACE — INSTANT  (AutoResolve.Resolve :74)
-   Pure Firepower×time vs Toughness. No dodge / shields / SalvoDamageScale.
-   ================================================================== */
-function newInstantState(scen){
-  const st=newSpaceState(scen);
-  st.instant=true;
-  // AutoResolve pools per fleet-side (two sides)
-  st.pools = {};
-  return st;
-}
-function stepInstant(){
-  const st=state; if(st.over) return;
-  const sideA = st.fleets.filter(f=>f.side==="A").flatMap(f=>f.ships).filter(s=>s.alive)
-    .sort((a,b)=>b.roleWeight-a.roleWeight);
-  const sideB = st.fleets.filter(f=>f.side==="B").flatMap(f=>f.ships).filter(s=>s.alive)
-    .sort((a,b)=>b.roleWeight-a.roleWeight);
-  if(!sideA.length||!sideB.length){ endInstant(); return; }
-  st.salvo++;
-  const strA=sideA.reduce((s,x)=>s+x.firepower,0);
-  const strB=sideB.reduce((s,x)=>s+x.firepower,0);
-  if(strA<=0&&strB<=0){ endInstant(); return; }
-  st.pools.B=(st.pools.B||0)+strA*AR.RoundSeconds;                        // poolB += strA×5
-  st.pools.A=(st.pools.A||0)+strB*AR.RoundSeconds;
-  const killA = applyInstantCasualties(sideA, st.pools.A);
-  const killB = applyInstantCasualties(sideB, st.pools.B);
-  st.pools.A=killA.pool; st.pools.B=killB.pool;
-  nl(`<span class="sys">— round ${st.salvo} (dt ${AR.RoundSeconds}s, no dodge/shields/pace) —</span>`,"sys");
-  nl(`<b class="A">A</b> str ${fmtMJ(strA)}/s → pool on B ${fmtMJ(st.pools.B+killB.spent)} `
-    +`· <b class="B">B</b> str ${fmtMJ(strB)}/s → pool on A ${fmtMJ(st.pools.A+killA.spent)}`);
-  if(killB.destroyed.length) nl(`<span class="kill">A destroyed ${killB.destroyed.map(n=>`'${n}'`).join(", ")}</span>`,"kill");
-  if(killA.destroyed.length) nl(`<span class="kill">B destroyed ${killA.destroyed.map(n=>`'${n}'`).join(", ")}</span>`,"kill");
-  for(const f of st.fleets) f.dealt=(f.side==="A"?instDealtA:0);
-  instDealtA += strA*AR.RoundSeconds; instDealtB += strB*AR.RoundSeconds;
-  if(!liveShips2(sideA)||!liveShips2(sideB)||st.salvo>=AR.MaxRounds) endInstant();
-  render();
-}
-let instDealtA=0, instDealtB=0;
-const liveShips2 = arr => arr.some(s=>s.alive);
-// ApplyCasualties (AutoResolve) — while pool >= lead.Toughness: destroy lead
-function applyInstantCasualties(side, pool){
-  const destroyed=[]; let spent=0;
-  const order = side.filter(s=>s.alive); // already RoleWeight-sorted
-  for(const s of order){
-    if(pool>=s.toughness){ pool-=s.toughness; spent+=s.toughness; s.alive=false; destroyed.push(s.name); }
-    else break;
-  }
-  return {pool, destroyed, spent};
-}
-function endInstant(){
-  const st=state; st.over=true;
-  const aAlive=st.fleets.filter(f=>f.side==="A").some(f=>liveShips(f).length>0);
-  const bAlive=st.fleets.filter(f=>f.side==="B").some(f=>liveShips(f).length>0);
-  st.outcome = aAlive&&!bAlive ? "Side A wins" : bAlive&&!aAlive ? "Side B wins" : !aAlive&&!bAlive ? "mutual destruction" : "stalemate";
-  nl(`<span class="sys">══ ${st.outcome} — ${st.salvo} rounds ══</span>`,"sys");
-  render();
-}
-
-/* ==================================================================
-   GROUND — REGION  (GroundForcesProcessor.ResolveRegionCombat :370)
-   Faithful — INCLUDING the 3-way double-count bug (incoming rebuilt full
-   per enemy faction, not divided by enemy-faction count).
-   ================================================================== */
-function newGroundState(scen){
-  const factions = scen.factions.map(f=>({
-    name:f.name, isDefender:f.isDefender,
-    units:f.units.map(([ty,nm])=>buildUnit(ty,nm,f.name)),
-    dealt:0, soaked:0,
-  }));
-  return {kind:"ground", factions, coverFort:scen.coverFort, defender:scen.defender, salvo:0, over:false, outcome:"", doubleCountHit:false};
-}
-// FireWeaponAtReachable (GroundForcesProcessor.cs:406) — dodge→shield pool→armour flat-per-source
-function fireWeaponAtReachable(attacker, reachable, pool, profile, incoming, faction){
-  let totalH=0; for(const t of reachable) totalH+=t.health;
-  if(totalH<=0) return;
-  const shieldSoakFrac = shieldSoakFraction(profile.nature);
-  for(const t of reachable){
-    let contribution = pool*(t.health/totalH)*hitFraction(profile, t.evasion, 0);   // sep 0 (co-located)
-    if(t.curShield>0 && shieldSoakFrac>0 && contribution>0){
-      const absorbed=Math.min(contribution*shieldSoakFrac, t.curShield);
-      t.curShield-=absorbed; contribution-=absorbed; faction.soaked+=absorbed;
-    }
-    const shotCount = burstShotCount(profile);
-    contribution = armourSoakBurst(t.defense, contribution, shotCount, profile.pen, 1.0);
-    incoming.set(t, (incoming.get(t)||0)+contribution);
-    faction.dealt += contribution;
-  }
-}
-function stepGround(){
-  const st=state; if(st.over) return;
-  st.salvo++;
-  // shield regen (between salvos)
-  for(const f of st.factions) for(const u of f.units){ if(u.alive){ if(u.curShield===undefined) u.curShield=u.shieldCap;
-    if(u.shieldCap>0 && u.curShield<u.shieldCap) u.curShield=Math.min(u.shieldCap, u.curShield+u.shieldCap*0.34*(1/3600*3600)); } }
-  const incoming=new Map();
-  const facs=st.factions;
-  // nested faction loops — attacker faction f, enemy faction g
-  for(const f of facs){ for(const g of facs){ if(f===g) continue;
-    const gIsDefender = (g.name===st.defender);
-    for(const u of f.units){ if(!u.alive || u.health<=0) continue;
-      const reachable = g.units.filter(t=>t.alive && t.health>0 && weaponReaches({range:u.range}, 0)); // co-located → all reachable
-      if(!reachable.length) continue;
-      let poolAmt = u.attack * GP.SalvoScale;                              // atk × terrain(1) × stance(1) × SalvoScale
-      if(gIsDefender && st.coverFort>0) poolAmt/=st.coverFort;             // defender's incoming divided by cover×fort
-      fireWeaponAtReachable(u, reachable, poolAmt, unitProfile(u), incoming, f);
-    }
-  }}
-  // detect the double-count: any unit fired at >1 enemy faction this salvo
-  const enemyFactionCount = facs.length-1;
-  if(enemyFactionCount>1) st.doubleCountHit=true;
-  // apply
-  const events=[];
-  for(const [t,amt] of incoming){
-    if(t.health<=0) continue;
-    const applied=Math.min(t.health, amt);
-    t.health-=applied;
-    if(t.health<=0){ t.alive=false; events.push(`<span class="kill">${t.faction}'s '${t.name}' destroyed</span>`); }
-  }
-  nl(`<span class="sys">— salvo ${st.salvo} (SalvoScale ${GP.SalvoScale}, cover×fort ÷${st.coverFort}) —</span>`,"sys");
-  // per-faction summary
-  for(const f of st.factions){ const live=f.units.filter(u=>u.alive).length; const tot=f.units.length;
-    nl(`<b>${f.name}</b>${f.name===st.defender?" (defender)":""}: ${live}/${tot} units, dealt ${fmtMJ(f.dealt)} total`); }
-  events.forEach(e=>nl(e,"kill"));
-  if(st.doubleCountHit) nl(`<span class="sys">⚠ 3-way: each unit applied its FULL pool to EACH enemy faction — firepower not conserved (engine BUG)</span>`,"sys");
-  const alive=st.factions.filter(f=>f.units.some(u=>u.alive));
-  if(alive.length<2 || st.salvo>=2000) endGround();
-  render();
-}
-function endGround(){
-  const st=state; st.over=true;
-  const alive=st.factions.filter(f=>f.units.some(u=>u.alive));
-  st.outcome = alive.length===1 ? alive[0].name+" holds the region" : alive.length===0 ? "mutual destruction" : "stalemate";
-  nl(`<span class="sys">══ ${st.outcome} — ${st.salvo} salvos ══</span>`,"sys");
-  render();
-}
-
-/* ==================================================================
-   DRIVER — build / step / play / resolve / replay
+   DRIVER
    ================================================================== */
 function rebuild(){
   const scen=SCENARIOS[scenKey];
   logLines.length=0;
-  instDealtA=0; instDealtB=0;
-  if(scen.kind==="ground"){ state=newGroundState(scen); }
-  else if(mode==="spaceInstant"){ state=newInstantState(scen); }
-  else { state=newSpaceState(scen); }
+  state=newSpaceState(scen);
+  applyStance("A", document.getElementById("stanceA").value);
+  applyStance("B", document.getElementById("stanceB").value);
   nl(`<span class="sys">${scen.label}</span>`,"sys");
-  nl(`<span class="sys">mode: ${modeName()} — ${state.kind==="ground"?"planet surface":mode==="spaceInstant"?"off-screen quick-math":"live, watchable"}</span>`,"sys");
-  updateModeButtons(); render(); flushLog();
+  nl(`<span class="sys">arena diameter ${fmtKm(state.sep0)} (bounded by the longest weapon range) — the two sides open at opposite ends and close at their real speeds</span>`,"sys");
+  render(); flushLog();
 }
-function stepOnce(){
-  if(!state||state.over) return;
-  if(state.kind==="ground") stepGround();
-  else if(mode==="spaceInstant") stepInstant();
-  else stepSpace();
-  flushLog();
-}
+function stepOnce(){ if(!state||state.over) return; stepSpace(); flushLog(); }
 function play(){
   if(state.over){ rebuild(); }
   playing=true; updatePlayBtn();
-  const iv = 960 - (+document.getElementById("speed").value); // higher speed = shorter interval
+  const iv = 960 - (+document.getElementById("speed").value);
   clearInterval(playTimer);
   playTimer=setInterval(()=>{ if(!state||state.over){ stop(); return; } stepOnce(); }, iv);
 }
 function stop(){ playing=false; clearInterval(playTimer); updatePlayBtn(); }
-function resolveAll(){
-  stop();
-  let guard=0;
-  while(state && !state.over && guard++<6000) stepOnce();
-}
+function resolveAll(){ stop(); let guard=0; while(state && !state.over && guard++<6000) stepOnce(); }
 function replay(){ stop(); rebuild(); }
+function applyStance(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side).forEach(f=>f.stance=val); }
 
 /* ==================================================================
    RENDER
    ================================================================== */
-function modeName(){ return mode==="spaceStepped"?"Space · stepped":mode==="spaceInstant"?"Space · instant":"Ground · region"; }
 function render(){
   const st=state; if(!st) return;
   document.getElementById("salvoNo").textContent = st.salvo;
-  document.getElementById("salvoLbl").textContent = (mode==="spaceInstant"?"rounds":"salvos");
   const pill=document.getElementById("statePill");
   pill.textContent = st.over ? st.outcome : (playing?"running":"ready");
   pill.className = "pill "+(st.over?"done":"live");
-  document.getElementById("dtPill").textContent = st.kind==="ground"
-    ? `SalvoScale ${GP.SalvoScale} · cover×fort ÷${st.coverFort}`
-    : mode==="spaceInstant" ? `RoundSeconds ${AR.RoundSeconds}s · pure Firepower×t`
-    : `dt ${CE.DtStep_s}s · SalvoDamageScale ${CE.SalvoDamageScale}`;
-  document.getElementById("fieldTitle").textContent = st.kind==="ground"?"Planet surface (region)":"Fleet engagement";
-  document.getElementById("modeNote").innerHTML = modeNote();
+  const gap = st.fleets.length? st.fleets[0].Separation_m : 0;
+  document.getElementById("gapPill").textContent = `gap ${fmtKm(gap)}`;
+  document.getElementById("dtPill").textContent = `dt ${CE.DtStep_s}s · SalvoDamageScale ${CE.SalvoDamageScale}`;
+  document.getElementById("modeNote").innerHTML =
+    `The <b>arena</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5 LD-30</span>): both sides open at opposite ends of a ${fmtKm(st.sep0)} diameter — the longest weapon range — and close at their <b>real speeds</b>. Weapons fire only at their <b>true range</b>; a beam is undodgeable but its accuracy is range-free, a slug/torpedo loses accuracy over the flight. <span class="badge gap">GAP</span> the <b>Proton Torpedo</b> is the engine's flat <b>0.1 MJ/s</b> missile stub — it under-counts vs a real live-flight impact.`;
+  drawArena();
   renderSides();
   renderLedger(); renderWeapons(); renderForces();
 }
-function modeNote(){
-  if(state.kind==="ground") return `<span class="badge bug">BUG</span> a three-way ground fight <b>double-counts</b> fire — a unit facing two enemy factions applies its whole pool to <i>each</i>. Space conserves fire (÷ N); ground does not. Also engine-true here: <span class="badge gap">GAP</span> no retreat, no battle log, no detection gate.`;
-  if(mode==="spaceInstant") return `The <b>stripped instant path</b> (<span class="src">AutoResolve.Resolve :74</span>) — the off-screen quick-math a battle nobody watches gets. Pure Firepower × time vs Toughness, combatants die first. <b>No dodge, no shields, and no SalvoDamageScale.</b> Run the same forces in <i>stepped</i> to see what the live harness adds.`;
-  return `The <b>live, watchable</b> resolver (<span class="src">CombatEngagement.StepEngagementGroup :640</span>): dodge, shields, point-defense, fire-split, doctrine, and whole-or-dead casualties, one salvo at a time. <span class="badge gap">GAP</span> the <b>Proton Torpedo</b> is the engine's flat <b>0.1 MJ/s</b> missile stub — it under-counts vs a real live-flight impact.`;
-}
 function bar(cur,max,cls){ const p=max>0?clamp(cur/max,0,1)*100:0; return `<div class="bar ${cls||''}"><i style="width:${p}%"></i></div>`; }
+
+/* ---- THE ARENA (the opposing-sides battlefield) ---- */
+function sideCentroidX(side){ const fs=state.fleets.filter(f=>f.side===side); if(!fs.length) return 0; return fs.reduce((a,f)=>a+f.pos.x,0)/fs.length; }
+function getCol(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || "#888"; }
+function drawArena(){
+  const st=state;
+  const W=1000, H=250, cy=H/2, padX=64;
+  const R=st.arenaR;                            // metres (arena radius)
+  const rPx=(W/2-padX);                         // arena radius in px
+  const k=rPx/R;                                // px per metre
+  const cx=W/2;
+  const X=m=> cx + m*k;                         // arena-x (metres) → svg x
+  const cssA=getCol('--sideA'), cssB=getCol('--sideB'), edge=getCol('--edge'), muted=getCol('--muted'), gapc=getCol('--gap');
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Arena battlefield — the two sides closing at true weapon ranges">`;
+  // arena boundary (bounded by the longest weapon range; it does NOT shrink)
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${rPx}" fill="none" stroke="${edge}" stroke-width="1.5" stroke-dasharray="5 6"/>`;
+  svg+=`<line x1="${padX}" y1="${cy}" x2="${W-padX}" y2="${cy}" stroke="${edge}" stroke-width="1" stroke-dasharray="2 5" opacity="0.6"/>`;
+  // km scale ticks (0 at centre, ±R at edges)
+  for(const frac of [-1,-0.5,0,0.5,1]){
+    const x=X(frac*R); const km=Math.abs(frac*R)/1000;
+    svg+=`<line x1="${x}" y1="${cy-4}" x2="${x}" y2="${cy+4}" stroke="${muted}" stroke-width="1"/>`;
+    svg+=`<text x="${x}" y="${H-6}" fill="${muted}" font-size="9" text-anchor="middle" font-family="monospace">${km.toFixed(0)}${frac===1?" km":""}</text>`;
+  }
+  // per-side reach bars + clusters
+  for(const side of ["A","B"]){
+    const col = side==="A"?cssA:cssB;
+    const fl = st.fleets.find(f=>f.side===side); if(!fl) continue;
+    const cxm = sideCentroidX(side);
+    const enemyDir = side==="A"?1:-1;                    // side A reaches to the right, B to the left
+    const clusterX = X(cxm);
+    const lr = longestRange(fl), dr = dominantRange(fl);
+    for(const [rng,op] of [[lr,0.10],[dr,0.20]]){
+      const reachPx = Math.min(rng*k, 2*rPx);
+      const x0 = clusterX, x1 = clusterX + enemyDir*reachPx;
+      const rx0=Math.min(x0,x1), rw=Math.abs(x1-x0);
+      svg+=`<rect x="${rx0}" y="${cy-26}" width="${rw}" height="52" fill="${col}" opacity="${op}"/>`;
+    }
+    const drx = clusterX + enemyDir*Math.min(dr*k,2*rPx);
+    svg+=`<line x1="${drx}" y1="${cy-28}" x2="${drx}" y2="${cy+28}" stroke="${col}" stroke-width="1.5" opacity="0.8"/>`;
+    const ships=fl.ships, n=ships.length;
+    ships.forEach((s,i)=>{
+      const yy = cy + (i-(n-1)/2)*15;
+      const dead=!s.alive;
+      svg+=`<circle cx="${clusterX}" cy="${yy.toFixed(1)}" r="${s.type==='venator'||s.type==='sovereign'?6.5:5}" `
+         + `fill="${dead?'transparent':col}" stroke="${dead?muted:col}" stroke-width="1.5" opacity="${dead?0.45:1}"/>`;
+      if(dead) svg+=`<text x="${clusterX}" y="${(yy+3.5).toFixed(1)}" fill="${muted}" font-size="9" text-anchor="middle">✕</text>`;
+    });
+    const lx = side==="A"?padX:W-padX;
+    svg+=`<text x="${lx}" y="18" fill="${col}" font-size="12" font-weight="700" text-anchor="${side==='A'?'start':'end'}">${fl.name}</text>`;
+    svg+=`<text x="${lx}" y="32" fill="${muted}" font-size="9.5" text-anchor="${side==='A'?'start':'end'}" font-family="monospace">${liveShips(fl).length}/${fl.ships.length} · ${fmtKm(dr)} reach · ${(fleetSpeed(fl)/1000).toFixed(1)} km/s</text>`;
+  }
+  // the gap marker between the two clusters
+  const ax=X(sideCentroidX("A")), bx=X(sideCentroidX("B"));
+  const midx=(ax+bx)/2;
+  svg+=`<line x1="${ax}" y1="${cy-34}" x2="${bx}" y2="${cy-34}" stroke="${gapc}" stroke-width="1" opacity="0.7"/>`;
+  svg+=`<line x1="${ax}" y1="${cy-38}" x2="${ax}" y2="${cy-30}" stroke="${gapc}" stroke-width="1"/>`;
+  svg+=`<line x1="${bx}" y1="${cy-38}" x2="${bx}" y2="${cy-30}" stroke="${gapc}" stroke-width="1"/>`;
+  const gap = st.fleets.length? st.fleets[0].Separation_m : 0;
+  svg+=`<text x="${midx}" y="${cy-40}" fill="${gapc}" font-size="10.5" text-anchor="middle" font-family="monospace">${fmtKm(gap)}</text>`;
+  svg+=`</svg>`;
+  document.getElementById("arena").innerHTML = svg;
+}
+
+/* ---- fleet cards ---- */
 function renderSides(){
   const host=document.getElementById("sides");
-  if(state.kind==="ground"){ renderGroundSides(host); return; }
   const A=state.fleets.filter(f=>f.side==="A"), B=state.fleets.filter(f=>f.side==="B");
   host.innerHTML = `<div>${A.map(fleetCard).join("")}</div><div class="vs">VS</div><div>${B.map(fleetCard).join("")}</div>`;
 }
@@ -916,10 +841,12 @@ function fleetCard(fl){
   const fp=fleetFirepower(fl), sh=fleetShield(fl);
   const live=liveShips(fl).length;
   const shPct = sh.cap>0 ? clamp((fl.ShieldPool<0?sh.cap:fl.ShieldPool)/sh.cap,0,1) : 0;
+  const stanceLbl = fl.stance==="close"?"closing in":fl.stance==="standoff"?"standing off":"holding";
   return `<div class="side ${fl.side}">
     <h3><span>${fl.name}${fl.retreated?' <span class="src">(broke off)</span>':''}</span><span class="fp">Σfp ${fmtMJ(fp)}/s</span></h3>
     <div class="fleetmeta">
       <span>${live}/${fl.ships.length} ships</span>
+      <span>${stanceLbl}</span>
       ${sh.cap>0?`<span>shield ${fmtMJ(fl.ShieldPool<0?sh.cap:fl.ShieldPool)}/${fmtMJ(sh.cap)} (${pct(shPct)})</span>`:''}
       ${fl.DamageTakenPool>0?`<span>dmg pool ${fmtMJ(fl.DamageTakenPool)}</span>`:''}
     </div>
@@ -930,41 +857,14 @@ function shipRow(s){
   return `<div class="ship ${s.alive?'':'dead'}">
     ${s.alive?'':'<span class="deadtag">DESTROYED</span>'}
     <div class="row1"><span class="nm">${s.name}</span><span class="ty">${s.label}</span></div>
-    <div class="val">T ${fmtMJ(s.toughness)} · fp ${fmtMJ(s.firepower)}/s · ev ${pct(s.evasion)}${s.shieldCap>0?` · sh ${fmtMJ(s.shieldCap)}`:''}</div>
+    <div class="val">T ${fmtMJ(s.toughness)} · fp ${fmtMJ(s.firepower)}/s · ev ${pct(s.evasion)} · ${(s.speed/1000).toFixed(1)} km/s${s.shieldCap>0?` · sh ${fmtMJ(s.shieldCap)}`:''}</div>
     ${bar(s.alive?1:0,1)}
   </div>`;
-}
-function renderGroundSides(host){
-  const cards = state.factions.map(f=>{
-    const live=f.units.filter(u=>u.alive).length;
-    const side = f.isDefender?"A":"B";
-    return `<div class="side ${side}" style="margin-bottom:10px">
-      <h3><span>${f.name}${f.isDefender?' <span class="src">(defender)</span>':''}</span><span class="fp">${live}/${f.units.length}</span></h3>
-      ${f.units.map(u=>`<div class="ship ${u.alive?'':'dead'}">
-        ${u.alive?'':'<span class="deadtag">KIA</span>'}
-        <div class="row1"><span class="nm">${u.name}</span><span class="ty">${u.label}</span></div>
-        <div class="val">atk ${u.attack} · def ${u.defense} · rng ${u.range}h · pen ${u.pen}${u.pershot?` · shot ${u.pershot}`:''}</div>
-        ${bar(u.health,u.maxHealth)}
-        <div class="val">${Math.max(0,Math.round(u.health))}/${u.maxHealth} hp</div>
-      </div>`).join("")}
-    </div>`;
-  }).join("");
-  host.style.gridTemplateColumns="1fr"; host.innerHTML=`<div>${cards}</div>`;
 }
 
 /* ---- ledger tab ---- */
 function renderLedger(){
   const host=document.getElementById("pane-ledger");
-  if(state.kind==="ground"){
-    host.innerHTML = `<p class="note">Per-faction totals across all salvos. In a 3-way fight the "dealt" figures are inflated by the double-count <span class="badge bug">BUG</span> — a unit's fire is counted once per enemy faction.</p>
-    <div class="ledger" style="grid-template-columns:1fr">
-    ${state.factions.map(f=>`<div class="lc ${f.isDefender?'A':'B'}"><h4>${f.name}</h4>
-      <div class="kv"><span>units alive</span><b>${f.units.filter(u=>u.alive).length}/${f.units.length}</b></div>
-      <div class="kv"><span>damage dealt (accumulated)</span><b>${fmtMJ(f.dealt)}</b></div>
-      <div class="kv"><span>shield-soaked (their targets)</span><b>${fmtMJ(f.soaked)}</b></div>
-    </div>`).join("")}</div>`;
-    return;
-  }
   const cards = ["A","B"].map(side=>{
     const fls=state.fleets.filter(f=>f.side===side);
     const dealt=fls.reduce((s,f)=>s+(f.dealt||0),0);
@@ -980,137 +880,111 @@ function renderLedger(){
       <div class="kv"><span>absorbed by enemy shields</span><b>${fmtMJ(soaked)}</b></div>
     </div>`;
   }).join("");
-  host.innerHTML = `<p class="note">${mode==="spaceInstant"?"Instant path: pool damage = Σ Firepower × RoundSeconds each round, whole ships removed combatants-first.":"Stepped path: hull damage after SalvoDamageScale, shield soak, and fire-split."}</p><div class="ledger">${cards}</div>`;
+  host.innerHTML = `<p class="note">Hull damage after SalvoDamageScale, shield soak, and fire-split conservation — accumulated across the closing fight.</p><div class="ledger">${cards}</div>`;
 }
 
-/* ---- weapons tab ---- */
+/* ---- weapons + ranges tab ---- */
 function renderWeapons(){
   const host=document.getElementById("pane-weapons");
-  if(state.kind==="ground"){
-    host.innerHTML = `<p class="note">Ground unit weapon profiles (the kernel reads these via <span class="src">GroundCombatant.ToWeaponProfile</span>). A Slug is dodgeable; a Blast (artillery) lands ~fully. Penetration cracks flat armour; per-shot energy sets the alpha-vs-chip split.</p>
-    <table><thead><tr><th>Unit</th><th>Nature</th><th>Delivery</th><th class="n">Atk</th><th class="n">Pen</th><th class="n">Shot</th><th class="n">Def</th><th class="n">Rng</th></tr></thead><tbody>
-    ${Object.entries(UNIT_TYPES).map(([k,u])=>`<tr><td>${u.label}</td><td>${u.nature}</td><td>${u.delivery}</td><td class="n">${u.attack}</td><td class="n">${u.pen}</td><td class="n">${u.pershot}</td><td class="n">${u.defense}</td><td class="n">${u.range}h</td></tr>`).join("")}
-    </tbody></table>`;
-    return;
-  }
-  // which weapon types appear in this scenario
   const keys=new Set();
   state.fleets.forEach(f=>f.ships.forEach(s=>s.weapons.forEach(w=>keys.add(w.key))));
-  const rows=[...keys].map(k=>{
+  const gap = state.fleets.length? state.fleets[0].Separation_m : 1e12;
+  const rows=[...keys].sort((a,b)=>WEAPONS[b].range-WEAPONS[a].range).map(k=>{
     const w=WEAPONS[k]; const cls=classify(w.delivery,w.vel,w.track,w.sat);
     const velS = w.vel>=1e7 ? "≈ c" : (w.vel/1000).toFixed(0)+" km/s";
-    return `<tr>
-      <td>${w.label}${w.stub?' <span class="badge gap">STUB</span>':''}</td>
+    const inRange = gap<=w.range;
+    return `<tr style="${inRange?'':'opacity:.5'}">
+      <td>${w.label}${w.stub?' <span class="badge gap">STUB</span>':''}${inRange?' <span class="badge live">IN RANGE</span>':''}</td>
       <td>${w.nature}</td><td>${w.delivery}</td><td>${cls}</td>
       <td class="n">${w.dps} MJ/s</td><td class="n">${velS}</td>
       <td class="n">${w.track.toFixed(2)}</td><td class="n">${w.sat}</td>
       <td class="n">${(w.range/1000).toFixed(0)} km</td><td class="n">${w.pen}</td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<p class="note">The ten-field <span class="src">WeaponProfile</span> the kernel reads. <b>Class</b> is a computed read-out (<span class="src">WeaponClassifier.Classify</span>), not authored. Beams run at the engine's real light-speed so they're undodgeable; the <span class="badge gap">STUB</span> torpedo is the engine's flat 0.1 MJ/s missile stub.</p>
+  host.innerHTML = `<p class="note">The ten-field <span class="src">WeaponProfile</span> the kernel reads — sorted by <b>range</b>, the axis the arena is built on. As the two sides close, weapons light up longest-first: torpedo → heavy turbo → ion → medium turbo → laser → PD. <b>IN RANGE</b> = reaches the current gap. Beams (≈c) are undodgeable and range-accuracy-immune; the <span class="badge gap">STUB</span> torpedo is the engine's flat 0.1 MJ/s missile stub.</p>
   <table><thead><tr><th>Weapon</th><th>Nature</th><th>Delivery</th><th>Class</th><th class="n">DPS</th><th class="n">Vel</th><th class="n">Trk</th><th class="n">Sat</th><th class="n">Range</th><th class="n">Pen</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 /* ---- forces editor tab ---- */
 function renderForces(){
   const host=document.getElementById("pane-forces");
-  if(state.kind==="ground"){
-    host.innerHTML = `<p class="note">Edit any unit stat and the change takes effect on <b>Replay</b>. Cover×fort divides the defender's incoming.</p>
-    <div class="ef" style="max-width:200px;margin-bottom:10px"><label>Cover × fortification (defender)</label><input type="number" step="0.1" value="${state.coverFort}" oninput="setGround('coverFort',this.value)"></div>
-    <div class="editgrid">${state.factions.map((f,fi)=>`<div class="eu"><h4>${f.name}${f.isDefender?' · defender':''}</h4>
-      ${f.units.map((u,ui)=>`<div style="margin-bottom:7px"><div class="src" style="margin-bottom:3px">${u.name} — ${u.label}</div><div class="efields">
-        ${gEdit(fi,ui,'attack','Attack',u.attack)}${gEdit(fi,ui,'defense','Defense',u.defense)}${gEdit(fi,ui,'maxHealth','MaxHP',u.maxHealth)}
-        ${gEdit(fi,ui,'pen','Pen',u.pen)}${gEdit(fi,ui,'pershot','PerShot',u.pershot)}${gEdit(fi,ui,'evasion','Evasion',u.evasion)}${gEdit(fi,ui,'range','Range h',u.range)}
-      </div></div>`).join("")}
-    </div>`).join("")}</div>`;
-    return;
-  }
-  host.innerHTML = `<p class="note">Edit any ship stat and press <b>Replay</b> to run with the new numbers. Add point-defense (pd), a magazine (ammoCap), radiators (heatCap), or nature-hardened armour to see those mechanics engage — they are 0 on the presets (engine-faithful).</p>
+  host.innerHTML = `<p class="note">Edit any ship stat and press <b>Replay</b> to run with the new numbers. <b>Speed</b> (m/s) is the arena closing speed — the one field the engine derives elsewhere (flagged in Honesty). Add point-defense (pd) or nature-hardened armour to see those mechanics engage — they are 0 on the presets (engine-faithful).</p>
   <div class="editgrid">${state.fleets.map((fl,fi)=>`<div class="eu"><h4>${fl.name} <span class="src">side ${fl.side}</span></h4>
     ${fl.ships.map((s,si)=>`<div style="margin-bottom:8px"><div class="src" style="margin-bottom:3px">${s.name} — ${s.label} · fp ${fmtMJ(s.firepower)}/s</div><div class="efields">
-      ${sEdit(fi,si,'toughness','Toughness',s.toughness)}${sEdit(fi,si,'evasion','Evasion',s.evasion)}
-      ${sEdit(fi,si,'shieldCap','Shield MJ',s.shieldCap)}${sEdit(fi,si,'shieldRegen','Sh regen/s',s.shieldRegen)}
-      ${sEdit(fi,si,'pd','PD J/s',s.pd)}${sEdit(fi,si,'armE','Armour vs E',s.armour.Energy)}${sEdit(fi,si,'armK','Armour vs K',s.armour.Kinetic)}
+      ${sEdit(fi,si,'toughness','Toughness',s.toughness)}${sEdit(fi,si,'evasion','Evasion',s.evasion)}${sEdit(fi,si,'speed','Speed m/s',s.speed)}
+      ${sEdit(fi,si,'shieldCap','Shield MJ',s.shieldCap)}${sEdit(fi,si,'pd','PD J/s',s.pd)}${sEdit(fi,si,'armE','Armour vs E',s.armour.Energy)}${sEdit(fi,si,'armK','Armour vs K',s.armour.Kinetic)}
     </div></div>`).join("")}
   </div>`).join("")}</div>`;
 }
 function sEdit(fi,si,k,lbl,v){ return `<div class="ef"><label>${lbl}</label><input type="number" step="any" value="${v}" oninput="setShip(${fi},${si},'${k}',this.value)"></div>`; }
-function gEdit(fi,ui,k,lbl,v){ return `<div class="ef"><label>${lbl}</label><input type="number" step="any" value="${v}" oninput="setUnit(${fi},${ui},'${k}',this.value)"></div>`; }
 window.setShip=(fi,si,k,v)=>{ v=+v; const s=state.fleets[fi].ships[si];
   if(k==="armE") s.armour.Energy=v; else if(k==="armK") s.armour.Kinetic=v; else s[k]=v; };
-window.setUnit=(fi,ui,k,v)=>{ v=+v; const u=state.factions[fi].units[ui]; u[k]=v; if(k==="maxHealth"){u.health=v;} };
-window.setGround=(k,v)=>{ state[k]=+v; };
 
-/* ---- honesty + constants tabs (static once) ---- */
+/* ---- honesty + constants tabs ---- */
 function renderHonesty(){
   document.getElementById("pane-honesty").innerHTML = `
-  <p class="note">The sim shows the engine straight — including where the engine is wrong or unfinished. It never silently "fixes" the engine; a flag is the honest thing.</p>
-  <div class="hitem"><div class="ht"><span class="badge bug">BUG</span> Ground 3-way double-count</div>
-    <p>On the surface, a unit facing two enemy factions applies its <b>full</b> damage pool to <b>each</b> — 2× in a 3-way. Space conserves fire (÷ number of targets); ground rebuilds the pool inside the nested faction loops and never divides it. <span class="src">GroundForcesProcessor.cs:399 / 487–493 / 519–529 vs CombatEngagement.cs:747</span>. Watch it in the <b>THREE-WAY</b> ground scenario.</p></div>
+  <p class="note">The sim shows the engine straight — including where it is unfinished. It never silently "fixes" the engine; a flag is the honest thing.</p>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> This is the arena TARGET, not the shipped default</div>
+    <p>This sim implements <b>LD-30</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5</span>) — the opposing-sides arena the developer ruled the resolver <i>must</i> become. The shipped default resolver still fights at <b>point-blank</b> (its closing model collapses to one shrinking scalar and is off by default); that model is superseded here, deliberately. The <b>damage math</b> below the movement is the engine's real kernel, byte-for-byte.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Closing speed is the one non-spec-sheet input</div>
+    <p>Every weapon <b>range</b> is engine-true (<span class="src">WeaponProfile.cs</span> authentic-closing ranges). A ship's sublight <b>speed</b> is <i>not</i> a <span class="src">ShipCombatValueDB</span> field — the engine derives it from <span class="src">NewtonThrustAbilityDB</span> (thrust ÷ mass). Here it's an editable per-class stand-in so the arena has real motion; tune it in <b>Forces</b>.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Missile / torpedo damage is a stub</div>
-    <p>In the auto-resolver a missile launcher counts a flat <b>0.1 MJ/s</b> (the engine's <span class="src">MissileLauncherFirepowerStub = 100,000 J/s</span>). The real GJ-scale impact only happens in the live-flight sim the auto-resolver doesn't run — so a torpedo-heavy ship (the Sovereign) reads <i>weaker</i> here than it fights.</p></div>
+    <p>In the auto-resolver a missile launcher counts a flat <b>0.1 MJ/s</b> (the engine's <span class="src">MissileLauncherFirepowerStub = 100,000 J/s</span>). The real GJ-scale impact only happens in the live-flight sim the auto-resolver doesn't run — so the torpedo-heavy Sovereign, which opens the fight at 400 km, reads <i>weaker</i> here than it fights.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Space armour is proportional, not per-shot</div>
-    <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the <b>ground</b>. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
-  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Ground has no retreat, no battle log, no detection gate</div>
-    <p>Its only stances are Hold / Close / Stand-off; a ground force can't break off (space can), records no play-by-play, and its first-strike is range-only (space gates on sensor detection — fog of war).</p></div>
-  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead, in every mode</div>
-    <p>No partial-hull tracking anywhere — a ship or a unit is full value or gone. Combat value is frozen at build (<span class="src">Combat/CLAUDE.md gotcha #2</span>), the direct consequence.</p></div>
+    <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead</div>
+    <p>No partial-hull tracking — a ship is full value or gone. Combat value is frozen at build (<span class="src">Combat/CLAUDE.md gotcha #2</span>), the direct consequence.</p></div>
   <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Everything else</div>
-    <p>The dodge/hit curve, shield nature-matchup + drain/regen, point-defense interception, ammo drain, heat throttle, fire-split conservation (space), the retreat threshold, closing-range accuracy falloff, doctrine multipliers, and bucketed whole-or-dead casualties are all shown engine-true.</p></div>`;
+    <p>The dodge/hit curve, the range-accuracy falloff over the closing flight (beams immune, slugs/torpedoes degrade), the true weapon-range gate, shield nature-matchup + drain/regen, point-defense interception, fire-split conservation, the retreat threshold, doctrine (Close / Stand-off / Hold) driving the movement, and bucketed whole-or-dead casualties are all shown engine-true.</p></div>`;
 }
 function renderConst(){
-  const rows=[
+  const kernel=[
     ["CombatKernel.cs:38","VelocityReference_mps","1,000,000","shot velocity at which a weapon half-defeats evasion"],
     ["CombatKernel.cs:42","SaturationReference","50","tracks/s at which volume-of-fire half-guarantees a hit"],
     ["CombatKernel.cs:71","MinLandedFraction","0.05","floor on fire that lands (= 1 − EvasionCap, the ×20 ceiling)"],
-    ["CombatKernel.cs:76","FlightTimeReference_s","10","range-accuracy half-falloff time"],
+    ["CombatKernel.cs:76","FlightTimeReference_s","10","range-accuracy half-falloff time over the flight"],
     ["CombatKernel.cs:82","RangeBaseMiss","0.9","evasion-independent base miss at range (the one mutable dial)"],
     ["CombatKernel.cs:87–93","ShieldSoak K/E/X/exotic","1.0 / 0.5 / 0.75 / 0.0","shield nature matchup (kinetic stopped, energy bleeds, exotic bypasses)"],
     ["CombatKernel.cs:100","ArmourSoakPerPoint","1.5","flat damage soaked per armour point, per source"],
     ["CombatKernel.cs:103","ArmourMinPassFraction","0.1","a source always lands ≥ this fraction (×10 armour ceiling)"],
-    ["CombatEngagement.cs:103","SalvoDamageScale","0.1","the combat-pace dial (stepped path only)"],
-    ["CombatEngagement.cs:110","AmmoBurnKgPerJoule","1e-4","magazine kg drained per joule of ammo-fed fire"],
-    ["CombatEngagement.cs:115","HeatDissipationFraction","0.5","radiator capacity shed as cooling each salvo"],
-    ["CombatEngagement.cs:120","HeatThrottleFloor","0.1","min energy-fire throttle when overheating"],
+    ["CombatEngagement.cs:103","SalvoDamageScale","0.1","the combat-pace dial"],
     ["CombatEngagement.cs:1459","PointDefenseMaxIntercept","0.95","hard cap on the missile fraction PD can intercept"],
     ["CombatEngagement.cs:48","RetreatCasualtyThreshold","0.5","ship-loss fraction that breaks a fleet off"],
-    ["CombatEngagement.cs:81","FallbackBeamVelocity_mps","1e8","old-style (profile-less) ship fires as this light-speed beam"],
-    ["AutoResolve.cs","RoundSeconds / MaxRounds","5.0 / 2000","instant path: seconds of fire per round; round cap"],
     ["ShipCombatValueDB.cs:38","MissileLauncherFirepowerStub","100,000 J/s","flat missile firepower = 0.1 MJ/s (the stub)"],
     ["ShipCombatValueDB.cs:96","EvasionCap","0.95","hard ceiling on evasion"],
     ["ShipCombatValueDB.cs:100","LightSpeed_mps","299,792,458","the real beam muzzle velocity (undodgeable)"],
-    ["GroundForcesProcessor.cs:35","SalvoScale (ground)","1.0","ground combat-pace dial (full, vs space's 0.1)"],
-    ["GroundForcesProcessor.cs:40","AmmoPerSalvo_kg","1.0","ammo a magazine-fed unit burns per salvo"],
     ["WeaponClassifier.cs:19/23","Beam / Flak thresholds","1e7 m/s / 50 sat","split the Bolt/Slug family into the computed Class"],
   ];
-  document.getElementById("pane-const").innerHTML = `<p class="note">Every number the sim runs on, cited to the engine source line it was re-verified against (Phase 2). The kernel cross-check (T1–T6) runs on load — see the badge on the battlefield header.</p>
-  <table><thead><tr><th>Source</th><th>Constant</th><th class="n">Value</th><th>What it does</th></tr></thead><tbody>
-  ${rows.map(r=>`<tr><td class="src">${r[0]}</td><td class="mono">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}
-  </tbody></table>`;
+  const arena=[
+    ["AUTO-RESOLVER-GROUND-TRUTH §5","LD-30 arena","opposite ends of a diameter","the two sides open on a diameter bounded by the longest weapon range; the circle does NOT close"],
+    ["§5 LD-30","closing = movement","units at real speeds","the fight is resolved by units moving, not by one shrinking gap"],
+    ["ARENA (sim)","MinGap_m","3,000","knife-range floor — clusters never fully overlap"],
+    ["ARENA (sim)","KiteMargin","0.9","'stand off' holds at its dominant-weapon range × this"],
+    ["WeaponProfile.cs","true weapon ranges","torpedo 400 / heavy-turbo 220 / ion 160 / med-turbo 140 / railgun 80 / laser 60 / PD 12 km","the engagement bands the arena closes through"],
+    ["NewtonThrustAbilityDB (stand-in)","closing speed","2,000–3,000 m/s","per-class editable — the one input not on a spec sheet"],
+  ];
+  const t=(rows)=>`<table><thead><tr><th>Source</th><th>Constant</th><th class="n">Value</th><th>What it does</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td class="src">${r[0]}</td><td class="mono">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`;
+  document.getElementById("pane-const").innerHTML =
+    `<p class="note">Two layers. <b>The damage kernel</b> — every number ported from engine source and re-verified at its line; the kernel cross-check (T1–T8) runs on load (badge on the battlefield header). <b>The arena model</b> — the LD-30 geometry the fight plays out on.</p>
+     <h4 style="margin:4px 0 6px;font-size:12px">Damage kernel (ported, verified)</h4>${t(kernel)}
+     <h4 style="margin:14px 0 6px;font-size:12px">Arena model (LD-30)</h4>${t(arena)}`;
 }
 
 /* ==================================================================
    SELF-TEST — the kernel cross-check (hand-computed from source).
-   Applies the Visibility Gate to the sim itself: if the port drifts
-   from the engine math, this goes red on load.
    ================================================================== */
 function selfTest(){
   const approx=(a,b,e=1e-4)=>Math.abs(a-b)<=e;
   const tests=[];
-  // T1 beam undodgeable
-  tests.push(approx(hitFraction({vel:3e8,track:0.72,sat:34},0.5,0), 0.99834, 5e-4));
-  // T2 railgun dodged
-  tests.push(approx(hitFraction({vel:9000,track:0.55,sat:26},0.5,0), 0.77500, 5e-4));
-  // T3 saturation floor binds
-  tests.push(approx(hitFraction({vel:6000,track:0.0,sat:180},0.95,0), 0.78261, 5e-4));
-  // T4 range term
-  tests.push(approx(hitFraction({vel:9000,track:0.55,sat:26},0.0,100000), 0.78684, 5e-4));
-  // T5 shield drain+regen
-  const t5=resolveShield(25,25,0.5,40,0.5,5); tests.push(approx(t5.absorbed,20)&&approx(t5.newPool,7.5));
-  // T6 armour soak + burst
-  tests.push(approx(armourSoak(10,100,0,1),85));
-  tests.push(approx(armourSoak(10,100,10,1),100));                // out-penned → full pass
-  tests.push(approx(armourSoakBurst(10,100,10,0,1),10));          // 10 chips × floor(1) each
+  tests.push(approx(hitFraction({vel:3e8,track:0.72,sat:34},0.5,0), 0.99834, 5e-4));   // T1 beam undodgeable
+  tests.push(approx(hitFraction({vel:9000,track:0.55,sat:26},0.5,0), 0.77500, 5e-4));   // T2 railgun dodged
+  tests.push(approx(hitFraction({vel:6000,track:0.0,sat:180},0.95,0), 0.78261, 5e-4));  // T3 saturation floor
+  tests.push(approx(hitFraction({vel:9000,track:0.55,sat:26},0.0,100000), 0.78684, 5e-4)); // T4 range term
+  const t5=resolveShield(25,25,0.5,40,0.5,5); tests.push(approx(t5.absorbed,20)&&approx(t5.newPool,7.5)); // T5
+  tests.push(approx(armourSoak(10,100,0,1),85));                  // T6
+  tests.push(approx(armourSoak(10,100,10,1),100));                // T7 out-penned
+  tests.push(approx(armourSoakBurst(10,100,10,0,1),10));          // T8 burst
   const pass=tests.every(Boolean), n=tests.filter(Boolean).length;
   const el=document.getElementById("selftest");
   el.textContent = pass ? `kernel ✓ ${n}/${tests.length}` : `kernel ✗ ${n}/${tests.length}`;
@@ -1122,32 +996,10 @@ function selfTest(){
 /* ==================================================================
    WIRING
    ================================================================== */
-function updateModeButtons(){
-  for(const m of ["spaceStepped","spaceInstant","ground"]){
-    const btn=document.getElementById("mode-"+m);
-    const active = (m==="ground" && state.kind==="ground") || (m===mode && state.kind!=="ground");
-    btn.setAttribute("aria-pressed", active?"true":"false");
-  }
-}
 function updatePlayBtn(){ const b=document.getElementById("btnPlay"); b.textContent=playing?"⏸ Pause":"▶ Play"; b.classList.toggle("primary",!playing); }
-function selectMode(m){
-  stop();
-  if(m==="ground"){
-    // switch to a ground scenario
-    if(SCENARIOS[scenKey].kind!=="ground") scenKey="ground2";
-    mode="ground";
-  } else {
-    mode=m;
-    if(SCENARIOS[scenKey].kind==="ground") scenKey="handoff";
-  }
-  syncScenarioSelect(); rebuild();
-}
 function syncScenarioSelect(){
   const sel=document.getElementById("scenario");
-  const wantGround = (mode==="ground");
-  sel.innerHTML = Object.entries(SCENARIOS)
-    .filter(([k,s])=> wantGround ? s.kind==="ground" : s.kind==="space")
-    .map(([k,s])=>`<option value="${k}" ${k===scenKey?"selected":""}>${s.label}</option>`).join("");
+  sel.innerHTML = Object.entries(SCENARIOS).map(([k,s])=>`<option value="${k}" ${k===scenKey?"selected":""}>${s.label}</option>`).join("");
 }
 function initTabs(){
   const tabs=["log","ledger","weapons","forces","honesty","const"];
@@ -1163,19 +1015,18 @@ function initTabs(){
   });
 }
 function initTheme(){
-  const btn=document.getElementById("themeBtn");
-  btn.addEventListener("click",()=>{
+  document.getElementById("themeBtn").addEventListener("click",()=>{
     const cur=document.documentElement.getAttribute("data-theme");
     const next = cur==="dark"?"light":cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark");
     document.documentElement.setAttribute("data-theme",next);
+    if(state) drawArena();
   });
 }
 function init(){
   initTabs(); initTheme();
-  document.getElementById("mode-spaceStepped").addEventListener("click",()=>selectMode("spaceStepped"));
-  document.getElementById("mode-spaceInstant").addEventListener("click",()=>selectMode("spaceInstant"));
-  document.getElementById("mode-ground").addEventListener("click",()=>selectMode("ground"));
   document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; stop(); rebuild(); });
+  document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
+  document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
   document.getElementById("btnStep").addEventListener("click",()=>{ stop(); stepOnce(); });
   document.getElementById("btnPlay").addEventListener("click",()=>{ playing?stop():play(); });
   document.getElementById("btnFf").addEventListener("click",resolveAll);
@@ -1188,5 +1039,6 @@ function init(){
 }
 document.addEventListener("DOMContentLoaded",init);
 </script>
+
 </body>
 </html>
