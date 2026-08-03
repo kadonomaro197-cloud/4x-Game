@@ -27,9 +27,9 @@ Rather than invent parallel systems, Trek tech maps onto the generic catalog by 
 the catalog with near-duplicates) is exactly what `CONVENTIONS.md` §6 demands — and it works.*
 
 ## It closes (all gates green)
-Hull **16,149 / 20,000 t** (a full capital cruiser — 81% of the chassis, filled out 2026-08-03) · Firepower **59 MJ/s**
-(see the torpedo caveat) · Crew **652** berthed/supported/**medically covered** · Shields **70 MJ — by far the heaviest
-of any build here** (14 generators, its whole doctrine) · **Deployment 500 days (~1.4 yr), self-sufficient** (a closed
+Hull **19,685 / 20,000 t** (**min/maxed 2026-08-03 — mass-bound, 315 t from the wall**) · Firepower **84 MJ/s**
+(see the torpedo caveat) · Crew **800** berthed/supported/**medically covered** · Shields **120 MJ — by far the heaviest
+of any build here** (24 generators, its whole doctrine — the min/max poured the residual into shields + phaser banks) · **Deployment 500 days (~1.4 yr), self-sufficient** (a closed
 food loop — a true long-range explorer) · Detection **490 km**, past its own torpedoes (it sees first, as an explorer
 should). *Filled in its own idiom — more shields, phasers, torpedoes, sensors and endurance, still deliberately light on
 armour — not turned into a brawler.*

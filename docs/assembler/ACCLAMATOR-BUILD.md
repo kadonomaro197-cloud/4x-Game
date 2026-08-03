@@ -23,8 +23,9 @@ force → ② break an orbital blockade (light guns) → ③ survive the drop.**
 starfighters** — it's a vehicle/troop carrier, not a fighter carrier.)*
 
 ## It closes (all gates green)
-Hull **17,125 / 20,000 t** · Volume **13,582 / 14,000 m³** (packed — it's a transport) · Firepower **61 MJ/s** ·
-Crew **659** berthed & supported · Power 129/2,400 MW · **Deployment 61 days — provisions-limited** (an assault
+Hull **18,249 / 20,000 t** · Volume **13,998 / 14,000 m³** (**min/maxed 2026-08-03 — VOLUME-bound, 2 m³ from the wall;
+1,751 t of mass is stranded because volume ran out first**) · Firepower **95 MJ/s** (3 heavy turbolasers added — the
+densest firepower-per-m³) · Crew **726** berthed & supported · Power 153/2,400 MW · **Deployment 61 days — provisions-limited** (an assault
 dropship isn't self-sufficient; it resupplies from the task force — a nice contrast with the self-sufficient
 carriers).
 

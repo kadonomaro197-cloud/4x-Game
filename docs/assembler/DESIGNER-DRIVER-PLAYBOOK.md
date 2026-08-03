@@ -145,6 +145,60 @@ fails cradle-to-grave.
 
 ---
 
+## THE MIN/MAX PASS — squeeze maximum performance from the residual budget
+
+*A build that closes (Step 4) has leftover budget. This is the optional last pass: pour that residual into the most
+performance you can buy, without breaking a single gate. It is an **add-to-the-leftover** pass — you keep the build's
+identity and fill the slack, you do NOT gut it. Worked live on the Venator / Acclamator / Sovereign, 2026-08-03.*
+
+**The seven steps:**
+
+1. **Read the residual.** For every budget — mass AND volume — compute `cap − used`. (Venator: 1,042 t / 2,794 m³ left.
+   Acclamator: 2,875 t / 418 m³ left. Sovereign: 3,851 t / 4,674 m³ left.)
+
+2. **Find the BINDING constraint** — the budget with the highest % used. That is the scarce resource, and you optimize
+   **per unit of it**. The other budget's slack is **stranded**: you literally cannot spend it. *This is the whole game.*
+   The Acclamator had **1,751 t of mass it could not use** because volume ran out first — a transport is volume-bound,
+   so its mass headroom is a mirage. Name the binding constraint before you add anything.
+
+3. **Name the metric.** What is this ship FOR? Firepower for a gunship, shield pool for a shield-tank, ground capacity
+   for a transport. That single number is what you maximize — everything else is support.
+
+4. **Rank fillers by metric-per-binding-unit, IN-FAMILY.** For each component the ship's role allows, compute
+   *(metric gained) ÷ (binding-constraint cost)*. When mass binds, that's metric **per ton**; when volume binds, metric
+   **per m³**. Pick the top of the list — but stay in the ship's weapon family so you don't erase its identity
+   (a phaser cruiser gets more phasers, not turbolasers). *In this catalog the **heavy turbolaser is the firepower-density
+   king** — the most MJ/s per ton AND per m³ (0.024 MJ/s·t⁻¹, 0.067 MJ/s·m⁻³) — which is why it's the default firepower
+   filler whenever a turbolaser ship has room; a **shield generator** is the survivability-density pick.*
+
+5. **Add greedily — but pay every FORCED cost in the same breath.** A weapon is never just its own mass. It **draws
+   power, makes heat, and needs a crew berth + life-support**. After each addition re-check EVERY gate; when a weapon is
+   about to trip one, add the cheapest fix alongside it — a **Radiator** for heat, **Crew Quarters** for berths, a
+   **Reactor** for power — and that fix spends the binding budget too, so it is part of the weapon's *true* cost. (The
+   Venator's real price for 2 heavy turbolasers was 2 turbolasers **+ 2 radiators + a berth** — budget the whole train.)
+
+6. **Stop at the wall.** When the binding constraint is within a hair of its cap (Venator 19,986/20,000 t; Acclamator
+   13,998/14,000 m³), or the next add trips a gate you can't cheaply fix, you're done.
+
+7. **Verify — and heat margin ≥ 0 is part of "max."** All requirement gates green, warp battery ≥ jump cost, AND the
+   **heat margin non-negative** — a ship whose guns out-heat its radiators is *throttling*, which is not maximum
+   performance no matter how many guns it mounts. Then screenshot + 0 throws.
+
+**What the pass bought (residual → firepower), each hitting a different wall:**
+
+| Ship | Binding wall | Residual poured in | Firepower | The lesson it teaches |
+|---|---|---|---|---|
+| **Venator** | MASS 99.9% | +2 heavy turbolasers +2 radiators +1 berth +armour | 120 → **143 MJ/s** | mass-bound; 2,272 m³ volume left stranded |
+| **Acclamator** | VOLUME 99.99% | +3 heavy turbolasers +1 radiator (densest firepower/m³) | 61 → **95 MJ/s** | volume-bound; **1,751 t mass stranded** |
+| **Sovereign** | MASS 98% | +6 phaser banks +10 shields +reactor/radiators/berths | 59 → **84 MJ/s**, shields **70 → 120 MJ** | in-family: a phaser/shield ship, scaled up — not re-armed |
+
+**The four durable lessons:** ① the **binding constraint decides everything** — optimize the scarce budget, ignore the
+roomy one; ② **weapons are never free** — firepower drags power + heat + crew, budget the whole train; ③ **density is
+king when a budget binds** — max metric-per-ton if mass-bound, per-m³ if volume-bound; ④ **min/max ≠ erase identity** —
+fill with more of what the ship already IS.
+
+---
+
 ## THE HONESTY VOCABULARY (mark every output as exactly one)
 **LIVE** · **LIVE-gated** (default-off flag, client-on) · **host-split** (live on ground, inert on ship, or vice
 versa) · **READ** (this door only displays it; another owns it) · **EMERGENT** (computed from the finished entity,

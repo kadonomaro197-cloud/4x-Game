@@ -86,10 +86,10 @@ Load the **▲ Venator-class carrier** preset (host = Warship):
 
 | Readout | Value |
 |---|---|
-| Hull mass | 18,958 / 20,000 t ✓ |
-| Power | 203 / 3,200 MW ✓ (huge headroom — beam guns barely tax a capital reactor; see the energy note) |
-| **Firepower** | **120 MJ/s** (8 heavy + 2 medium turbolasers + 52 PD + 4 torpedoes, ×1.40 targeting+fire-control) |
-| **Toughness** | **434** |
+| Hull mass | 19,986 / 20,000 t ✓ (**min/maxed 2026-08-03 — mass-bound, 14 t from the wall**) |
+| Power | 223 / 3,200 MW ✓ (huge headroom — beam guns barely tax a capital reactor; see the energy note) |
+| **Firepower** | **143 MJ/s** (10 heavy + 2 medium turbolasers + 52 PD + 4 torpedoes, ×1.40 targeting+fire-control) |
+| **Toughness** | **463** |
 | Shields | 25 MJ (+500 kJ/s regen) |
 | Evasion | 12% (a slow capital ship) |
 | FTL | warp-capable; 1.5 GJ battery to open the jump, 2.5 MW to sustain |
