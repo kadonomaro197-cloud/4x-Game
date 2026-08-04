@@ -1,7 +1,41 @@
 # The Resolver Simulator — the Arena: what it models, and every number it borrows from the engine
 
-**Companion to `docs/combat/resolversim.html`.** *(As of 2026-08-03. Rebuilt to the LD-30 arena model on the
-developer's ruling: the sim shows the opposing-sides battle at true engagement ranges — nothing else.)*
+**Companion to `docs/combat/resolversim.html`.** *(As of 2026-08-04. Rebuilt to the LD-30 arena model on the
+developer's ruling: the sim shows the opposing-sides battle at true engagement ranges — nothing else. **2026-08-04
+adds three TARGET-model layers: degrading health, per-squadron target priority, and carriers/deployable wings — see
+"What 2026-08-04 added" below.**)*
+
+---
+
+## What 2026-08-04 added (three TARGET layers, each behind an honest toggle)
+
+The sim grew three things the developer called for, each modelling the *target* the engine is meant to reach and each
+flagged **MODEL** in the Honesty tab (the shipped engine does none of them yet — the toggles show engine-true vs target):
+
+1. **Damage degrades health ("watch it play out").** The shipped resolver is **whole-or-dead** — a ship is full value
+   or gone (combat value frozen at build, `Combat/CLAUDE.md` gotcha #2), which is why a ship is fine one salvo and dead
+   the next. The sim now defaults to **Damage → degrades health**: damage accumulates *per ship* (shield → armour →
+   hull), and a hurt ship crosses **condition tiers** (Pristine → Light → Moderate → Severe → Crippled) that **lower
+   its firepower and evasion**, so its fire slackens as it is ground down and you watch the tide turn. This is the
+   parked **aggregate force-condition** model; the *Damage* control flips back to engine whole-or-dead.
+2. **Target priority (per side).** The **A/B targets** dial decides who a fleet shoots first — **Spread** (combatants
+   before utility), **Finish wounded**, **Break the heaviest**, **Biggest threat**. In the engine this is *authored but
+   dropped* (the `TargetPriority` enum + parser exist, `FleetDoctrine.TrySetDoctrine` throws it away — `CARRIER-DESIGN
+   §13d`); wiring it is a field-add + a read.
+3. **Carriers + a deployable fighter wing** (`CARRIER-DESIGN.md`, design-locked). A **carrier** stands off and launches
+   a wing of evasive **strike fighters** as a *deployable sub-fleet* that fights on the normal salvo math; a hurt
+   fighter **docks to rearm and relaunches** (the launch/dock loop — a fighter's "retreat" is recover-to-host, §13b);
+   **kill the carrier and the aloft wing is STRANDED** (§13c); and **flak/point-defense is the fighter counter** (its
+   saturation floors a fighter's dodge). Every runtime piece is `MISSING/NEW` in the engine (the Docking bay exists,
+   no order launches a wing — §3), so the **Carriers** toggle is a MODEL; flip it off to see the carrier as the engine
+   sees it: a soft ship that never launches. **"Deployable" is the chassis carry-class** (StrikeCraft / Personnel /
+   Vehicle / …), generalized — *not* a boolean on the unit (§13a). Scenarios: *Carrier group*, *Carrier vs FLAK*,
+   *Carrier caught* (watch the strand).
+
+> These three are **TARGET-model** layers, not engine-accurate readouts. The exact combat *balance* (fighter punch vs
+> flak volume vs sortie rate, the condition-tier debuffs) is a live-tuning knob like `SalvoDamageScale` — the sim shows
+> the *mechanics*; the numbers are set in **Forces** and the design docs. Verified headless (27 scenario×mode runs
+> terminate, zero NaN) + kernel self-test 11/11 + Playwright (both themes).
 
 ---
 

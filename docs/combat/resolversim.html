@@ -114,7 +114,12 @@ label.inl.A{color:var(--sideA)} label.inl.B{color:var(--sideB)}
 .ship .val{font-size:10.5px;color:var(--ink2);font-family:var(--mono)}
 .bar{height:6px;border-radius:4px;background:var(--hbar-bg);margin-top:6px;overflow:hidden;position:relative}
 .bar>i{display:block;height:100%;background:var(--hbar);border-radius:4px;transition:width .18s ease}
+.bar.sh{height:4px;margin-top:3px;background:var(--shbar-bg,#231a1c)}
+.bar.sh>i{background:var(--shbar)}
 .deadtag{position:absolute;right:8px;top:7px;font-size:10px;color:var(--bug);font-weight:700;letter-spacing:1px}
+.cond{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:0 5px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.t-pristine{color:var(--ok)} .t-light{color:var(--ok)} .t-moderate{color:var(--gap)}
+.t-severe{color:var(--bug)} .t-crippled{color:var(--bug)} .t-dead{color:var(--muted)}
 
 /* right column tabs */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--edge2);padding:0 8px;overflow-x:auto}
@@ -177,14 +182,26 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
     <label class="inl A">A doctrine
       <select id="stanceA"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option><option value="withdraw">Withdraw</option></select>
     </label>
+    <label class="inl A">A targets
+      <select id="priA"><option value="spread" selected>Spread</option><option value="wounded">Finish wounded</option><option value="heaviest">Heaviest</option><option value="threat">Biggest threat</option></select>
+    </label>
     <label class="inl B">B doctrine
       <select id="stanceB"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option><option value="withdraw">Withdraw</option></select>
+    </label>
+    <label class="inl B">B targets
+      <select id="priB"><option value="spread" selected>Spread</option><option value="wounded">Finish wounded</option><option value="heaviest">Heaviest</option><option value="threat">Biggest threat</option></select>
     </label>
     <label class="inl">Step
       <select id="dtsel"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="5">5 s</option></select>
     </label>
     <label class="inl">Warheads
       <select id="whsel"><option value="real" selected>real (target)</option><option value="stub">engine stub</option></select>
+    </label>
+    <label class="inl">Damage
+      <select id="dmgsel"><option value="degrade" selected>degrades health (target)</option><option value="whole">whole-or-dead (engine)</option></select>
+    </label>
+    <label class="inl">Carriers
+      <select id="depsel"><option value="on" selected>launch wings (target)</option><option value="off">no launch (engine)</option></select>
     </label>
     <span class="spacer"></span>
     <button class="ctl" id="btnStep">Step ▸</button>
@@ -425,6 +442,61 @@ let WARHEADS_REAL = true;
 const PD = { PdPerBattery_MJps: 1.0 };
 
 /* ==================================================================
+   DEGRADING HEALTH — the "watch it play out" model (the parked AGGREGATE
+   FORCE-CONDITION model, shown as TARGET). The shipped engine is
+   WHOLE-OR-DEAD: a ship is full value or gone, combat value frozen at build
+   (Combat/CLAUDE.md gotcha #2). Here (default ON) damage ACCUMULATES per
+   ship — shield → armour → hull — and a hurt ship crosses CONDITION TIERS
+   that degrade its firepower AND evasion, so damage compounds and you watch
+   a fleet's fire slacken as it is ground down. Flip to whole-or-dead in the
+   header to see the engine-true model. AUTO-RESOLVER-GROUND-TRUTH: the seam
+   is already in the engine (a degraded ship buckets differently) — only the
+   recalc-on-damage hook is parked.
+   ================================================================== */
+let DEGRADE = true;
+// hull-fraction → condition tier: name · firepower mult · evasion mult · css class · hull-bar colour var
+const TIERS = [
+  {min:0.85,  name:"Pristine", fire:1.00, eva:1.00, cls:"t-pristine", col:"--hbar"},
+  {min:0.60,  name:"Light",    fire:0.94, eva:0.98, cls:"t-light",    col:"--hbar"},
+  {min:0.35,  name:"Moderate", fire:0.78, eva:0.93, cls:"t-moderate", col:"--gap"},
+  {min:0.12,  name:"Severe",   fire:0.52, eva:0.85, cls:"t-severe",   col:"--bug"},
+  {min:1e-9,  name:"Crippled", fire:0.28, eva:0.75, cls:"t-crippled", col:"--bug"},
+  {min:-1,    name:"Destroyed",fire:0.00, eva:1.00, cls:"t-dead",     col:"--muted"},
+];
+function tierOf(frac){ for(const t of TIERS) if(frac>=t.min) return t; return TIERS[TIERS.length-1]; }
+function hullFrac(s){ return s.hullMax>0 ? clamp(s.hull/s.hullMax,0,1) : (s.alive?1:0); }
+// a ship's CURRENT effectiveness = base × its condition tier (1.0 in whole-or-dead mode)
+function fireMultOf(s){ return DEGRADE ? tierOf(hullFrac(s)).fire : 1.0; }
+function evaMultOf(s){  return DEGRADE ? tierOf(hullFrac(s)).eva  : 1.0; }
+
+/* TARGET PRIORITY — who a fleet shoots first (the authored-but-DROPPED doctrine
+   dial: TargetPriority enum + parser exist, but TrySetDoctrine drops it and no
+   resolver reads it — FleetDoctrine.cs:54, CARRIER-DESIGN §13d). Wired here as
+   the target model. Decides how a salvo is allocated across the enemy's ships. */
+const TARGET_PRIORITIES = {
+  spread:  {label:"Spread (balanced)", focus:false},
+  wounded: {label:"Finish the wounded", focus:true,  key:s=>hullFrac(s)},               // lowest hull first
+  heaviest:{label:"Break the heaviest", focus:true,  key:s=>-s.hullMax},                // toughest first
+  threat:  {label:"Biggest threat",     focus:true,  key:s=>-currentFirepower(s)},      // most firepower first
+};
+function currentFirepower(s){ return (s.firepowerMax||s.firepower) * fireMultOf(s); }
+
+/* ==================================================================
+   CARRIER / DEPLOYABLE WING (CARRIER-DESIGN.md — design-locked; §13 refinements).
+   A carrier stands off and LAUNCHES a wing of evasive strike fighters as a
+   deployable SUB-FLEET; the wing fights on the normal resolve; a badly-hurt
+   fighter DOCKS to rearm and relaunches (the launch/dock loop — a fighter's
+   "retreat" is recover-to-host, §13b); and if the CARRIER dies the aloft wing
+   is STRANDED and lost (§6 step 6 / §13c — the host-alive rung). The shipped
+   engine has NO launch mechanic (the Docking primitives exist, no order calls
+   them — CARRIER-DESIGN §3), so the whole layer is a MODEL, default ON.
+   ================================================================== */
+let DEPLOYABLES = true;
+const CARRIER = { WingDisengageFrac: 0.12 };  // a fighter hit for LESS than this fraction of its hull in a pulse can peel off + dock/rearm; hit harder, it can't disengage and attrits
+let _fighterSeq = 0;
+const isWing = fl => !!fl.deployable;
+
+/* ==================================================================
    5) WEAPON CATALOG — the ten-field WeaponProfile per weapon type.
       Ranges are engine-true (WeaponProfile.cs authentic-closing ranges);
       the torpedo's 0.1 MJ/s IS the engine's MissileLauncherFirepowerStub
@@ -440,6 +512,7 @@ const WEAPONS = {
   railgun:   {label:"Railgun",          dps:1,   vel:9000,  track:0.55, sat:26,  range:80000,  nature:"Kinetic",  delivery:"Slug",  pen:9, pershot:0.04,  heat:0},
   plasma:    {label:"Plasma Cannon",    dps:2,   vel:40000, track:0.60, sat:16,  range:55000,  nature:"Energy",   delivery:"Bolt",  pen:2, pershot:0.125, heat:0},
   pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0},
+  strikegun: {label:"Fighter Cannon",     dps:1.0, vel:30000, track:0.85, sat:3,   range:35000,  nature:"Kinetic",  delivery:"Bolt",  pen:3, pershot:0.05,  heat:0},
   missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true, warhead:1},
   // Federation (Sovereign-class) weapons — a phaser IS an energy beam; a torpedo IS a guided explosive.
   phaser:    {label:"Type-XII Phaser Array", dps:3, vel:C,    track:0.50, sat:4,   range:140000, nature:"Energy",   delivery:"Beam",  pen:0, pershot:0.75,  heat:0},
@@ -476,6 +549,21 @@ const SHIP_TYPES = {
   // 685 m capital). Firepower total unchanged from the turbolaser build — same dps, Federation names.
   sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:5000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{phaser:16, phaserbank:14, photon:12, quantum:4, pdbattery:12}},
+  // ── DEPLOYABLE / CARRIER layer (CARRIER-DESIGN.md) ────────────────────────────────────────────────
+  // A STRIKE FIGHTER is just a small ship design (§4b): tiny + fast → high evasion, a short-range gun. Its
+  // chassis carry-class = StrikeCraft (§13a — the "flag", generalized), so it rides a StrikeCraft bay.
+  fighter:   {label:"Strike Fighter", toughness:8, evasion:0.90, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:12000,
+              carryClass:"StrikeCraft",
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{strikegun:2}},
+  // A CARRIER: soft, sluggish, weak DIRECT fire (2 turbolasers + PD for self-defence) — its punch is the WING it
+  // launches from standoff. `bay:StrikeCraft` + a wing pool (hangar inventory) + cycle rate (sortie tempo).
+  carrier:   {label:"Fleet Carrier", toughness:520, evasion:0.00, shieldCap:60, shieldRegen:1.0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:2600,
+              bay:"StrikeCraft", wing:{type:"fighter", pool:16, cycleRate:5},
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{medturbo:2, pdbattery:10}},
+  // A FLAK ESCORT: the counter (§ triangle). Heavy point-defense/flak — high saturation FLOORS a fighter's dodge —
+  // plus real anti-ship beams so it is a credible line ship, not just a fighter-swatter.
+  flakescort:{label:"Flak Escort", toughness:230, evasion:0.05, shieldCap:12, shieldRegen:0.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:6000,
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{pdbattery:70, heavyturbo:2, medturbo:6}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -484,9 +572,15 @@ function buildShip(typeKey, name){
   // Point-defense rating: each PD battery feeds the missile-intercept screen (was hardcoded 0 → PD never fired).
   const pd = (t.pd||0) + (t.loadout.pdbattery||0)*PD.PdPerBattery_MJps;
   return {name, type:typeKey, label:t.label, alive:true,
-    firepower, toughness:t.toughness, evasion:t.evasion, speed:t.speed,
+    firepower, firepowerMax:firepower, toughness:t.toughness, evasion:t.evasion, speed:t.speed,
+    hull:t.toughness, hullMax:t.toughness,                      // per-ship hull (degrade model) — full = toughness
+    shield:t.shieldCap, shieldMax:t.shieldCap,                  // per-ship shield pool (degrade model)
     roleWeight: firepower>0?1.0:SCV.UtilityRoleWeight,          // ShipCombatValueDB RoleWeight
     shieldCap:t.shieldCap, shieldRegen:t.shieldRegen, pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
+    // carry-class (CARRIER-DESIGN §13a): what a chassis IS, for the deployable/bay match. null = an ordinary hull.
+    carryClass:t.carryClass||null, bay:t.bay||null,
+    // carrier hangar (StrikeCraft bay): wing pool aboard + sortie tempo (CARRIER-DESIGN §5/§6)
+    wingType:t.wing?t.wing.type:null, wingPool:t.wing?t.wing.pool:0, wingMax:t.wing?t.wing.pool:0, cycleRate:t.wing?t.wing.cycleRate:0,
     armour:Object.assign({},t.armour), weapons};
 }
 
@@ -509,6 +603,21 @@ const SCENARIOS = {
     fleets:[
       {side:"A", name:"Venator group", ships:[["venator","Venator"]]},
       {side:"B", name:"Acclamator wing", ships:[["acclamator","Acclamator I"],["acclamator","Acclamator II"],["acclamator","Acclamator III"]]},
+    ]},
+  carrier:{ label:"Carrier group — Carrier + 2 escorts vs a gun-line (3 Acclamators)",
+    fleets:[
+      {side:"A", name:"Carrier group", ships:[["carrier","Flagship Carrier"],["acclamator","Escort I"],["acclamator","Escort II"]]},
+      {side:"B", name:"Gun-line", ships:[["acclamator","Acclamator I"],["acclamator","Acclamator II"],["acclamator","Acclamator III"]]},
+    ]},
+  flakcounter:{ label:"Carrier vs FLAK — Carrier + 2 escorts vs a flak wall (4 Flak Escorts, the fighter counter)",
+    fleets:[
+      {side:"A", name:"Carrier group", ships:[["carrier","Flagship Carrier"],["acclamator","Escort I"],["acclamator","Escort II"]]},
+      {side:"B", name:"Flak wall", ships:[["flakescort","Flak I"],["flakescort","Flak II"],["flakescort","Flak III"],["flakescort","Flak IV"]]},
+    ]},
+  caught:{ label:"Carrier caught — a lone Carrier vs 2 Acclamators (watch the wing STRAND when the carrier dies)",
+    fleets:[
+      {side:"A", name:"Lone carrier", ships:[["carrier","Flagship Carrier"]]},
+      {side:"B", name:"Interceptors", ships:[["acclamator","Acclamator I"],["acclamator","Acclamator II"]]},
     ]},
 };
 
@@ -542,18 +651,31 @@ function fleetSep(a,b){ return Math.abs(a.pos.x - b.pos.x); }
 function nearestEnemy(f, live){ let best=null, bd=Infinity; for(const g of live){ if(g.side===f.side) continue; const d=fleetSep(f,g); if(d<bd){bd=d;best=g;} } return best; }
 function fleetShield(fl){ let cap=0,regen=0; for(const s of fl.ships) if(s.alive){cap+=s.shieldCap; regen+=s.shieldRegen;} return {cap,regen}; }
 function fleetPD(fl){ let pd=0; for(const s of fl.ships) if(s.alive) pd+=s.pd; return pd; }
-function fleetFirepower(fl){ let f=0; for(const s of fl.ships) if(s.alive) f+=s.firepower; return f; }
+function fleetFirepower(fl){ let f=0; for(const s of fl.ships) if(s.alive) f+=currentFirepower(s); return f; }  // current (degraded) fire
 function avgEvasion(fl){ const s=liveShips(fl); if(!s.length) return 0; return s.reduce((a,x)=>a+x.evasion,0)/s.length; }
 
 function newSpaceState(scen){
+  _fighterSeq = 0;
   const fleets = scen.fleets.map(f=>{
     const ships = f.ships.map(([ty,nm])=>buildShip(ty,nm));
     return {side:f.side, name:f.name, ships,
       DamageTakenPool:0, ShieldPool:-1, StepsFought:0,
       Separation_m:0, InitialShipCount:ships.length, retreated:false,
-      stance:"close", pos:{x:0,y:0},
+      stance:"close", targetPri:"spread", pos:{x:0,y:0},
       dealt:0, soaked:0};
   });
+  // DEPLOYABLE WINGS — one (empty) wing sub-fleet per carrier, tied to its host; filled by launches in the fight.
+  if(DEPLOYABLES){
+    const wings=[];
+    for(const fl of fleets) for(const s of fl.ships) if(s.wingType){
+      wings.push({side:fl.side, name:`${s.name} wing`, ships:[], deployable:true,
+        hostRef:s, hostFleet:fl, wingType:s.wingType,
+        wingTag:(s.name.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()||'F')+'-',
+        DamageTakenPool:0, ShieldPool:-1, StepsFought:0, Separation_m:0, InitialShipCount:0, retreated:false,
+        stance:"close", targetPri:"spread", pos:{x:0,y:0}, dealt:0, soaked:0, launched:0, recovered:0, lost:0});
+    }
+    fleets.push(...wings);
+  }
   // arena bounded by the LONGEST weapon range in the whole battle
   const maxR = Math.max(...fleets.map(longestRange));
   const R = maxR/2;                                    // arena radius; diameter = maxR = the opening gap
@@ -598,11 +720,12 @@ function advanceArena(live, dt){
 function buildFireMix(fl, separation_m){
   const byKey = {};
   for(const s of fl.ships){ if(!s.alive) continue;
+    const fm = fireMultOf(s);                                             // a degraded ship shoots less (condition tier)
     for(const w of s.weapons){
       if(!weaponReaches(w, separation_m)) continue;                       // WeaponReaches gate — TRUE ranges
       const k = w.key;
       if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub};
-      byKey[k].dps += w.dps;
+      byKey[k].dps += w.dps*fm;
     }
   }
   return Object.values(byKey);
@@ -683,46 +806,185 @@ function describeFireMix(mix){
 }
 
 /* ==================================================================
+   DEGRADE DAMAGE PATH — per-ship hull + shield, target-priority allocation.
+   Used when DEGRADE is ON (the TARGET model — "watch it play out"). The
+   whole-or-dead path (applyShield + applyCasualties + fleet pool) is kept
+   intact for DEGRADE off, so the toggle shows engine-true vs target.
+   ================================================================== */
+// per-ship nature-armour soak fraction (the one-ship form of fleetArmourSoakFraction)
+function shipArmourFrac(s, mix){
+  if(!(s.armour.Kinetic||s.armour.Energy||s.armour.Explosive||s.armour.Exotic)) return 0;
+  let total=0, soak=0;
+  for(const w of mix){ total+=w.dps; soak += w.dps*(s.armour[w.nature]||0); }
+  return total>0 ? clamp(soak/total,0,0.95) : 0;
+}
+// pour a RAW damage budget at ONE ship through its dodge → shield → armour → hull chain.
+// returns {toHull, absorbed, died, overflowRaw} — overflowRaw spills to the next focus-fire target.
+function hitShip(s, mix, rawBudget, sep, dt){
+  const eva = clamp(s.evasion*evaMultOf(s),0,SCV.EvasionCap);
+  const landed = landedFraction(mix, eva, sep);            // dodge — the missed part is wasted
+  let toHull = rawBudget*landed, absorbed=0;
+  const soakF = soakFractionOf(mix);                        // shield nature matchup
+  if(s.shieldMax>0 && s.shield>0 && soakF>0 && toHull>0){
+    const soakable = toHull*soakF;
+    absorbed = Math.min(soakable, s.shield);
+    s.shield -= absorbed; toHull -= absorbed;
+  }
+  const af = shipArmourFrac(s, mix);
+  if(af>0) toHull *= (1-af);
+  let died=false, overflowRaw=0, applied=toHull;
+  if(toHull >= s.hull){
+    applied = s.hull;
+    const usedFrac = toHull>0 ? s.hull/toHull : 1;          // the fraction of the budget that was needed to kill
+    overflowRaw = rawBudget*(1-usedFrac);                   // the rest spills to the next priority target
+    s.hull=0; s.alive=false; died=true;
+  } else { s.hull -= toHull; }
+  s._dmgFrac = (s._dmgFrac||0) + applied/Math.max(s.hullMax||1,1e-9);   // how hard this ship was hit this pulse (accum.)
+  return {toHull:applied, absorbed, landed, died, overflowRaw};
+}
+// allocate ONE attacker's fire mix onto a defending fleet's live ships per the attacker's TARGET PRIORITY.
+function allocateAttackerFire(defFleet, mix, rawBudget, sep, dt, priKey){
+  const pri = TARGET_PRIORITIES[priKey] || TARGET_PRIORITIES.spread;
+  const live = liveShips(defFleet);
+  if(!live.length || rawBudget<=0) return {toHull:0, absorbed:0, destroyed:[]};
+  let toHull=0, absorbed=0; const destroyed=[];
+  if(pri.focus){
+    // FOCUS FIRE: order by the priority key, pour into the first, spill overflow to the next.
+    const order = live.slice().sort((a,b)=> pri.key(a)-pri.key(b));
+    let budget = rawBudget;
+    for(const s of order){
+      if(budget<=0) break;
+      const r = hitShip(s, mix, budget, sep, dt);
+      toHull+=r.toHull; absorbed+=r.absorbed;
+      if(r.died) destroyed.push(s.name);
+      budget = r.died ? r.overflowRaw : 0;                 // a survivor soaks the whole budget; a kill spills the rest
+    }
+  } else {
+    // SPREAD: aim by roleWeight (combatants absorb before utility hulls); each ship's own dodge/shield/armour applies.
+    let wsum=0; for(const s of live) wsum += s.roleWeight; if(wsum<=0) wsum=live.length;
+    for(const s of live){
+      const r = hitShip(s, mix, rawBudget*(s.roleWeight/wsum), sep, dt);
+      toHull+=r.toHull; absorbed+=r.absorbed;
+      if(r.died) destroyed.push(s.name);
+    }
+  }
+  return {toHull, absorbed, destroyed};
+}
+
+/* ==================================================================
+   CARRIER OPS — launch / recover / strand the wing each pulse (CARRIER-DESIGN §6).
+   Runs BEFORE the fire step so a fresh wave fights this pulse.
+   ================================================================== */
+function cycleWings(){
+  if(!DEPLOYABLES) return;
+  for(const wg of state.fleets){
+    if(!wg.deployable) continue;
+    const host = wg.hostRef;
+    // STRAND (§6 step 6 / §13c): host dead → aloft fighters are lost, no deck to recover to.
+    if(!host || !host.alive){
+      const aloft = wg.ships.filter(s=>s.alive).length;
+      if(aloft>0){ wg.lost += aloft;
+        nl(`<b class="${wg.side==="A"?"A":"B"}">${wg.name}</b> <span class="kill">STRANDED — carrier lost; ${aloft} fighter(s) had no deck to recover to</span>`,"kill"); }
+      wg.ships=[]; continue;
+    }
+    // attrition — fighters killed last pulse are permanent losses (leave the wing)
+    const killed = wg.ships.filter(s=>!s.alive).length;
+    if(killed){ wg.lost += killed; wg.ships = wg.ships.filter(s=>s.alive); }
+    // RECOVER (the dock/rearm half of the loop, §13b): a damaged fighter that took only LIGHT fire last pulse can
+    // peel off, dock, rearm, and relaunch fresh (returns to the hangar pool). A fighter hammered hard (heavy fire)
+    // can't disengage — it stays and attrits. So flak/beams that keep hitting the wing hard SHRED it (the counter);
+    // a wing that isn't being hammered sustains itself. `WingDisengageFrac` is the light-vs-heavy threshold.
+    let rec=0;
+    wg.ships = wg.ships.filter(s=>{ if(hullFrac(s) < 0.85 && (s._dmgFrac||0) < CARRIER.WingDisengageFrac){ host.wingPool++; rec++; return false; } return true; });
+    wg.recovered += rec;
+    for(const s of wg.ships) s._dmgFrac = 0;   // reset — this pulse's damage re-accumulates
+    // LAUNCH up to the carrier's cycle rate from the hangar pool
+    const wasEmpty = wg.ships.length===0;
+    const launch = Math.min(host.cycleRate||0, host.wingPool||0);
+    for(let i=0;i<launch;i++) wg.ships.push(buildShip(wg.wingType, `${wg.wingTag}${++_fighterSeq}`));
+    host.wingPool -= launch; wg.launched += launch;
+    if(wasEmpty && wg.ships.length>0) wg.pos = {x: wg.hostFleet.pos.x, y:0};   // a fresh wing launches from its carrier
+  }
+}
+
+/* ==================================================================
    ONE STEP of the arena battle — fire at the current range, then close.
    ================================================================== */
 function stepSpace(){
   const st=state; if(st.over) return;
   const dt=CE.DtStep_s;
+  cycleWings();                                                       // launch/recover/strand carrier wings first
   const live=st.fleets.filter(f=>liveShips(f).length>0 && !f.retreated);
   if(live.length<2){ endSpace(); return; }
   st.salvo++;
   // (1) FIRE at the CURRENT separation (true weapon ranges gate who can shoot)
   const fire = live.map(f=>buildFireMix(f, f.Separation_m));
-  const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> live[j].side!==f.side && liveShips(live[j]).length>0));
+  const reachOf = live.map(longestRange);
+  // An attacker only engages — and splits its fire among — enemy fleets within its weapon REACH. So a fast wing
+  // that has closed alone eats the enemy's UNDIVIDED fire (flak concentrates on the fighters), while the slow
+  // carrier group is still out of range. Single-fleet-per-side battles are unchanged (one enemy → split of 1).
+  const canHit = (ai,dj)=> live[ai].side!==live[dj].side && liveShips(live[dj]).length>0 && fleetSep(live[ai],live[dj])<=reachOf[ai];
+  const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> canHit(i,j)));
   const salvoEvents=[];
   for(let i=0;i<live.length;i++){
     const fl=live[i]; fl.StepsFought++;
-    const attackers = live.map((g,j)=>j).filter(j=> j!==i && live[j].side!==fl.side && liveShips(live[j]).length>0);
+    const attackers = live.map((g,j)=>j).filter(j=> j!==i && canHit(j,i));
     if(!attackers.length) continue;
+    // merged incoming (fire-split, conserved) — used for the PD fraction, the shield-nature soak, and the log
     const incoming=[];
     for(const g of attackers){
       const split = enemies[g].length; if(split<=0) continue;
-      for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});             // fire-split, conserved
+      for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});
     }
+    // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total)
     const pd=fleetPD(fl);
-    let intercepted=0; if(pd>0) intercepted=interceptMissiles(incoming, pd);
-    let dmg = totalDamage(incoming)*dt*CE.SalvoDamageScale;
-    const sh = applyShield(fl, incoming, dt, dmg); dmg = sh.dmg;
-    const armourFrac = fleetArmourSoakFraction(fl, incoming);
-    if(armourFrac>0) dmg *= (1-armourFrac);
-    fl.DamageTakenPool += dmg;
-    const landed = landedFraction(incoming, avgEvasion(fl), fl.Separation_m);
-    for(const g of attackers){ const af=live[g]; af.dealt += dmg/attackers.length; }
-    fl.soaked += sh.absorbed;
-    const destroyed = applyCasualties(fl, incoming, fl.Separation_m);
+    let intercepted=0, survive=1;
+    if(pd>0){ const md=missileFireDamage(incoming); if(md>0){ const frac=pdInterceptFraction(pd,md); survive=1-frac; intercepted=md*frac; } }
+
+    let dmg=0, absorbedTot=0, destroyed=[], shInfo=null;
+    const preTiers = DEGRADE ? new Map(liveShips(fl).map(s=>[s, tierOf(hullFrac(s)).name])) : null;
+    if(DEGRADE){
+      // TARGET model: each attacker allocates its own fire per its OWN target priority; per-ship hull/shield.
+      for(const g of attackers){
+        const split=enemies[g].length; if(split<=0) continue;
+        const mix = fire[g].map(w=>({...w, dps:(w.delivery==="Guided"? w.dps*survive : w.dps)/split}));  // PD applied to guided
+        const raw = totalDamage(mix)*dt*CE.SalvoDamageScale;
+        const res = allocateAttackerFire(fl, mix, raw, fl.Separation_m, dt, live[g].targetPri);
+        dmg += res.toHull; absorbedTot += res.absorbed;
+        for(const n of res.destroyed) destroyed.push(n);
+        live[g].dealt += res.toHull;
+      }
+      for(const s of liveShips(fl)) if(s.shieldMax>0 && s.shieldRegen>0) s.shield=Math.min(s.shieldMax, s.shield+s.shieldRegen*dt); // regen
+      fl.soaked += absorbedTot;
+    } else {
+      // ENGINE model: whole-or-dead, fleet damage pool + bucketed casualties (unchanged).
+      if(pd>0) for(const w of incoming) if(w.delivery==="Guided") w.dps*=survive;
+      dmg = totalDamage(incoming)*dt*CE.SalvoDamageScale;
+      shInfo = applyShield(fl, incoming, dt, dmg); dmg = shInfo.dmg;
+      const armourFrac = fleetArmourSoakFraction(fl, incoming);
+      if(armourFrac>0) dmg *= (1-armourFrac);
+      fl.DamageTakenPool += dmg;
+      for(const g of attackers){ const af=live[g]; af.dealt += dmg/attackers.length; }
+      absorbedTot = shInfo.absorbed; fl.soaked += shInfo.absorbed;
+      destroyed = applyCasualties(fl, incoming, fl.Separation_m);
+    }
     const after = liveShips(fl).length;
     const atkLabels = attackers.map(g=>live[g].name);
     const cls = fl.side==="A"?"A":"B";
+    const landed = landedFraction(incoming, avgEvasion(fl), fl.Separation_m);
     let line = `<b class="${cls}">${fl.name}</b> took ${describeFireMix(incoming)||"fire"} from ${atkLabels.join(", ")} — `
       + `${pct(landed)} on target, ${fmtMJ(dmg)} to hull`;
-    if(sh.cap>0) line += `; shield ${pct(sh.poolPct)} (soaked ${fmtMJ(sh.absorbed)})`;
+    if(DEGRADE){
+      const smax=liveShips(fl).reduce((a,s)=>a+s.shieldMax,0), scur=liveShips(fl).reduce((a,s)=>a+s.shield,0);
+      if(smax>0) line += `; shields ${pct(smax>0?scur/smax:0)} (soaked ${fmtMJ(absorbedTot)})`;
+    } else if(shInfo && shInfo.cap>0){ line += `; shield ${pct(shInfo.poolPct)} (soaked ${fmtMJ(shInfo.absorbed)})`; }
     if(intercepted>0) line += `; PD stopped ${fmtMJ(intercepted)} of torpedoes`;
     if(destroyed.length) line += ` — <span class="kill">destroyed ${destroyed.map(n=>`'${n}'`).join(", ")}</span>`;
+    if(DEGRADE && preTiers){
+      const changed=[];
+      for(const s of fl.ships){ if(!preTiers.has(s)||!s.alive) continue; const now=tierOf(hullFrac(s)).name; if(now!==preTiers.get(s)) changed.push(`${s.name} → ${now}`); }
+      if(changed.length) line += `; <span class="rng">${changed.join(", ")}</span>`;
+    }
     line += `; ${after} left`;
     salvoEvents.push(line);
   }
@@ -777,6 +1039,8 @@ function rebuild(){
   state=newSpaceState(scen);
   applyStance("A", document.getElementById("stanceA").value);
   applyStance("B", document.getElementById("stanceB").value);
+  applyTargetPri("A", document.getElementById("priA").value);
+  applyTargetPri("B", document.getElementById("priB").value);
   nl(`<span class="sys">${scen.label}</span>`,"sys");
   nl(`<span class="sys">arena diameter ${fmtKm(state.sep0)} (bounded by the longest weapon range) — the two sides open at opposite ends and close at their real speeds</span>`,"sys");
   render(); flushLog();
@@ -792,7 +1056,8 @@ function play(){
 function stop(){ playing=false; clearInterval(playTimer); updatePlayBtn(); }
 function resolveAll(){ stop(); let guard=0; while(state && !state.over && guard++<6000) stepOnce(); }
 function replay(){ stop(); rebuild(); }
-function applyStance(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side).forEach(f=>f.stance=val); }
+function applyStance(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side && !f.deployable).forEach(f=>f.stance=val); }  // a wing always closes to strike
+function applyTargetPri(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side).forEach(f=>f.targetPri=val); }
 
 /* ==================================================================
    RENDER
@@ -812,7 +1077,7 @@ function render(){
   renderSides();
   renderLedger(); renderWeapons(); renderForces();
 }
-function bar(cur,max,cls){ const p=max>0?clamp(cur/max,0,1)*100:0; return `<div class="bar ${cls||''}"><i style="width:${p}%"></i></div>`; }
+function bar(cur,max,cls,col){ const p=max>0?clamp(cur/max,0,1)*100:0; return `<div class="bar ${cls||''}"><i style="width:${p}%${col?`;background:var(${col})`:''}"></i></div>`; }
 
 /* ---- THE ARENA (the opposing-sides battlefield) ---- */
 function sideCentroidX(side){ const fs=state.fleets.filter(f=>f.side===side); if(!fs.length) return 0; return fs.reduce((a,f)=>a+f.pos.x,0)/fs.length; }
@@ -836,45 +1101,49 @@ function drawArena(){
     svg+=`<line x1="${x}" y1="${cy-4}" x2="${x}" y2="${cy+4}" stroke="${muted}" stroke-width="1"/>`;
     svg+=`<text x="${x}" y="${H-6}" fill="${muted}" font-size="9" text-anchor="middle" font-family="monospace">${km.toFixed(0)}${frac===1?" km":""}</text>`;
   }
-  // per-side reach bars + clusters
-  for(const side of ["A","B"]){
-    const col = side==="A"?cssA:cssB;
-    const fl = st.fleets.find(f=>f.side===side); if(!fl) continue;
-    const cxm = sideCentroidX(side);
-    const enemyDir = side==="A"?1:-1;                    // side A reaches to the right, B to the left
-    const clusterX = clamp(X(cxm), padX, W-padX);        // keep a running (withdrawing) fleet visible at the edge
-    const dr = dominantRange(fl);
-    // one translucent band + labeled edge per DISTINCT weapon range — so you SEE that a
-    // missile reaches farther than a laser (widest band = faintest/outermost, layered inward)
+  // per-FLEET reach bands + clusters — a side can have several fleets (a carrier group AND its launched wing),
+  // each drawn at its OWN position, so you watch the fast wing close ahead of the carrier holding back.
+  const drawFleets = st.fleets.filter(f=>liveShips(f).length>0);
+  for(const fl of drawFleets){
+    const side=fl.side, col=side==="A"?cssA:cssB, wing=isWing(fl);
+    const enemyDir = side==="A"?1:-1;
+    const clusterX = clamp(X(fl.pos.x), padX, W-padX);
+    // translucent band per DISTINCT weapon range (a missile reaches farther than a laser)
     const uniqR = [...new Map(fl.ships.filter(s=>s.alive).flatMap(s=>s.weapons).map(w=>[w.range,w.label])).entries()].sort((a,b)=>b[0]-a[0]);
-    uniqR.forEach(([rng,label],idx)=>{
+    uniqR.forEach(([rng],idx)=>{
       const x1 = clusterX + enemyDir*Math.min(rng*k, 2.2*rPx);
       const rx0=Math.min(clusterX,x1), rw=Math.abs(x1-clusterX);
-      svg+=`<rect x="${rx0}" y="${cy-22}" width="${rw}" height="44" fill="${col}" opacity="${(0.06+0.055*idx).toFixed(3)}"/>`;
-      svg+=`<line x1="${x1}" y1="${cy-22}" x2="${x1}" y2="${cy+22}" stroke="${col}" stroke-width="1" opacity="0.6"/>`;
-      const ly = (side==="A"? cy-27 : cy+34) - (idx%2)*10;   // stagger so range labels don't collide
-      svg+=`<text x="${x1}" y="${ly}" fill="${col}" font-size="8" text-anchor="middle" font-family="monospace" opacity="0.85">${(rng/1000).toFixed(0)}</text>`;
+      svg+=`<rect x="${rx0}" y="${cy-19}" width="${rw}" height="38" fill="${col}" opacity="${(0.05+0.05*idx).toFixed(3)}"/>`;
+      svg+=`<line x1="${x1}" y1="${cy-19}" x2="${x1}" y2="${cy+19}" stroke="${col}" stroke-width="1" opacity="0.5"/>`;
     });
+    // ship cluster (adaptive vertical spacing so a big wing fits)
     const ships=fl.ships, n=ships.length;
+    const spacing = n>1 ? Math.min(14, 175/(n-1)) : 0;
     ships.forEach((s,i)=>{
-      const yy = cy + (i-(n-1)/2)*15;
-      const dead=!s.alive;
-      svg+=`<circle cx="${clusterX}" cy="${yy.toFixed(1)}" r="${s.type==='venator'||s.type==='sovereign'?6.5:5}" `
-         + `fill="${dead?'transparent':col}" stroke="${dead?muted:col}" stroke-width="1.5" opacity="${dead?0.45:1}"/>`;
-      if(dead) svg+=`<text x="${clusterX}" y="${(yy+3.5).toFixed(1)}" fill="${muted}" font-size="9" text-anchor="middle">✕</text>`;
+      const yy = cy + (i-(n-1)/2)*spacing;
+      const dead=!s.alive, frac=hullFrac(s);
+      const rad = wing?3 : (s.type==='venator'||s.type==='sovereign'||s.type==='carrier'?6.5:5);
+      const op = dead?0.4 : (DEGRADE?(0.35+0.6*frac):1);   // a hurt ship fades — you see clusters wear down
+      const tcol = (DEGRADE && !dead) ? getCol(tierOf(frac).col) : col;
+      const carrierMark = s.type==='carrier';
+      svg+=`<circle cx="${clusterX}" cy="${yy.toFixed(1)}" r="${rad}" `
+         + `fill="${dead||carrierMark?'transparent':col}" stroke="${dead?muted:tcol}" stroke-width="${(DEGRADE&&!dead&&frac<0.6)||carrierMark?2:1.5}" opacity="${op.toFixed(2)}"/>`;
+      if(dead) svg+=`<text x="${clusterX}" y="${(yy+3).toFixed(1)}" fill="${muted}" font-size="8" text-anchor="middle">✕</text>`;
     });
-    const lx = side==="A"?padX:W-padX;
-    svg+=`<text x="${lx}" y="18" fill="${col}" font-size="12" font-weight="700" text-anchor="${side==='A'?'start':'end'}">${fl.name}</text>`;
-    svg+=`<text x="${lx}" y="32" fill="${muted}" font-size="9.5" text-anchor="${side==='A'?'start':'end'}" font-family="monospace">${liveShips(fl).length}/${fl.ships.length} · ${fmtKm(dr)} reach · ${(fleetSpeed(fl)/1000).toFixed(1)} km/s</text>`;
+    // a compact label above each cluster (name + count) — placed at the cluster's x so multiple per side don't collide
+    const lbl = wing?`✈ ${fl.name.replace(' wing','')} wing · ${liveShips(fl).length} up` : `${fl.name} ${liveShips(fl).length}/${fl.ships.length}`;
+    svg+=`<text x="${clamp(clusterX,padX,W-padX)}" y="14" fill="${col}" font-size="${wing?9:10}" font-weight="${wing?'500':'700'}" text-anchor="middle">${lbl}</text>`;
   }
-  // the gap marker between the two clusters
-  const ax=clamp(X(sideCentroidX("A")),padX,W-padX), bx=clamp(X(sideCentroidX("B")),padX,W-padX);
+  // gap marker between the CLOSEST opposing clusters
+  const axAll=drawFleets.filter(f=>f.side==="A").map(f=>f.pos.x), bxAll=drawFleets.filter(f=>f.side==="B").map(f=>f.pos.x);
+  const ax = axAll.length? clamp(X(Math.max(...axAll)),padX,W-padX):padX;
+  const bx = bxAll.length? clamp(X(Math.min(...bxAll)),padX,W-padX):W-padX;
   const midx=(ax+bx)/2;
   svg+=`<line x1="${ax}" y1="${cy-34}" x2="${bx}" y2="${cy-34}" stroke="${gapc}" stroke-width="1" opacity="0.7"/>`;
   svg+=`<line x1="${ax}" y1="${cy-38}" x2="${ax}" y2="${cy-30}" stroke="${gapc}" stroke-width="1"/>`;
   svg+=`<line x1="${bx}" y1="${cy-38}" x2="${bx}" y2="${cy-30}" stroke="${gapc}" stroke-width="1"/>`;
-  const gap = st.fleets.length? st.fleets[0].Separation_m : 0;
-  svg+=`<text x="${midx}" y="${cy-40}" fill="${gapc}" font-size="10.5" text-anchor="middle" font-family="monospace">${fmtKm(gap)}</text>`;
+  const gap = (axAll.length&&bxAll.length)? (Math.min(...bxAll)-Math.max(...axAll)) : 0;
+  svg+=`<text x="${midx}" y="${cy-40}" fill="${gapc}" font-size="10.5" text-anchor="middle" font-family="monospace">${fmtKm(Math.max(0,gap))}</text>`;
   svg+=`</svg>`;
   document.getElementById("arena").innerHTML = svg;
 }
@@ -886,27 +1155,63 @@ function renderSides(){
   host.innerHTML = `<div>${A.map(fleetCard).join("")}</div><div class="vs">VS</div><div>${B.map(fleetCard).join("")}</div>`;
 }
 function fleetCard(fl){
+  if(fl.deployable) return wingCard(fl);
   const fp=fleetFirepower(fl), sh=fleetShield(fl);
-  const live=liveShips(fl).length;
-  const shPct = sh.cap>0 ? clamp((fl.ShieldPool<0?sh.cap:fl.ShieldPool)/sh.cap,0,1) : 0;
+  const liveS=liveShips(fl), live=liveS.length;
+  const smax = DEGRADE ? liveS.reduce((a,s)=>a+s.shieldMax,0) : sh.cap;
+  const scur = DEGRADE ? liveS.reduce((a,s)=>a+s.shield,0) : (fl.ShieldPool<0?sh.cap:fl.ShieldPool);
+  const shPct = smax>0 ? clamp(scur/smax,0,1) : 0;
   const stanceLbl = fl.stance==="close"?"closing in":fl.stance==="standoff"?"standing off":fl.stance==="withdraw"?"withdrawing":"holding";
+  const priLbl = (TARGET_PRIORITIES[fl.targetPri]||TARGET_PRIORITIES.spread).label;
   return `<div class="side ${fl.side}">
     <h3><span>${fl.name}${fl.retreated?' <span class="src">(broke off)</span>':''}</span><span class="fp">Σfp ${fmtMJ(fp)}/s</span></h3>
     <div class="fleetmeta">
       <span>${live}/${fl.ships.length} ships</span>
       <span>${stanceLbl}</span>
-      ${sh.cap>0?`<span>shield ${fmtMJ(fl.ShieldPool<0?sh.cap:fl.ShieldPool)}/${fmtMJ(sh.cap)} (${pct(shPct)})</span>`:''}
-      ${fl.DamageTakenPool>0?`<span>dmg pool ${fmtMJ(fl.DamageTakenPool)}</span>`:''}
+      <span>targets: ${priLbl}</span>
+      ${smax>0?`<span>shield ${fmtMJ(scur)}/${fmtMJ(smax)} (${pct(shPct)})</span>`:''}
+      ${(!DEGRADE&&fl.DamageTakenPool>0)?`<span>dmg pool ${fmtMJ(fl.DamageTakenPool)}</span>`:''}
     </div>
     ${fl.ships.map(shipRow).join("")}
   </div>`;
 }
+// a launched carrier wing (deployable sub-fleet) — dashed card: aloft / aboard / rearmed / lost
+function wingCard(fl){
+  const host=fl.hostRef;
+  const aloft=liveShips(fl).length, aboard=host?host.wingPool:0;
+  const stranded = host && !host.alive;
+  const fp=fleetFirepower(fl);
+  return `<div class="side ${fl.side}" style="border-style:dashed">
+    <h3><span>${fl.name} <span class="badge plan">WING</span></span><span class="fp">Σfp ${fmtMJ(fp)}/s</span></h3>
+    <div class="fleetmeta">
+      <span>${aloft} aloft</span><span>◆ ${aboard} aboard</span><span>launched ${fl.launched||0}</span>
+      ${(fl.recovered||0)?`<span>rearmed ${fl.recovered}</span>`:''}
+      ${(fl.lost||0)?`<span style="color:var(--bug)">lost ${fl.lost}</span>`:''}
+      ${stranded?'<span style="color:var(--bug);font-weight:700">STRANDED — carrier lost</span>':`<span>from ${host?host.name:'—'}</span>`}
+    </div>
+    ${liveShips(fl).map(fighterRow).join("") || '<div class="src" style="padding:6px 2px">— none aloft —</div>'}
+  </div>`;
+}
+function fighterRow(s){
+  const frac=hullFrac(s), tier=tierOf(frac);
+  const eva=pct(clamp(s.evasion*evaMultOf(s),0,SCV.EvasionCap));
+  return `<div class="ship" style="padding:4px 7px;margin-top:5px">
+    <div class="row1"><span class="nm" style="font-size:11px">${s.name}</span><span class="val">${DEGRADE?`<span class="${tier.cls}">${tier.name} ${pct(frac)}</span> · `:''}ev ${eva}</span></div>
+    ${DEGRADE?bar(s.hull,s.hullMax,'hull',tier.col):bar(1,1)}
+  </div>`;
+}
 function shipRow(s){
+  const frac=hullFrac(s), tier=tierOf(frac);
+  const curFp=currentFirepower(s), curEva=clamp(s.evasion*evaMultOf(s),0,SCV.EvasionCap);
+  const cond = (DEGRADE && s.alive) ? ` · <span class="${tier.cls}" style="font-weight:700">${tier.name} ${pct(frac)}</span>` : '';
+  const fpOf = (DEGRADE && curFp < s.firepowerMax-1e-6) ? ` <span class="src">of ${fmtMJ(s.firepowerMax)}/s</span>` : '';
   return `<div class="ship ${s.alive?'':'dead'}">
     ${s.alive?'':'<span class="deadtag">DESTROYED</span>'}
-    <div class="row1"><span class="nm">${s.name}</span><span class="ty">${s.label}</span></div>
-    <div class="val">T ${fmtMJ(s.toughness)} · fp ${fmtMJ(s.firepower)}/s · ev ${pct(s.evasion)} · ${(s.speed/1000).toFixed(1)} km/s${s.shieldCap>0?` · sh ${fmtMJ(s.shieldCap)}`:''}</div>
-    ${bar(s.alive?1:0,1)}
+    <div class="row1"><span class="nm">${s.name}${cond}</span><span class="ty">${s.label}</span></div>
+    <div class="val">T ${fmtMJ(s.toughness)} · fp ${fmtMJ(DEGRADE?curFp:s.firepower)}/s${fpOf} · ev ${pct(curEva)} · ${(s.speed/1000).toFixed(1)} km/s</div>
+    ${(DEPLOYABLES && s.wingMax>0)?`<div class="val" style="color:var(--accent)">◆ hangar: <b>${s.wingPool}/${s.wingMax}</b> aboard · ${s.cycleRate}/pulse sortie · StrikeCraft bay</div>`:''}
+    ${DEGRADE ? bar(s.hull, s.hullMax, 'hull', tier.col) : bar(s.alive?1:0,1)}
+    ${DEGRADE && s.shieldMax>0 ? bar(s.shield, s.shieldMax, 'sh') : ''}
   </div>`;
 }
 
@@ -991,8 +1296,14 @@ function renderHonesty(){
     <p>Point-defense engages only <b>Guided</b> fire — a torpedo, never a beam — so it knows a missile from a phaser (target selection). Each PD battery feeds the fleet's intercept screen (this was hardcoded to 0, so PD never actually fired — now a ship with PD batteries really shoots torpedoes down, capped at 95% so a big enough salvo always leaks). That is the whole point of a scalable warhead: a one-shot torpedo is fair <b>because it can be shot down</b> — pour into warheads, your enemy pours into PD. Edit either side (warhead in the Weapons tab, PD in Forces) and watch the fight swing.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Space armour is proportional, not per-shot</div>
     <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
-  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead</div>
-    <p>No partial-hull tracking — a ship is full value or gone. Combat value is frozen at build (<span class="src">Combat/CLAUDE.md gotcha #2</span>), the direct consequence.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Damage degrades health — the engine is whole-or-dead</div>
+    <p>The shipped resolver is <b>whole-or-dead</b>: a ship is full value or gone, combat value frozen at build (<span class="src">Combat/CLAUDE.md gotcha #2</span>) — that is exactly why, in the engine, a ship is fine one salvo and dead the next. This sim defaults to <b>Damage → degrades health</b> (the target): damage accumulates <b>per ship</b> — <b>shield → armour → hull</b> — and a hurt ship crosses <b>condition tiers</b> (Pristine → Light → Moderate → Severe → Crippled) that <b>lower its firepower AND evasion</b>, so its fire slackens as it is ground down and you watch the fight turn rather than blink. This is the parked <b>aggregate force-condition</b> model: the seam is already in the engine (a degraded ship buckets differently — <span class="src">Combat/CLAUDE.md</span>), only the recalc-on-damage hook is deferred. Flip <b>Damage → whole-or-dead</b> to see the engine-true model side-by-side.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Target priority is a real doctrine option here — the engine drops it</div>
+    <p>Each side's <b>targets</b> dial decides who a fleet shoots first: <b>Spread</b> (balanced — combatants before utility hulls), <b>Finish the wounded</b> (concentrate on the most-damaged), <b>Break the heaviest</b> (kill capitals first), or <b>Biggest threat</b> (highest current firepower). In the shipped engine this is <b>authored but dropped</b>: the <span class="src">TargetPriority</span> enum + parser exist, but <span class="src">FleetDoctrine.TrySetDoctrine</span> copies six fields and throws it on the floor, and no resolver reads it (<span class="src">CARRIER-DESIGN §13d</span>). Wiring it is a field-add + a read, not a new system. Set A to <i>Finish wounded</i> and B to <i>Spread</i> and watch who falls first.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Carriers launch a deployable wing — the engine can't launch at all</div>
+    <p>A <b>carrier</b> stands off and launches a wing of evasive <b>strike fighters</b> as a <b>deployable sub-fleet</b>; the wing fights on the normal salvo math — no second combat engine (<span class="src">CARRIER-DESIGN §2</span>). A fighter's "retreat" is <b>recover-to-host</b>: a badly-hurt one docks, rearms, and relaunches (the launch/dock loop, §13b). Kill the <b>carrier</b> and the aloft wing is <b>STRANDED</b> and lost — no deck to recover to (§6 step 6 / §13c). <b>Flak / point-defense is the fighter counter</b>: a flak weapon's high <i>saturation</i> FLOORS a fighter's dodge (the kernel's saturation floor — a swarm can't fully evade volume-of-fire), so point-defense lands on the wing where a slug-thrower whiffs. Whether a given flak wall out-attrits a given wing is a live BALANCE (fighter punch × flak volume × sortie rate) — those numbers are yours to tune in <b>Forces</b>, like the rest of the sim; the <i>mechanic</i> is what is shown. The design is <b>design-locked</b> (<span class="src">CARRIER-DESIGN.md</span>) but <b>unbuilt</b>: the Docking-bay component exists, yet <b>no order launches a wing</b> (§3), so the whole layer is a MODEL. Flip <b>Carriers → no launch</b> to see the carrier as the engine sees it today: a soft ship that never launches.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> "Deployable" is the chassis carry-class, generalized — not a unit flag</div>
+    <p>A fighter is not a special type — its <b>chassis carry-class</b> is <b>StrikeCraft</b>, and the SAME generalized bay carries a marine (<b>Personnel</b>), a tank (<b>Vehicle</b>), or a shuttle (<span class="src">CARRIER-DESIGN §13a</span>). The "flag" lives on the chassis + the host's bay, never as a boolean on the carried unit (a bare flag writes to nothing — the dead "Fighter Construction Points" dial the survey found). This sim shows the <b>StrikeCraft</b> case; the same mechanism is how infantry deploy from a dropship — the only difference is that a marine's deploy is <b>one-way</b> (holds ground) while a fighter's is <b>round-trip</b> (recover + rearm), §13b.</p></div>
   <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Break-off is an ORDER, not an auto-reflex</div>
     <p>There is <b>no automatic casualty retreat</b> — a fleet fights until the battle is decided unless you <i>order</i> it to <b>Withdraw</b>. A withdrawing fleet runs from the enemy and only breaks contact once it has opened the gap past the longest weapon range — so it escapes <b>only if it is faster</b> than its pursuers; a slower fleet ordered to run gets caught and ground down as it flees. That mirrors the engine's real rule: retreat is a withdraw <i>doctrine</i>, not a threshold.</p></div>
   <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> Each weapon engages at its OWN range</div>
@@ -1026,6 +1337,8 @@ function renderConst(){
     ["doctrine order","break-off","Withdraw","no auto-retreat — a fleet leaves only when ordered, and escapes only if it outruns the enemy"],
     ["WeaponProfile.cs","true weapon ranges","torpedo 400 / heavy-turbo 220 / ion 160 / med-turbo 140 / railgun 80 / laser 60 / PD 12 km","each fires only at its own range — missiles open, PD closes"],
     ["NewtonThrustAbilityDB (stand-in)","closing speed","4,000–6,000 m/s","per-class editable — the one input not on a spec sheet"],
+    ["MODEL — aggregate condition","degrade tiers","Pristine · Light · Moderate · Severe · Crippled","per-ship hull; each tier lowers firepower + evasion. Engine is whole-or-dead (Damage toggle)"],
+    ["MODEL — CARRIER-DESIGN §13d","target priority","Spread · Wounded · Heaviest · Threat","who a fleet shoots first — authored but DROPPED in the engine (TrySetDoctrine)"],
   ];
   const t=(rows)=>`<table><thead><tr><th>Source</th><th>Constant</th><th class="n">Value</th><th>What it does</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td class="src">${r[0]}</td><td class="mono">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`;
@@ -1049,6 +1362,16 @@ function selfTest(){
   tests.push(approx(armourSoak(10,100,0,1),85));                  // T6
   tests.push(approx(armourSoak(10,100,10,1),100));                // T7 out-penned
   tests.push(approx(armourSoakBurst(10,100,10,0,1),10));          // T8 burst
+  // T9 — condition tiers map hull-fraction → the right tier
+  tests.push(tierOf(0.90).name==="Pristine" && tierOf(0.50).name==="Moderate" && tierOf(0.05).name==="Crippled" && tierOf(0).name==="Destroyed");
+  // T10 — hitShip pours a raw budget through dodge→shield→armour→hull (evasion 0, no shield/armour → all lands)
+  const _fs={hull:100,hullMax:100,shield:0,shieldMax:0,evasion:0,alive:true,armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}};
+  const _r10=hitShip(_fs,[{dps:10,vel:3e8,track:0.5,sat:5,nature:"Energy"}],30,0,1);
+  tests.push(approx(_r10.toHull,30) && approx(_fs.hull,70) && !_r10.died);
+  // T11 — a killing budget overflows: 200 raw on a 70-hull ship → dies, spills the excess
+  const _fs2={hull:70,hullMax:100,shield:0,shieldMax:0,evasion:0,alive:true,armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}};
+  const _r11=hitShip(_fs2,[{dps:10,vel:3e8,track:0.5,sat:5,nature:"Energy"}],200,0,1);
+  tests.push(_r11.died && approx(_r11.overflowRaw,130) && approx(_fs2.hull,0));
   const pass=tests.every(Boolean), n=tests.filter(Boolean).length;
   const el=document.getElementById("selftest");
   el.textContent = pass ? `kernel ✓ ${n}/${tests.length}` : `kernel ✗ ${n}/${tests.length}`;
@@ -1091,8 +1414,12 @@ function init(){
   document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; stop(); rebuild(); });
   document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
   document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
+  document.getElementById("priA").addEventListener("change",e=>{ applyTargetPri("A",e.target.value); render(); });
+  document.getElementById("priB").addEventListener("change",e=>{ applyTargetPri("B",e.target.value); render(); });
   document.getElementById("dtsel").addEventListener("change",e=>{ CE.DtStep_s=+e.target.value; if(state) render(); });
   document.getElementById("whsel").addEventListener("change",e=>{ WARHEADS_REAL = e.target.value==="real"; stop(); rebuild(); });
+  document.getElementById("dmgsel").addEventListener("change",e=>{ DEGRADE = e.target.value==="degrade"; stop(); rebuild(); });
+  document.getElementById("depsel").addEventListener("change",e=>{ DEPLOYABLES = e.target.value==="on"; stop(); rebuild(); });
   document.getElementById("btnStep").addEventListener("click",()=>{ stop(); stepOnce(); });
   document.getElementById("btnPlay").addEventListener("click",()=>{ playing?stop():play(); });
   document.getElementById("btnFf").addEventListener("click",resolveAll);
