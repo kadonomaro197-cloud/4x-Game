@@ -119,6 +119,15 @@ footer{padding:24px 0 50px}
 .mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
 .mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
 @media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+/* carry-class / deployability readout */
+.carry{margin-top:11px;border:1px solid var(--rule);border-left:3px solid var(--ink3);border-radius:4px;background:var(--card2);padding:10px 12px}
+.carry .ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.carry .ch i{font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.carry .ch b{font-family:ui-monospace,Menlo,monospace;font-size:15px;font-weight:730;line-height:1.2;text-align:right}
+.carry p{margin:5px 0 0;font-size:11.5px;color:var(--ink2)}
+.carry.yes{border-left-color:var(--ac)} .carry.yes .ch b{color:var(--ac2)}
+.carry.plan{border-left-color:var(--warn)} .carry.plan .ch b{color:var(--warn)}
+.carry.no .ch b{color:var(--ink3)}
 
 /* power additions, same idiom */
 .lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
@@ -321,6 +330,10 @@ At the shipped efficiency of <b>1,128</b>, the biggest thing you can hold togeth
 <div class="num fixed"><i id="l_a5">Runs on</i><b id="v_a5"></b></div>
 <div class="num fixed"><i>Build cost</i><b id="v_cost"></b></div>
 </div>
+<div class="carry no" id="carrybox">
+<div class="ch"><i>Can it be carried / deployed? — its CarryClass</i><b id="v_carry">—</b></div>
+<p id="s_carry"></p>
+</div>
 <div class="mu">
 <p class="blab" style="margin:15px 0 3px">The requirement set this chassis DECLARES</p>
 <p class="muN">What the assembler would flag, generated from <b>environment × kind × substrate</b>. Green = the check exists today. Amber = built as a stat, never gated. Red = does not exist yet.</p>
@@ -339,7 +352,7 @@ At the shipped efficiency of <b>1,128</b>, the biggest thing you can hold togeth
 <p class="sub" id="verdict" style="margin-top:10px"></p>
 </div>
 </div>
-<p class="sub" style="margin-top:11px"><b>Three things to try.</b> ⓪ <b>Open water + Unit</b>, then drag the <b>envelope</b> slider: a shallow-only boat is cheap, a surface-to-abyssal boat costs multiples of it — and <b>research caps how wide you are allowed to go.</b> ① <b>Orbital + Infrastructure</b>, size to the top, then drag <b>efficiency</b> from bottom to top: the frame never changes and the name goes from <em>beyond your reach</em> to <em>Light</em>. <b>That is "an average station to one faction, an outpost to another", and it is one number.</b> ② <b>Surface + Unit + Psionic</b>: the requirement panel drops power and crew and asks for <b>a seated leader</b> — which is the Command Berth, already built.</p>
+<p class="sub" style="margin-top:11px"><b>Four things to try.</b> ⓪ <b>Open water + Unit</b>, then drag the <b>envelope</b> slider: a shallow-only boat is cheap, a surface-to-abyssal boat costs multiples of it — and <b>research caps how wide you are allowed to go.</b> ① <b>Orbital + Infrastructure</b>, size to the top, then drag <b>efficiency</b> from bottom to top: the frame never changes and the name goes from <em>beyond your reach</em> to <em>Light</em>. <b>That is "an average station to one faction, an outpost to another", and it is one number.</b> ② <b>Surface + Unit + Psionic</b>: the requirement panel drops power and crew and asks for <b>a seated leader</b> — which is the Command Berth, already built. ③ <b>Surface + Unit</b>, then drag <b>size</b> from the bottom up and watch the <b>CarryClass</b> readout flip <em>Personnel → Vehicle → Not carriable (too big)</em> — <b>that is deployability, and it is nothing but Kind + Size.</b> Switch to <b>Orbital</b> and a small hull reads <em>StrikeCraft</em> (design-locked); flip to <b>Infrastructure</b> and it is never carried.</p>
 </div></section>
 
 <section class="band alt"><div class="w">
@@ -609,6 +622,27 @@ function requirements(S,fixed){
   return rows;
 }
 
+// ── CARRY-CLASS / DEPLOYABILITY — the "what flags it as deployable" answer, made live.
+// It is NOT a separate flag: it FALLS OUT of KIND (must be a Unit) + ENVIRONMENT + SIZE (must fit a bay). The
+// class only NAMES which bay hauls it. Personnel/Vehicle are LIVE (GroundChassisAtb.CarryClass + GroundTransport);
+// StrikeCraft/Shuttle are design-locked (§13a — a ship-hull carries no CarryClass field yet). Thresholds anchor on
+// the shipped frames: swarm 5 / human 20 = Personnel · walker 2500 / vehicle 4000 = Vehicle · light hull 500 = the
+// smallest hull a Flight Deck could hold; a medium/heavy hull is a carrier or line ship ITSELF, not cargo.
+function carriability(size){
+  if(kind==='infra')
+    return {cls:'no', tag:'Not carriable — fixed', note:'Infrastructure is bolted down — a station or a building is never carried. Only a UNIT can ride a bay, so a fixed chassis has no CarryClass at all.'};
+  if(env==='surface'){
+    if(size < 500)   return {cls:'yes',  tag:'Personnel', note:'A person-scale unit → rides a Personnel bay. ✅ LIVE today: troop transports already match on it (GroundChassisAtb.CarryClass = Personnel).'};
+    if(size < 50000) return {cls:'yes',  tag:'Vehicle',   note:'A vehicle/walker-scale unit → rides a Vehicle bay. ✅ LIVE today (GroundChassisAtb.CarryClass = Vehicle).'};
+    return {cls:'no', tag:'Not carriable — too big', note:'A colossal surface frame, larger than any troop or vehicle bay can hold. It deploys under its own power — never as cargo.'};
+  }
+  if(env==='orbital'){
+    if(size < 1000)  return {cls:'plan', tag:'StrikeCraft / Shuttle', note:'A fighter- or shuttle-scale hull → would ride a Flight Deck / Shuttle bay. ⚠ DESIGN-LOCKED, not wired: a ship-hull carries no CarryClass field yet (§13a / the C1 generalization).'};
+    return {cls:'no', tag:'Not carriable — a carrier/line ship', note:'A warship-scale hull — it is a carrier or line ship ITSELF, not cargo. Ship-hulls have no CarryClass (their budget is Mass, not Carry).'};
+  }
+  return {cls:'no', tag:'No bay class yet', note:'The carrier/bay model covers Surface (Personnel/Vehicle) and Orbital (StrikeCraft) only — this environment has no bay class defined, so nothing carries it today.'};
+}
+
 function render(){
  const d1=+$('d1').value, d2=+$('d2').value, d3=+$('d3').value, fixed=$('fix').checked;
  const E=ENV[env], K=KIND[kind], S=SUB[sub], SZ=SIZE[env];
@@ -661,6 +695,11 @@ function render(){
  set('l_a4','Part mount'); set('v_a4', K.mount(env));
  set('l_a5','Runs on'); set('v_a5', S.runsOn);
  set('v_cost', fmt(credits)+' cr  ·  '+fmt(bp)+' BP'+(crew>=1?'  ·  '+fmt(crew)+' crew':'  ·  no crew'));
+
+ // CARRY-CLASS / DEPLOYABILITY readout — deployability = Kind (Unit) + Environment + Size, live.
+ const cc = carriability(size);
+ $('carrybox').className = 'carry '+cc.cls;
+ set('v_carry', cc.tag); set('s_carry', cc.note);
 
  const reqs=requirements(S,fixed);
  $('reqs').innerHTML = reqs.map(r=>
