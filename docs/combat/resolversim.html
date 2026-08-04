@@ -427,6 +427,13 @@ const WEAPONS = {
   plasma:    {label:"Plasma Cannon",    dps:2,   vel:40000, track:0.60, sat:16,  range:55000,  nature:"Energy",   delivery:"Bolt",  pen:2, pershot:0.125, heat:0},
   pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0},
   missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true},
+  // Federation (Sovereign-class) weapons — a phaser IS an energy beam; a torpedo IS a guided explosive.
+  phaser:    {label:"Type-XII Phaser Array", dps:3, vel:C,    track:0.50, sat:4,   range:140000, nature:"Energy",   delivery:"Beam",  pen:0, pershot:0.75,  heat:0},
+  phaserbank:{label:"Phaser Bank",       dps:0.5, vel:C,     track:0.72, sat:34,  range:60000,  nature:"Energy",   delivery:"Beam",  pen:0, pershot:0.015, heat:0},
+  photon:    {label:"Photon Torpedo",    dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true},
+  // Quantum torpedo: a HEAVIER warhead (zero-point) — higher penetration + per-shot alpha + a touch more speed,
+  // but the auto-resolver STUBS every missile at 0.1 MJ/s, so its real advantage lands in the live sim, not here.
+  quantum:   {label:"Quantum Torpedo",   dps:0.1, vel:16000, track:0.92, sat:0.9, range:400000, nature:"Explosive",delivery:"Guided",pen:14,pershot:0.25,  heat:0, stub:true, quantum:true},
 };
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
@@ -448,8 +455,11 @@ const SHIP_TYPES = {
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:10, medturbo:2, pdbattery:52, missile:4}},
   acclamator:{label:"Acclamator",toughness:286, evasion:0.00, shieldCap:15,  shieldRegen:0.3, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:6000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:3, medturbo:12, pdbattery:24, missile:4}},
+  // Sovereign (Enterprise-E): 16 Type-XII phaser arrays + phaser banks · photon + quantum torpedoes · strongest
+  // regenerative shields, armour-light · fights with firepower + shields, NOT agility (evasion stays modest for a
+  // 685 m capital). Firepower total unchanged from the turbolaser build — same dps, Federation names.
   sovereign: {label:"Sovereign", toughness:410, evasion:0.12, shieldCap:120, shieldRegen:2.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:5000,
-              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{medturbo:16, laser:14, missile:16, pdbattery:12}},
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{phaser:16, phaserbank:14, photon:12, quantum:4, pdbattery:12}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -779,7 +789,7 @@ function render(){
   document.getElementById("gapPill").textContent = `gap ${fmtKm(gap)}`;
   document.getElementById("dtPill").textContent = `dt ${CE.DtStep_s}s · SalvoDamageScale ${CE.SalvoDamageScale}`;
   document.getElementById("modeNote").innerHTML =
-    `The <b>arena</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5 LD-30</span>): both sides open at opposite ends of a ${fmtKm(st.sep0)} diameter — the longest weapon range — and close at their <b>real speeds</b>. Weapons fire only at their <b>true range</b>; a beam is undodgeable but its accuracy is range-free, a slug/torpedo loses accuracy over the flight. <span class="badge gap">GAP</span> the <b>Proton Torpedo</b> is the engine's flat <b>0.1 MJ/s</b> missile stub — it under-counts vs a real live-flight impact.`;
+    `The <b>arena</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5 LD-30</span>): both sides open at opposite ends of a ${fmtKm(st.sep0)} diameter — the longest weapon range — and close at their <b>real speeds</b>. Weapons fire only at their <b>true range</b>; a beam is undodgeable but its accuracy is range-free, a slug/torpedo loses accuracy over the flight. <span class="badge gap">GAP</span> every <b>torpedo</b> (proton · photon · quantum) is the engine's flat <b>0.1 MJ/s</b> missile stub — so the quantum's heavier warhead reads the same as a photon here; its real punch lands only in the live-flight sim.`;
   drawArena();
   renderSides();
   renderLedger(); renderWeapons(); renderForces();
@@ -948,8 +958,8 @@ function renderHonesty(){
     <p>This sim implements <b>LD-30</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5</span>) — the opposing-sides arena the developer ruled the resolver <i>must</i> become. The shipped default resolver still fights at <b>point-blank</b> (its closing model collapses to one shrinking scalar and is off by default); that model is superseded here, deliberately. The <b>damage math</b> below the movement is the engine's real kernel, byte-for-byte.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Closing speed is the one non-spec-sheet input</div>
     <p>Every weapon <b>range</b> is engine-true (<span class="src">WeaponProfile.cs</span> authentic-closing ranges). A ship's sublight <b>speed</b> is <i>not</i> a <span class="src">ShipCombatValueDB</span> field — the engine derives it from <span class="src">NewtonThrustAbilityDB</span> (thrust ÷ mass). Here it's an editable per-class stand-in so the arena has real motion; tune it in <b>Forces</b>.</p></div>
-  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Missile / torpedo damage is a stub</div>
-    <p>In the auto-resolver a missile launcher counts a flat <b>0.1 MJ/s</b> (the engine's <span class="src">MissileLauncherFirepowerStub = 100,000 J/s</span>). The real GJ-scale impact only happens in the live-flight sim the auto-resolver doesn't run — so the torpedo-heavy Sovereign, which opens the fight at 400 km, reads <i>weaker</i> here than it fights.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Torpedo damage is a stub — and it flattens photon vs quantum</div>
+    <p>In the auto-resolver <b>every</b> torpedo launcher counts a flat <b>0.1 MJ/s</b> (the engine's <span class="src">MissileLauncherFirepowerStub = 100,000 J/s</span>). The real GJ-scale impact only happens in the live-flight sim the auto-resolver doesn't run — so the torpedo-heavy Sovereign, which opens the fight at 400 km, reads <i>weaker</i> here than it fights. The Sovereign now carries <b>photon + quantum</b> torpedoes, and the quantum is the heavier warhead (penetration 14 vs 4, bigger per-shot alpha) — but under this stub <b>both read 0.1 MJ/s</b>, so the quantum's edge is flavor here and real only in the live sim. Fix the stub and the split becomes a real weapon choice.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Space armour is proportional, not per-shot</div>
     <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead</div>
