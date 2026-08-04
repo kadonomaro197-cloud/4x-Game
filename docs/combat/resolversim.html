@@ -203,6 +203,9 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
     <label class="inl">Carriers
       <select id="depsel"><option value="on" selected>launch wings (target)</option><option value="off">no launch (engine)</option></select>
     </label>
+    <label class="inl">Point-defense
+      <select id="pdsel"><option value="beams" selected>beams double as PD (target)</option><option value="dedicated">dedicated only (engine)</option></select>
+    </label>
     <span class="spacer"></span>
     <button class="ctl" id="btnStep">Step ▸</button>
     <button class="ctl primary" id="btnPlay">▶ Play</button>
@@ -439,7 +442,28 @@ const ARENA = {
      engages GUIDED fire — a torpedo, never a beam. That is PD "knowing" to intercept a missile (target selection).
    ================================================================== */
 let WARHEADS_REAL = true;
-const PD = { PdPerBattery_MJps: 1.0 };
+const PD = { PdPerBattery_MJps: 1.0, BeamMaxDivert: 0.75 };
+
+/* ==================================================================
+   BEAM-PD — point-defense GENERALIZED (target). The engine models PD as a DEDICATED component only
+   (PointDefenseAtb → PointDefense_Jps), so a phaser adds firepower but can't shoot down a torpedo. In reality a
+   fast, accurate beam IS a torpedo-killer, so with this ON every weapon has a latent PD rating = dps × pdEff, where
+   pdEff rises with TRACKING × RATE-OF-FIRE (the same specs that already decide whether it can hit a dodging
+   fighter): a Phaser Bank (track .72, fast) is good PD, a Heavy Turbolaser (track .35, slow) is poor PD, the
+   dedicated battery (track .95, sat 180) is still the best. THE HONEST TWIST (the developer's insight): a beam OUT
+   of range of the enemy hull is FREE PD — at standoff a phaser can't reach the enemy ship, so swatting torpedoes
+   costs it nothing — but an IN-RANGE beam pulled onto torpedoes is firepower NOT hitting the enemy. So a saturation
+   torpedo attack degrades an enemy's beam output even when few torpedoes land. Flip to "dedicated only" for the
+   engine-true model. `isPD` weapons are the dedicated mounts (already in ship.pd) — excluded here so they don't
+   double-count. Guided weapons can't do PD (a torpedo can't shoot a torpedo). */
+let BEAM_PD = true;
+// a weapon's point-defense effectiveness from its tracking + rate-of-fire (saturation): 0..1
+function pdEff(w){
+  if(!w || w.isPD || w.delivery==="Guided") return 0;
+  const trk = clamp(w.track||0, 0, 1);
+  const sat = (w.sat===Infinity) ? 1 : (w.sat||0)/((w.sat||0)+K.SaturationReference);
+  return trk*sat;
+}
 
 /* ==================================================================
    DEGRADING HEALTH — the "watch it play out" model (the parked AGGREGATE
@@ -513,7 +537,7 @@ const WEAPONS = {
   ioncannon: {label:"Ion Cannon",       dps:3,   vel:C,     track:0.45, sat:3,   range:160000, nature:"Exotic",   delivery:"Beam",  pen:0, pershot:1,     heat:0},
   railgun:   {label:"Railgun",          dps:1,   vel:9000,  track:0.55, sat:26,  range:80000,  nature:"Kinetic",  delivery:"Slug",  pen:9, pershot:0.04,  heat:0},
   plasma:    {label:"Plasma Cannon",    dps:2,   vel:40000, track:0.60, sat:16,  range:55000,  nature:"Energy",   delivery:"Bolt",  pen:2, pershot:0.125, heat:0},
-  pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0},
+  pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0, isPD:true},
   strikegun: {label:"Fighter Cannon",     dps:1.0, vel:30000, track:0.85, sat:3,   range:35000,  nature:"Kinetic",  delivery:"Bolt",  pen:3, pershot:0.05,  heat:0},
   missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true, warhead:1},
   // Federation (Sovereign-class) weapons — a phaser IS an energy beam; a torpedo IS a guided explosive.
@@ -530,7 +554,7 @@ function profileFor(key, count, fpScale){
   const perLauncher = (WARHEADS_REAL && w.warhead) ? w.warhead*w.sat : w.dps;
   return {key, label:w.label, dps:perLauncher*count*fpScale, vel:w.vel, track:w.track, sat:w.sat,
           range:w.range, nature:w.nature, delivery:w.delivery, pen:w.pen, pershot:w.pershot,
-          heat:w.heat, stub:!!w.stub, warhead:w.warhead||0, quantum:!!w.quantum, count};
+          heat:w.heat, stub:!!w.stub, warhead:w.warhead||0, quantum:!!w.quantum, isPD:!!w.isPD, count};
 }
 
 /* ==================================================================
@@ -726,7 +750,7 @@ function buildFireMix(fl, separation_m){
     for(const w of s.weapons){
       if(!weaponReaches(w, separation_m)) continue;                       // WeaponReaches gate — TRUE ranges
       const k = w.key;
-      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub};
+      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD};
       byKey[k].dps += w.dps*fm;
     }
   }
@@ -928,6 +952,35 @@ function stepSpace(){
   const canHit = (ai,dj)=> live[ai].side!==live[dj].side && liveShips(live[dj]).length>0 && fleetSep(live[ai],live[dj])<=reachOf[ai];
   const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> canHit(i,j)));
   const salvoEvents=[];
+  // BEAM-PD (generalized dual-use, target): every non-dedicated, non-guided weapon has latent PD from tracking ×
+  // rate-of-fire. A beam OUT of range of the enemy hull is FREE PD; an IN-RANGE beam pulled onto torpedoes COSTS
+  // that anti-ship firepower. Computed once per tick from the RAW fire, then the divert is charged to outgoing fire.
+  if(BEAM_PD){
+    const incMissile = live.map((f,i)=>{ let md=0;                        // incoming torpedo pressure per fleet
+      for(let g=0; g<live.length; g++){ if(g===i || !canHit(g,i)) continue; const split=enemies[g].length||1;
+        md += missileFireDamage(fire[g])/split; }
+      return md; });
+    for(let i=0;i<live.length;i++){
+      const fl=live[i], sep=fl.Separation_m; let pdDed=0, pdFree=0, pdIn=0;
+      for(const s of liveShips(fl)){
+        pdDed += s.pd;                                                    // dedicated mounts (short-range → ~free)
+        const fm = fireMultOf(s);
+        for(const w of s.weapons){ const eff=pdEff(w); if(eff<=0) continue;
+          const rating = w.dps*fm*eff;
+          if(weaponReaches(w, sep)) pdIn += rating;                      // in range of the enemy hull → costs firepower
+          else pdFree += rating;                                         // out of range (e.g. standoff) → FREE PD
+        }
+      }
+      // commit only as much IN-RANGE beam capacity as the FREE PD can't already cover, capped so a fleet never
+      // fully stops shooting the enemy. `divert` = the fraction of in-range beams pulled onto torpedo defense.
+      const residual = Math.max(0, incMissile[i] - pdDed - pdFree);
+      const divert = pdIn>0 ? Math.min(PD.BeamMaxDivert, residual/pdIn) : 0;
+      fl._pdTotal = pdDed + pdFree + divert*pdIn;
+      fl._beamDivert = divert;
+    }
+    for(let g=0; g<live.length; g++){ const div=live[g]._beamDivert||0; if(div<=0) continue;  // charge the divert
+      for(const w of fire[g]) if(pdEff(w)>0) w.dps *= (1-div); }         // a beam on PD is NOT hitting the enemy
+  }
   for(let i=0;i<live.length;i++){
     const fl=live[i]; fl.StepsFought++;
     const attackers = live.map((g,j)=>j).filter(j=> j!==i && canHit(j,i));
@@ -938,8 +991,9 @@ function stepSpace(){
       const split = enemies[g].length; if(split<=0) continue;
       for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});
     }
-    // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total)
-    const pd=fleetPD(fl);
+    // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total).
+    // With BEAM_PD on, the screen includes beams doing double duty (fl._pdTotal, computed above); else dedicated only.
+    const pd = BEAM_PD ? (fl._pdTotal||0) : fleetPD(fl);
     let intercepted=0, survive=1;
     if(pd>0){ const md=missileFireDamage(incoming); if(md>0){ const frac=pdInterceptFraction(pd,md); survive=1-frac; intercepted=md*frac; } }
 
@@ -981,6 +1035,7 @@ function stepSpace(){
       if(smax>0) line += `; shields ${pct(smax>0?scur/smax:0)} (soaked ${fmtMJ(absorbedTot)})`;
     } else if(shInfo && shInfo.cap>0){ line += `; shield ${pct(shInfo.poolPct)} (soaked ${fmtMJ(shInfo.absorbed)})`; }
     if(intercepted>0) line += `; PD stopped ${fmtMJ(intercepted)} of torpedoes`;
+    if(BEAM_PD && (fl._beamDivert||0) > 0.01) line += `; <span class="rng">${pct(fl._beamDivert)} of beams pulled onto PD</span>`;
     if(destroyed.length) line += ` — <span class="kill">destroyed ${destroyed.map(n=>`'${n}'`).join(", ")}</span>`;
     if(DEGRADE && preTiers){
       const changed=[];
@@ -1296,6 +1351,8 @@ function renderHonesty(){
     <p>The shipped auto-resolver counts <b>every</b> torpedo at a flat <b>0.1 MJ/s</b> (<span class="src">MissileLauncherFirepowerStub</span>), so warheads don't matter and a quantum reads the same as a photon. This sim defaults to <b>Warheads = real</b> (the target): a torpedo does its <b>yield × fire-rate</b>, so the quantum out-hits the photon and a warhead can be scaled toward a <b>one-shot</b>. Flip the toggle to <b>engine stub</b> to see today's placeholder. In the engine this is one wire — read the already-designed warhead into combat value — plus a GJ→MJ calibration.</p></div>
   <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> PD <i>knows</i> to intercept missiles — and that is the balance</div>
     <p>Point-defense engages only <b>Guided</b> fire — a torpedo, never a beam — so it knows a missile from a phaser (target selection). Each PD battery feeds the fleet's intercept screen (this was hardcoded to 0, so PD never actually fired — now a ship with PD batteries really shoots torpedoes down, capped at 95% so a big enough salvo always leaks). That is the whole point of a scalable warhead: a one-shot torpedo is fair <b>because it can be shot down</b> — pour into warheads, your enemy pours into PD. Edit either side (warhead in the Weapons tab, PD in Forces) and watch the fight swing.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Beams double as point-defense — and it costs firepower up close</div>
+    <p>The shipped engine models PD as a <b>dedicated component only</b> (<span class="src">PointDefenseAtb → PointDefense_Jps</span>): a phaser adds firepower but <b>cannot shoot down a torpedo</b>. That breaks the phaser, whose whole identity is being the ship's main gun <em>and</em> its torpedo-swatter. With <b>Point-defense → beams double as PD</b> (the default here), every weapon gets a latent PD rating = <b>tracking × rate-of-fire</b> — the same specs that already decide whether it can hit a dodging fighter — so a <b>Phaser Bank</b> (track .72, fast) is good PD, a <b>Heavy Turbolaser</b> (track .35, slow) is poor PD, and the dedicated battery is still the best. <b>The honest twist</b> (the developer's insight): a beam <b>out of range</b> of the enemy hull is <b>FREE</b> PD — at standoff a phaser can't reach the enemy ship, so swatting torpedoes costs it nothing — but an <b>in-range</b> beam pulled onto torpedoes is <b>firepower not hitting the enemy</b>. So a <b>saturation torpedo attack degrades an enemy's beam output even when nothing lands</b>: watch the battle log read <span class="rng">“NN% of beams pulled onto PD”</span> as two beam-heavy fleets close under torpedo fire. Flip to <b>dedicated only</b> for the engine-true model. <span class="src">A proposed engine change: make PD a computed property of tracking + rate-of-fire, not a bolted-on component.</span></p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Space armour is proportional, not per-shot</div>
     <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
   <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Damage degrades health — the engine is whole-or-dead</div>
@@ -1341,6 +1398,7 @@ function renderConst(){
     ["NewtonThrustAbilityDB (stand-in)","closing speed","4,000–6,000 m/s","per-class editable — the one input not on a spec sheet"],
     ["MODEL — aggregate condition","degrade tiers","Pristine · Light · Moderate · Severe · Crippled","per-ship hull; each tier lowers firepower + evasion. Engine is whole-or-dead (Damage toggle)"],
     ["WIRED 2026-08-04","target priority","Heaviest · Threat live · Wounded pending","who a fleet shoots first — now read by ApplyCasualties (Heaviest/BiggestThreat live; Wounded awaits the degrade-health model)"],
+    ["MODEL — dual-use PD","beams as PD","tracking × RoF · 75% max divert","every weapon does PD by track×rate-of-fire; an OUT-of-range beam is FREE PD, an IN-range beam pulled onto torpedoes costs firepower. Engine PD is a dedicated component (PD toggle)"],
   ];
   const t=(rows)=>`<table><thead><tr><th>Source</th><th>Constant</th><th class="n">Value</th><th>What it does</th></tr></thead><tbody>
   ${rows.map(r=>`<tr><td class="src">${r[0]}</td><td class="mono">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`;
@@ -1422,6 +1480,7 @@ function init(){
   document.getElementById("whsel").addEventListener("change",e=>{ WARHEADS_REAL = e.target.value==="real"; stop(); rebuild(); });
   document.getElementById("dmgsel").addEventListener("change",e=>{ DEGRADE = e.target.value==="degrade"; stop(); rebuild(); });
   document.getElementById("depsel").addEventListener("change",e=>{ DEPLOYABLES = e.target.value==="on"; stop(); rebuild(); });
+  document.getElementById("pdsel").addEventListener("change",e=>{ BEAM_PD = e.target.value==="beams"; stop(); rebuild(); });
   document.getElementById("btnStep").addEventListener("click",()=>{ stop(); stepOnce(); });
   document.getElementById("btnPlay").addEventListener("click",()=>{ playing?stop():play(); });
   document.getElementById("btnFf").addEventListener("click",resolveAll);
