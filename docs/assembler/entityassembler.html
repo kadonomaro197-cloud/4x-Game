@@ -317,8 +317,8 @@ if(tb){tb.addEventListener('click',function(){
 var HOSTS={
   ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
         budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:900,role:'ship'},
-  ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles. Armour is soaked shot-by-shot; penetration bites here.',
-        budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground'},
+  ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles — a CARRIED unit whose chassis carry-class (Personnel or Vehicle) is the "deployable flag" a matching bay hauls (CARRIER-DESIGN §13a — the flag lives on the chassis, not as a boolean). Armour is soaked shot-by-shot; penetration bites here.',
+        budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground',carryClass:'Personnel · Vehicle'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
         budgetName:'Structural budget',budget:22000,volCap:16000,crewRef:900,role:'station'},
   megastructure:{name:'Battle Station',glyph:'★',desc:'A moon-sized fortress and superweapon platform. Immobile in a fight (never dodges), but FTL-capable — an armed city with its own reactors, food, and a crew in the millions.',
@@ -417,14 +417,22 @@ var CAT=[
    mass:180,vol:50,crew:6,hp:20,draw:0,supply:0,warp:true,warpSustain:2.5,warpCreate:1250000,
    cost:{bp:260,cr:34,rp:6,steel:90,elec:70,mats:{'ree-magnetics':16}},
    honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Engine-exact energy: opening the bubble needs a 1.25 GJ stored-energy buffer (drawn from capacitors at departure — gated: no battery, no jump); sustaining it draws just 2.5 MW the whole crossing. So FTL\'s real cost is a big one-time BATTERY charge, not a big continuous draw.'},
- {id:'fighterbay',cat:'Carrier',name:'Fighter Bay',hosts:['ship','station'],
-   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,
+ {id:'fighterbay',cat:'Bay',name:'Flight Deck — StrikeCraft bay',hosts:['ship','station'],
+   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,bayClass:'StrikeCraft',cycleRate:6,
    cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
-   honesty:'Holds ~70 fighters. THE carrier capability — and the honest gap: strike-launch is a PENDING output (verified: ParasiteLauncherReady has zero emitters), so the wing embarks but cannot sortie in the sim yet.'},
- {id:'vehiclebay',cat:'Carrier',name:'Vehicle & Troop Bay',hosts:['ship','station'],
-   mass:300,vol:360,crew:10,hp:24,draw:2,supply:0,vehicles:16,troopsLive:true,
+   honesty:'ONE generalized BayAtb, dialed to the StrikeCraft class (CARRIER-DESIGN §5 — the flight deck IS the troop bay IS the passenger berth, one component class-dialed). Holds ~70 strike craft + a Cycle Rate (the sortie tempo). A carried fighter is just a small ship whose CHASSIS carry-class is StrikeCraft (§13a — the deployable "flag" lives on the chassis, never as a boolean on the unit). THE carrier capability, with the honest gap: launch-as-a-sub-fleet is a PENDING output (the Docking bay exists, but no order launches a wing — §3). A fighter breaks off by recover-to-host, and if the carrier dies the aloft wing is STRANDED (§13b-c).'},
+ {id:'vehiclebay',cat:'Bay',name:'Troop & Vehicle Bay — Personnel · Vehicle',hosts:['ship','station'],
+   mass:300,vol:360,crew:10,hp:24,draw:2,supply:0,vehicles:16,troopsLive:true,bayClass:'Personnel · Vehicle',cycleRate:4,
    cost:{bp:280,cr:36,rp:4,steel:150,elec:40,mats:{'reinforced-trusswork':40}},
-   honesty:'Carries ground units — gunships, walkers, troops — down to a surface. Unlike the fighter bay, THIS chain is LIVE: GroundBayAtb → GroundTransport is the invasion path the game actually runs.'},
+   honesty:'The SAME generalized BayAtb, dialed to the Personnel/Vehicle class — carries ground units (troops, gunships, walkers) to a surface. Unlike the StrikeCraft class, THIS chain is LIVE: GroundBayAtb → GroundTransport is the invasion path the game runs. Deploy is ONE-WAY here (a marine holds ground or dies — it does not dock back mid-battle), the per-class difference from a fighter round-trip recover (§13b: launch generalizes to every class, recover does not).'},
+ {id:'passengerbay',cat:'Bay',name:'Passenger Berths — Passenger',hosts:['ship','station'],
+   mass:120,vol:200,crew:4,hp:12,draw:2,supply:0,passengers:400,bayClass:'Passenger',cycleRate:2,
+   cost:{bp:120,cr:14,rp:2,steel:70,elec:20},
+   honesty:'The SAME generalized BayAtb, dialed to the Passenger class — colonists / VIPs / crews carried (not fighting units). A future consumer: the component is ready, a passenger-move order is the wire. Here to prove one bay component spans all five classes (CARRIER-DESIGN §5), not five parallel systems.'},
+ {id:'shuttlebay',cat:'Bay',name:'Shuttle Bay — Shuttle',hosts:['ship','station'],
+   mass:160,vol:220,crew:6,hp:16,draw:2,supply:0,shuttles:8,bayClass:'Shuttle',cycleRate:3,
+   cost:{bp:150,cr:18,rp:3,steel:90,elec:24},
+   honesty:'The SAME generalized BayAtb, dialed to the Shuttle class — utility craft that ferry units/cargo/personnel surface↔orbit and ship↔ship. Round-trip like the flight deck, non-combat. A future consumer (folds in the existing cargo-shuttlebay). One component, five classes — the anti-parallel-system move (CONVENTIONS §6).'},
  {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
    mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,ammoCap:36,
    cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
@@ -644,6 +652,7 @@ function compute(){
   var mass=0,vol=0,crew=0,supply=0,draw=0,thrust=0,hp=0,armourThick=0,shieldCap=0,shieldRegen=0,firepower=0;
   var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
   var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0,superweapons=0;
+  var passengers=0,hasPassengerBay=false,shuttles=0,hasShuttleBay=false,cycleRate=0,bayClasses=[];
   var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
   var warpCap=false,warpSustain=0,warpCreateNeed=0,speedFactor=0,reactorDays=Infinity;
   var berths=0,lifeSupport=0,medical=0,cargo=0,caliber=1,hasFlag=false;
@@ -657,6 +666,9 @@ function compute(){
     if(c.ammoStore)ammoStore+=n;
     if(c.fighters){fighters+=c.fighters*n;hasFighterBay=true;}
     if(c.vehicles){vehicles+=c.vehicles*n;hasVehicleBay=true;}
+    if(c.passengers){passengers+=c.passengers*n;hasPassengerBay=true;}
+    if(c.shuttles){shuttles+=c.shuttles*n;hasShuttleBay=true;}
+    if(c.bayClass){cycleRate=Math.max(cycleRate,c.cycleRate||0);if(bayClasses.indexOf(c.bayClass)<0)bayClasses.push(c.bayClass);}
     if(c.tractor)tractors+=n;
     if(c.superweapon)superweapons+=n;
     heatGen+=(c.heat||0)*n;
@@ -724,6 +736,7 @@ function compute(){
     firepower:firepower,toughness:toughness,evasion:evasion,shieldCap:shieldCap,shieldRegen:shieldRegen,
     roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
     fighters:fighters,hasFighterBay:hasFighterBay,vehicles:vehicles,hasVehicleBay:hasVehicleBay,tractors:tractors,superweapons:superweapons,
+    passengers:passengers,hasPassengerBay:hasPassengerBay,shuttles:shuttles,hasShuttleBay:hasShuttleBay,cycleRate:cycleRate,bayClasses:bayClasses,
     accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
     warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,warpCreateNeed:warpCreateNeed,
     provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
@@ -803,15 +816,16 @@ function renderGates(S){
         ? (fmt(S.medical)+' sickbay capacity ('+(S.medical>=S.crew?'covers the crew':'partial')+') — readiness only; the +health output is engine-pending')
         : 'no medical bay — readiness note only, since the +health output is engine-pending anyway');
   }
-  // carrier wing — the honest pending gap
-  if(S.hasFighterBay){
-    gate('pend','Carrier wing (fighter launch)',
-      fmt(S.fighters)+' fighters berthed — but strike-launch is a PENDING output: no live consumer yet (ParasiteLauncherReady has 0 emitters). They embark; they cannot sortie in the sim.');
-  }
-  // vehicle & troop bay — the LIVE delivery chain (contrast with fighters)
-  if(S.hasVehicleBay){
-    gate('pass','Ground delivery (vehicle & troop bay)',
-      fmt(S.vehicles)+' vehicle/troop capacity — the GroundBayAtb → GroundTransport invasion chain is LIVE: this is how the game actually lands an assault.');
+  // generalized bay (CARRIER-DESIGN §5 + §13) — the deployable / carried-unit capability, all classes as ONE component
+  if(S.bayClasses && S.bayClasses.length){
+    var bayBits=[];
+    if(S.hasFighterBay) bayBits.push(fmt(S.fighters)+' strike craft (StrikeCraft — launch PENDING)');
+    if(S.hasVehicleBay) bayBits.push(fmt(S.vehicles)+' troops/vehicles (Personnel·Vehicle — LIVE, one-way)');
+    if(S.hasPassengerBay) bayBits.push(fmt(S.passengers)+' passengers (Passenger — future)');
+    if(S.hasShuttleBay) bayBits.push(fmt(S.shuttles)+' shuttles (Shuttle — future)');
+    var bayLive = S.hasVehicleBay;   // Personnel/Vehicle is the one live class today
+    gate(bayLive?'pass':'pend','Generalized bay — deployable / carried units',
+      'ONE BayAtb, class-dialed (CARRIER-DESIGN §5): '+bayBits.join(' · ')+'. Cycle/sortie rate '+fmt(S.cycleRate)+'/pulse. A carried unit is designated by its CHASSIS carry-class (§13a — not a boolean on the unit). LAUNCH is one order for every class (§13b); RECOVER is per-class — a fighter docks round-trip, a marine deploys one-way. Kill the host and an aloft StrikeCraft wing is STRANDED (§13c). Personnel/Vehicle is LIVE (GroundBayAtb→GroundTransport); StrikeCraft launch is the PENDING wire.');
   }
   // tractor beams — pending payoff
   if(S.tractors>0){
@@ -847,8 +861,10 @@ function renderGauges(S){
   if(S.ecmBonus>0)bits.push('<b style="color:var(--ac2)">ECM +'+(S.ecmBonus*100).toFixed(0)+'%</b> hit-avoidance (LIVE)');
   if(S.energyStore>0)bits.push('Capacitors '+fmtE(S.energyStore*1000)+' stored (warp-jump buffer)');
   if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
-  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' fighters berthed — PENDING (can’t sortie yet).</b>');
-  if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' vehicles/troops — invasion chain LIVE.</b>');
+  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' strike craft (StrikeCraft bay) — launch PENDING.</b>');
+  if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' troops/vehicles — invasion chain LIVE.</b>');
+  if(S.hasPassengerBay)bits.push(fmt(S.passengers)+' passengers (Passenger bay — future).');
+  if(S.hasShuttleBay)bits.push(fmt(S.shuttles)+' shuttles (Shuttle bay — future).');
   if(S.superweapons>0)bits.push('<b style="color:var(--warn)">Superlaser aboard — PENDING (planet-crack has no engine reader).</b>');
   nt.innerHTML=bits.join(' · ');
 }
