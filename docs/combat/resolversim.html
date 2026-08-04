@@ -469,10 +469,12 @@ function hullFrac(s){ return s.hullMax>0 ? clamp(s.hull/s.hullMax,0,1) : (s.aliv
 function fireMultOf(s){ return DEGRADE ? tierOf(hullFrac(s)).fire : 1.0; }
 function evaMultOf(s){  return DEGRADE ? tierOf(hullFrac(s)).eva  : 1.0; }
 
-/* TARGET PRIORITY — who a fleet shoots first (the authored-but-DROPPED doctrine
-   dial: TargetPriority enum + parser exist, but TrySetDoctrine drops it and no
-   resolver reads it — FleetDoctrine.cs:54, CARRIER-DESIGN §13d). Wired here as
-   the target model. Decides how a salvo is allocated across the enemy's ships. */
+/* TARGET PRIORITY — who a fleet shoots first. WIRED in the engine 2026-08-04:
+   TrySetDoctrine now copies the doctrine's TargetPriority (FleetDoctrine.cs) and
+   CombatEngagement.ApplyCasualties orders the casualty buckets by it — Break-the-
+   heaviest + Biggest-threat are engine-true; Finish-the-wounded still falls back
+   to Spread until the degrade-health model lands (needs per-ship health).
+   Decides how a salvo is allocated across the enemy's ships. */
 const TARGET_PRIORITIES = {
   spread:  {label:"Spread (balanced)", focus:false},
   wounded: {label:"Finish the wounded", focus:true,  key:s=>hullFrac(s)},               // lowest hull first
