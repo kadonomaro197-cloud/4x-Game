@@ -183,6 +183,9 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
     <label class="inl">Step
       <select id="dtsel"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="5">5 s</option></select>
     </label>
+    <label class="inl">Warheads
+      <select id="whsel"><option value="real" selected>real (target)</option><option value="stub">engine stub</option></select>
+    </label>
     <span class="spacer"></span>
     <button class="ctl" id="btnStep">Step ▸</button>
     <button class="ctl primary" id="btnPlay">▶ Play</button>
@@ -411,6 +414,17 @@ const ARENA = {
 };
 
 /* ==================================================================
+   MISSILE WARHEADS + POINT-DEFENSE — the missile-vs-PD arms race.
+   - WARHEADS_REAL: the shipped engine STUBS every torpedo at 0.1 MJ/s (v1). With this ON (default = the target
+     model), a torpedo does its real warhead damage (yield × fire-rate), so a quantum out-hits a photon and a
+     warhead can be scaled toward a ONE-SHOT — the balance being that it can be shot down on the way in.
+   - PD is the missile-intercept screen: each point-defense battery contributes PdPerBattery_MJps, and PD only ever
+     engages GUIDED fire — a torpedo, never a beam. That is PD "knowing" to intercept a missile (target selection).
+   ================================================================== */
+let WARHEADS_REAL = true;
+const PD = { PdPerBattery_MJps: 1.0 };
+
+/* ==================================================================
    5) WEAPON CATALOG — the ten-field WeaponProfile per weapon type.
       Ranges are engine-true (WeaponProfile.cs authentic-closing ranges);
       the torpedo's 0.1 MJ/s IS the engine's MissileLauncherFirepowerStub
@@ -426,20 +440,22 @@ const WEAPONS = {
   railgun:   {label:"Railgun",          dps:1,   vel:9000,  track:0.55, sat:26,  range:80000,  nature:"Kinetic",  delivery:"Slug",  pen:9, pershot:0.04,  heat:0},
   plasma:    {label:"Plasma Cannon",    dps:2,   vel:40000, track:0.60, sat:16,  range:55000,  nature:"Energy",   delivery:"Bolt",  pen:2, pershot:0.125, heat:0},
   pdbattery: {label:"Point-Defense Battery",dps:0.3,vel:6000,track:0.95,sat:180, range:12000,  nature:"Kinetic",  delivery:"Cloud", pen:1, pershot:0.0017,heat:0},
-  missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true},
+  missile:   {label:"Proton Torpedo",   dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true, warhead:1},
   // Federation (Sovereign-class) weapons — a phaser IS an energy beam; a torpedo IS a guided explosive.
   phaser:    {label:"Type-XII Phaser Array", dps:3, vel:C,    track:0.50, sat:4,   range:140000, nature:"Energy",   delivery:"Beam",  pen:0, pershot:0.75,  heat:0},
   phaserbank:{label:"Phaser Bank",       dps:0.5, vel:C,     track:0.72, sat:34,  range:60000,  nature:"Energy",   delivery:"Beam",  pen:0, pershot:0.015, heat:0},
-  photon:    {label:"Photon Torpedo",    dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true},
-  // Quantum torpedo: a HEAVIER warhead (zero-point) — higher penetration + per-shot alpha + a touch more speed,
-  // but the auto-resolver STUBS every missile at 0.1 MJ/s, so its real advantage lands in the live sim, not here.
-  quantum:   {label:"Quantum Torpedo",   dps:0.1, vel:16000, track:0.92, sat:0.9, range:400000, nature:"Explosive",delivery:"Guided",pen:14,pershot:0.25,  heat:0, stub:true, quantum:true},
+  photon:    {label:"Photon Torpedo",    dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true, warhead:1},
+  // Quantum torpedo: a HEAVIER warhead (zero-point) — bigger yield + higher penetration + a touch more speed.
+  quantum:   {label:"Quantum Torpedo",   dps:0.1, vel:16000, track:0.92, sat:0.9, range:400000, nature:"Explosive",delivery:"Guided",pen:14,pershot:0.25,  heat:0, stub:true, quantum:true, warhead:3},
 };
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
-  return {key, label:w.label, dps:w.dps*count*fpScale, vel:w.vel, track:w.track, sat:w.sat,
+  // A torpedo's REAL damage = warhead yield × fire-rate (sat). With warheads off, it's the engine's 0.1 stub.
+  // A beam keeps its authored dps. So flipping warheads on/off changes only the guided weapons.
+  const perLauncher = (WARHEADS_REAL && w.warhead) ? w.warhead*w.sat : w.dps;
+  return {key, label:w.label, dps:perLauncher*count*fpScale, vel:w.vel, track:w.track, sat:w.sat,
           range:w.range, nature:w.nature, delivery:w.delivery, pen:w.pen, pershot:w.pershot,
-          heat:w.heat, stub:!!w.stub, count};
+          heat:w.heat, stub:!!w.stub, warhead:w.warhead||0, quantum:!!w.quantum, count};
 }
 
 /* ==================================================================
@@ -465,10 +481,12 @@ function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
   const weapons = Object.entries(t.loadout).map(([k,c])=>profileFor(k,c,t.fpScale));
   const firepower = weapons.reduce((s,w)=>s+w.dps,0);          // = Σ weapon dps (ShipCombatValueDB.cs:524 × caliber :529)
+  // Point-defense rating: each PD battery feeds the missile-intercept screen (was hardcoded 0 → PD never fired).
+  const pd = (t.pd||0) + (t.loadout.pdbattery||0)*PD.PdPerBattery_MJps;
   return {name, type:typeKey, label:t.label, alive:true,
     firepower, toughness:t.toughness, evasion:t.evasion, speed:t.speed,
     roleWeight: firepower>0?1.0:SCV.UtilityRoleWeight,          // ShipCombatValueDB RoleWeight
-    shieldCap:t.shieldCap, shieldRegen:t.shieldRegen, pd:t.pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
+    shieldCap:t.shieldCap, shieldRegen:t.shieldRegen, pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
     armour:Object.assign({},t.armour), weapons};
 }
 
@@ -789,7 +807,7 @@ function render(){
   document.getElementById("gapPill").textContent = `gap ${fmtKm(gap)}`;
   document.getElementById("dtPill").textContent = `dt ${CE.DtStep_s}s · SalvoDamageScale ${CE.SalvoDamageScale}`;
   document.getElementById("modeNote").innerHTML =
-    `The <b>arena</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5 LD-30</span>): both sides open at opposite ends of a ${fmtKm(st.sep0)} diameter — the longest weapon range — and close at their <b>real speeds</b>. Weapons fire only at their <b>true range</b>; a beam is undodgeable but its accuracy is range-free, a slug/torpedo loses accuracy over the flight. <span class="badge gap">GAP</span> every <b>torpedo</b> (proton · photon · quantum) is the engine's flat <b>0.1 MJ/s</b> missile stub — so the quantum's heavier warhead reads the same as a photon here; its real punch lands only in the live-flight sim.`;
+    `The <b>arena</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5 LD-30</span>): both sides open at opposite ends of a ${fmtKm(st.sep0)} diameter — the longest weapon range — and close at their <b>real speeds</b>. Weapons fire only at their <b>true range</b>; a beam is undodgeable but its accuracy is range-free, a slug/torpedo loses accuracy over the flight. <span class="badge plan">MODEL</span> <b>torpedoes</b> do real <b>warhead</b> damage (quantum out-hits photon; scale one toward a one-shot) and <b>point-defense shoots them down</b> on the way in — the arms race. Flip <i>Warheads → engine stub</i> to see the shipped flat 0.1 MJ/s placeholder.`;
   drawArena();
   renderSides();
   renderLedger(); renderWeapons(); renderForces();
@@ -920,20 +938,29 @@ function renderWeapons(){
   state.fleets.forEach(f=>f.ships.forEach(s=>s.weapons.forEach(w=>keys.add(w.key))));
   const gap = state.fleets.length? state.fleets[0].Separation_m : 1e12;
   const rows=[...keys].sort((a,b)=>WEAPONS[b].range-WEAPONS[a].range).map(k=>{
-    const w=WEAPONS[k]; const cls=classify(w.delivery,w.vel,w.track,w.sat);
-    const velS = w.vel>=1e7 ? "≈ c" : (w.vel/1000).toFixed(0)+" km/s";
+    const w=WEAPONS[k];
     const inRange = gap<=w.range;
-    return `<tr style="${inRange?'':'opacity:.5'}">
-      <td>${w.label}${w.stub?' <span class="badge gap">STUB</span>':''}${inRange?' <span class="badge live">IN RANGE</span>':''}</td>
-      <td>${w.nature}</td><td>${w.delivery}</td><td>${cls}</td>
-      <td class="n">${w.dps} MJ/s</td><td class="n">${velS}</td>
+    const guided = w.delivery==="Guided";
+    const effDps = (WARHEADS_REAL && w.warhead) ? (w.warhead*w.sat) : w.dps;    // per launcher
+    const dpsCell = guided && !WARHEADS_REAL ? `0.1 MJ/s` : `${effDps.toFixed(effDps<10?1:0)} MJ/s`;
+    const whCell = guided
+      ? `<input type="number" step="any" value="${w.warhead||0}" style="width:50px;padding:2px 4px;font-size:11px" onchange="setWarhead('${k}',this.value)"> MJ`
+      : `—`;
+    const pdCell = guided ? `<span class="badge live">PD-answerable</span>` : `—`;
+    const badge = (guided && !WARHEADS_REAL) ? ' <span class="badge gap">STUB</span>'
+                : (inRange ? ' <span class="badge live">IN RANGE</span>' : '');
+    return `<tr style="${inRange?'':'opacity:.55'}">
+      <td>${w.label}${badge}</td>
+      <td>${w.nature}</td><td>${w.delivery}</td>
+      <td class="n">${dpsCell}</td><td class="n">${whCell}</td><td>${pdCell}</td>
       <td class="n">${w.track.toFixed(2)}</td><td class="n">${w.sat}</td>
       <td class="n">${(w.range/1000).toFixed(0)} km</td><td class="n">${w.pen}</td>
     </tr>`;
   }).join("");
-  host.innerHTML = `<p class="note">The ten-field <span class="src">WeaponProfile</span> the kernel reads — sorted by <b>range</b>, the axis the arena is built on. As the two sides close, weapons light up longest-first: torpedo → heavy turbo → ion → medium turbo → laser → PD. <b>IN RANGE</b> = reaches the current gap. Beams (≈c) are undodgeable and range-accuracy-immune; the <span class="badge gap">STUB</span> torpedo is the engine's flat 0.1 MJ/s missile stub.</p>
-  <table><thead><tr><th>Weapon</th><th>Nature</th><th>Delivery</th><th>Class</th><th class="n">DPS</th><th class="n">Vel</th><th class="n">Trk</th><th class="n">Sat</th><th class="n">Range</th><th class="n">Pen</th></tr></thead><tbody>${rows}</tbody></table>`;
+  host.innerHTML = `<p class="note">Sorted by <b>range</b> — as the sides close, weapons light up longest-first (torpedoes open at 400 km, PD closes at 12 km). <b>Warhead</b> is a torpedo's real yield (editable — press <b>Replay</b>): with <b>Warheads = real</b> its damage is <i>yield × fire-rate</i>, so a quantum out-hits a photon and you can scale one toward a <b>one-shot</b>. <b>PD-answerable</b> = point-defense can shoot it down on the way in — PD only ever engages <b>Guided</b> fire (a torpedo, never a beam), which is PD <i>knowing</i> a missile from a phaser. Flip <b>Warheads = engine stub</b> to see the shipped flat 0.1 MJ/s placeholder.</p>
+  <table><thead><tr><th>Weapon</th><th>Nature</th><th>Delivery</th><th class="n">DPS</th><th class="n">Warhead</th><th>PD?</th><th class="n">Trk</th><th class="n">Sat</th><th class="n">Range</th><th class="n">Pen</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
+window.setWarhead=(key,v)=>{ v=+v; if(WEAPONS[key]) WEAPONS[key].warhead=v; };
 
 /* ---- forces editor tab ---- */
 function renderForces(){
@@ -958,8 +985,10 @@ function renderHonesty(){
     <p>This sim implements <b>LD-30</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5</span>) — the opposing-sides arena the developer ruled the resolver <i>must</i> become. The shipped default resolver still fights at <b>point-blank</b> (its closing model collapses to one shrinking scalar and is off by default); that model is superseded here, deliberately. The <b>damage math</b> below the movement is the engine's real kernel, byte-for-byte.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Closing speed is the one non-spec-sheet input</div>
     <p>Every weapon <b>range</b> is engine-true (<span class="src">WeaponProfile.cs</span> authentic-closing ranges). A ship's sublight <b>speed</b> is <i>not</i> a <span class="src">ShipCombatValueDB</span> field — the engine derives it from <span class="src">NewtonThrustAbilityDB</span> (thrust ÷ mass). Here it's an editable per-class stand-in so the arena has real motion; tune it in <b>Forces</b>.</p></div>
-  <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Torpedo damage is a stub — and it flattens photon vs quantum</div>
-    <p>In the auto-resolver <b>every</b> torpedo launcher counts a flat <b>0.1 MJ/s</b> (the engine's <span class="src">MissileLauncherFirepowerStub = 100,000 J/s</span>). The real GJ-scale impact only happens in the live-flight sim the auto-resolver doesn't run — so the torpedo-heavy Sovereign, which opens the fight at 400 km, reads <i>weaker</i> here than it fights. The Sovereign now carries <b>photon + quantum</b> torpedoes, and the quantum is the heavier warhead (penetration 14 vs 4, bigger per-shot alpha) — but under this stub <b>both read 0.1 MJ/s</b>, so the quantum's edge is flavor here and real only in the live sim. Fix the stub and the split becomes a real weapon choice.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Warheads are real here — the engine still stubs them</div>
+    <p>The shipped auto-resolver counts <b>every</b> torpedo at a flat <b>0.1 MJ/s</b> (<span class="src">MissileLauncherFirepowerStub</span>), so warheads don't matter and a quantum reads the same as a photon. This sim defaults to <b>Warheads = real</b> (the target): a torpedo does its <b>yield × fire-rate</b>, so the quantum out-hits the photon and a warhead can be scaled toward a <b>one-shot</b>. Flip the toggle to <b>engine stub</b> to see today's placeholder. In the engine this is one wire — read the already-designed warhead into combat value — plus a GJ→MJ calibration.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge live">LIVE &amp; TRUSTED</span> PD <i>knows</i> to intercept missiles — and that is the balance</div>
+    <p>Point-defense engages only <b>Guided</b> fire — a torpedo, never a beam — so it knows a missile from a phaser (target selection). Each PD battery feeds the fleet's intercept screen (this was hardcoded to 0, so PD never actually fired — now a ship with PD batteries really shoots torpedoes down, capped at 95% so a big enough salvo always leaks). That is the whole point of a scalable warhead: a one-shot torpedo is fair <b>because it can be shot down</b> — pour into warheads, your enemy pours into PD. Edit either side (warhead in the Weapons tab, PD in Forces) and watch the fight swing.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Space armour is proportional, not per-shot</div>
     <p>On a ship, armour folds into Toughness and the nature-hardening soaks a <i>fraction</i>; the flat per-shot bounce (one big alpha punches, a swarm chips off) only actually runs on the ground. The space fire-mix hard-zeros per-shot energy (<span class="src">CombatEngagement.cs:1368</span>). A deliberate v1 deferral.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Whole-or-dead</div>
@@ -1063,6 +1092,7 @@ function init(){
   document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
   document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
   document.getElementById("dtsel").addEventListener("change",e=>{ CE.DtStep_s=+e.target.value; if(state) render(); });
+  document.getElementById("whsel").addEventListener("change",e=>{ WARHEADS_REAL = e.target.value==="real"; stop(); rebuild(); });
   document.getElementById("btnStep").addEventListener("click",()=>{ stop(); stepOnce(); });
   document.getElementById("btnPlay").addEventListener("click",()=>{ playing?stop():play(); });
   document.getElementById("btnFf").addEventListener("click",resolveAll);

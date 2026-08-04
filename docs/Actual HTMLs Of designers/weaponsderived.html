@@ -164,7 +164,7 @@ footer{padding:24px 0 50px}
 <button class="chip" type="button" data-g="fam" data-v="beam" aria-pressed="true">Beam</button>
 <button class="chip" type="button" data-g="fam" data-v="proj" aria-pressed="false">Projectile</button>
 <button class="chip" type="button" data-g="fam" data-v="guided" aria-pressed="false">Guided</button></div>
-<p class="chelp">Physics, not taste. <b>Contact</b> &mdash; nothing crosses the gap, so nothing supplies it (you must close). <b>Beam</b> &mdash; light speed, undodgeable, runs on power. <b>Projectile</b> &mdash; finite speed, a nimble target can juke it, runs on ammo. <b>Guided</b> &mdash; slow but it steers, runs on ammo, and is the <b>only</b> family point-defence can answer.</p></div>
+<p class="chelp">Physics, not taste. <b>Contact</b> &mdash; nothing crosses the gap, so nothing supplies it (you must close). <b>Beam</b> &mdash; light speed, undodgeable, runs on power. <b>Projectile</b> &mdash; finite speed, a nimble target can juke it, runs on ammo. <b>Guided</b> &mdash; slow but it steers, runs on ammo, and is the <b>only</b> family point-defence can answer &mdash; which is exactly why a missile&rsquo;s <b>warhead</b> (its shot-size dial) can be scaled all the way to a <b>one-shot</b>: the balance is not a damage cap, it is the point-defence screen that shoots it down on the way in.</p></div>
 <div class="bsec"><p class="blab">Door 2 &mdash; what it&rsquo;s good against</p>
 <div class="chips">
 <button class="chip" type="button" data-g="nat" data-v="kinetic" aria-pressed="false">Kinetic</button>
@@ -387,7 +387,7 @@ function render(){
               : 'Nearest shipped gun: <b>'+rep.name+'</b> — the sliders have pushed it past what that one is')
    : 'A weapon no shipped gun occupies — one of the ~1,073 the two choices reach.';
  const set=(id,v)=>{$(id).textContent=v;};
- set('v_dps',fmt(dps)+' J/s'); set('v_shot',fmt(perShot)+' J'); set('v_rate',rate>=1?fmt(rate)+'/s':rate.toFixed(2)+'/s');
+ set('v_dps',fmt(dps)+' J/s'); set('v_shot',fmt(perShot)+' J'+(fam==='guided'?' — warhead':'')); set('v_rate',rate>=1?fmt(rate)+'/s':rate.toFixed(2)+'/s');
  set('v_sat',fmt(sat)); set('v_rng',fam==='contact'?'contact':fmt(range)+' m');
  set('v_vel',f.vel); set('v_trk',f.trk); set('v_pen',pen.toFixed(0));
  set('v_heat',heat.toFixed(1)+' kJ/s'); set('v_shield',Math.round(nt.soak*100)+'% of it');
