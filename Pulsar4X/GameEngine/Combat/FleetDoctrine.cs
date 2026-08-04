@@ -28,6 +28,11 @@ namespace Pulsar4X.Combat
         public static EngagementPosture PostureOf(Entity fleet)
             => fleet != null && fleet.TryGetDataBlob<FleetDoctrineDB>(out var d) ? d.Posture : EngagementPosture.WeaponsFree;
 
+        /// <summary>This fleet's target-selection priority (Phase 5). Balanced (spread fire) if it has no doctrine —
+        /// so an un-doctrined fleet targets exactly as it always has. Read by the resolver's casualty step.</summary>
+        public static TargetPriority TargetingOf(Entity fleet)
+            => fleet != null && fleet.TryGetDataBlob<FleetDoctrineDB>(out var d) ? d.Targeting : TargetPriority.Balanced;
+
         /// <summary>Set a fleet's weapons-release posture — a DIRECT call (like the doctrine + EMCON setters), so it
         /// works mid-battle. Mutates the existing doctrine blob in place (preserving its multipliers) or creates a
         /// neutral one carrying just the posture.</summary>
