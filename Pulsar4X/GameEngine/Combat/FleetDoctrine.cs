@@ -67,6 +67,11 @@ namespace Pulsar4X.Combat
                 // Preserve the weapons-release posture across a doctrine switch (they're separate ROE knobs; Phase 5
                 // unifies them). Without this, changing doctrine would silently reset a fleet to WeaponsFree.
                 Posture = hadDoctrine ? existing.Posture : EngagementPosture.WeaponsFree,
+                // TARGET PRIORITY (Phase 5 ROE) is part of the doctrine itself (authored on the catalog blueprint), so
+                // a doctrine switch adopts the new doctrine's targeting — unlike Posture, which is an independently-set
+                // ROE knob. Missing this line was the bug the resolver read Balanced no matter the doctrine (the
+                // casualty sort never reordered): CombatTargetPriorityTests.Heaviest_KillsToughestFirst.
+                Targeting = CombatDoctrine.ParseTargetPriority(doctrine.TargetPriority),
                 SwitchableAfter = now + TimeSpan.FromSeconds(doctrine.CooldownSeconds),
             };
             fleet.SetDataBlob(db);
