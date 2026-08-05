@@ -321,10 +321,12 @@ var HOSTS={
         budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground',carryClass:'Personnel · Vehicle'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
         budgetName:'Structural budget',budget:22000,volCap:16000,crewRef:900,role:'station'},
+  dreadnought:{name:'Dreadnought',glyph:'◆',desc:'A mobile super-capital — a warship three times a normal hull, between a ship and a Battle Station. It still dodges (barely, at its size) and is FTL-capable; it mounts anything a ship OR a station can. The tier a 1,600 m Star Destroyer needs when it overflows the ship budget.',
+        budgetName:'Hull mass budget',budget:60000,volCap:44000,crewRef:40000,role:'ship'},
   megastructure:{name:'Battle Station',glyph:'★',desc:'A moon-sized fortress and superweapon platform. Immobile in a fight (never dodges), but FTL-capable — an armed city with its own reactors, food, and a crew in the millions.',
         budgetName:'Structural budget',budget:50000000,volCap:40000000,crewRef:500000,role:'megastructure'}
 };
-var HOSTORDER=['ship','ground','station','megastructure'];
+var HOSTORDER=['ship','ground','station','dreadnought','megastructure'];
 
 /* ---------- component catalog ----------
    host output behaviour is encoded in weapon.fields[] state per host below. */
@@ -553,6 +555,32 @@ var PRESETS=[
             magazine:5,ammobunker:3,cargo:10,
             quarters:12,lifesupport:9,medbay:5,provisions:5,hydroponics:5,
             sensor:5,searchsensor:5,firecontrol:3,ecm:2,targeting:2,bridge:1,flagsuite:1}},
+  {id:'prometheus',name:'Prometheus-class (glass cannon)',host:'ship',
+    /* CANON (Memory Alpha/Beta, VOY "Message in a Bottle"): ~415 m advanced TACTICAL prototype — ~16 Type-XII phaser
+       arrays (a generation above the Galaxy's Type-X), photon + quantum torpedoes, REGENERATIVE shields + ABLATIVE
+       hull armour, warp 9.9, minimal EMH-run crew. Its signature — MULTI-VECTOR ASSAULT MODE (split into 3 warp-capable
+       sections) — has NO engine wire (one-host-per-ship), flagged PENDING in the dossier. MIN/MAXED for firepower-DENSITY:
+       a compact 415 m striker in a 20,000 t capital host (fills only ~69% mass), so the residual maxes phasers-per-tonne
+       — it reaches Sovereign-class absolute output at two-thirds the mass. Phasers → energy beams, torpedoes → guided. */
+    counts:{medturbo:28,laser:8,missile:8,pdbattery:6,shield:26,armour:14,
+            capreactor:1,radiator:12,capacitor:2,warp:1,drive:4,fueltank:2,
+            magazine:3,provisions:3,quarters:5,lifesupport:3,medbay:1,
+            sensor:2,searchsensor:2,firecontrol:1,targeting:1,ecm:1,bridge:1}},
+  {id:'isd1',name:'◆ Imperial-I Star Destroyer',hero:true,host:'dreadnought',
+    /* CANON (Wookieepedia / Incredible Cross-Sections / West End): 1,600 m do-everything conqueror — 60 heavy turbolasers
+       + 60 ion cannons, 6 tractor projectors (ICS; West End says 10), a 72-TIE wing, 20 AT-AT + 30 AT-ST + ~9,700
+       stormtroopers, ~37,085 crew, Class-2 hyperdrive. OVERFLOWS the 20,000 t ship host, so it uses the new mobile
+       DREADNOUGHT tier (60,000 t) — exactly as the Death Star needed the Battle Station tier. MIN/MAXED mass-bound
+       (96% mass, ~11,000 m³ volume stranded): residual → battle line (60→78 turbolasers, each paying its reactor +
+       radiator + berth) + armour. ~8× a Venator's firepower — the canon 60-vs-8 turbolaser ratio. Ground-invasion
+       chain is genuinely LIVE (GroundBayAtb→GroundTransport); TIE-launch, ion-disable, tractor, and turbolaser
+       surface-fire are all flagged PENDING. */
+    counts:{heavyturbo:78,ioncannon:60,pdbattery:12,tractor:6,
+            fighterbay:2,vehiclebay:4,passengerbay:25,shield:14,armour:22,
+            capreactor:3,radiator:60,capacitor:6,warp:1,drive:6,fueltank:4,
+            magazine:2,ammobunker:2,provisions:6,hydroponics:4,cargo:6,
+            quarters:34,lifesupport:20,medbay:6,
+            sensor:4,searchsensor:3,firecontrol:2,targeting:2,ecm:2,bridge:2,flagsuite:1}},
   {id:'deathstar',name:'★ DS-1 Death Star',hero:true,host:'megastructure',
     /* CANON (Wookieepedia): Concave Dish Composite Beam Superlaser · 5,000 heavy turbolasers · 5,000 turbolaser
        batteries · 2,500 ion cannons · 2,500 laser cannons · 768 tractor beams · ~7,000 TIE fighters ·
@@ -567,9 +595,11 @@ var PRESETS=[
 ];
 
 /* ---------- helpers ---------- */
-/* a Battle Station is a superset host — it mounts anything a ship OR a station can, plus its own mega-scale parts */
+/* a Battle Station is a superset host — it mounts anything a ship OR a station can, plus its own mega-scale parts.
+   A Dreadnought is a big warship — it mounts anything a ship OR a station can (no mega-scale-only parts). */
 function hostAccepts(c){
   if(host==='megastructure')return c.hosts.indexOf('megastructure')>=0||c.hosts.indexOf('station')>=0||c.hosts.indexOf('ship')>=0;
+  if(host==='dreadnought')return c.hosts.indexOf('ship')>=0||c.hosts.indexOf('station')>=0;
   return c.hosts.indexOf(host)>=0;
 }
 function actives(){return CAT.filter(function(c){return counts[c.id]>0 && hostAccepts(c);});}
@@ -706,12 +736,12 @@ function compute(){
     }
   });
   firepower*=caliber*fcMult; // caliber module (UnitCaliberAtb) × fire-control tracking (BeamFireControlAtb), both LIVE
-  var baseHP={ship:120,ground:80,station:400,megastructure:40000}[host];
+  var baseHP={ship:120,ground:80,station:400,dreadnought:120,megastructure:40000}[host];
   var totalHP=baseHP+hp;
   var toughness=(totalHP + armourThick*(host==='station'?4:2))*0.1; // MJ-ish
   var accel=mass>0?thrust/mass:0; // kN/t = m/s^2
   var evasion;
-  if(host==='ship'){evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
+  if(host==='ship'||host==='dreadnought'){evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
   else if(host==='ground'){evasion=speedFactor>0?clamp(0.22+0.20,0,0.95):0.22;}
   else {evasion=0;}
   evasion=clamp(evasion+ecmBonus,0,0.95); // ECM jams enemy targeting → fewer shots land (a hit-avoidance term, not dodging)
@@ -854,7 +884,7 @@ function renderGauges(S){
   var nt=document.getElementById('totalsNote');
   var bits=[];
   bits.push('Role: <b>'+(S.roleWeight>=1?'armed (weight 1.0)':'utility (weight 0.25)')+'</b>');
-  if(host==='ship')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
+  if(host==='ship'||host==='dreadnought')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
   if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
   if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
   if(S.caliber>1||S.fcMult>1)bits.push('<b style="color:var(--ac2)">Firepower ×'+(S.caliber*S.fcMult).toFixed(2)+'</b> (targeting + fire-control, LIVE)');
@@ -910,7 +940,7 @@ function renderEndurance(S){
   }
   // MANEUVER FUEL — a Δv reserve you spend in bursts, then coast (NOT the deployment clock)
   var fV,fS,fC='';
-  if(host!=='ship'){fV='—';fS=(host==='ground'?'ground units march, not burn':'immobile — holds station');fC=' muted';}
+  if(host!=='ship'&&host!=='dreadnought'){fV='—';fS=(host==='ground'?'ground units march, not burn':'immobile — holds station');fC=' muted';}
   else if(S.fuelStore<=0){fV=S.accel>0?'0 h':'—';fS=S.accel>0?'a drive with no fuel tank':'no drive';fC=S.accel>0?' warnb':' muted';}
   else {fV=fmt(S.fuelHrs,0)+' h';fS='full-burn reserve · Δv '+fmt(S.deltaV,1)+' km/s — spent in bursts, coast between';}
   // ammo
@@ -925,7 +955,7 @@ function renderEndurance(S){
   else {hV=fmt(S.heatBalance,0)+' MW';hS='over-heats → throttles fire';hC=' warnb';}
   el.innerHTML=g('Deployment',dV,dS,dC)+g('Maneuver fuel',fV,fS,fC)+g('Ammo',aV,aS,aC)+g('Heat margin',hV,hS,hC);
   var w=[];
-  if(host==='ship'&&S.accel>0&&S.fuelStore<=0)w.push('a drive with no fuel — it can’t maneuver');
+  if((host==='ship'||host==='dreadnought')&&S.accel>0&&S.fuelStore<=0)w.push('a drive with no fuel — it can’t maneuver');
   if(S.crew>0&&!S.selfSufficient&&S.provisions<=0)w.push('crew aboard with no food — add provisions or hydroponics');
   if(S.hasAmmoWeapon&&S.ammoMin<=0)w.push('ammo weapons with no magazine — they fire dry');
   if(S.heatBalance<0)w.push('energy guns out-heat the radiators — sustained fire throttles');
@@ -950,7 +980,7 @@ function renderWeapons(S){
       return '<div class="'+cls+'"><span class="state">'+tag+'</span><i>'+label+'</i><b>'+val+'</b></div>';
     }
     var groundOnly = (host==='ground')?'live':'inert';
-    var pdState = w.pd || w.delivery==='Guided' ? (host==='ship'?'shiponly':'inert') : null;
+    var pdState = w.pd || w.delivery==='Guided' ? ((host==='ship'||host==='dreadnought')?'shiponly':'inert') : null;
     var g='';
     var powered=(w.nature==='Energy'||w.nature==='Exotic');
     g+=fld('damage/s',fmt(w.dps*n,1)+' MJ/s','live');

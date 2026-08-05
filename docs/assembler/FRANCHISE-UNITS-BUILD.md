@@ -1,8 +1,8 @@
-# Seven franchise units, through the Entity Assembler — a reproduction dossier
+# Nine franchise units, through the Entity Assembler — a reproduction dossier
 
-> **What this is.** Two starships and five ground units from three universes (Star Wars, Star Trek, Warhammer 40,000), deep-researched to canon and driven through the reproduction pipeline in `docs/assembler/DESIGNER-DRIVER-PLAYBOOK.md` — the same one that built the Venator and the Sovereign. Every capability is graded by **THE LAW: authenticity to limitations** — traced to a real engine reader (LIVE), or flagged where the fantasy outruns the simulation (PENDING/DEAD). The interactive dossier is the published **Entity Assembler dossier** artifact; this doc is the durable record + the deferred backlog.
+> **What this is.** Two starships, five ground units, and two capital ships from three universes (Star Wars, Star Trek, Warhammer 40,000), deep-researched to canon and driven through the reproduction pipeline in `docs/assembler/DESIGNER-DRIVER-PLAYBOOK.md` — the same one that built the Venator and the Sovereign. Every capability is graded by **THE LAW: authenticity to limitations** — traced to a real engine reader (LIVE), or flagged where the fantasy outruns the simulation (PENDING/DEAD). The interactive dossier is the published **Entity Assembler dossier** artifact; this doc is the durable record + the deferred backlog.
 
-**Research:** 7 parallel agents, 1.19M tokens, canon cross-checked against wookieepedia / memory-alpha / lexicanum and engine source at file:line.
+**Research:** 7 agents for the first seven; a research→adversarial-verify pipeline for the two capitals (canon re-checked by hand when the live fetch failed). The two capitals add the **min/max pass** — every gate closed arithmetically against the live catalog via a build harness, then the residual filled to the wall.
 
 
 ## The slate
@@ -16,8 +16,10 @@
 | **Tyranid Carnifex** | Warhammer 40,000 | ground | heavy bio-monster — a walking super-heavy |
 | **Republic Clone Trooper (Phase II) — Grand Army of the Republic line infantry** | Star Wars (Clone Wars / Legends + canon) | ground | sealed, elite-trained line infantry |
 | **AT-TE (All Terrain Tactical Enforcer)** | Star Wars (Clone Wars) | ground | six-legged assault gun-walker + troop transport |
+| **Prometheus-class Starship (USS Prometheus, NX-74913)** | Star Trek | ship | advanced tactical prototype — a glass cannon, min/maxed for firepower-density |
+| **Imperial I-class Star Destroyer** | Star Wars | dreadnought | the do-everything conqueror — a mobile Dreadnought filled to 96% mass |
 
-**Tally across all 7:** **87** capabilities LIVE (incl. gated / host-split / emergent / read-elsewhere) · **19** PENDING (each names the missing wire) · **3** DEAD.
+**Tally across all 9:** **99** capabilities LIVE (incl. gated / host-split / emergent / read-elsewhere) · **26** PENDING (each names the missing wire) · **3** DEAD.
 
 
 ---
@@ -563,6 +565,168 @@
 - READ/flavour — no shields (canon-correct: the AT-TE relied on armour). No GroundAugmentAtb shield mounted, so Shield = 0 — faithfully a pure-armour tank, not a shield-tank.
 
 **Sources:** Wookieepedia — All Terrain Tactical Enforcer (length 12.4 m; crew 1 pilot + 1 co-pilot/spotter + 1 commander + up to 5 gunners; up to 20 troops; 1 top mass-driver cannon + 6 laser cannons; two armoured halves + concertina section; six articulated legs) · Wookieepedia — Mass-driver cannon (Firefont/Tup-2b; fires sonic charges, heat-seeking missiles, or armour-penetrating solid shots; slow rate of fire, poor accuracy) · Clone Wiki / Clone Army Wiki — AT-TE (4 front + 2 rear laser cannons for anti-personnel/anti-light-vehicle; troop complement up to ~38 in some sources) · Star Wars RPG (FFG) Wiki / SWRPGGM — AT-TE walker (all-terrain, sheer-surface climbing; ~60 km/h speed, Legends) · Pulsar4X engine source: GroundUnitAssembly.cs, GroundChassisAtb/GroundArmorAtb/GroundLocomotionAtb/GroundMagazineAtb/GroundSealAtb, SpaceWeaponGround.cs, WeaponSupply.cs, GroundTransport.cs; installations.json (walker-frame); docs/assembler/06-OUTPUTS-BY-DOOR.md + 01-IO-chassis.md (LIVE/PENDING reader ledger)
+
+---
+
+## Prometheus-class Starship (USS Prometheus, NX-74913)
+
+*Star Trek · ship host.* A late-24th-century advanced TACTICAL prototype built to fight outnumbered: small, heavily-automated, and armed far above its size. Role stack — ① out-hit anything its size (firepower density) → ② soak with regenerative shields + ablative armour → ③ split into three to attack in 3D (MVAM) → ④ run on a skeleton crew. It trades a capital's size and crew redundancy for the highest firepower-per-tonne in the set.
+
+**Canon —** **Physical:** Length ~415 m; 15 decks (Memory Beta). Mass is NOT canon — any tonnage here is an assembler-budget abstraction. Source dispute: length ~400–416 m across sources; 415 m best-supported. **Defense:** Regenerative shields (recharge mid-fight) + ABLATIVE hull armour — it tanks disproportionate fire on screen. No reliance on evasion; it out-lasts by shields + plating, not dodging. **Mobility:** Warp 9.9 (very fast). Three warp cores / three impulse sections feed MVAM. Agile for its size but its identity is firepower, not evasion. **Crew/control:** Designed for a MINIMAL, heavily-AUTOMATED crew — on screen the EMH Mark II ran it near-autonomously. Memory Beta lists ~171 as a secondary upper bound; the design intent is a skeleton complement.
+
+**★ Signature that must be expressed:** MULTI-VECTOR ASSAULT MODE (MVAM): the hull separates into THREE independently warp-capable, independently-armed sections (Alpha/Beta/Gamma), attacks in coordinated 3D, then recombines. Three warships in one — the defining capability that MUST be expressed.
+
+**Armament (canon):**
+- ~16 Type-XII phaser arrays (Type-XII is a generation above the Galaxy's Type-X) — secondary/technical figure, disputed 12–16, not screen-confirmed
+- Photon torpedo launchers (several; exact count not firmly canon)
+- Quantum torpedo launchers (advanced warhead)
+- Regenerative shields (canon, screen-shown)
+- Ablative hull armour (canon, screen-shown)
+
+**Chassis / host:** Stock ~20,000 t / 14,000 m³ ship host. The min/maxed build sits at 69% mass / 43% volume — deliberately sub-capital in absolute size (a 415 m ship), maxed on density.
+
+**Build — capability → component → count → door:**
+
+| Capability | Component | Count | Door |
+|---|---|---|---|
+| Type-XII phaser arrays (main battery) | Medium Turbolaser (energy beam) — 'Type-XII phaser array' | 28 | Weapons |
+| Secondary phaser strips | Laser Cannon (light energy) | 8 | Weapons |
+| Photon + quantum torpedoes | Missile Launcher (guided) | 8 | Weapons |
+| Point defense | Point-Defense Battery | 6 | Weapons |
+| Regenerative shields (the defense signature) | Shield Generator | 26 | Defense |
+| Ablative hull armour | Composite Armour Plating | 14 | Defense |
+| Reactor power | Capital Reactor | 1 | Power |
+| Heat rejection | Radiator Bank | 12 | Power |
+| Warp departure buffer | Capacitor Bank | 2 | Power |
+| Warp 9.9 + sublight | Warp Drive + Ion Drive | 1 + 4 | Propulsion |
+| Torpedo feed | Magazine | 3 | Logistical |
+| Skeleton-crew sustainment | Quarters + Life Support + Medbay + Provisions | 5 + 3 + 1 + 3 | Civic |
+| See-first sensors + fire control + ECM | Sensor + Long-Range + Fire-Control + Targeting + ECM + Bridge | 2+2+1+1+1+1 | Sensors/Command |
+
+**Gates closed:**
+- **mass ≤ budget:** 13,855 / 20,000 t (69.3%) — binding; room left is host-scale slack, not ship slack
+- **volume ≤ cap:** 5,988 / 14,000 m³ (42.8%)
+- **power ≥ draw:** draw 133 MW / supply 800 MW — one capital reactor, huge headroom
+- **heat ≥ 0:** dissip 480 − gen 328 = +152 MW margin
+- **berths ≥ crew:** 750 berths / 617 crew
+- **life ≥ crew:** 750 / 617
+- **detect ≥ weapon:** 470 km detect / 400 km longest weapon (torpedo)
+- **warp battery ≥ jump:** 1.50 MJ stored / 1.25 MJ needed
+
+**Host scale:** Fits the stock ~20,000 t ship host (the Venator/Sovereign tier) easily — at ~415 m it is SMALLER than the 685 m Sovereign, so the canon baseline fills only ~39% of the host. Consequence for the min/max: a compact frigate in a capital-sized host, so the honest fill maxes firepower DENSITY (metric-per-tonne), not absolute size — pushing it to the host cap would misrepresent its canon scale.
+
+
+**Emergent (what the assembler computes):** Firepower 126.8 MJ/s · Toughness 349 · Shield 130 MJ (regen +2.6 MJ/s) · Evasion 16%. Against the min/maxed Sovereign (~84 MJ/s in a 685 m hull), the Prometheus delivers MORE absolute firepower at ~two-thirds the mass — the highest firepower-per-tonne of the Trek builds, which is exactly the canon 'a small ship that out-fights bigger ones.' Its deep regenerative shield (130 MJ, +2.6 MJ/s) is its survivability, not evasion (16%).
+
+
+**Min/max — filling the empty space:** binding = *MASS (69.3% used vs 42.8% volume). The residual is host-scale slack — a 415 m frigate in a 20,000 t capital host — so the fill maxes DENSITY, not size.*; metric = Firepower throughput (a glass-cannon tactical striker), with the regenerative shield pool as the secondary sink.. Residual poured in: +16 Type-XII phaser arrays (medturbo 12→28) — in-family density fill, each paying its radiator (heat) + berth (crew); +4 laser strips (4→8); +14 shield generators (12→26) — deepen the regenerative pool (its defense signature); +2 torpedo tubes (6→8) + a magazine; +7 radiators to hold heat margin ≥ 0 (the wall) + berths for the added gun crews. **Result: Firepower 55.7 → 126.8 MJ/s (2.3×) · Shield 60 → 130 MJ · Toughness 201 → 349 — all while staying at 69% mass (deliberately sub-Sovereign size).** (All 8 gates green: reactor 800 MW ≫ draw 133; heat +152 MW margin; berths 750 ≥ crew 617; warp buffer 1.5 ≥ 1.25 MJ. Stopped at the density ceiling, not the host cap — pushing to 20,000 t would make a 415 m ship as massive as a 685 m Sovereign.)
+
+**Honesty ledger:**
+
+| | Capability | Reader (LIVE) or missing wire (PENDING) |
+|---|---|---|
+| ✅ `LIVE` | Type-XII phaser firepower + torpedoes | Σ weapon dps → ShipCombatValueDB.cs:524 → CombatKernel.cs:228 (energy beams + guided). Firepower ×1.4 from targeting(1.25)+fire-control(1.12), both LIVE-gated. |
+| ✅ `LIVE` | Regenerative shields (deep pool + regen) | ShieldCapacity_J + regen → CombatKernel.ResolveShield (drain then regen per salvo). The 'regenerative' name is exactly the engine's regen field — a rare on-the-nose match. |
+| ✅ `LIVE` | Ablative hull armour | Armour thickness folds into the ship Toughness pool — ShipCombatValueDB.cs:297,519. |
+| ✅ `LIVE` | Warp 9.9 + sublight + warp buffer | Warp create/sustain (WarpMoveCommand.cs:266) gated on stored energy ≥ jump cost (capacitors). |
+| ✅ `LIVE` | See-first detection | Sensor detection range → the contact/fog model; opens past its own torpedoes. |
+| 🟠 `PENDING` | Torpedo damage in the AUTO-RESOLVE total | The auto-resolver stubs guided damage at a flat 0.1 MJ/s (the Sovereign/Miranda caveat) — the photon/quantum punch is under-counted in strength-math battles; it lands in the live tactical sim (MissileImpactProcessor). |
+| 🟠 `PENDING` | Minimal / EMH-automated crew | No ship crew-automation dial in the assembler — the build berths the gun/reactor crews (617) the gates count; the canon 'runs on the EMH' automation has no wire. (The engine has CrewAutomationAtb ship-side, not exposed in the assembler.) |
+| 🟠 `PENDING` | MULTI-VECTOR ASSAULT MODE (the signature) | NO wire — the engine is one-host-per-ship; a hull cannot split into three independently-warp-capable, independently-fighting sub-entities mid-combat and recombine. This is the defining trait and it is the least-expressible thing on the ship. Missing wire: a ship-fission model (spawn N sub-hulls sharing the parent's parts, each an independent combatant, re-merge). |
+
+**Authenticity notes:**
+- FAITHFUL — the glass-cannon identity is the MIN/MAX itself: a small hull maxed for firepower-per-tonne reaches Sovereign-class absolute output at two-thirds the mass. That IS 'a Prometheus out-fights bigger ships.'
+- FAITHFUL — 'regenerative shields' maps to the engine's literal shield regen field, and ablative armour to the Toughness pool; both LIVE. Its survivability is shields+plating, not dodging (evasion 16%), exactly as on screen.
+- PENDING — MVAM cannot be expressed: the one-host-per-ship engine has no ship-fission model. Marked PENDING, named the missing wire. The defining trait is the least-wired thing on the ship — the honest headline.
+- PENDING — the minimal EMH-run crew: the assembler has no ship crew-automation dial, so the build berths the gun crews the gates count; the canon skeleton-crew automation is flagged, not faked.
+- CANON DISPUTE flagged: ~16 phaser arrays is a technical-manual figure (12–16, not screen-confirmed); torpedo counts and crew (~171) are secondary; mass is not canon at all. Length ~415 m is best-supported. VERIFIED against Memory-Alpha/Beta knowledge (the workflow's live fetch failed this run; canon re-checked by hand).
+- MODEL CAVEAT — per-part masses/damage/heat are the assembler's tuning (to make the gates behave), computed against the LIVE catalog via the build harness; the phaser/torpedo COUNTS are the canon shape, up-gunned transparently in the min/max.
+
+**Sources:** Memory Alpha — Prometheus class · USS Prometheus (NX-74913); VOY 'Message in a Bottle' (2374) · Memory Beta — Prometheus-class recognition data (~415 m, 15 decks, secondary armament/crew figures) · Ex Astris Scientia — Prometheus-class / MVAM analysis · Canon re-verified by hand (the workflow's live fetch failed this run — see flags); numbers computed against docs/assembler/entityassembler.html via the build harness
+
+---
+
+## Imperial I-class Star Destroyer
+
+*Star Wars · dreadnought host.* A 1,600 m Imperial wedge capital built as a do-everything conqueror: a line battleship (60 heavy turbolasers + 60 ion cannons), a full fighter wing (72 TIEs), an invasion army (20 AT-ATs, 30 AT-STs, ~9,700 stormtroopers, a prefab garrison), and an orbital-bombardment platform — all in one hull. It wins by needing no support fleet to take a system; it sacrifices per-role peak (a dedicated carrier out-carries it, a dedicated battleship out-guns it) for the fact that neither can do all four jobs alone.
+
+**Canon —** **Physical:** 1,600 m long (firm across canon + Legends — the single most consistent ISD figure); beam ~900 m, height ~375 m. Deck count not fixed. MASS is NOT canonically stated by any primary source — scaled estimates run to tens of millions of tonnes, i.e. far beyond the ~20,000 t ship budget, which is why it needs a bigger host tier. **Defense:** Heavy durasteel armour + deflector shields (bow shields especially strong). A brawler that tanks, not dodges — evasion ~0 for a 1,600 m capital. **Mobility:** Solar-ionization reactor; Class-2 hyperdrive (Class-8 backup); sublight ion drives. Not agile — a slow, inexorable wedge. **Crew/control:** ~37,085 officers and enlisted (incl. ~275 gunners) + a ~9,700 stormtrooper ground contingent. Total complement ~46,785 souls.
+
+**★ Signature that must be expressed:** THE SIGNATURE: the do-everything capital — one ISD combines battle line + carrier + army + garrison + bombardment and can conquer a planet with no support fleet. No separation gimmick (that's Trek's Prometheus); the ISD's signature is monolithic multi-role self-sufficiency.
+
+**Armament (canon):**
+- Taim & Bak XX-9 heavy turbolasers ×60 (well-supported: ICS + West End + Wookieepedia)
+- Borstel NK-7 ion cannons ×60 (well-supported)
+- Phylon Q7 tractor beam projectors ×6 (DK Incredible Cross-Sections / Wookieepedia) — DISPUTED: West End Games lists 10
+- Lighter turbolaser / laser point-defense batteries (mentioned for anti-fighter work; not consistently counted)
+
+**Chassis / host:** NEW mobile DREADNOUGHT host — 60,000 t / 44,000 m³ / crew-ref 40,000. A big warship (dodges ~0 at this size, FTL-capable), inheriting every ship- and station-scale part. Added to the assembler for this build.
+
+**Build — capability → component → count → door:**
+
+| Capability | Component | Count | Door |
+|---|---|---|---|
+| Heavy turbolaser battle line | Heavy Turbolaser Battery | 78 | Weapons |
+| Ion cannon battery | Ion Cannon | 60 | Weapons |
+| Anti-fighter point defense | Point-Defense Battery | 12 | Weapons |
+| Tractor projectors | Tractor Beam Projector | 6 | Utility |
+| 72-TIE fighter wing | Flight Deck — StrikeCraft bay | 2 | Bay |
+| AT-AT / AT-ST invasion force | Troop & Vehicle Bay | 4 | Bay |
+| ~9,700 stormtroopers + garrison | Passenger Berths | 25 | Bay |
+| Deflector shields | Shield Generator | 14 | Defense |
+| Heavy armour | Composite Armour Plating | 22 | Defense |
+| Reactor power | Capital Reactor | 3 | Power |
+| Heat rejection | Radiator Bank | 60 | Power |
+| Hyperdrive + jump buffer | Warp Drive + Capacitor ×6 | 1 + 6 | Propulsion/Power |
+| Sublight + fuel | Ion Drive ×6 + Fuel Tank ×4 | 6 + 4 | Propulsion |
+| Ammunition + stores + endurance | Magazine·2 + Ammo Bunker·2 + Cargo·6 + Provisions·6 + Hydroponics·4 | — | Logistical |
+| Crew city (37,085) + command | Quarters·34 + Life Support·20 + Medbay·6 + Bridge·2 + Flag Suite·1 | — | Civic/Command |
+| Detection + fire control + ECM | Sensor·4 + Long-Range·3 + Fire-Control·2 + Targeting·2 + ECM·2 | — | Sensors |
+
+**Gates closed:**
+- **mass ≤ budget:** 57,684 / 60,000 t (96.1%) — filled to the wall; BINDING
+- **volume ≤ cap:** 32,766 / 44,000 m³ (74.5%) — ~11,000 m³ stranded (the roomy budget)
+- **power ≥ draw:** draw 1,068 MW / supply 2,400 MW (3 capital reactors)
+- **heat ≥ 0:** dissip 2,400 − gen 2,040 = +360 MW margin (60 radiators — the ISD's real cost)
+- **berths ≥ crew:** 5,100 berths / 3,420 assembler crew
+- **life ≥ crew:** 5,000 / 3,420
+- **detect ≥ weapon:** 490 km detect / 220 km longest weapon
+- **warp battery ≥ jump:** 4.50 MJ stored / 1.25 MJ needed
+
+**Host scale:** OVERFLOWS the stock ~20,000 t ship host (the Venator/Sovereign tier). The Venator is 1,137 m and fills that host; the ISD is 1,600 m (~1.4× longer, ~2.8× hull volume) AND carries a strictly larger stack — a Venator-class fighter wing PLUS a full ground army PLUS a heavier gun line. So — exactly as the Death Star needed a new Battle Station host — this build ADDS a mobile DREADNOUGHT / super-capital tier between the ship and the megastructure: 60,000 t / 44,000 m³ (≈3× the ship host), sized so the four roles seat without cannibalizing each other. Verified: it closes at 96% mass on that budget.
+
+
+**Emergent (what the assembler computes):** Firepower 1,130.6 MJ/s · Toughness 968 · Shield 70 MJ · Evasion 13% · 140-fighter deck (72-TIE wing) · 64 vehicles · 10,000 troops · deploy ~9 days. Against the min/maxed Venator (143 MJ/s), the ISD delivers ~8× the firepower (canon: 60 heavy turbolasers vs the Venator's 8 — the ratio is right) and out-armours it, while matching its carrier + army role-count. It is the highest-firepower MOBILE ship in the set (below only the Death Star megastructure). The whole point: no single-role peak, but no peer at doing ALL of it alone.
+
+
+**Min/max — filling the empty space:** binding = *MASS (96.1% used vs 74.5% volume) — the real compute corrects the research guess of volume-bound. The ~11,000 m³ of volume is STRANDED: you literally cannot spend it once mass caps.*; metric = FIREPOWER (heavy-energy tube count) — the battle-line half of the do-everything identity, with toughness as the secondary sink once the roles are seated.. Residual poured in: +18 heavy turbolasers (60→78) — each paying its FORCED costs: +8 MW draw (→ +1 capital reactor), +20 MW heat (→ +radiators), +22 gun-crew (→ +berths); +12 armour (10→22) — the best firepower-neutral use of the last stranded mass: dense, near-zero volume, pure toughness; +6 shields (8→14) — deeper deflectors; +15 radiators (45→60) to hold heat margin ≥ 0 (the wall) · +1 capital reactor · +berths for the added gun crews. **Result: Firepower 929 → 1,130.6 MJ/s (+22%) · Toughness 750 → 968 (+29%) · Shield 40 → 70 MJ. Mass 80.5% → 96.1% (filled to the wall); ~11,000 m³ volume left stranded — the textbook min/max shape (optimise the scarce budget, ignore the roomy one).** (All 8 gates green after the fill: reactor 2,400 MW ≥ draw 1,068; radiators 60 hold +360 MW heat margin with 78 turbolasers + 60 ion + 12 PD firing; berths 5,100 ≥ crew 3,420; warp buffer 4.5 ≥ 1.25 MJ. Stopped at 96.1% mass — the next turbolaser train (gun + reactor + radiator + berth) trips the mass cap.)
+
+**Honesty ledger:**
+
+| | Capability | Reader (LIVE) or missing wire (PENDING) |
+|---|---|---|
+| ✅ `LIVE` | Heavy turbolaser firepower | Σ weapon dps → ShipCombatValueDB.Calculate → AutoResolve (Combat CLAUDE.md); design-time draw≤supply gate. |
+| 🟠 `PENDING` | Ion cannon (disable-not-destroy) | Raw firepower counts (LIVE), but no wire distinguishes an ion 'disable' from a turbolaser kill — the signature ion effect has no dedicated reader. |
+| ✅ `LIVE` | Deflector shields + heavy armour | Shield pool → CombatKernel.ResolveShield; armour → Toughness (DamageComplex path). |
+| 🟦 `LIVE-gated` | Reactor / heat / crew / warp gates | All four design-time gates close arithmetically against the live catalog (draw≤supply, heat≥0, berths≥crew, warp battery≥jump) — computed via the build harness. |
+| ✅ `LIVE` | Long-range detection | Sensor engine + contact model (Sensors CLAUDE.md) — rigorous and read; opens past its guns. |
+| ✅ `LIVE` | AT-AT / AT-ST / stormtrooper invasion (land the army) | Vehicle + Personnel carry-class → GroundBayAtb → GroundTransport — the invasion chain the game actually runs. The ground-campaign half is the ISD's most-wired role. |
+| 🟦 `host-split` | Orbital bombardment (Base Delta Zero) | The guided path CAN hit a surface (DamageProcessor.OnColonyDamage, gotcha #8), so missile bombardment is wired; routing the TURBOLASER gun line to surface fire is not (EMERGENT/PENDING). |
+| 🟠 `PENDING` | 72-TIE fighter wing (carrier ops) | The deck STORES the wing but nothing launches it — no fighter launch/recovery or small-craft combat wire (the Venator's exact gap). |
+| 🟠 `PENDING` | Tractor beam (pull / capture / hold) | tractor is in the part enum but has no combat/movement reader — nothing pulls or holds a target. |
+| ⬜ `READ` | Sector-flagship command | Flag/admin suite is read (AdminSpaceAtb/AdministratorDB) but the active command-behaviour arm is gated off by default. |
+| 🟠 `PENDING` | DO-EVERYTHING SIGNATURE (solo planetary conquest) | No single wire expresses 'this one hull takes a planet unaided.' It is an emergent composition needing carrier ops + surface-fire bombardment BOTH live — and both are pending — on top of the (live) ground landing. The signature is the least-wired thing on the ship. |
+
+**Authenticity notes:**
+- FAITHFUL — the do-everything capital is expressed as four SEATED roles at once: 78-turbolaser battle line, 72-TIE deck, 64-vehicle + 10,000-troop army, bombardment path — and the ground-invasion half is genuinely LIVE (GroundBayAtb→GroundTransport). No other ship in the set carries all four.
+- FAITHFUL — needed a new host tier, exactly like the Death Star: a 1,600 m capital does not fit the 20,000 t ship budget, so a mobile 60,000 t Dreadnought tier was added. It closes at 96% mass, verified against the live catalog.
+- FAITHFUL (min/max) — mass-bound, so the residual went to the density king (heavy turbolasers) + armour (dense, volume-free), paying every forced cost; heat is the ISD's true price (60 radiators). Firepower 929→1,131, ~8× a Venator — the canon 60-vs-8 turbolaser ratio.
+- PENDING — the SIGNATURE is the least-wired thing: 'solo planetary conquest' needs carrier launch (pending) + surface turbolaser-fire (pending) on top of the live ground landing. Two of the three legs of the do-everything identity are engine-pending — flagged, not sold.
+- PENDING — ion 'disable', tractor 'capture', and TIE 'launch' all echo gaps the Venator/Death Star builds flagged: firepower counts, but the distinctive non-damage effects have no readers.
+- CANON DISPUTE flagged: tractor projectors 6 (ICS) vs 10 (West End); mass not canon at all; lighter PD-battery + torpedo counts interpretive. 1,600 m / 37,085 crew / 72 TIE / 20 AT-AT / 30 AT-ST / ~9,700 troops are well-established Legends figures (Disney echoes them). VERIFIED by hand (the workflow's live fetch failed this run).
+- MODEL CAVEAT — every gate is closed ARITHMETICALLY against the live catalog via the build harness (not reasoned) — the research agent could not read the file this run, so these numbers are the corrected, computed ones.
+
+**Sources:** Wookieepedia — Imperial I-class Star Destroyer (1,600 m; crew 37,085; 72 TIE / 20 AT-AT / 30 AT-ST / ~9,700 troops) · Star Wars: Incredible Cross-Sections (DK) — 60 heavy turbolasers, 60 ion cannons, 6 tractor projectors · West End Games — Imperial Sourcebook (60/60/10 — the tractor-count dispute) · Star Wars: The Essential Guide to Vehicles and Vessels — role/complement · Canon re-verified by hand (the workflow's live fetch failed this run — see flags); every gate computed against docs/assembler/entityassembler.html via the build harness
 
 
 ---
