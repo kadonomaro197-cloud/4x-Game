@@ -147,6 +147,21 @@ td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 .badge.gap{background:color-mix(in srgb,var(--gap) 20%,transparent);color:var(--gap);border:1px solid var(--gap)}
 .badge.live{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok);border:1px solid var(--ok)}
 .badge.plan{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);border:1px solid var(--accent)}
+.envbox{border:1px solid var(--edge2);border-radius:10px;padding:11px 13px;margin-top:12px;background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.envbox .eh{font-size:13px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.envbox .eg{font-size:16px}
+.envbox .eb{font-size:11.5px;color:var(--ink2);margin:5px 0 8px;line-height:1.5}
+.envbox .efx{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.efx .chip{font-size:10.5px;font-family:var(--mono);padding:2px 7px;border-radius:6px;border:1px solid var(--edge);color:var(--ink2);white-space:nowrap}
+.efx .chip.up{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,var(--edge))}
+.efx .chip.dn{color:var(--bug);border-color:color-mix(in srgb,var(--bug) 55%,var(--edge))}
+.envbox .reads{display:flex;flex-direction:column;gap:3px}
+.envbox .rd{font-size:11px;color:var(--ink2);display:flex;gap:7px;align-items:baseline}
+.emk{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;padding:1px 5px;border-radius:4px;flex:none;min-width:46px;text-align:center}
+.emk.LIVE{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok);border:1px solid var(--ok)}
+.emk.DATA{background:color-mix(in srgb,var(--gap) 18%,transparent);color:var(--gap);border:1px solid var(--gap)}
+.emk.THEORY{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border:1px solid var(--accent)}
+.envbox .theater{font-size:9.5px;font-weight:700;letter-spacing:.6px;padding:1.5px 6px;border-radius:5px;border:1px solid var(--edge);color:var(--muted)}
 .hitem{border:1px solid var(--edge2);border-radius:9px;padding:10px 11px;margin-bottom:9px}
 .hitem .ht{font-size:12.5px;font-weight:600;margin:5px 0 4px;display:flex;gap:8px;align-items:center}
 .hitem p{margin:3px 0 0;font-size:12px;color:var(--ink2)}
@@ -178,6 +193,9 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
   <div class="controls">
     <label class="inl">Scenario
       <select id="scenario"></select>
+    </label>
+    <label class="inl">Environment
+      <select id="envsel"></select>
     </label>
     <label class="inl A">A doctrine
       <select id="stanceA"><option value="close">Close in</option><option value="standoff">Stand off</option><option value="hold">Hold</option><option value="withdraw">Withdraw</option></select>
@@ -242,6 +260,7 @@ details.foot summary{cursor:pointer;color:var(--ink2);font-size:12px}
         <span>shaded bar = a side's weapon reach toward the enemy</span>
       </div>
       <p class="note" id="modeNote" style="margin-top:12px"></p>
+      <div id="envReadout" class="envbox"></div>
     </div>
   </section>
 
@@ -597,12 +616,17 @@ function buildShip(typeKey, name){
   const firepower = weapons.reduce((s,w)=>s+w.dps,0);          // = Σ weapon dps (ShipCombatValueDB.cs:524 × caliber :529)
   // Point-defense rating: each PD battery feeds the missile-intercept screen (was hardcoded 0 → PD never fired).
   const pd = (t.pd||0) + (t.loadout.pdbattery||0)*PD.PdPerBattery_MJps;
+  // ENVIRONMENT — shield cap/regen are scaled by the active environment at build (env is fixed per run; a change
+  // rebuilds). An ion storm/corona kills regen; a benign field leaves it at ×1. (Damage/evasion/range/PD/closing/DoT
+  // are read LIVE in the step, below.)
+  const _E = activeEnv().m;
+  const shieldCap = t.shieldCap*_E.shCap, shieldRegen = t.shieldRegen*_E.shReg;
   return {name, type:typeKey, label:t.label, alive:true,
     firepower, firepowerMax:firepower, toughness:t.toughness, evasion:t.evasion, speed:t.speed,
     hull:t.toughness, hullMax:t.toughness,                      // per-ship hull (degrade model) — full = toughness
-    shield:t.shieldCap, shieldMax:t.shieldCap,                  // per-ship shield pool (degrade model)
+    shield:shieldCap, shieldMax:shieldCap,                      // per-ship shield pool (degrade model) — env-scaled
     roleWeight: firepower>0?1.0:SCV.UtilityRoleWeight,          // ShipCombatValueDB RoleWeight
-    shieldCap:t.shieldCap, shieldRegen:t.shieldRegen, pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
+    shieldCap, shieldRegen, pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
     // carry-class (CARRIER-DESIGN §13a): what a chassis IS, for the deployable/bay match. null = an ordinary hull.
     carryClass:t.carryClass||null, bay:t.bay||null,
     // carrier hangar (StrikeCraft bay): wing pool aboard + sortie tempo (CARRIER-DESIGN §5/§6)
@@ -646,6 +670,190 @@ const SCENARIOS = {
       {side:"B", name:"Interceptors", ships:[["acclamator","Acclamator I"],["acclamator","Acclamator II"]]},
     ]},
 };
+
+/* ==================================================================
+   ENVIRONMENT / CONDITIONS — the battle's SURROUNDINGS as a struct of
+   multipliers on the shared kernel. Grounded 2026-08-05 in a 5-agent source
+   survey (env_notes / ENVIRONMENT-CONDITIONS-DESIGN.md). THE MODEL: the engine
+   already speaks HazardEffectType (Hazards/HazardEffect.cs:16-43) — SensorJam →
+   detection/range, MovementDrag → closing, the six damage kinds → armour-
+   resisted DoT, Vacuum/ToxicAtmosphere → ground attrition; terrain →
+   cover→evasion. An environment is just a NAMED BUNDLE of those, and it feeds
+   the SAME resolve a clean fight does. Space combat reads NONE of this today
+   (CombatEngagement is environment-blind); ground combat already reads terrain
+   + the per-region hazard list. Each effect below is graded against a real
+   engine reader:
+     LIVE   — the engine already applies this exact effect at file:line.
+     DATA   — the data/authoring path exists; the RESOLVER just doesn't read it yet.
+     THEORY — a creative extrapolation with no engine data behind it (flagged, not faked).
+   Fields (all multipliers ×, default 1; eva is ADDITIVE cover, default 0):
+     range  arena open-gap / detection (SensorJam)      eva    +cover to evasion (terrain/clutter/blind)
+     dmgK/E/X/O  damage × by nature (K,E,X,O)            guidedR guided/missile REACH × (atmo, gravity, EM)
+     shCap/shReg shield capacity × / regen ×            pd     point-defence intercept ×
+     closing closing speed × (MovementDrag)             dotKind/dotJps ambient hull DoT (armour-resisted; J/s)
+   ================================================================== */
+function envM(o){ return Object.assign({range:1,eva:0,dmgK:1,dmgE:1,dmgX:1,dmgO:1,guidedR:1,shCap:1,shReg:1,pd:1,closing:1,dotKind:null,dotJps:0}, o||{}); }
+function natureMul(m,nat){ return nat==="Kinetic"?m.dmgK : nat==="Energy"?m.dmgE : nat==="Explosive"?m.dmgX : nat==="Exotic"?m.dmgO : 1; }
+const ENVIRONMENTS = [
+  // ---------- SPACESIDE ----------
+  {key:"open", theater:"space", glyph:"○", label:"Open space (baseline)",
+   blurb:"The clean vacuum default — the arena as shipped. Every multiplier is 1.0; this is the yardstick every other environment is measured against.",
+   m:envM({}), r:[["LIVE","Baseline — the resolver's only real state today (it reads no environment)"]]},
+  {key:"nebula", theater:"space", glyph:"☁", label:"Nebula / gas cloud",
+   blurb:"Ionized murk. You can't see far, thrust drags, beams scatter, and the gas corrodes hulls over time — so the fight collapses to knife range where short, punchy weapons win.",
+   m:envM({range:0.45, closing:0.6, dmgE:0.82, pd:0.72, eva:0.10, dotKind:"Corrosive", dotJps:50}),
+   r:[["LIVE","range — gas-cloud SensorJam ×0.35 cuts sensor reach (SensorScan.cs:83,114-129)"],
+      ["LIVE","closing — MovementDrag ×0.5 slows free-flying ships (SpaceHazardProcessor.cs:113-122)"],
+      ["LIVE","DoT — Corrosive 50 J/s, armour-resisted (SpaceHazardFactory.cs:59-69)"],
+      ["THEORY","dmgE/pd/eva — ionized-gas beam-scatter + tracking murk (no combat reader)"]]},
+  {key:"corona", theater:"space", glyph:"☀", label:"Stellar corona / sun-skim",
+   blurb:"Fighting in a star's outer fire. Heat saturates radiators so energy weapons choke and shields sag; the searing DoT is proximity-scaled. Bring ammo, not beams.",
+   m:envM({dmgE:0.62, shCap:0.72, shReg:0.5, range:0.75, dotKind:"Heat", dotJps:800}),
+   r:[["LIVE","DoT — StarCorona Heat 800 J/s, ∝1/dist² (SpaceHazardFactory.cs:75-89)"],
+      ["THEORY","dmgE/shield/range — heat-saturation throttle isn't wired to the resolver (heat pool exists, CombatEngagement.cs:711-726, but no env term)"]]},
+  {key:"debris", theater:"space", glyph:"▩", label:"Debris / micrometeoroid field",
+   blurb:"A shooting gallery of tumbling rock. Everyone's harder to hit (dodge in the clutter), movement drags, and grit peppers hulls — a slow, grinding brawl.",
+   m:envM({eva:0.18, closing:0.6, pd:0.8, dotKind:"Kinetic", dotJps:60}),
+   r:[["LIVE","closing — MovementDrag ×0.6 (SpaceHazardFactory.cs:97-105)"],
+      ["LIVE","DoT — Kinetic 60 J/s, armour-resisted (SpaceHazardFactory.cs:97-105)"],
+      ["THEORY","eva/pd — cover-among-rocks + clutter isn't a combat reader"]]},
+  {key:"ionstorm", theater:"space", glyph:"⚡", label:"Ion storm",
+   blurb:"An electromagnetic tempest. Guidance fries — torpedoes lose the plot — and shields won't recharge. Dumb-fire beams and slugs rule; missile boats are dead weight.",
+   m:envM({guidedR:0.5, dmgX:0.6, shReg:0.4, range:0.5, pd:0.72, dotKind:"EM", dotJps:40}),
+   r:[["LIVE","range — Ion-storm SensorJam ×0.4 (SpaceHazardFactory.cs:111-119)"],
+      ["LIVE","DoT — EM 40 J/s (SpaceHazardFactory.cs:111-119)"],
+      ["THEORY","guidedR/dmgX/shReg/pd — EM-degrades-guidance/shield-regen isn't a combat reader"]]},
+  {key:"gravanom", theater:"space", glyph:"◉", label:"Gravimetric anomaly",
+   blurb:"A micro-singularity's tidal stress. Missile courses bend and miss, and — the sting — WarpInhibit slams the exits shut: nobody jumps out. Beams stay true. You fight to a decision.",
+   m:envM({guidedR:0.55, dmgX:0.7, closing:0.82, dotKind:"Gravimetric", dotJps:70}),
+   r:[["LIVE","DoT — Gravimetric 70 J/s, proximity-scaled (SpaceHazardFactory.cs:126-134)"],
+      ["LIVE","no-escape — WarpInhibit ×0.3 blocks the warp exit (WarpMoveProcessor.cs:214-219)"],
+      ["THEORY","guidedR/dmgX — course-bending on guided weapons isn't a combat reader"]]},
+  {key:"flare", theater:"space", glyph:"✷", label:"Solar flare (transient)",
+   blurb:"The star just erupted. Sensors go FULL WHITE — everyone's blind — long-range fire is useless, and a radiation bath cooks unhardened hulls. Chaos; the fight falls to point-blank.",
+   m:envM({range:0.15, eva:0.25, guidedR:0.4, pd:0.4, dotKind:"Radiation", dotJps:500}),
+   r:[["LIVE","range — SolarFlare SensorJam ×0.0 = FULL BLIND (SpaceHazardFactory.cs:140-149; SensorScan.cs:117-120)"],
+      ["LIVE","DoT — Radiation 500 J/s (SpaceHazardFactory.cs:140-149); transient, grows/fades (SolarFlareProcessor 1h)"],
+      ["THEORY","eva/pd — blind-targeting spread isn't a combat reader"]]},
+  {key:"radbelt", theater:"space", glyph:"◍", label:"Radiation belt",
+   blurb:"A trapped-particle belt around a magnetized world. A steady radiation bath and degraded electronics — survivable in hardened hulls, attritional in soft ones.",
+   m:envM({dmgX:0.85, shReg:0.7, dotKind:"Radiation", dotJps:220}),
+   r:[["DATA","Authored via the JSON hazard path (CreateFromEffects, SpaceHazardFactory.cs:22-52) — RadiationDamage + SensorJam; not a built preset"],
+      ["THEORY","dmgX/shReg — electronics-degrade isn't a combat reader"]]},
+  {key:"asteroidbelt", theater:"space", glyph:"⬡", label:"Asteroid belt",
+   blurb:"Threading a belt of tumbling mountains. Superb cover (hide behind rock), poor sightlines, slow going, and a real collision risk — the ambusher's ground.",
+   m:envM({eva:0.22, range:0.7, closing:0.7, dotKind:"Kinetic", dotJps:40}),
+   r:[["DATA","A belt is scattered BodyType.Asteroid bodies (StarSystemExtensions:38) — enumerable, but there is NO belt-region object to test 'am I in it'"],
+      ["THEORY","eva/range/closing/DoT — 'fighting inside the belt' has no engine model (location survey: Failure B)"]]},
+  {key:"orbit", theater:"space", glyph:"◐", label:"Planetary orbit (over a world)",
+   blurb:"Fighting in a planet's shadow. The bulk below blocks one arc (a little cover) and shortens the sightline to the limb — but it opens the prize: orbital bombardment of the surface.",
+   m:envM({eva:0.08, range:0.85}),
+   r:[["LIVE","bombardment — a guided hit CAN strike the surface (DamageProcessor.OnColonyDamage; gotcha #8), so orbit→ground fire is wired"],
+      ["DATA","the resolver can cheaply learn it's in orbit (FindSOIForPosition + BodyType, OrbitProcessor.cs:134) — it just never asks"],
+      ["THEORY","eva/range — planet-limb cover isn't a combat reader"]]},
+  {key:"gasgiant", theater:"space", glyph:"◕", label:"Gas-giant upper atmosphere",
+   blurb:"Skimming the cloud-tops of a gas giant. A thick, screaming medium: projectiles and missiles bleed range fast, drag is brutal, and friction heats the hull. Only close brawls happen here.",
+   m:envM({guidedR:0.4, dmgK:0.7, dmgE:0.85, closing:0.5, eva:0.1, dotKind:"Heat", dotJps:120}),
+   r:[["DATA","BodyType.GasGiant is known (SystemBodyInfoDB.cs:26); gas giants get NO space-hazard today (surface-gate excludes them)"],
+      ["THEORY","the whole 'fight in a gas-giant atmosphere' drag/heat model is extrapolation"]]},
+  {key:"deepspace", theater:"space", glyph:"·", label:"Deep space (interstellar)",
+   blurb:"The cold dark between stars. No stellar glare to wash out your sensors — you see farther and shoot first. Clean, empty, and slightly in the sharp-eyed fleet's favour.",
+   m:envM({range:1.25}),
+   r:[["THEORY","range — 'no stellar background → see farther' is the inverse of an explicit TODO (SensorTools.cs:91 'ships near a sun should be hidden'); not built either way"]]},
+  {key:"jumppoint", theater:"space", glyph:"✧", label:"Jump-point turbulence",
+   blurb:"Battle at a jump point, where hulls arrive disoriented. Scrambled sensors, ragged formations, degraded fire-control — a confused, close-range scramble on emergence.",
+   m:envM({range:0.6, eva:0.15, pd:0.6}),
+   r:[["DATA","Jump points exist (JumpPoints/JPFactory) but carry NO hazard — no SpaceHazardDB is attached to one"],
+      ["THEORY","emergence-disorientation is entirely extrapolation"]]},
+  {key:"pulsarwind", theater:"space", glyph:"❂", label:"Pulsar / magnetar wind",
+   blurb:"In the lash of a neutron star's magnetized wind. Guidance is annihilated, shields barely hold, radiation floods everything — but a light-speed beam doesn't care. The beam-boat's paradise.",
+   m:envM({guidedR:0.3, dmgX:0.4, shReg:0.3, dotKind:"Radiation", dotJps:300}),
+   r:[["THEORY","No pulsar/magnetar object or wind model exists (grep: solar wind = zero matches) — pure theory, the extreme end of the EM axis"]]},
+  // ---------- PLANETSIDE (surface theater — shown on the shared kernel) ----------
+  {key:"temperate", theater:"surface", glyph:"⬖", label:"Temperate surface (baseline)",
+   blurb:"Open, breathable, Earth-like ground — the surface yardstick. Terrain is 'Open': tanks like it, cover is thin. In-engine this is the GroundTerrain.Open baseline.",
+   m:envM({}), r:[["LIVE","Baseline surface — GroundTerrain Open (CoverDefenseMult 0.9, GroundTerrain.cs:114-122)"]]},
+  {key:"vacuum", theater:"surface", glyph:"◌", label:"Airless surface (vacuum)",
+   blurb:"An airless moon or rock. Unsealed troops asphyxiate and attrit; SEALED units shrug it off. With no air, projectiles carry flat and far — ballistics reward the well-equipped.",
+   m:envM({dmgK:1.1, guidedR:1.1, dotKind:"Vacuum", dotJps:830}),
+   r:[["LIVE","DoT — Vacuum attrition 3.0/hr unless sealed (GroundForcesProcessor.cs:225-236)"],
+      ["LIVE","sealing — GroundSealAtb → EnvironmentalResistance{Vacuum} resists it (GroundUnitAssembly.cs:311-314)"],
+      ["THEORY","dmgK/guidedR — 'no-air-drag ballistics' isn't a ground-combat reader"]]},
+  {key:"toxic", theater:"surface", glyph:"☣", label:"Toxic / corrosive atmosphere",
+   blurb:"An acid-fog world. The very air eats unsealed troops; sealed suits hold the line. A slow poison that rewards preparation over numbers.",
+   m:envM({dotKind:"ToxicAtmosphere", dotJps:830}),
+   r:[["LIVE","DoT — ToxicAtmosphere / Corrosive Superstorm attrition unless sealed (GroundForcesProcessor.cs:236; PlanetEnvironmentFactory.cs:82,91)"],
+      ["LIVE","sealing — GroundSealAtb resists ToxicAtmosphere (GroundUnitAssembly.cs:311-314)"]]},
+  {key:"firestorm", theater:"surface", glyph:"🔥", label:"Fire tornadoes / molten (>400°C)",
+   blurb:"A hellscape of fire-whirls on a scorched world. A heavy, steady burn on everything; energy weapons struggle to shed their own heat on top of the ambient furnace.",
+   m:envM({dmgE:0.8, dotKind:"Heat", dotJps:9700}),
+   r:[["LIVE","DoT — Fire Tornadoes Heat 20-50/hr, from AtmosphereDB.SurfaceTemperature>400 (PlanetEnvironmentFactory.cs:80)"],
+      ["THEORY","dmgE — ambient-heat weapon throttle isn't a ground-combat reader"]]},
+  {key:"cryo", theater:"surface", glyph:"❄", label:"Cryostorms / frozen (<−120°C)",
+   blurb:"A cryogenic waste. A cold that seeps through seals and slows everything — machinery stiffens, troops labour, the advance crawls.",
+   m:envM({closing:0.8, dotKind:"Heat", dotJps:4200}),
+   r:[["LIVE","DoT — Cryostorms Heat 15/hr, from SurfaceTemperature<−120 (PlanetEnvironmentFactory.cs:81)"],
+      ["THEORY","closing — cold-slows-mobility isn't a ground-combat reader"]]},
+  {key:"duststorm", theater:"surface", glyph:"🌪", label:"Dust storm (arid)",
+   blurb:"A choking ochre wall on a dry world. Sensors and sightlines die in the grit — everyone's harder to spot and hit. The ambusher's weather.",
+   m:envM({range:0.6, eva:0.12}),
+   r:[["DATA","Dust Storm SensorJam ×0.4 is GENERATED from air+hydro<10% (PlanetEnvironmentFactory.cs:84) — but ground SPOTTING is line-of-sight, a separate mechanic; the ground resolver reads only IsDamageEffect hazards for attrition"],
+      ["THEORY","range/eva as a combat modifier for ground units — not consumed today"]]},
+  {key:"lightning", theater:"surface", glyph:"🌩", label:"Lightning superstorm (dense air)",
+   blurb:"A high-pressure world wracked by continent-spanning storms. Blinding strikes and EM crash scramble sensors and guidance; the thick air drags projectiles down.",
+   m:envM({range:0.5, guidedR:0.8, dmgK:0.9}),
+   r:[["DATA","Lightning Superstorm SensorJam ×0.6 GENERATED from pressure>5 atm (PlanetEnvironmentFactory.cs:85) — not consumed by the ground resolver"],
+      ["THEORY","guidedR/dmgK — EM + dense-air drag on ground weapons isn't a reader"]]},
+  {key:"ashstorm", theater:"surface", glyph:"🌫", label:"Ash storm (volcanic / tectonic)",
+   blurb:"Volcanic ash blots the sky on a geologically live world. Grey-out visibility and grit in every joint — sight and fire-control suffer, cover is everywhere.",
+   m:envM({range:0.55, eva:0.1}),
+   r:[["DATA","Ash Storm SensorJam ×0.5 GENERATED from Tectonics active (PlanetEnvironmentFactory.cs:83) — not consumed by the ground resolver"],
+      ["THEORY","range/eva as a ground-combat modifier — not consumed today"]]},
+  {key:"highg", theater:"surface", glyph:"⬇", label:"High gravity",
+   blurb:"A heavy world that drags on everything. Movement crawls, arcs fall short, jumps die — the domain of squat, powerful war-machines over nimble ones. THE sharp gap: gravity is stored but combat reads none of it.",
+   m:envM({closing:0.7, guidedR:0.75, dmgK:0.9, eva:-0.05}),
+   r:[["DATA","SystemBodyInfoDB.Gravity (m/s²) is stored (SystemBodyInfoDB.cs:107)"],
+      ["THEORY","EVERYTHING here — GroundCombat reads Gravity NOWHERE (no gravity-tolerance component for ground); the sharpest unbuilt lever"]]},
+  {key:"lowg", theater:"surface", glyph:"⬆", label:"Low gravity",
+   blurb:"A feather-light world. Bounding mobility, flat far-reaching trajectories, big evasive leaps — the light-and-fast force's playground.",
+   m:envM({closing:1.3, guidedR:1.25, eva:0.1}),
+   r:[["DATA","SystemBodyInfoDB.Gravity is stored (SystemBodyInfoDB.cs:107)"],
+      ["THEORY","EVERYTHING here — gravity is unread by ground combat"]]},
+  {key:"jungle", theater:"surface", glyph:"🌴", label:"Dense jungle (Cover)",
+   blurb:"Triple-canopy green. Infantry vanish into the cover and thrive; armour bogs and loses its edge; the march slows to a hack. In-engine this is GroundTerrain 'Cover'.",
+   m:envM({eva:0.20, closing:0.66, dmgK:0.9}),
+   r:[["LIVE","eva — Cover terrain CoverDefenseMult ×1.25 (GroundTerrain.cs:114-122)"],
+      ["LIVE","unit-affinity — Armor ×0.75 / Infantry 1.0 attack in cover (TerrainAttackMult, GroundTerrain.cs:82-93)"],
+      ["LIVE","closing — march ×1.5 in cover (HexPathfinder; GroundForcesProcessor.cs:196)"]]},
+  {key:"mountains", theater:"surface", glyph:"⛰", label:"Mountains (Rough)",
+   blurb:"Broken high ground. Superb cover, artillery lords it over the valleys, armour claws for purchase, and every kilometre is a slog. In-engine this is GroundTerrain 'Rough'.",
+   m:envM({eva:0.30, closing:0.4}),
+   r:[["LIVE","eva — Rough terrain CoverDefenseMult ×1.5 (GroundTerrain.cs:114-122)"],
+      ["LIVE","unit-affinity — Artillery ×1.3 / Armor ×0.7 in rough (TerrainAttackMult, GroundTerrain.cs:82-93)"],
+      ["LIVE","closing — march ×2.5 in rough (GroundForcesProcessor.cs:196)"]]},
+  {key:"plains", theater:"surface", glyph:"▭", label:"Open plains",
+   blurb:"Rolling open ground with nowhere to hide. Thin cover, long fields of fire — tank country, where massed armour rolls and the exposed defender pays.",
+   m:envM({eva:-0.05, dmgK:1.1}),
+   r:[["LIVE","eva — Open terrain CoverDefenseMult ×0.9 (less cover, GroundTerrain.cs:114-122)"],
+      ["LIVE","unit-affinity — Armor ×1.3 attack on open ground (TerrainAttackMult, GroundTerrain.cs:82-93)"]]},
+  {key:"radsurface", theater:"surface", glyph:"☢", label:"Irradiated surface",
+   blurb:"A world bathed in hard radiation (a hot star, a stripped magnetosphere, or the fallout of an orbital bombardment). Unshielded troops sicken and die — but combat currently ignores it entirely.",
+   m:envM({dmgX:0.9, dotKind:"Radiation", dotJps:170}),
+   r:[["DATA","SystemBodyInfoDB.RadiationLevel is stored (:73) and RAISED by orbital bombardment (DamageProcessor.cs:304-310); RadiationDamage is a valid IsDamageEffect"],
+      ["THEORY","THE sharpest surface gap — PlanetEnvironmentFactory NEVER emits RadiationDamage, so a planet's RadiationLevel produces ZERO combat effect today"]]},
+  {key:"urban", theater:"surface", glyph:"🏙", label:"Urban / dense ruins",
+   blurb:"City fighting — the meat-grinder. Every wall is cover, every cellar an ambush; infantry is king and armour dies in the streets. The ultimate defender's ground.",
+   m:envM({eva:0.28, closing:0.6, dmgK:0.85}),
+   r:[["THEORY","No Urban RegionFeatureType exists (PlanetRegionsDB.cs:16-20) — closest live analogue is 'Cover'; a true urban terrain class is unbuilt"]]},
+  {key:"night", theater:"surface", glyph:"☾", label:"Long night / polar dark",
+   blurb:"A world in its long dark — a tide-locked far side, a polar winter, a slow rotator. Sightlines collapse to sensor range; the side that sees in the dark owns the field.",
+   m:envM({range:0.7, eva:0.1}),
+   r:[["DATA","SystemBodyInfoDB.LengthOfDay is stored (:100, 'mostly fluff')"],
+      ["THEORY","day/night is unread by anything — a pure theory lever on detection"]]},
+];
+const ENVBY = Object.fromEntries(ENVIRONMENTS.map(e=>[e.key,e]));
+let envKey = "open";
+function activeEnv(){ return ENVBY[envKey] || ENVIRONMENTS[0]; }
 
 /* ==================================================================
    STATE
@@ -702,8 +910,10 @@ function newSpaceState(scen){
     }
     fleets.push(...wings);
   }
-  // arena bounded by the LONGEST weapon range in the whole battle
-  const maxR = Math.max(...fleets.map(longestRange));
+  // arena bounded by the LONGEST weapon range in the whole battle, then SCALED by the environment's detection reach
+  // (a nebula/flare shrinks how far anyone opens — the SensorJam lever; deep space widens it). This is the sim's
+  // detection→engagement hook: a smaller opening gap means short-range weapons reach sooner and the fight starts closer.
+  const maxR = Math.max(...fleets.map(longestRange)) * activeEnv().m.range;
   const R = maxR/2;                                    // arena radius; diameter = maxR = the opening gap
   fleets.forEach(f=>{ f.pos = {x:(f.side==="A"?-R:R), y:0}; f.Separation_m = maxR; });  // opposite ends of a diameter
   return {kind:"space", fleets, salvo:0, over:false, outcome:"", arenaR:R, sep0:maxR};
@@ -720,7 +930,8 @@ function advanceArena(live, dt){
              : f.stance==="standoff" ? Math.min(dominantRange(f)*ARENA.KiteMargin, state.sep0)
              : ARENA.MinGap_m;                                          // "close" → drive to knife range
     const dir = Math.sign(enemy.pos.x - f.pos.x) || 1;                  // +dir points at the enemy
-    const step = fleetSpeed(f)*dt;
+    // ENV closing: the medium drags movement (nebula gas, debris grit, dense atmosphere, cryo cold, rough terrain).
+    const step = fleetSpeed(f)*dt*activeEnv().m.closing;
     if(gap > want+1) f.pos.x += dir*step;                               // close in
     else if(gap < want-1) f.pos.x -= dir*step;                          // open up (kite / run)
     // NOTE: no arena clamp — "close/stand-off/hold" are already bounded by `want`,
@@ -745,13 +956,18 @@ function advanceArena(live, dt){
 // BuildFireMix (CombatEngagement.cs:1317) — aggregate a fleet's weapons, range-gated
 function buildFireMix(fl, separation_m){
   const byKey = {};
+  const E = activeEnv().m;                                                // environment condition-multipliers
   for(const s of fl.ships){ if(!s.alive) continue;
     const fm = fireMultOf(s);                                             // a degraded ship shoots less (condition tier)
     for(const w of s.weapons){
-      if(!weaponReaches(w, separation_m)) continue;                       // WeaponReaches gate — TRUE ranges
+      // ENV range: guided weapons lose REACH in atmosphere / gravity wells / EM (guidedR); beams/slugs keep their range.
+      const reach = w.delivery==="Guided" ? w.range*E.guidedR : w.range;
+      if(!(reach<=0 || separation_m<=reach)) continue;                    // WeaponReaches gate — TRUE ranges, env-adjusted
       const k = w.key;
       if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD};
-      byKey[k].dps += w.dps*fm;
+      // ENV damage-by-nature: the medium favours some weapon natures over others (a nebula scatters beams, an ion
+      // storm cooks torpedo guidance, dense air drags slugs) — Kinetic/Energy/Explosive/Exotic each scaled here.
+      byKey[k].dps += w.dps*fm*natureMul(E, w.nature);
     }
   }
   return Object.values(byKey);
@@ -809,8 +1025,9 @@ function applyCasualties(fl, incoming, separation_m){
     const key = `${s.toughness}|${s.evasion}|${s.roleWeight}`;
     (buckets[key] ||= {role:s.roleWeight, toughness:s.toughness, evasion:s.evasion, ships:[]}).ships.push(s);
   }
+  const _eEva = activeEnv().m.eva;                                        // ENV cover applies in the whole-or-dead path too
   const arr = Object.values(buckets).map(b=>{
-    const landed = landedFraction(incoming, b.evasion, separation_m);
+    const landed = landedFraction(incoming, clamp(b.evasion+_eEva,0,SCV.EvasionCap), separation_m);
     return {...b, landed, eff: landed>0 ? b.toughness/landed : Infinity};
   });
   arr.sort((a,b)=> b.role-a.role || b.landed-a.landed);
@@ -847,7 +1064,8 @@ function shipArmourFrac(s, mix){
 // pour a RAW damage budget at ONE ship through its dodge → shield → armour → hull chain.
 // returns {toHull, absorbed, died, overflowRaw} — overflowRaw spills to the next focus-fire target.
 function hitShip(s, mix, rawBudget, sep, dt){
-  const eva = clamp(s.evasion*evaMultOf(s),0,SCV.EvasionCap);
+  // ENV cover: the environment adds (or removes) evasion — nebula murk / debris / dust hide a ship; open plains expose it.
+  const eva = clamp(s.evasion*evaMultOf(s) + activeEnv().m.eva, 0, SCV.EvasionCap);
   const landed = landedFraction(mix, eva, sep);            // dodge — the missed part is wasted
   let toHull = rawBudget*landed, absorbed=0;
   const soakF = soakFractionOf(mix);                        // shield nature matchup
@@ -993,7 +1211,8 @@ function stepSpace(){
     }
     // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total).
     // With BEAM_PD on, the screen includes beams doing double duty (fl._pdTotal, computed above); else dedicated only.
-    const pd = BEAM_PD ? (fl._pdTotal||0) : fleetPD(fl);
+    // ENV pd: clutter/EM/blinding degrades the intercept screen (a dust cloud or ion storm blunts point-defence).
+    const pd = (BEAM_PD ? (fl._pdTotal||0) : fleetPD(fl)) * activeEnv().m.pd;
     let intercepted=0, survive=1;
     if(pd>0){ const md=missileFireDamage(incoming); if(md>0){ const frac=pdInterceptFraction(pd,md); survive=1-frac; intercepted=md*frac; } }
 
@@ -1056,6 +1275,12 @@ function stepSpace(){
       nl(`<span class="rng">▸ ${WEAPONS[key].label} opens up — reaches ${fmtKm(rng)}, gap now ${fmtKm(gapNow)}</span>`,"rng"); }
   });
   salvoEvents.forEach(l=>nl(l));
+  // ENV ambient DoT — the hazard's own damage-over-time (corrosive gas, radiation bath, coronal heat, kinetic grit).
+  // In the engine this rides the SAME DamageProcessor path as a weapon hit (armour-resisted). Here a flat hull chip
+  // that never lands the killing blow (weapons do that) — because environmental attrition is MINOR over a short
+  // engagement and only lethal over a long dwell: the honest scale. (Bites the per-ship hull → the DEGRADE path.)
+  { const eDot=activeEnv().m; if(eDot.dotJps>0){ const chip=(eDot.dotJps/1e6)*dt;
+      for(const fl of live) for(const s of liveShips(fl)) if(s.hull>chip) s.hull-=chip; } }
   // (2) MOVE — the units close / kite / run at their real speeds for the next salvo (LD-30)
   advanceArena(live, dt);
   // (3) resolution: a WITHDRAW fleet disengages once it has broken past the longest
@@ -1133,6 +1358,35 @@ function render(){
   drawArena();
   renderSides();
   renderLedger(); renderWeapons(); renderForces();
+  renderEnv();
+}
+// ENVIRONMENT READOUT — the active environment, the multipliers it applies, and the honesty ledger (LIVE/DATA/THEORY).
+function renderEnv(){
+  const el=document.getElementById("envReadout"); if(!el) return;
+  const e=activeEnv(), m=e.m, chips=[];
+  const push=(cond,txt,up)=>{ if(cond) chips.push(`<span class="chip ${up?'up':'dn'}">${txt}</span>`); };
+  const x=v=>(+v).toFixed(2).replace(/\.?0+$/,'');
+  push(m.range!==1, `detection ×${x(m.range)}`, m.range>1);
+  push(m.eva!==0,   `cover ${m.eva>0?'+':''}${Math.round(m.eva*100)}% evasion`, m.eva>0);
+  push(m.dmgK!==1,  `kinetic ×${x(m.dmgK)}`, m.dmgK>1);
+  push(m.dmgE!==1,  `energy ×${x(m.dmgE)}`, m.dmgE>1);
+  push(m.dmgX!==1,  `explosive ×${x(m.dmgX)}`, m.dmgX>1);
+  push(m.dmgO!==1,  `exotic ×${x(m.dmgO)}`, m.dmgO>1);
+  push(m.guidedR!==1,`guided reach ×${x(m.guidedR)}`, m.guidedR>1);
+  push(m.shCap!==1, `shield cap ×${x(m.shCap)}`, m.shCap>1);
+  push(m.shReg!==1, `shield regen ×${x(m.shReg)}`, m.shReg>1);
+  push(m.pd!==1,    `point-defense ×${x(m.pd)}`, m.pd>1);
+  push(m.closing!==1,`closing ×${x(m.closing)}`, m.closing>1);
+  if(m.dotKind) chips.push(`<span class="chip dn">${m.dotKind} DoT ${m.dotJps} J/s</span>`);
+  const chipsHtml = chips.length ? `<div class="efx">${chips.join("")}</div>`
+    : `<div class="efx"><span class="chip">no combat modifiers — the clean baseline</span></div>`;
+  const reads = e.r.map(([mk,txt])=>`<div class="rd"><span class="emk ${mk}">${mk}</span><span>${txt}</span></div>`).join("");
+  const th = e.theater==="space" ? "SPACESIDE" : "SURFACE · ground theater";
+  const surfaceNote = e.theater==="surface"
+    ? `<p class="note" style="margin:8px 0 0">A <b>surface</b> condition, shown on the <b>shared combat kernel</b> (the same hit / damage math the ground resolver runs). In-engine it routes through <span class="src">GroundForcesProcessor</span>; its unit-type affinities (Armor / Artillery / Infantry) apply to ground units, not shown on these ships.</p>`
+    : "";
+  el.innerHTML = `<div class="eh"><span class="eg">${e.glyph}</span> ${e.label} <span class="theater">${th}</span></div>`
+    + `<div class="eb">${e.blurb}</div>${chipsHtml}<div class="reads">${reads}</div>${surfaceNote}`;
 }
 function bar(cur,max,cls,col){ const p=max>0?clamp(cur/max,0,1)*100:0; return `<div class="bar ${cls||''}"><i style="width:${p}%${col?`;background:var(${col})`:''}"></i></div>`; }
 
@@ -1345,6 +1599,8 @@ function renderHonesty(){
   <p class="note">The sim shows the engine straight — including where it is unfinished. It never silently "fixes" the engine; a flag is the honest thing.</p>
   <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> This is the arena TARGET, not the shipped default</div>
     <p>This sim implements <b>LD-30</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5</span>) — the opposing-sides arena the developer ruled the resolver <i>must</i> become. The shipped default resolver still fights at <b>point-blank</b> (its closing model collapses to one shrinking scalar and is off by default); that model is superseded here, deliberately. The <b>damage math</b> below the movement is the engine's real kernel, byte-for-byte.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> The <b>Environment</b> selector is a design proposal — the space resolver reads NONE of it today</div>
+    <p>Pick an <b>Environment</b> and the whole battle shifts — detection range, cover, damage-by-nature, shields, point-defense, closing, and an ambient DoT. This is the <b>condition-multiplier</b> model: an environment is a named bundle of the engine's own <span class="src">HazardEffectType</span> vocabulary (SensorJam→detection, MovementDrag→closing, the damage kinds→DoT, terrain→cover), feeding the same resolve. <b>The honest split</b> (each effect is graded in the box under the arena): <span class="emk LIVE">LIVE</span> the engine already applies it (gas-cloud sensor-cut, coronal heat, ground vacuum/terrain attrition — all real); <span class="emk DATA">DATA</span> the data/authoring path exists but the <i>resolver</i> doesn't read it (a planet's gravity, radiation, atmosphere); <span class="emk THEORY">THEORY</span> a creative extrapolation with no engine data (beam-scatter-in-a-nebula, gravity-well missile drop). The load-bearing truth: <b>space combat is environment-blind</b> — <span class="src">CombatEngagement</span> reads no terrain/hazard/body — while <b>ground combat already reads terrain + a per-region hazard list</b>. The single cleanest wire to close the gap is the shared <span class="src">CombatKernel.HitFraction</span>, which both resolvers call. See <span class="src">ENVIRONMENT-CONDITIONS-DESIGN.md</span>.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Closing speed is the one non-spec-sheet input</div>
     <p>Every weapon <b>range</b> is engine-true (<span class="src">WeaponProfile.cs</span> authentic-closing ranges). A ship's sublight <b>speed</b> is <i>not</i> a <span class="src">ShipCombatValueDB</span> field — the engine derives it from <span class="src">NewtonThrustAbilityDB</span> (thrust ÷ mass). Here it's an editable per-class stand-in so the arena has real motion; tune it in <b>Forces</b>.</p></div>
   <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Warheads are real here — the engine still stubs them</div>
@@ -1448,6 +1704,13 @@ function syncScenarioSelect(){
   const sel=document.getElementById("scenario");
   sel.innerHTML = Object.entries(SCENARIOS).map(([k,s])=>`<option value="${k}" ${k===scenKey?"selected":""}>${s.label}</option>`).join("");
 }
+function syncEnvSelect(){
+  const sel=document.getElementById("envsel"); if(!sel) return;
+  const opt=e=>`<option value="${e.key}" ${e.key===envKey?"selected":""}>${e.glyph} ${e.label}</option>`;
+  const space=ENVIRONMENTS.filter(e=>e.theater==="space").map(opt).join("");
+  const surf =ENVIRONMENTS.filter(e=>e.theater==="surface").map(opt).join("");
+  sel.innerHTML = `<optgroup label="Spaceside">${space}</optgroup><optgroup label="Planetside · surface theater">${surf}</optgroup>`;
+}
 function initTabs(){
   const tabs=["log","ledger","weapons","forces","honesty","const"];
   tabs.forEach(t=>{
@@ -1472,6 +1735,7 @@ function initTheme(){
 function init(){
   initTabs(); initTheme();
   document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; stop(); rebuild(); });
+  document.getElementById("envsel").addEventListener("change",e=>{ envKey=e.target.value; stop(); rebuild(); });
   document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
   document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
   document.getElementById("priA").addEventListener("change",e=>{ applyTargetPri("A",e.target.value); render(); });
@@ -1488,6 +1752,7 @@ function init(){
   document.getElementById("speed").addEventListener("input",()=>{ if(playing){ stop(); play(); } });
   selfTest();
   syncScenarioSelect();
+  syncEnvSelect();
   rebuild();
   renderHonesty(); renderConst();
 }
