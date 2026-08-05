@@ -751,9 +751,9 @@
 
 ---
 
-## Assembler additions this build required (LIVE, not fake)
+## Assembler additions these ground builds REQUIRE (LIVE engine wires — designed, not yet in the interactive tool)
 
-Three ground components were added to the assembler so the ground units build faithfully — each is a genuinely LIVE engine wire the tool was simply not exposing:
+**Honest status:** the two capital ships above (Prometheus, ISD) are **clickable presets in the published Entity Assembler** — they were built entirely from parts already in the tool and every gate was re-verified through its real `compute()`. The five ground units and the two earlier ship units (ARC-170, Miranda) are **dossier cards** authored from the engine research; they are **not yet clickable presets**. Three of them additionally need ground components the interactive tool does **not yet expose** — listed below. Each is a genuinely **LIVE** engine wire (traced to a reader at file:line), so adding it is exposure, not invention — but until it is added to `entityassembler.html`, treat this as the designed next step, not a shipped feature:
 
 - **Sealed Systems** → `GroundSealAtb.Sealing` → `EnvironmentalResistance{Vacuum,ToxicAtmosphere}` → E4 attrition (`GroundUnitAssembly.cs:311-315` → `GroundForcesProcessor.IsDamageEffect`). *Clone trooper, Genestealer, Carnifex.*
 
