@@ -1,5 +1,11 @@
 # 01-IO-ENHANCERS — Enhancers, re-derived - the door where you set your own price, and the two kinds it cannot express
 > Source: `docs/Actual HTMLs Of designers/enhancersderived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02).** The **iface `SwitchableAfter` cut is
+> DEAD-END, not live** — the cooldown machinery is live, but **no enhancer component writes a cut** (no `InterfaceAtb`
+> exists; the cooldown is a fixed per-blueprint constant). So of the 7 "live" enhancer templates only **6** are live.
+> Caliber / training / carry / dodge / shield / crew are correct; self-repair + fury are correctly engine-pending.
+> See `06` §Enhancers + correction #1.
 
 ## What this door builds
 This designer builds **enhancers** — small components that make some *other* thing better: a veteran cadre that lifts a warship's combat rating, power armour that lets a soldier carry a heavier gun, a personal shield, reflex boosters, a crew-automation suite, a command interface that shortens the stance-switch timer, and (still on the drawing board) self-repair and morale/fury. Every one of them is the *same* component with different defaults: **pick what it improves, then pick by how much.** One forced choice, one capability slider.

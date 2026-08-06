@@ -1,5 +1,10 @@
 # 01-IO-COMMAND — Command, re-derived - one seat built twice, and the 26-leader grid it should be
 > Source: `docs/Actual HTMLs Of designers/commandderived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02).** The **Office-Space → hex-radius**
+> formula is `ceil(sqrt(officeSpace/100))` (this census dropped the sqrt), and that output is a **LIVE-WRITE /
+> DEAD-ENDING value** — `MaxRadius` is read only by a client display, on the save-unsafe `ColonyHexMapDB` (L12).
+> Console Space (dead, colony-gated) and AdminLevel (dead, C8) are correct as stated. See `06` §Command + corr #10.
 
 ## What this door builds
 This door designs a **command seat** — the component you install to give a post a commander. In the running game today it is actually **three** separate components that all do the same job at different sizes: an **administrative complex** (`admin-complex`, sizes a colony's buildable hex map), a **ship bridge** (`ship-command`, whose `Console Space` dial is read by nothing), and the newer **Command Berth** (`CommandBerthAtb`, the best-built one — it has Role, Grade, Support, Survivability, and a hazard roll that can kill the seated officer). The point every one of them makes to the simulation is the same: *what this post commands, how well, and whether the person in it survives the job.*

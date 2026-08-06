@@ -1,5 +1,10 @@
 # 01-IO-INDUSTRIAL — Industrial, re-derived - the healthiest door, and its three exceptions
 > Source: `docs/Actual HTMLs Of designers/industrialderived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02).** The lab **`Cost Per Day` is LIVE, not
+> dead** — it is read and paid at `ResearchProcessor.cs:107-118` (write `ResearchPointsAtbDB.cs:71`). Only **Fighter
+> Construction Points** is the genuine dead dial (no `fighter-construction` industry type exists). Everything else in
+> this "healthiest door" is correct. See `06` §Industrial + correction #13.
 
 ## What this door builds
 This is the **industry / installation** door. It stamps out the buildings and plant that mine, refine, manufacture, assemble ships, research, construct, and fortify — mines, automines, refineries, factories, unit-assembly yards, research labs, and bunkers (the interactive builder ships seven of the ten templates; `infrastructure` and the two extra construction templates are discussed only in prose).

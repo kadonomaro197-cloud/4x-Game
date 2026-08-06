@@ -73,6 +73,11 @@ propulsionderived, sensorsderived, auraderived (all `.html`).
       + TOTALS-handoff band citing ShipCombatValueDB.Calculate §6.1
 - [x] 4e verified: node --check + DOM-stub harness driving all 3 hosts + power-gate stress test (0 throws)
 > Built as one atomic file (safer than 5 partial edits to one <script>); all stages present + verified.
+> **⏩ Since this 2026-08-02 mission the tool has GROWN** (recorded in the build docs, not here): the assembler now
+> has **5 hosts** (ship / ground / station / **Dreadnought** / **Battle Station megastructure**), **~43 components**,
+> and **7 presets** (Escort · Venator · Acclamator · Sovereign · Prometheus · ISD · Death Star). This checklist's
+> "8-component roster / 3 hosts" was accurate for the mission it logs; for current catalog state see
+> `DEATH-STAR-BUILD.md` and `FRANCHISE-UNITS-BUILD.md`.
 
 ### PHASE 5 — verify, index, close out
 - [x] 5.1 render-verify the HTML (node --check + DOM-stub driving all 3 hosts + power-gate stress test; 0 throws)

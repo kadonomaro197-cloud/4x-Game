@@ -1,5 +1,12 @@
 # 01-IO-WEAPONS — Weapons, re-derived - two choices and four sliders
 > Source: `docs/Actual HTMLs Of designers/weaponsderived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02; folded into `02-IO-MATRIX.md` 2026-08-06).**
+> This Phase-1 census was written from the door's OUTPUT end; `06`'s reader-end trace narrows four states below:
+> **DamagePerShot / Rate / Penetration are LIVE (ground-only)** — a ship zeroes them (`CombatEngagement.cs:1368`);
+> **runs-on is PARTIAL** (the engine keys ammo-vs-power on **Nature**, not Delivery; power/none have no reader); and
+> **`HeatPerSecond` is a LIVE field with a live reader** the door just doesn't emit (not "computed, no engine var").
+> PD-answerable is ship-only. See `06` §Weapons for the file:line readers.
 
 ## What this door builds
 This designer builds **one weapon component** — the thing a ship or ground unit mounts and fires. It replaces the old pile of five separate weapon doors (67 → 89 → 96 templates) with a single door because the combat resolver only ever reads ten numbers off any weapon; everything else on the old templates was naming, cost and flavour.

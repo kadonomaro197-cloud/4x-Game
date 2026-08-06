@@ -240,7 +240,7 @@ The method is scale-invariant; only these change:
 | Escort / corvette | ship | small budget; often provisions-limited (no room for hydroponics) |
 | Capital ship | ship (capital tier) | flagship command, full crew sustainment, closed food loop, capital reactors |
 | Station | station | **immobile** (Evasion = 0); immense structure; can host industry + a population town |
-| **Megastructure / Death Star** | station (mega tier) — *add a host tier + scale budgets when we build it* | a **superweapon** capability (a new door-derived component — verify its output has a reader before selling it); an internal **economy + crew town** at colony scale; its own defensive fleet-in-a-hull. Expect much of the superweapon to land PENDING — flag it, that's the honest answer. |
+| **Megastructure / Death Star** | station (mega tier) — *Battle Station host tier + scaled budgets, **BUILT** 2026-08-02 (`deathstar` preset)* | a **superweapon** capability (a new door-derived component — verify its output has a reader before selling it); an internal **economy + crew town** at colony scale; its own defensive fleet-in-a-hull. Expect much of the superweapon to land PENDING — flag it, that's the honest answer. |
 
 When a rung needs a capacity the host can't express (a megastructure's superweapon, a planet-cracker), that's a
 **Step 3 derive** — and if the engine has no reader, a **Step 5 PENDING**, not a fake.

@@ -1,5 +1,11 @@
 # 01-IO-DEFENSE — Defense, re-derived — the four layers a shot meets, in order
 > Source: `docs/Actual HTMLs Of designers/defensederived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02).** The two SHIELD rows below name the
+> wrong consumer: shield pool + regen are **LIVE (ground-inline)** — drained/regenerated inline in the ground
+> resolver (`GroundForcesProcessor.cs:391-430`), **NOT** `CombatKernel.ResolveShield` (that belongs to a separate
+> ship `ShieldAtb`). Armour + the four nature resists, and Evasion/Structure (READ, owned by Chassis+Propulsion,
+> crack C9), are correct as stated. See `06` §Defense.
 
 ## What this door builds
 This door builds a single **defensive component** — and its first act is to make you pick which of two it is: a **Shield generator** (a recharging pool of protection laid on top of hit points) or an **Armour plate** (a flat amount subtracted off every shot that lands). Those are the only two of the four defensive layers the door can actually sell. The other two layers a shot meets — **Evasion** (whether the shot is even rolled) and **Structure** (raw hit points) — are set by the Chassis and Propulsion doors, and this door can only read them back to show you the whole picture.

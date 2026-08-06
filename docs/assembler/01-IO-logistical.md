@@ -1,5 +1,11 @@
 # 01-IO-LOGISTICAL — Logistical, re-derived — thirteen boxes, two attributes, and the one cargo that has no consumer
 > Source: `docs/Actual HTMLs Of designers/logisticalderived.html` · Component-designer door · Census (Phase 1 draft, unverified)
+>
+> **⚠ CORRECTED against `06-OUTPUTS-BY-DOOR.md` (reader-verified 2026-08-02).** Three cargo-type rows below are
+> MISATTRIBUTED: the **ammo** and **troops** typed stores have **zero readers** — the resolver reads a dedicated
+> `ShipMagazineAtb.Capacity_kg`, and invasion reads a dedicated `GroundBayAtb` (`GroundTransport.cs:40`); and
+> **`LogiBaseAtb` is ENGINE-DEAD but CLIENT-LIVE** (a live client gate, `ColonyLogisticsDisplay.cs:215`), not
+> "totally dead." Fuel + ordnance are the two genuinely load-bearing live cargo wires. See `06` §Logistical.
 
 ## What this door builds
 This designer builds every **logistical component** in the game — cargo holds, warehouses, fuel tanks, ordnance racks, magazines, troop bays, passenger cabins, cryo bays, and spaceports/shuttlebays (thirteen shipped templates). The finding: strip away the labels and the simulation only ever receives **two things** — **a store** (`CargoStorageAtb(storeTypeID, maxVolume)`: a cargo-type string plus a volume) and **a mover** (`CargoTransferAtb(rate, range)`: how fast cargo crosses and from how far).
