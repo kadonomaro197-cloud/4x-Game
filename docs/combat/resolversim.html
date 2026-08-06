@@ -678,6 +678,16 @@ const SCENARIOS = {
       {side:"B", name:"ST · Sqn B — Sovereigns", ships:[["sovereign","Sovereign I"],["sovereign","Sovereign II"]]},
       {side:"B", name:"ST · Sqn C — Prometheus", ships:[["prometheus","Prometheus"]]},
     ]},
+  // DOUBLED FEDERATION — same Star Wars fleet vs a Star Trek task force at 2× size (10 Mirandas + 4 Sovereigns + 2 Prometheus).
+  franchise2:{ label:"Franchise clash · DOUBLED Federation — SW fleet vs Star Trek 2× (10 Mirandas + 4 Sovereigns + 2 Prometheus)",
+    fleets:[
+      {side:"A", name:"SW · Sqn A — Star Destroyer",     ships:[["isd","Imperial-I"]]},
+      {side:"A", name:"SW · Sqn B — Venators (carriers)", ships:[["venatorcarrier","Venator I"],["venatorcarrier","Venator II"]]},
+      {side:"A", name:"SW · Sqn C — Acclamator",          ships:[["acclamator","Acclamator"]]},
+      {side:"B", name:"ST · Sqn A — Mirandas (10)", ships:[["miranda","Miranda I"],["miranda","Miranda II"],["miranda","Miranda III"],["miranda","Miranda IV"],["miranda","Miranda V"],["miranda","Miranda VI"],["miranda","Miranda VII"],["miranda","Miranda VIII"],["miranda","Miranda IX"],["miranda","Miranda X"]]},
+      {side:"B", name:"ST · Sqn B — Sovereigns (4)", ships:[["sovereign","Sovereign I"],["sovereign","Sovereign II"],["sovereign","Sovereign III"],["sovereign","Sovereign IV"]]},
+      {side:"B", name:"ST · Sqn C — Prometheus (2)", ships:[["prometheus","Prometheus I"],["prometheus","Prometheus II"]]},
+    ]},
   handoff:{ label:"Handoff — 1 Venator + 2 Acclamators vs 2 Sovereigns",
     fleets:[
       {side:"A", name:"Republic", ships:[["venator","Venator"],["acclamator","Acclamator I"],["acclamator","Acclamator II"]]},
@@ -897,7 +907,7 @@ function activeEnv(){ return ENVBY[envKey] || ENVIRONMENTS[0]; }
 /* ==================================================================
    STATE
    ================================================================== */
-let scenKey = "franchise";
+let scenKey = "franchise2";
 let state = null;
 let playing = false, playTimer = null;
 const logLines = [];
