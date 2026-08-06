@@ -452,6 +452,9 @@ const ARENA = {
   MinGap_m:   3000,     // knife-range floor — clusters never fully overlap
   KiteMargin: 0.9,      // "stand off" holds at its dominant-weapon range × this
 };
+// The active contact-floor. Space = 3 km. A GROUND scenario overrides it (scen.minGap) down to metres so melee-range
+// weapons (rending claws ~60 m) can actually reach — otherwise the 3 km space floor makes ground melee impossible.
+let MINGAP = ARENA.MinGap_m;
 
 /* ==================================================================
    MISSILE WARHEADS + POINT-DEFENSE — the missile-vs-PD arms race.
@@ -566,6 +569,18 @@ const WEAPONS = {
   photon:    {label:"Photon Torpedo",    dps:0.1, vel:14000, track:0.90, sat:1.2, range:400000, nature:"Explosive",delivery:"Guided",pen:4, pershot:0.08,  heat:0, stub:true, warhead:1},
   // Quantum torpedo: a HEAVIER warhead (zero-point) — bigger yield + higher penetration + a touch more speed.
   quantum:   {label:"Quantum Torpedo",   dps:0.1, vel:16000, track:0.92, sat:0.9, range:400000, nature:"Explosive",delivery:"Guided",pen:14,pershot:0.25,  heat:0, stub:true, quantum:true, warhead:3},
+  // ── GROUND WEAPONS (surface scale — ranges in METRES, not km; direct-fire, so no PD/torpedo machinery) ──
+  //    dps is scaled to the sim's damage pace (SalvoDamageScale 0.1) so a squad dies in a handful of salvos, not hundreds.
+  blasterrifle:{label:"Blaster Rifle",    dps:0.8, vel:150000, track:0.60, sat:8,  range:400, nature:"Energy",   delivery:"Bolt", pen:2,  pershot:0.05, heat:0},
+  cloneheavy: {label:"Repeating Blaster", dps:1.6, vel:120000, track:0.55, sat:14, range:700, nature:"Energy",   delivery:"Bolt", pen:4,  pershot:0.08, heat:0},
+  attecannon: {label:"AT-TE Mass-Driver Cannon", dps:3.0, vel:8000, track:0.40, sat:2, range:1200, nature:"Kinetic", delivery:"Slug", pen:22, pershot:1.5, heat:0},
+  atteAP:     {label:"AT-TE Anti-Personnel Laser", dps:1.2, vel:130000, track:0.62, sat:24, range:900, nature:"Energy", delivery:"Bolt", pen:1, pershot:0.03, heat:0},
+  clonemortar:{label:"Clone Mortar",      dps:1.1, vel:3000, track:0.30, sat:6,  range:1500, nature:"Explosive",delivery:"Bolt", pen:5,  pershot:0.4,  heat:0},
+  // Tyranid bio-weapons — mostly MELEE (ultra-short range, huge penetration: claws REND armour). The swarm must CLOSE.
+  fleshborer:  {label:"Fleshborer",              dps:0.7, vel:1200, track:0.55, sat:16, range:250, nature:"Kinetic",  delivery:"Bolt", pen:3,  pershot:0.03, heat:0},
+  rendingclaws:{label:"Rending Claws (melee)",   dps:2.6, vel:200,  track:0.30, sat:2,  range:60,  nature:"Kinetic",  delivery:"Slug", pen:30, pershot:1.3,  heat:0},
+  scythingtalons:{label:"Scything Talons (melee)",dps:5.5,vel:200,  track:0.25, sat:1.5,range:70,  nature:"Kinetic",  delivery:"Slug", pen:26, pershot:2.6,  heat:0},
+  biocannon:   {label:"Venom / Bio-Cannon",      dps:2.2, vel:2500, track:0.35, sat:4,  range:800, nature:"Explosive",delivery:"Bolt", pen:10, pershot:0.7,  heat:0},
 };
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
@@ -635,6 +650,28 @@ const SHIP_TYPES = {
   venatorcarrier:{label:"Venator (carrier)", toughness:463, evasion:0.12, shieldCap:25, shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:4000,
               bay:"StrikeCraft", wing:{type:"arc170", pool:25, cycleRate:4},
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:10, medturbo:2, pdbattery:52, missile:4}},
+  // ── GROUND UNITS (surface theater) — `unitType` (Infantry/Armor/Artillery) drives the LIVE terrain triangle
+  //    (GroundTerrain.TerrainAttackMult): in a JUNGLE (Cover) Armor attacks at ×0.75, Artillery ×0.85, Infantry ×1.0.
+  //    Ground units mostly carry NO shields (armour is the defense; penetration bites) — the ground doctrine.
+  // Star Wars — Grand Army: disciplined ranged infantry + heavy walkers (armour, but jungle-penalised).
+  clonetrooper:{label:"Clone Trooper Squad", unitType:"Infantry", toughness:20, evasion:0.30, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:130,
+              armour:{Kinetic:1,Energy:2,Explosive:0,Exotic:0}, loadout:{blasterrifle:1}},
+  atte:      {label:"AT-TE Walker", unitType:"Armor", toughness:120, evasion:0.10, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:55,
+              armour:{Kinetic:8,Energy:6,Explosive:4,Exotic:0}, loadout:{attecannon:1, atteAP:2}},
+  atst:      {label:"AT-ST Scout Walker", unitType:"Armor", toughness:46, evasion:0.20, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:160,
+              armour:{Kinetic:3,Energy:2,Explosive:1,Exotic:0}, loadout:{atteAP:2}},
+  cloneheavy:{label:"Clone Heavy-Weapons Team", unitType:"Artillery", toughness:16, evasion:0.25, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:30,
+              armour:{Kinetic:1,Energy:1,Explosive:0,Exotic:0}, loadout:{clonemortar:1}},
+  // Tyranids — a melee SWARM + living tanks (the units from the franchise dossier). No shields; chitin armour + numbers +
+  // speed. Rending claws out-penetrate any plating, so they SHRED once they close — the whole fight is the approach.
+  // (Synapse — the hive-mind command that keeps the swarm coherent — is a real Tyranid mechanic with no sim reader;
+  //  flagged, not modeled: here every creature fights at full will regardless of a synapse node.)
+  termagant: {label:"Termagant Swarm", unitType:"Infantry", toughness:8, evasion:0.30, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:150,
+              armour:{Kinetic:1,Energy:0,Explosive:0,Exotic:0}, loadout:{fleshborer:1}},
+  genestealer:{label:"Genestealer Brood", unitType:"Infantry", toughness:18, evasion:0.45, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:230,
+              armour:{Kinetic:2,Energy:1,Explosive:1,Exotic:0}, loadout:{rendingclaws:1}},
+  carnifex: {label:"Carnifex", unitType:"Armor", toughness:130, evasion:0.08, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:70,
+              armour:{Kinetic:9,Energy:7,Explosive:5,Exotic:0}, loadout:{scythingtalons:1, biocannon:1}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -655,6 +692,8 @@ function buildShip(typeKey, name){
     shieldCap, shieldRegen, pd, ammoCap:t.ammoCap, heatCap:t.heatCap,
     // carry-class (CARRIER-DESIGN §13a): what a chassis IS, for the deployable/bay match. null = an ordinary hull.
     carryClass:t.carryClass||null, bay:t.bay||null,
+    unitType:t.unitType||null,                                 // Infantry/Armor/Artillery — drives the ground terrain triangle
+
     // carrier hangar (StrikeCraft bay): wing pool aboard + sortie tempo (CARRIER-DESIGN §5/§6)
     wingType:t.wing?t.wing.type:null, wingPool:t.wing?t.wing.pool:0, wingMax:t.wing?t.wing.pool:0, cycleRate:t.wing?t.wing.cycleRate:0,
     armour:Object.assign({},t.armour), weapons};
@@ -664,7 +703,24 @@ function buildShip(typeKey, name){
    SCENARIOS — space fleet engagements only (the arena is a space battle;
    ground is the same model on a surface, a follow-up).
    ================================================================== */
+// expand a count into [type,name] pairs — for the big ground squads (a 24-strong Termagant swarm, etc.)
+function rep(n,type,pfx){ const a=[]; for(let i=1;i<=n;i++) a.push([type, pfx+' '+i]); return a; }
 const SCENARIOS = {
+  // ── JUNGLE GROUND ASSAULT — Star Wars ground army vs the Tyranid swarm, on a jungle world ──
+  // Ground combat on the SHARED kernel: short (metre-scale) ranges, armour-vs-penetration (no shields), the LIVE jungle
+  // effects (cover→evasion, ×0.66 advance, the unit-type terrain triangle: Armour ×0.75 / Infantry ×1.0). The Tyranids
+  // are a MELEE swarm — the whole fight is whether the clone gun-line can thin them during the approach before the
+  // rending claws (which out-penetrate any plating) reach contact. Default doctrine: the GAR HOLDS, the swarm CHARGES.
+  jungleground:{ label:"Jungle assault — Star Wars ground (clones + walkers) vs the Tyranid swarm",
+    env:"jungle", minGap:40, stances:{A:"hold", B:"close"}, salvoScale:8,
+    fleets:[
+      {side:"A", name:"GAR · Line — Clone Troopers", ships:rep(14,"clonetrooper","Clone Squad")},
+      {side:"A", name:"GAR · Armour — AT-TE / AT-ST", ships:[["atte","AT-TE Alpha"],["atte","AT-TE Beta"],["atte","AT-TE Gamma"],["atst","AT-ST 1"],["atst","AT-ST 2"],["atst","AT-ST 3"]]},
+      {side:"A", name:"GAR · Support — Heavy Weapons", ships:rep(4,"cloneheavy","HW Team")},
+      {side:"B", name:"Tyranids · Termagant Swarm", ships:rep(28,"termagant","Termagant")},
+      {side:"B", name:"Tyranids · Genestealer Broods", ships:rep(11,"genestealer","Genestealer")},
+      {side:"B", name:"Tyranids · Carnifexes", ships:rep(3,"carnifex","Carnifex")},
+    ]},
   // ── THE FRANCHISE CLASH — Imperial fleet (4 squadrons) vs Federation task force (3 squadrons) ──
   // Each SQUADRON is its own fleet on the same side (the sim groups fleets by `side`). Squadron D = the 50 ARC-170s,
   // docked in the two Venators (25 each) and LAUNCHED as carrier wings once the fight opens (CARRIER-DESIGN §6).
@@ -743,6 +799,17 @@ const SCENARIOS = {
    ================================================================== */
 function envM(o){ return Object.assign({range:1,eva:0,dmgK:1,dmgE:1,dmgX:1,dmgO:1,guidedR:1,shCap:1,shReg:1,pd:1,closing:1,dotKind:null,dotJps:0}, o||{}); }
 function natureMul(m,nat){ return nat==="Kinetic"?m.dmgK : nat==="Energy"?m.dmgE : nat==="Explosive"?m.dmgX : nat==="Exotic"?m.dmgO : 1; }
+// GROUND TERRAIN TRIANGLE — the LIVE GroundTerrain.TerrainAttackMult (GroundTerrain.cs:82-93): a unit's OUTGOING
+// attack is scaled by its type vs the terrain class. Applied only when a ground unit fights on a surface env.
+function groundTerrainAttack(unitType, terrain){
+  if(!unitType || !terrain) return 1;
+  const T = {
+    Armor:    {Open:1.30, Cover:0.75, Rough:0.70},
+    Artillery:{Open:1.00, Cover:0.85, Rough:1.30},
+    Infantry: {Open:1.00, Cover:1.00, Rough:1.00},
+  };
+  return (T[unitType] && T[unitType][terrain]) || 1;
+}
 const ENVIRONMENTS = [
   // ---------- SPACESIDE ----------
   {key:"open", theater:"space", glyph:"○", label:"Open space (baseline)",
@@ -868,19 +935,19 @@ const ENVIRONMENTS = [
    m:envM({closing:1.3, guidedR:1.25, eva:0.1}),
    r:[["DATA","SystemBodyInfoDB.Gravity is stored (SystemBodyInfoDB.cs:107)"],
       ["THEORY","EVERYTHING here — gravity is unread by ground combat"]]},
-  {key:"jungle", theater:"surface", glyph:"🌴", label:"Dense jungle (Cover)",
+  {key:"jungle", theater:"surface", glyph:"🌴", label:"Dense jungle (Cover)", terrain:"Cover",
    blurb:"Triple-canopy green. Infantry vanish into the cover and thrive; armour bogs and loses its edge; the march slows to a hack. In-engine this is GroundTerrain 'Cover'.",
    m:envM({eva:0.20, closing:0.66, dmgK:0.9}),
    r:[["LIVE","eva — Cover terrain CoverDefenseMult ×1.25 (GroundTerrain.cs:114-122)"],
       ["LIVE","unit-affinity — Armor ×0.75 / Infantry 1.0 attack in cover (TerrainAttackMult, GroundTerrain.cs:82-93)"],
       ["LIVE","closing — march ×1.5 in cover (HexPathfinder; GroundForcesProcessor.cs:196)"]]},
-  {key:"mountains", theater:"surface", glyph:"⛰", label:"Mountains (Rough)",
+  {key:"mountains", theater:"surface", glyph:"⛰", label:"Mountains (Rough)", terrain:"Rough",
    blurb:"Broken high ground. Superb cover, artillery lords it over the valleys, armour claws for purchase, and every kilometre is a slog. In-engine this is GroundTerrain 'Rough'.",
    m:envM({eva:0.30, closing:0.4}),
    r:[["LIVE","eva — Rough terrain CoverDefenseMult ×1.5 (GroundTerrain.cs:114-122)"],
       ["LIVE","unit-affinity — Artillery ×1.3 / Armor ×0.7 in rough (TerrainAttackMult, GroundTerrain.cs:82-93)"],
       ["LIVE","closing — march ×2.5 in rough (GroundForcesProcessor.cs:196)"]]},
-  {key:"plains", theater:"surface", glyph:"▭", label:"Open plains",
+  {key:"plains", theater:"surface", glyph:"▭", label:"Open plains", terrain:"Open",
    blurb:"Rolling open ground with nowhere to hide. Thin cover, long fields of fire — tank country, where massed armour rolls and the exposed defender pays.",
    m:envM({eva:-0.05, dmgK:1.1}),
    r:[["LIVE","eva — Open terrain CoverDefenseMult ×0.9 (less cover, GroundTerrain.cs:114-122)"],
@@ -890,7 +957,7 @@ const ENVIRONMENTS = [
    m:envM({dmgX:0.9, dotKind:"Radiation", dotJps:170}),
    r:[["DATA","SystemBodyInfoDB.RadiationLevel is stored (:73) and RAISED by orbital bombardment (DamageProcessor.cs:304-310); RadiationDamage is a valid IsDamageEffect"],
       ["THEORY","THE sharpest surface gap — PlanetEnvironmentFactory NEVER emits RadiationDamage, so a planet's RadiationLevel produces ZERO combat effect today"]]},
-  {key:"urban", theater:"surface", glyph:"🏙", label:"Urban / dense ruins",
+  {key:"urban", theater:"surface", glyph:"🏙", label:"Urban / dense ruins", terrain:"Cover",
    blurb:"City fighting — the meat-grinder. Every wall is cover, every cellar an ambush; infantry is king and armour dies in the streets. The ultimate defender's ground.",
    m:envM({eva:0.28, closing:0.6, dmgK:0.85}),
    r:[["THEORY","No Urban RegionFeatureType exists (PlanetRegionsDB.cs:16-20) — closest live analogue is 'Cover'; a true urban terrain class is unbuilt"]]},
@@ -907,7 +974,7 @@ function activeEnv(){ return ENVBY[envKey] || ENVIRONMENTS[0]; }
 /* ==================================================================
    STATE
    ================================================================== */
-let scenKey = "franchise2";
+let scenKey = "jungleground";
 let state = null;
 let playing = false, playTimer = null;
 const logLines = [];
@@ -977,7 +1044,7 @@ function advanceArena(live, dt){
     let want = f.stance==="hold" ? gap
              : f.stance==="withdraw" ? state.sep0*4                     // run for it — open the gap as far as you can
              : f.stance==="standoff" ? Math.min(dominantRange(f)*ARENA.KiteMargin, state.sep0)
-             : ARENA.MinGap_m;                                          // "close" → drive to knife range
+             : MINGAP;                                                  // "close" → drive to knife/contact range
     const dir = Math.sign(enemy.pos.x - f.pos.x) || 1;                  // +dir points at the enemy
     // ENV closing: the medium drags movement (nebula gas, debris grit, dense atmosphere, cryo cold, rough terrain).
     const step = fleetSpeed(f)*dt*activeEnv().m.closing;
@@ -991,9 +1058,9 @@ function advanceArena(live, dt){
   const A=live.filter(f=>f.side==="A"), B=live.filter(f=>f.side==="B");
   if(A.length && B.length){
     const ax=Math.max(...A.map(f=>f.pos.x)), bx=Math.min(...B.map(f=>f.pos.x));
-    if(bx-ax < ARENA.MinGap_m){ const mid=(ax+bx)/2;
-      A.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.min(f.pos.x, mid-ARENA.MinGap_m/2); });
-      B.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.max(f.pos.x, mid+ARENA.MinGap_m/2); }); }
+    if(bx-ax < MINGAP){ const mid=(ax+bx)/2;
+      A.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.min(f.pos.x, mid-MINGAP/2); });
+      B.forEach(f=>{ if(f.stance!=="withdraw") f.pos.x=Math.max(f.pos.x, mid+MINGAP/2); }); }
   }
   // each fleet's separation = distance to its nearest enemy (what the range gate + falloff read)
   for(const f of live){ const e=nearestEnemy(f, live); f.Separation_m = e ? fleetSep(f,e) : 0; }
@@ -1005,9 +1072,13 @@ function advanceArena(live, dt){
 // BuildFireMix (CombatEngagement.cs:1317) — aggregate a fleet's weapons, range-gated
 function buildFireMix(fl, separation_m){
   const byKey = {};
-  const E = activeEnv().m;                                                // environment condition-multipliers
+  const eActive = activeEnv();
+  const E = eActive.m;                                                    // environment condition-multipliers
   for(const s of fl.ships){ if(!s.alive) continue;
     const fm = fireMultOf(s);                                             // a degraded ship shoots less (condition tier)
+    // GROUND terrain triangle (LIVE, GroundTerrain.cs): a ground unit's attack is scaled by its type vs the terrain
+    // class — in a jungle (Cover) an Armor walker attacks at ×0.75, Artillery ×0.85, Infantry ×1.0. 1.0 for space.
+    const gt = groundTerrainAttack(s.unitType, eActive.terrain);
     for(const w of s.weapons){
       // ENV range: guided weapons lose REACH in atmosphere / gravity wells / EM (guidedR); beams/slugs keep their range.
       const reach = w.delivery==="Guided" ? w.range*E.guidedR : w.range;
@@ -1016,7 +1087,8 @@ function buildFireMix(fl, separation_m){
       if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD};
       // ENV damage-by-nature: the medium favours some weapon natures over others (a nebula scatters beams, an ion
       // storm cooks torpedo guidance, dense air drags slugs) — Kinetic/Energy/Explosive/Exotic each scaled here.
-      byKey[k].dps += w.dps*fm*natureMul(E, w.nature);
+      // × the ground terrain-triangle attack multiplier (gt) for a surface unit-type.
+      byKey[k].dps += w.dps*fm*natureMul(E, w.nature)*gt;
     }
   }
   return Object.values(byKey);
@@ -1366,6 +1438,10 @@ function endSpace(){
    ================================================================== */
 function rebuild(){
   const scen=SCENARIOS[scenKey];
+  MINGAP = scen.minGap || ARENA.MinGap_m;                                 // ground scenarios pull the contact-floor down to metres
+  CE.SalvoDamageScale = scen.salvoScale || 0.1;                           // the SIM's combat-pace dial (not a unit stat) —
+  // a ground scenario runs it faster so a metre-scale firefight resolves in a watchable count instead of ~700 salvos.
+  // This is the ONLY pacing lever touched for ground; every unit's HP/damage/armour is its own role-based value.
   logLines.length=0;
   state=newSpaceState(scen);
   applyStance("A", document.getElementById("stanceA").value);
@@ -1373,7 +1449,8 @@ function rebuild(){
   applyTargetPri("A", document.getElementById("priA").value);
   applyTargetPri("B", document.getElementById("priB").value);
   nl(`<span class="sys">${scen.label}</span>`,"sys");
-  nl(`<span class="sys">arena diameter ${fmtKm(state.sep0)} (bounded by the longest weapon range) — the two sides open at opposite ends and close at their real speeds</span>`,"sys");
+  const closeWord = scen.minGap ? "advance across the ground toward contact" : "close at their real speeds";
+  nl(`<span class="sys">arena diameter ${fmtKm(state.sep0)} (bounded by the longest weapon range) — the two sides open at opposite ends and ${closeWord}</span>`,"sys");
   render(); flushLog();
 }
 function stepOnce(){ if(!state||state.over) return; stepSpace(); flushLog(); }
@@ -1762,6 +1839,18 @@ function syncEnvSelect(){
   const surf =ENVIRONMENTS.filter(e=>e.theater==="surface").map(opt).join("");
   sel.innerHTML = `<optgroup label="Spaceside">${space}</optgroup><optgroup label="Planetside · surface theater">${surf}</optgroup>`;
 }
+// A scenario can carry its own defaults — the battle's environment and each side's opening doctrine. Applied on
+// scenario select (a deliberate reset); the user can then change env/stance freely. Space scenarios reset env→open.
+function applyScenarioDefaults(scen){
+  envKey = scen.env || "open";
+  const es=document.getElementById("envsel"); if(es) es.value=envKey;
+  // ALWAYS set stances/priorities (to the scenario's value or a clean default) so doctrine never leaks between
+  // scenarios — e.g. the jungle scenario's Hold/Close must not carry into a space battle that expects Close/Close.
+  document.getElementById("stanceA").value = (scen.stances&&scen.stances.A) || "close";
+  document.getElementById("stanceB").value = (scen.stances&&scen.stances.B) || "close";
+  document.getElementById("priA").value = (scen.pri&&scen.pri.A) || "spread";
+  document.getElementById("priB").value = (scen.pri&&scen.pri.B) || "spread";
+}
 function initTabs(){
   const tabs=["log","ledger","weapons","forces","honesty","const"];
   tabs.forEach(t=>{
@@ -1785,7 +1874,7 @@ function initTheme(){
 }
 function init(){
   initTabs(); initTheme();
-  document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; stop(); rebuild(); });
+  document.getElementById("scenario").addEventListener("change",e=>{ scenKey=e.target.value; applyScenarioDefaults(SCENARIOS[scenKey]); stop(); rebuild(); });
   document.getElementById("envsel").addEventListener("change",e=>{ envKey=e.target.value; stop(); rebuild(); });
   document.getElementById("stanceA").addEventListener("change",e=>{ applyStance("A",e.target.value); render(); });
   document.getElementById("stanceB").addEventListener("change",e=>{ applyStance("B",e.target.value); render(); });
@@ -1804,6 +1893,7 @@ function init(){
   selfTest();
   syncScenarioSelect();
   syncEnvSelect();
+  applyScenarioDefaults(SCENARIOS[scenKey]);
   rebuild();
   renderHonesty(); renderConst();
 }
