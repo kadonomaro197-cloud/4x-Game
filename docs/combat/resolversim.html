@@ -157,6 +157,7 @@ td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 .efx .chip.dn{color:var(--bug);border-color:color-mix(in srgb,var(--bug) 55%,var(--edge))}
 .envbox .reads{display:flex;flex-direction:column;gap:3px}
 .envbox .rd{font-size:11px;color:var(--ink2);display:flex;gap:7px;align-items:baseline}
+.envbox .rdhdr{display:block;font-weight:700;color:var(--ink);margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--edge2);font-size:11px}
 .emk{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;padding:1px 5px;border-radius:4px;flex:none;min-width:46px;text-align:center}
 .emk.LIVE{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok);border:1px solid var(--ok)}
 .emk.DATA{background:color-mix(in srgb,var(--gap) 18%,transparent);color:var(--gap);border:1px solid var(--gap)}
@@ -609,6 +610,31 @@ const SHIP_TYPES = {
   // plus real anti-ship beams so it is a credible line ship, not just a fighter-swatter.
   flakescort:{label:"Flak Escort", toughness:230, evasion:0.05, shieldCap:12, shieldRegen:0.4, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:6000,
               armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{pdbattery:70, heavyturbo:2, medturbo:6}},
+  // ── FRANCHISE CAPITALS (ported from the Entity Assembler min/max builds — the numbers we already committed) ──
+  // Imperial-I Star Destroyer: assembler Firepower 1,130.6 MJ/s · Toughness 968 · Evasion 13% · Shield 70 MJ. Loadout
+  // reproduces the total exactly: (8·78 + 3·60 + 0.3·12) × 1.40 = 1,130.64. Ion cannons are EXOTIC → shields do NOT
+  // stop them (ShieldSoakVsExotic 0.0) — the canon shield-bypass. ~8× a Venator; the dreadnought-tier super-capital.
+  isd:       {label:"Imperial-I Star Destroyer", toughness:968, evasion:0.13, shieldCap:70, shieldRegen:1.2, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:3000,
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:78, ioncannon:60, pdbattery:12}},
+  // Prometheus-class (glass cannon): assembler Firepower 126.8 · Toughness 349 · Shield 130 (strongest regenerative) ·
+  // agile 415 m → Evasion 0.15. (3·24 + 0.5·8 + 1.2·6 + 2.7·2 + 0.3·6) × 1.40 = 126.6 MJ/s. Federation weapons.
+  prometheus:{label:"Prometheus", toughness:349, evasion:0.15, shieldCap:130, shieldRegen:2.8, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:5800,
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{phaser:24, phaserbank:8, photon:6, quantum:2, pdbattery:6}},
+  // Miranda (USS Reliant): dossier Firepower ~25 MJ/s (phaser-led) · light frigate hull ~90 · 8 shield gens ≈ 40 MJ ·
+  // nimbler than a capital → Evasion 0.20. (3·6 + 0.5·2 + 1.2·4 + 0.3·4) = 25.0. Half a Sovereign, a third the shields.
+  miranda:   {label:"Miranda", toughness:90, evasion:0.20, shieldCap:40, shieldRegen:0.8, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:6500,
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{phaser:6, phaserbank:2, photon:4, pdbattery:4}},
+  // ARC-170 heavy strike-fighter: dossier Firepower "a few MJ/s" · whole-or-dead on one capital hit (toughness ~10) ·
+  // EMERGENT high evasion ~0.82 · tiny shield. carryClass StrikeCraft → it rides a carrier's bay as a launched wing.
+  // (0.5·4 lasers + 1.2·2 proton torpedoes) = 4.4 MJ/s. 4 wingtip+tail lasers + 6 proton torpedoes.
+  arc170:    {label:"ARC-170", toughness:10, evasion:0.82, shieldCap:3, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:12000,
+              carryClass:"StrikeCraft",
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{laser:4, missile:2}},
+  // Venator (carrier fit): the same gunship as `venator`, PLUS a StrikeCraft bay carrying a 25-ARC-170 wing (two of
+  // them = the 50 ARC-170s "docked between the Venators"). It fights with its own guns AND launches the wing.
+  venatorcarrier:{label:"Venator (carrier)", toughness:463, evasion:0.12, shieldCap:25, shieldRegen:0.5, pd:0, ammoCap:0, heatCap:0, fpScale:1.40, speed:4000,
+              bay:"StrikeCraft", wing:{type:"arc170", pool:25, cycleRate:4},
+              armour:{Kinetic:0,Energy:0,Explosive:0,Exotic:0}, loadout:{heavyturbo:10, medturbo:2, pdbattery:52, missile:4}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -639,6 +665,19 @@ function buildShip(typeKey, name){
    ground is the same model on a surface, a follow-up).
    ================================================================== */
 const SCENARIOS = {
+  // ── THE FRANCHISE CLASH — Imperial fleet (4 squadrons) vs Federation task force (3 squadrons) ──
+  // Each SQUADRON is its own fleet on the same side (the sim groups fleets by `side`). Squadron D = the 50 ARC-170s,
+  // docked in the two Venators (25 each) and LAUNCHED as carrier wings once the fight opens (CARRIER-DESIGN §6).
+  franchise:{ label:"Franchise clash — Star Wars fleet (ISD + 2 Venators + Acclamator + 50 ARC-170s) vs Star Trek (5 Mirandas + 2 Sovereigns + Prometheus)",
+    fleets:[
+      {side:"A", name:"SW · Sqn A — Star Destroyer",     ships:[["isd","Imperial-I"]]},
+      {side:"A", name:"SW · Sqn B — Venators (carriers)", ships:[["venatorcarrier","Venator I"],["venatorcarrier","Venator II"]]},
+      {side:"A", name:"SW · Sqn C — Acclamator",          ships:[["acclamator","Acclamator"]]},
+      // Sqn D — 50 ARC-170s — auto-launches from the two Venators above (25 each); appears as two wing sub-fleets.
+      {side:"B", name:"ST · Sqn A — Mirandas",  ships:[["miranda","Miranda I"],["miranda","Miranda II"],["miranda","Miranda III"],["miranda","Miranda IV"],["miranda","Miranda V"]]},
+      {side:"B", name:"ST · Sqn B — Sovereigns", ships:[["sovereign","Sovereign I"],["sovereign","Sovereign II"]]},
+      {side:"B", name:"ST · Sqn C — Prometheus", ships:[["prometheus","Prometheus"]]},
+    ]},
   handoff:{ label:"Handoff — 1 Venator + 2 Acclamators vs 2 Sovereigns",
     fleets:[
       {side:"A", name:"Republic", ships:[["venator","Venator"],["acclamator","Acclamator I"],["acclamator","Acclamator II"]]},
@@ -858,7 +897,7 @@ function activeEnv(){ return ENVBY[envKey] || ENVIRONMENTS[0]; }
 /* ==================================================================
    STATE
    ================================================================== */
-let scenKey = "handoff";
+let scenKey = "franchise";
 let state = null;
 let playing = false, playTimer = null;
 const logLines = [];
@@ -1381,12 +1420,14 @@ function renderEnv(){
   const chipsHtml = chips.length ? `<div class="efx">${chips.join("")}</div>`
     : `<div class="efx"><span class="chip">no combat modifiers — the clean baseline</span></div>`;
   const reads = e.r.map(([mk,txt])=>`<div class="rd"><span class="emk ${mk}">${mk}</span><span>${txt}</span></div>`).join("");
+  const hookHdr = e.key==="open"||e.key==="temperate" ? "" :
+    `<div class="rd rdhdr">✔ Accepted resolver hook (design-locked 2026-08-05) — wiring status per effect: <span class="emk LIVE">LIVE</span>=already wired · <span class="emk DATA">DATA</span>=data ready · <span class="emk THEORY">THEORY</span>=to build</div>`;
   const th = e.theater==="space" ? "SPACESIDE" : "SURFACE · ground theater";
   const surfaceNote = e.theater==="surface"
     ? `<p class="note" style="margin:8px 0 0">A <b>surface</b> condition, shown on the <b>shared combat kernel</b> (the same hit / damage math the ground resolver runs). In-engine it routes through <span class="src">GroundForcesProcessor</span>; its unit-type affinities (Armor / Artillery / Infantry) apply to ground units, not shown on these ships.</p>`
     : "";
   el.innerHTML = `<div class="eh"><span class="eg">${e.glyph}</span> ${e.label} <span class="theater">${th}</span></div>`
-    + `<div class="eb">${e.blurb}</div>${chipsHtml}<div class="reads">${reads}</div>${surfaceNote}`;
+    + `<div class="eb">${e.blurb}</div>${chipsHtml}<div class="reads">${hookHdr}${reads}</div>${surfaceNote}`;
 }
 function bar(cur,max,cls,col){ const p=max>0?clamp(cur/max,0,1)*100:0; return `<div class="bar ${cls||''}"><i style="width:${p}%${col?`;background:var(${col})`:''}"></i></div>`; }
 
@@ -1599,8 +1640,8 @@ function renderHonesty(){
   <p class="note">The sim shows the engine straight — including where it is unfinished. It never silently "fixes" the engine; a flag is the honest thing.</p>
   <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> This is the arena TARGET, not the shipped default</div>
     <p>This sim implements <b>LD-30</b> (<span class="src">AUTO-RESOLVER-GROUND-TRUTH §5</span>) — the opposing-sides arena the developer ruled the resolver <i>must</i> become. The shipped default resolver still fights at <b>point-blank</b> (its closing model collapses to one shrinking scalar and is off by default); that model is superseded here, deliberately. The <b>damage math</b> below the movement is the engine's real kernel, byte-for-byte.</p></div>
-  <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> The <b>Environment</b> selector is a design proposal — the space resolver reads NONE of it today</div>
-    <p>Pick an <b>Environment</b> and the whole battle shifts — detection range, cover, damage-by-nature, shields, point-defense, closing, and an ambient DoT. This is the <b>condition-multiplier</b> model: an environment is a named bundle of the engine's own <span class="src">HazardEffectType</span> vocabulary (SensorJam→detection, MovementDrag→closing, the damage kinds→DoT, terrain→cover), feeding the same resolve. <b>The honest split</b> (each effect is graded in the box under the arena): <span class="emk LIVE">LIVE</span> the engine already applies it (gas-cloud sensor-cut, coronal heat, ground vacuum/terrain attrition — all real); <span class="emk DATA">DATA</span> the data/authoring path exists but the <i>resolver</i> doesn't read it (a planet's gravity, radiation, atmosphere); <span class="emk THEORY">THEORY</span> a creative extrapolation with no engine data (beam-scatter-in-a-nebula, gravity-well missile drop). The load-bearing truth: <b>space combat is environment-blind</b> — <span class="src">CombatEngagement</span> reads no terrain/hazard/body — while <b>ground combat already reads terrain + a per-region hazard list</b>. The single cleanest wire to close the gap is the shared <span class="src">CombatKernel.HitFraction</span>, which both resolvers call. See <span class="src">ENVIRONMENT-CONDITIONS-DESIGN.md</span>.</p></div>
+  <div class="hitem"><div class="ht"><span class="badge live">HOOK</span> The <b>Environment</b> selector — an ACCEPTED resolver hook (design-locked 2026-08-05); wiring is a follow-up</div>
+    <p>Pick an <b>Environment</b> and the whole battle shifts — detection range, cover, damage-by-nature, shields, point-defense, closing, and an ambient DoT. These effects are <b>the developer's accepted design</b> for how surroundings feed the resolver (locked 2026-08-05); the engine wire comes later. It's the <b>condition-multiplier</b> model: an environment is a named bundle of the engine's own <span class="src">HazardEffectType</span> vocabulary (SensorJam→detection, MovementDrag→closing, the damage kinds→DoT, terrain→cover), feeding the same resolve. Each effect carries its <b>wiring status</b> in the box under the arena: <span class="emk LIVE">LIVE</span> already wired (gas-cloud sensor-cut, coronal heat, ground vacuum/terrain attrition — real today); <span class="emk DATA">DATA</span> the data/authoring path exists, the read is the to-do (a planet's gravity, radiation, atmosphere); <span class="emk THEORY">THEORY</span> to build from scratch (beam-scatter-in-a-nebula, gravity-well missile drop). Context for the wiring job: <b>space combat is environment-blind today</b> — <span class="src">CombatEngagement</span> reads no terrain/hazard/body — while <b>ground combat already reads terrain + a per-region hazard list</b>. The single cleanest wire is the shared <span class="src">CombatKernel.HitFraction</span>, which both resolvers call. See <span class="src">ENVIRONMENT-CONDITIONS-DESIGN.md</span>.</p></div>
   <div class="hitem"><div class="ht"><span class="badge gap">GAP</span> Closing speed is the one non-spec-sheet input</div>
     <p>Every weapon <b>range</b> is engine-true (<span class="src">WeaponProfile.cs</span> authentic-closing ranges). A ship's sublight <b>speed</b> is <i>not</i> a <span class="src">ShipCombatValueDB</span> field — the engine derives it from <span class="src">NewtonThrustAbilityDB</span> (thrust ÷ mass). Here it's an editable per-class stand-in so the arena has real motion; tune it in <b>Forces</b>.</p></div>
   <div class="hitem"><div class="ht"><span class="badge plan">MODEL</span> Warheads are real here — the engine still stubs them</div>

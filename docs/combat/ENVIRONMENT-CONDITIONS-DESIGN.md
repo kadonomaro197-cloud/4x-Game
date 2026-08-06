@@ -1,8 +1,10 @@
 # Environment & Battle Conditions — how the surroundings shape a fight
 
-**As of 2026-08-05.** Status: **DESIGN + a live model in the resolver sim.** The record half (how the game reads
-environments today) is verified against source at file:line by a 5-agent survey. The build half (wiring it into the
-real auto-resolver) is a proposal with a named seam, not yet in the engine.
+**As of 2026-08-05.** Status: **ACCEPTED RESOLVER HOOKS (design-locked) + a live model in the resolver sim.** The
+developer has accepted every environment effect below as an intended input to the combat resolver — this is *how
+environments hook in*. **Wiring into the real engine is a deferred follow-up** (a named seam, not yet built). The
+record half (how the game reads environments today) is verified against source at file:line by a 5-agent survey; the
+per-effect marker now reads as **wiring status**, not a question of whether the hook is accepted.
 
 ---
 
@@ -51,11 +53,13 @@ nature, shields, point-defense, closing speed, and an ambient DoT — that feeds
 uses. Fight in a nebula and the bundle says "see 45% as far, beams do 82%, everyone drags at 60% speed." That's the
 whole model. The sim implements exactly this struct.
 
-Every effect below is graded three ways, and the grade is the honest part:
+Every effect below is an **accepted hook** into the resolver; the three-way grade is now its **wiring status** — how
+much engine plumbing remains before it's live (the honest part is that nothing here is wired-and-shipped yet on the
+space side):
 
-- **🟢 LIVE** — the engine already applies this exact effect, at a cited file:line.
-- **🟡 DATA** — the data (or the JSON authoring path) exists; the **resolver** just doesn't read it yet.
-- **🔵 THEORY** — a creative extrapolation with no engine data behind it. Flagged, never faked.
+- **🟢 LIVE** — already wired: the engine applies this exact effect today, at a cited file:line.
+- **🟡 DATA** — data-ready: the data (or the JSON authoring path) exists; the **read** into the resolver is the to-do.
+- **🔵 THEORY** — to build: a creative extrapolation with no engine data behind it yet. Flagged, never faked.
 
 ---
 
