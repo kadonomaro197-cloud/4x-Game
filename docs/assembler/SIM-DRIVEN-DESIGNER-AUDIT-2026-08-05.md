@@ -12,6 +12,13 @@ This doc does **not** duplicate it; it re-prioritizes it by what the recent sims
 ground-assembler stat findings 06 doesn't cover. Verified by three parallel source audits (2026-08-06), each claim at
 file:line.
 
+> **⚙ The engine side of this fix list is now its own punch-list:
+> [`ENGINE-WIRING-BACKLOG-2026-08-06.md`](ENGINE-WIRING-BACKLOG-2026-08-06.md).** The HTML design tools (doors +
+> assembler + resolver sim) are DONE as *intention documents* — they already draw every capability below and flag every
+> un-wired dial honestly. This audit is the analysis; the backlog is the marked-down engine work that makes the
+> intentions real (nothing implemented yet). The developer's 2026-08-06 call: fix the tools' expression (already done),
+> mark down the engine work — do NOT touch the engine.
+
 ---
 
 ## Why this matters (plain English)
