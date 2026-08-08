@@ -261,3 +261,48 @@ kernel **8/8**, and assert the four behaviours: the default fight runs **to dest
 **Withdraw escapes intact** while a slower one is caught; and a **finer step gives more salvos with the same winner**
 (dt 1 s → 67 salvos, dt 5 s → 13). A Playwright pass renders both themes and runs the battle to completion with **0
 console errors**.)*
+
+## The atmospheric-aircraft test — do the Apache / F-22 / LAAT resolve correctly? (2026-08-08)
+
+The scenario **"Combined arms (air + ground)"** places the three atmospheric-layer aircraft
+(`docs/assembler/AIRCRAFT-BUILDS.md`) + clone infantry against LAAT gunships + AT-TE walkers + Carnifexes on open
+plains — air units on either side. The question: does the auto-resolver handle aircraft correctly? The answer is a clean
+**two-part verdict**, and it exactly confirms what the locked atmospheric design says (`docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`).
+
+**✅ The shared kernel resolves them correctly — as COMBATANTS.** Headless run: parses + renders clean, **0 throws**,
+NaN-swept clean (every unit's firepower/toughness/evasion/speed finite), decisive outcome in 27 salvos. And the damage
+model is right, proven by the kernel micro-checks (the sim's own `hitFraction` + `armourSoak`):
+- **Armour × penetration differentiates targets exactly.** An AIM-120 (Explosive, pen 5) **one-shots the unarmoured LAAT
+  for 90 MJ** but the AT-TE's Explosive-4 plate **soaks it to ~7 MJ**; the Apache's Hellfire (pen 22) **cracks any ground
+  armour 100%** (vs AT-TE plate 4, vs Carnifex plate 5). Anti-armour works; the nature matchup bites.
+- **Dodge works.** A composite-beam (light-speed) is **undodgeable (hf 0.998)**; a mass-driver slug (finite velocity) is
+  **dodged to 0.898** against the F-22's higher evasion. Beam ≠ slug, exactly as the kernel intends.
+- **Whole-or-dead casualties, the range+speed closing fight, and firepower totals all resolve** with no special-casing —
+  an aircraft is just another combatant to the kernel.
+
+**🟠 And it exposes precisely what the atmospheric layer is missing — because the air layer is design-only.** Every gap
+below is a PENDING item the locked design already names; the sim quantifies each:
+- **No `EngageBands` gate → an air-to-air missile mows down tanks.** The F-22's AIM-120 (an *air-to-air* weapon) hit
+  ground units **49 times** and lands 100% after armour. Nothing stops an A2A weapon from hitting the surface.
+- **No altitude gate → a tank cannon fully downs a jet.** Micro-check: the AT-TE's mass-driver cannon vs the F-22 hits
+  **66% of the time and deals 100% of its per-shot damage** (pen 22 vs a jet's armour 1). A ground tank shouldn't be
+  able to swat a jet at altitude; here it can.
+- **No anti-air class → a long-range aircraft is unanswerable.** In **both** stance variants the ground side fired **zero
+  shots** — the F-22's 40 km AMRAAM out-ranges everything (3× the next weapon), and with no ground SAM (an `EngageBands:air`
+  long-range weapon) nothing can reach it. The fight is a one-sided BVR turkey-shoot.
+- **No stealth / altitude edge.** The F-22 won on **raw range + speed** (both LIVE), *not* on being unseen or high — its
+  actual identity advantage (stealth, altitude) is invisible, so it reads as a fast, long-ranged ground unit.
+- *(Correct-by-null:* aircraft carry `unitType:null`, so they correctly **skip the ground terrain triangle** — a flyer
+  ignores ground cover/rough. That one piece is already right.)*
+
+**The bottom line:** the auto-resolver **works correctly for what exists** — the shared kernel treats an aircraft as a
+combatant and resolves firepower/dodge/armour/penetration/closing cleanly and decisively. What it does **not** do is make
+an aircraft fight *like an aircraft* — no altitude, no air-vs-surface targeting, no anti-air, no stealth — which is
+exactly the design-only atmospheric layer. **The kernel is ready; the air layer is the missing piece, and this test shows
+precisely which four wires it would add** (altitude separation → `RealGap3D`, the `EngageBands` gate, a ground SAM class,
+and stealth/detection). A minor sim note: the guided-weapon PD-intercept screen prints a small "PD stopped …" figure even
+for a pd:0 defender (≤2 MJ, outcome-neutral) — flagged, not outcome-changing.
+
+*(Verified 2026-08-08 headless: script parses + renders clean, NaN-swept clean across all units incl. the 3 aircraft,
+both stance variants resolve decisively, and the six kernel micro-checks reproduce the armour/penetration/dodge findings
+above. Scenario `aircombined` in `resolversim.html`.)*

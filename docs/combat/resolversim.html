@@ -581,6 +581,19 @@ const WEAPONS = {
   rendingclaws:{label:"Rending Claws (melee)",   dps:2.6, vel:200,  track:0.30, sat:2,  range:60,  nature:"Kinetic",  delivery:"Slug", pen:30, pershot:1.3,  heat:0},
   scythingtalons:{label:"Scything Talons (melee)",dps:5.5,vel:200,  track:0.25, sat:1.5,range:70,  nature:"Kinetic",  delivery:"Slug", pen:26, pershot:2.6,  heat:0},
   biocannon:   {label:"Venom / Bio-Cannon",      dps:2.2, vel:2500, track:0.35, sat:4,  range:800, nature:"Explosive",delivery:"Bolt", pen:10, pershot:0.7,  heat:0},
+  // ── ATMOSPHERIC AIRCRAFT WEAPONS (real METRE ranges; the Apache/F-22/LAAT builds). ⚠ The air layer is design-only,
+  //    so there is NO altitude separation and NO EngageBands gate here — every weapon can hit every target regardless of
+  //    "air vs surface". So an A2A missile hits a tank and a tank cannon hits a jet — the honest current-engine reality.
+  chaingun:  {label:"30mm Chain Gun (M230)",  dps:1.4, vel:805,    track:0.50, sat:14, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:6,  pershot:0.05, heat:0},
+  hellfire:  {label:"AGM-114 Hellfire",       dps:2.0, vel:450,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:22, pershot:0.9,  heat:0},
+  hydra:     {label:"Hydra 70 Rockets",       dps:1.2, vel:700,    track:0.20, sat:6,  range:3000,  nature:"Explosive",delivery:"Bolt",  pen:3,  pershot:0.1,  heat:0},
+  amraam:    {label:"AIM-120 AMRAAM (A2A)",   dps:2.2, vel:1000,   track:0.95, sat:1,  range:40000, nature:"Explosive",delivery:"Guided",pen:5,  pershot:1.0,  heat:0},
+  sidewinder:{label:"AIM-9 Sidewinder (A2A)", dps:1.4, vel:900,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:4,  pershot:0.5,  heat:0},
+  vulcan:    {label:"M61 Vulcan 20mm",        dps:1.0, vel:1050,   track:0.60, sat:40, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:3,  pershot:0.005,heat:0},
+  beamturret:{label:"Composite-Beam Laser",   dps:2.0, vel:C,      track:0.70, sat:4,  range:6000,  nature:"Energy",   delivery:"Beam",  pen:0,  pershot:0.5,  heat:0},
+  aplaser:   {label:"Anti-Personnel Laser",   dps:1.0, vel:130000, track:0.60, sat:12, range:1500,  nature:"Energy",   delivery:"Bolt",  pen:1,  pershot:0.08, heat:0},
+  massdriver:{label:"Mass-Driver Missile",    dps:2.5, vel:3000,   track:0.85, sat:2,  range:12000, nature:"Kinetic",  delivery:"Slug",  pen:18, pershot:1.25, heat:0},
+  aarocket:  {label:"Light A2A Rocket",        dps:1.0, vel:800,    track:0.70, sat:3,  range:4000,  nature:"Explosive",delivery:"Guided",pen:2,  pershot:0.33, heat:0},
 };
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
@@ -672,6 +685,17 @@ const SHIP_TYPES = {
               armour:{Kinetic:2,Energy:1,Explosive:1,Exotic:0}, loadout:{rendingclaws:1}},
   carnifex: {label:"Carnifex", unitType:"Armor", toughness:130, evasion:0.08, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:70,
               armour:{Kinetic:9,Energy:7,Explosive:5,Exotic:0}, loadout:{scythingtalons:1, biocannon:1}},
+  // ── ATMOSPHERIC AIRCRAFT (the Apache/F-22/LAAT builds — docs/assembler/AIRCRAFT-BUILDS.md). `unitType:null` → NOT in
+  //    the ground Infantry/Armor/Artillery triangle (a flyer ignores ground terrain — the sim honours that via null).
+  //    ⚠ The whole air layer is DESIGN-ONLY, so there is no altitude, no air-to-air/anti-air gate, no stealth-as-
+  //    undetectability, no fire-and-forget-from-defilade. They fight here as flat ground units at real range + speed —
+  //    the honest current-engine reality. Their real advantages are the PENDING findings the analysis calls out.
+  apache: {label:"AH-64 Apache", unitType:null, toughness:55, evasion:0.40, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:90,
+              armour:{Kinetic:4,Energy:3,Explosive:2,Exotic:0}, loadout:{hellfire:8, chaingun:1, hydra:2}},
+  f22:    {label:"F-22 Raptor", unitType:null, toughness:26, evasion:0.55, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:600,
+              armour:{Kinetic:1,Energy:1,Explosive:0,Exotic:0}, loadout:{amraam:6, sidewinder:2, vulcan:1}},
+  laat:   {label:"LAAT Gunship", unitType:null, toughness:45, evasion:0.35, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:170,
+              armour:{Kinetic:2,Energy:1,Explosive:0,Exotic:0}, loadout:{beamturret:4, aplaser:3, massdriver:2, aarocket:8}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -720,6 +744,21 @@ const SCENARIOS = {
       {side:"B", name:"Tyranids · Termagant Swarm", ships:rep(28,"termagant","Termagant")},
       {side:"B", name:"Tyranids · Genestealer Broods", ships:rep(11,"genestealer","Genestealer")},
       {side:"B", name:"Tyranids · Carnifexes", ships:rep(3,"carnifex","Carnifex")},
+    ]},
+  // ── COMBINED ARMS — AIR + GROUND on open plains: the atmospheric-layer aircraft (Apache/F-22/LAAT) on either side vs
+  //    the ground units we've built. ⚠ THE TEST: the air layer is design-only, so there is NO altitude and NO EngageBands
+  //    gate — every air advantage is absent and the aircraft fight as flat, fast, long-ranged ground units. What resolves
+  //    CORRECTLY: firepower, dodge, armour-vs-penetration, whole-or-dead, and the range+speed closing fight (the F-22's
+  //    40 km AMRAAMs open first; the AT-TEs must close). What is WRONG-because-PENDING: a tank cannon downs a jet, an A2A
+  //    missile hits a tank, no aircraft gets an altitude/stealth edge. See docs/combat/RESOLVER-SIM.md.
+  aircombined:{ label:"Combined arms (air + ground) — F-22/Apache + clones vs LAAT + AT-TEs + Carnifexes, open plains",
+    env:"plains", minGap:50, stances:{A:"hold", B:"close"}, salvoScale:8,
+    fleets:[
+      {side:"A", name:"Coalition · Air — F-22 + Apache", ships:[["f22","Raptor 1"],["f22","Raptor 2"],["apache","Apache 1"],["apache","Apache 2"]]},
+      {side:"A", name:"Coalition · Infantry — Clones", ships:rep(4,"clonetrooper","Clone Squad")},
+      {side:"B", name:"Republic · Gunships — LAAT", ships:[["laat","LAAT Alpha"],["laat","LAAT Bravo"]]},
+      {side:"B", name:"Republic · Armour — AT-TE", ships:[["atte","AT-TE 1"],["atte","AT-TE 2"],["atte","AT-TE 3"]]},
+      {side:"B", name:"Wild — Carnifexes", ships:[["carnifex","Carnifex 1"],["carnifex","Carnifex 2"]]},
     ]},
   // ── THE FRANCHISE CLASH — Imperial fleet (4 squadrons) vs Federation task force (3 squadrons) ──
   // Each SQUADRON is its own fleet on the same side (the sim groups fleets by `side`). Squadron D = the 50 ARC-170s,
