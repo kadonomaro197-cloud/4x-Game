@@ -425,12 +425,16 @@ function bandOf(fl){ let b=0; for(const s of fl.ships) if(s.alive && (s.band||0)
 function sigOf(fl){ let m=1; for(const s of fl.ships) if(s.alive){ const g=(s.sig!=null?s.sig:1); if(g<m)m=g; } return m; }
 function pairGap3D(a,b){ const dh=Math.abs(BAND_HEIGHT_m[bandOf(a)]-BAND_HEIGHT_m[bandOf(b)]); const s=fleetSep(a,b); return Math.sqrt(s*s+dh*dh); }
 function weaponEngagesBand(w, band){ return !w.engageBands || w.engageBands.indexOf(band)>=0; }
-// the attacker's longest weapon range that CAN engage `tBand`, shrunk by the target's signature (stealth)
+// the attacker's longest weapon range that CAN engage `tBand`, shrunk by the target's signature (stealth). REFERENCE
+// SEMANTICS — the plain-fleet form a future engine port mirrors. The SIM's hot damage loop does NOT call this live;
+// it freezes a per-band reach SNAPSHOT at the start of each tick (see stepSpace `bandReachOf`) so a fleet destroyed
+// earlier in the loop can still RETALIATE the same salvo (its fire was already computed) — the same tick-start freeze
+// the non-atmo `reachOf` already uses. Reading reach live here would make a symmetric exchange first-mover-wins.
 function reachAgainst(fl, tBand, tSig){ let m=0; for(const s of fl.ships) if(s.alive) for(const w of s.weapons){ if(!weaponEngagesBand(w,tBand)) continue; const r=w.range<=0?1e9:w.range; if(r>m)m=r; } return m*tSig; }
-// per-(attacker→target) fire filter: keep only weapons that can engage the target's BAND and whose range (× target sig)
-// covers the real 3-D gap. A no-op when the fight has no atmospheric units (ATMO false) → byte-identical.
-function fireFor(mix, atk, tgt){ if(!ATMO) return mix; const tb=bandOf(tgt), ts=sigOf(tgt), g=pairGap3D(atk,tgt);
-  return mix.filter(w=> weaponEngagesBand(w,tb) && (w.range<=0 || w.range*ts>=g)); }
+// per-(attacker→target) fire filter on RESOLVED values (target band, target sig, the 3-D gap) — all taken from the
+// tick-start snapshot by the caller, never re-read live. A no-op when the fight has no atmospheric units → byte-identical.
+function fireForVals(mix, tgtBand, tgtSig, gap){ if(!ATMO) return mix;
+  return mix.filter(w=> weaponEngagesBand(w,tgtBand) && (w.range<=0 || w.range*tgtSig>=gap)); }
 
 /* ==================================================================
    2) WeaponClassifier.cs — the COMPUTED triangle corner (.Class readout)
@@ -1365,6 +1369,16 @@ function stepSpace(){
   // (1) FIRE at the CURRENT separation (true weapon ranges gate who can shoot)
   const fire = live.map(f=>buildFireMix(f, f.Separation_m));
   const reachOf = live.map(longestRange);
+  // ATMOSPHERIC tick-start SNAPSHOTS — frozen now (all ships still alive), exactly like `reachOf` and `fire`, so the
+  // whole tick resolves order-independently: a fleet destroyed earlier in the damage loop can STILL retaliate this same
+  // salvo, and a symmetric exchange is mutual (not first-mover-wins). bandReachOf[f][b] = f's longest range that can
+  // engage band b; bandOfSnap/sigOfSnap = each fleet's band/signature at tick start.
+  const bandReachOf = live.map(fl=>{ const r=[0,0,0,0]; for(const s of fl.ships){ if(!s.alive) continue;
+    for(const w of s.weapons){ const rng=w.range<=0?1e9:w.range; for(let b=0;b<4;b++) if(weaponEngagesBand(w,b) && rng>r[b]) r[b]=rng; } } return r; });
+  const bandOfSnap = live.map(bandOf), sigOfSnap = live.map(sigOf);
+  // the 3-D gap and the per-pair fire filter, both on the tick-start snapshot (no live re-reads)
+  const gapSnap = (ai,dj)=>{ const dh=Math.abs(BAND_HEIGHT_m[bandOfSnap[ai]]-BAND_HEIGHT_m[bandOfSnap[dj]]); const s=fleetSep(live[ai],live[dj]); return Math.sqrt(s*s+dh*dh); };
+  const fireSnap = (g,tgt)=> fireForVals(fire[g], bandOfSnap[tgt], sigOfSnap[tgt], gapSnap(g,tgt));
   // An attacker only engages — and splits its fire among — enemy fleets within its weapon REACH. So a fast wing
   // that has closed alone eats the enemy's UNDIVIDED fire (flak concentrates on the fighters), while the slow
   // carrier group is still out of range. Single-fleet-per-side battles are unchanged (one enemy → split of 1).
@@ -1376,9 +1390,28 @@ function stepSpace(){
   const canHit = (ai,dj)=>{
     if(live[ai].side===live[dj].side || liveShips(live[dj]).length===0) return false;
     if(!ATMO) return fleetSep(live[ai],live[dj])<=reachOf[ai];
-    return pairGap3D(live[ai],live[dj]) <= reachAgainst(live[ai], bandOf(live[dj]), sigOf(live[dj]));
+    return gapSnap(ai,dj) <= bandReachOf[ai][bandOfSnap[dj]] * sigOfSnap[dj];   // tick-start snapshot → order-independent
   };
   const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> canHit(i,j)));
+  // ATMOSPHERIC STALEMATE GUARD — end the fight explicitly (endSpace → "stalemate / broke off") instead of grinding to
+  // the 6000-salvo cap when the two sides genuinely cannot resolve it. Only looks when NO fleet can engage any enemy
+  // THIS tick, and is gated to ATMO so every non-atmospheric fight is byte-identical (its 6000-cap behaviour is
+  // unchanged). Two ways a band fight deadlocks: (a) PERMANENT — nobody can hit anybody even at contact range (MINGAP):
+  // a band mismatch (air-only weapons vs a ground-only force) or a low unit that can never reach a high one; stance-
+  // independent. (b) STANDOFF — nobody can engage AND the closest gap is no longer closing (both holding out of range).
+  if(ATMO && !enemies.some(e=>e.length>0)){
+    let everEngage=false;
+    for(let ai=0;ai<live.length && !everEngage;ai++) for(let dj=0;dj<live.length;dj++){
+      if(live[ai].side===live[dj].side || liveShips(live[dj]).length===0) continue;
+      const dh=Math.abs(BAND_HEIGHT_m[bandOfSnap[ai]]-BAND_HEIGHT_m[bandOfSnap[dj]]);
+      if(bandReachOf[ai][bandOfSnap[dj]]*sigOfSnap[dj] >= Math.sqrt(MINGAP*MINGAP+dh*dh)){ everEngage=true; break; }
+    }
+    let minSep=Infinity;
+    for(let ai=0;ai<live.length;ai++) for(let dj=ai+1;dj<live.length;dj++) if(live[ai].side!==live[dj].side){ const s=fleetSep(live[ai],live[dj]); if(s<minSep) minSep=s; }
+    if(st._lastMinSep!=null && minSep >= st._lastMinSep-1) st._standoff=(st._standoff||0)+1; else st._standoff=0;
+    st._lastMinSep=minSep;
+    if(!everEngage || st._standoff>=8){ endSpace(); return; }
+  } else if(ATMO){ st._standoff=0; }
   const salvoEvents=[];
   // BEAM-PD (generalized dual-use, target): every non-dedicated, non-guided weapon has latent PD from tracking ×
   // rate-of-fire. A beam OUT of range of the enemy hull is FREE PD; an IN-RANGE beam pulled onto torpedoes COSTS
@@ -1386,7 +1419,7 @@ function stepSpace(){
   if(BEAM_PD){
     const incMissile = live.map((f,i)=>{ let md=0;                        // incoming torpedo pressure per fleet
       for(let g=0; g<live.length; g++){ if(g===i || !canHit(g,i)) continue; const split=enemies[g].length||1;
-        md += missileFireDamage(fireFor(fire[g], live[g], live[i]))/split; }   // only missiles that can engage THIS fleet's band
+        md += missileFireDamage(fireSnap(g, i))/split; }   // only missiles that can engage THIS fleet's band (snapshot)
       return md; });
     for(let i=0;i<live.length;i++){
       const fl=live[i], sep=fl.Separation_m; let pdDed=0, pdFree=0, pdIn=0;
@@ -1418,7 +1451,7 @@ function stepSpace(){
     for(const g of attackers){
       const split = enemies[g].length; if(split<=0) continue;
       // ATMOSPHERIC per-pair filter: only the attacker's weapons that can engage THIS target fleet's band + 3-D gap.
-      for(const w of fireFor(fire[g], live[g], fl)) incoming.push({...w, dps:w.dps/split});
+      for(const w of fireSnap(g, i)) incoming.push({...w, dps:w.dps/split});
     }
     // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total).
     // With BEAM_PD on, the screen includes beams doing double duty (fl._pdTotal, computed above); else dedicated only.
@@ -1433,8 +1466,8 @@ function stepSpace(){
       // TARGET model: each attacker allocates its own fire per its OWN target priority; per-ship hull/shield.
       for(const g of attackers){
         const split=enemies[g].length; if(split<=0) continue;
-        // ATMOSPHERIC per-pair filter (see fireFor): drop weapons that can't engage this target's band / are out of 3-D gap.
-        const mix = fireFor(fire[g], live[g], fl).map(w=>({...w, dps:(w.delivery==="Guided"? w.dps*survive : w.dps)/split}));  // PD applied to guided
+        // ATMOSPHERIC per-pair filter (snapshot): drop weapons that can't engage this target's band / are out of 3-D gap.
+        const mix = fireSnap(g, i).map(w=>({...w, dps:(w.delivery==="Guided"? w.dps*survive : w.dps)/split}));  // PD applied to guided
         const raw = totalDamage(mix)*dt*CE.SalvoDamageScale;
         const res = allocateAttackerFire(fl, mix, raw, fl.Separation_m, dt, live[g].targetPri);
         dmg += res.toHull; absorbedTot += res.absorbed;
