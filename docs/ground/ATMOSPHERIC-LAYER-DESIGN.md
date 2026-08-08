@@ -1,9 +1,18 @@
 # The Atmospheric Layer — aircraft that fly and fight over a planet
 
-**As of 2026-08-08. DESIGN ONLY — no engine work yet (the developer's explicit call).** How an aircraft — an F-22, an
-AH-64 Apache, a Death Glider, a LAAT gunship — is *designed, based, moved, and fought* over a planet surface, grounded in
-what the engine and the designers already do. **All six design decisions are now LOCKED (see §11).** This doc is the
-record; the engine slices wait for a separate go-ahead.
+**As of 2026-08-08. DESIGN LOCKED · MODELLED IN THE RESOLVER SIM · engine wiring still PENDING.** How an aircraft — an
+F-22, an AH-64 Apache, a Death Glider, a LAAT gunship — is *designed, based, moved, and fought* over a planet surface,
+grounded in what the engine and the designers already do. **All six design decisions are LOCKED (see §11).** This doc is
+the record; the C# engine slices wait for a separate go-ahead.
+
+> **✅ NOW PROVEN IN THE SIM (2026-08-08).** The whole combat half of this design — band-as-altitude → `RealGap3D`, the
+> `EngageBands` weapon gate, signature-as-stealth, and anti-air-falls-out (a SAM = a surface unit with an air-only
+> long-range weapon) — is **built into `docs/combat/resolversim.html`'s combat kernel and re-run**. The `aircombined`
+> scenario now resolves with air fighting like air: F-22 AMRAAMs kill LAATs (A2A), a SAM battery kills the F-22s
+> (anti-air), a 1.2 km tank cannon *never* reaches a 10 km-high jet (altitude, by geometry alone), stealth halves the
+> SAM's reach on the F-22, and Apache Hellfires crack AT-TE armour (CAS). Proven byte-identical for all-surface/space
+> fights. See `docs/combat/RESOLVER-SIM.md` §"The atmospheric layer — BUILT INTO THE SIM." The sim is the executable
+> proof the design closes; the engine port is the remaining work.
 
 > **One-line version:** an aircraft is a **ground unit that carries an altitude**, altitude is **a third leg on the
 > distance ruler the ground fight already uses**, and it **flies sorties from a base** whose endurance falls out of its

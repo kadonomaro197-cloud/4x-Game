@@ -473,7 +473,7 @@ loud rather than smoothing it over.
 | 12 | **Fog of war / first-strike (blind enemy)** | HANDLED | **GAP** (detection) | Space: detection asymmetry — a seer shoots a blind target that cannot reply (`CanEngageTarget`), behind `RequireDetectionToEngage`. Ground has **no detection combat gate**: radar reveals the *map*, not who may shoot. Its first-strike is **range-based only**. *(§12 Slice 4 is the design.)* |
 | 13 | **Wildly mismatched forces resolve cheaply** | HANDLED | **PARTIAL** | Space buckets by combat value → O(buckets); proven by `CombatPerformanceTests` (200 warships in ms) and `CombatBattleSims` B10 (1 dreadnought vs **1000** gnats ≈ 9 ms). Ground gets the right *outcome* but is **O(units²)** with **no perf gauge** — a large *symmetric* ground battle is far costlier than the space equivalent. *(W4 / slice 5c is the fix.)* |
 | 14 | **Defensive posture as improvised armour** | HANDLED | HANDLED | `ToughnessMult` / `DamageTakenMult` + hardened plating all stack. Missing only the per-source bounce (row 6) on the space side. |
-| 15 | **Air / altitude combat** (fighter · CAS · anti-air) | n/a | **DESIGN** | **Designed 2026-08-08, native to the resolver, not yet built** (§11.3 + `docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`). An aircraft is a ground-domain unit at an altitude band; air-to-air / CAS / anti-air fall out of the ONE resolver via a 3D-gap distance (`RealGap3D`) + an `EngageBands` weapon gate — no air domain, no air resolver. Orbital bombardment stays separate. |
+| 15 | **Air / altitude combat** (fighter · CAS · anti-air) | n/a | **SIM-PROVEN, engine PENDING** | **Designed + MODELLED IN THE SIM 2026-08-08** (§11.3 + `docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`; results in `docs/combat/RESOLVER-SIM.md`). An aircraft is a ground-domain unit at an altitude band; air-to-air / CAS / anti-air fall out of the ONE resolver via a 3D-gap distance (`RealGap3D`) + an `EngageBands` weapon gate + signature-as-stealth — no air domain, no air resolver. Built into `resolversim.html` and re-run (the `aircombined` scenario resolves with air fighting like air; byte-identical for all-surface fights). The C# `GroundForcesProcessor.cs` port is the remaining work. Orbital bombardment stays separate. |
 
 > **\*Honest disagreements, preserved.** Row 1 space is where the agents split — two called the fleet-of-N-ships case
 > HANDLED (N discrete kills), one called it PARTIAL (no per-*ship* hull tracking). **Both describe the same fact:
@@ -637,7 +637,14 @@ kernel's shape; nothing below the orchestration changes.
 **Air combat is NOT a third resolver.** The same "one model, both domains" principle extends to a third one: an aircraft
 is a **ground-domain unit carrying an altitude band**, and the air↔ground↔air exchange falls out of the ONE resolver the
 same way the ground closing fight does — no air domain, no air map, no air resolver, no `DoctrineDomain.Air`. Full design
-+ the six locked rulings: **`docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`. Design only — not yet built.**
++ the six locked rulings: **`docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`.**
+
+> **✅ MODELLED + PROVEN IN THE RESOLVER SIM (2026-08-08) — C# engine port still pending.** The full combat mechanism
+> below (band → `RealGap3D`, the `EngageBands` gate, signature-as-stealth, anti-air-falls-out) is built into
+> `docs/combat/resolversim.html` and re-run: the `aircombined` scenario resolves with air fighting like air (A2A, CAS,
+> anti-air via a SAM = surface unit + air-only weapon, altitude by geometry, stealth by a reach multiplier), and it is
+> **byte-identical** for every all-surface/space fight (13/13 geometry probes pass; full-log diff empty). The design is
+> proven to close; the `GroundForcesProcessor.cs` port is the remaining work. See `docs/combat/RESOLVER-SIM.md`.
 
 **The mechanism — one changed argument.** The ground resolver already gates fire on a real metre gap
 (`GroundMiniHex.RealGapMetres` → `CombatKernel.WithinReach` at `GroundForcesProcessor.cs:568`, and the dodge accuracy

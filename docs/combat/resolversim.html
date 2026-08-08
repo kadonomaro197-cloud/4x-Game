@@ -411,6 +411,26 @@ function armourSoakBurst(armour, sourceDamage, shotCount, penetration=0, natureF
 }
 // CombatKernel.cs:174 WeaponReaches(w, separation_m)
 const weaponReaches=(w, sep)=> w.range<=0.0 || sep<=w.range;
+// ── ATMOSPHERIC LAYER (the auto-resolver's AIR model, built into the sim — docs/ground/ATMOSPHERIC-LAYER-DESIGN.md) ──
+// A unit's position = its HEX (the horizontal arena gap, shared with ground) + its OPERATIONAL BAND (discrete, from the
+// chassis door: 0 surface / 1 low / 2 medium / 3 high). The band index → a nominal HEIGHT (m) = the vertical leg of a
+// 3-D gap (RealGap3D). A weapon carries ENGAGEBANDS (which bands it may fire at; null = all). STEALTH = a unit's
+// SIGNATURE (sig, default 1) shrinking the range an enemy may engage it at. Anti-air FALLS OUT of bands+EngageBands —
+// a SAM is just a surface unit with an air-EngageBands long-range weapon. DEFAULTS (band 0, no engageBands, sig 1) make
+// every all-surface fight byte-identical; `ATMO` (set at rebuild) switches the new per-target filter on only when a
+// scenario actually fields bands/engageBands/stealth. Engine wiring is PENDING; this models the DESIGNED layer.
+let ATMO=false;
+const BAND_HEIGHT_m = [0, 800, 4000, 10000];   // surface · low (terrain-following) · medium · high
+function bandOf(fl){ let b=0; for(const s of fl.ships) if(s.alive && (s.band||0)>b) b=s.band||0; return b; }
+function sigOf(fl){ let m=1; for(const s of fl.ships) if(s.alive){ const g=(s.sig!=null?s.sig:1); if(g<m)m=g; } return m; }
+function pairGap3D(a,b){ const dh=Math.abs(BAND_HEIGHT_m[bandOf(a)]-BAND_HEIGHT_m[bandOf(b)]); const s=fleetSep(a,b); return Math.sqrt(s*s+dh*dh); }
+function weaponEngagesBand(w, band){ return !w.engageBands || w.engageBands.indexOf(band)>=0; }
+// the attacker's longest weapon range that CAN engage `tBand`, shrunk by the target's signature (stealth)
+function reachAgainst(fl, tBand, tSig){ let m=0; for(const s of fl.ships) if(s.alive) for(const w of s.weapons){ if(!weaponEngagesBand(w,tBand)) continue; const r=w.range<=0?1e9:w.range; if(r>m)m=r; } return m*tSig; }
+// per-(attacker→target) fire filter: keep only weapons that can engage the target's BAND and whose range (× target sig)
+// covers the real 3-D gap. A no-op when the fight has no atmospheric units (ATMO false) → byte-identical.
+function fireFor(mix, atk, tgt){ if(!ATMO) return mix; const tb=bandOf(tgt), ts=sigOf(tgt), g=pairGap3D(atk,tgt);
+  return mix.filter(w=> weaponEngagesBand(w,tb) && (w.range<=0 || w.range*ts>=g)); }
 
 /* ==================================================================
    2) WeaponClassifier.cs — the COMPUTED triangle corner (.Class readout)
@@ -584,16 +604,24 @@ const WEAPONS = {
   // ── ATMOSPHERIC AIRCRAFT WEAPONS (real METRE ranges; the Apache/F-22/LAAT builds). ⚠ The air layer is design-only,
   //    so there is NO altitude separation and NO EngageBands gate here — every weapon can hit every target regardless of
   //    "air vs surface". So an A2A missile hits a tank and a tank cannon hits a jet — the honest current-engine reality.
-  chaingun:  {label:"30mm Chain Gun (M230)",  dps:1.4, vel:805,    track:0.50, sat:14, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:6,  pershot:0.05, heat:0},
-  hellfire:  {label:"AGM-114 Hellfire",       dps:2.0, vel:450,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:22, pershot:0.9,  heat:0},
-  hydra:     {label:"Hydra 70 Rockets",       dps:1.2, vel:700,    track:0.20, sat:6,  range:3000,  nature:"Explosive",delivery:"Bolt",  pen:3,  pershot:0.1,  heat:0},
-  amraam:    {label:"AIM-120 AMRAAM (A2A)",   dps:2.2, vel:1000,   track:0.95, sat:1,  range:40000, nature:"Explosive",delivery:"Guided",pen:5,  pershot:1.0,  heat:0},
-  sidewinder:{label:"AIM-9 Sidewinder (A2A)", dps:1.4, vel:900,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:4,  pershot:0.5,  heat:0},
-  vulcan:    {label:"M61 Vulcan 20mm",        dps:1.0, vel:1050,   track:0.60, sat:40, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:3,  pershot:0.005,heat:0},
+  // ── ATMOSPHERIC WEAPONS. `engageBands` = which target BANDS this weapon may fire at (0 surface / 1 low / 2 med / 3 high;
+  //    null/absent = all bands). A ground-attack weapon is [0] (can't waste shots skyward); an air-to-air weapon is [1,2,3]
+  //    (can't hit the dirt — the fix for "an A2A missile hit ground"); a flexible beam is all-bands. High aircraft stay
+  //    safe from short-range ground fire by the 3-D gap ALONE (geometry), not by an engageBands flag. ──
+  chaingun:  {label:"30mm Chain Gun (M230)",  dps:1.4, vel:805,    track:0.50, sat:14, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:6,  pershot:0.05, heat:0, engageBands:[0]},
+  hellfire:  {label:"AGM-114 Hellfire",       dps:2.0, vel:450,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:22, pershot:0.9,  heat:0, engageBands:[0]},
+  hydra:     {label:"Hydra 70 Rockets",       dps:1.2, vel:700,    track:0.20, sat:6,  range:3000,  nature:"Explosive",delivery:"Bolt",  pen:3,  pershot:0.1,  heat:0, engageBands:[0]},
+  amraam:    {label:"AIM-120 AMRAAM (A2A)",   dps:2.2, vel:1000,   track:0.95, sat:1,  range:40000, nature:"Explosive",delivery:"Guided",pen:5,  pershot:1.0,  heat:0, engageBands:[1,2,3]},
+  sidewinder:{label:"AIM-9 Sidewinder (A2A)", dps:1.4, vel:900,    track:0.90, sat:1,  range:8000,  nature:"Explosive",delivery:"Guided",pen:4,  pershot:0.5,  heat:0, engageBands:[1,2,3]},
+  vulcan:    {label:"M61 Vulcan 20mm",        dps:1.0, vel:1050,   track:0.60, sat:40, range:1500,  nature:"Kinetic",  delivery:"Cloud", pen:3,  pershot:0.005,heat:0, engageBands:[1,2,3]},
   beamturret:{label:"Composite-Beam Laser",   dps:2.0, vel:C,      track:0.70, sat:4,  range:6000,  nature:"Energy",   delivery:"Beam",  pen:0,  pershot:0.5,  heat:0},
-  aplaser:   {label:"Anti-Personnel Laser",   dps:1.0, vel:130000, track:0.60, sat:12, range:1500,  nature:"Energy",   delivery:"Bolt",  pen:1,  pershot:0.08, heat:0},
-  massdriver:{label:"Mass-Driver Missile",    dps:2.5, vel:3000,   track:0.85, sat:2,  range:12000, nature:"Kinetic",  delivery:"Slug",  pen:18, pershot:1.25, heat:0},
-  aarocket:  {label:"Light A2A Rocket",        dps:1.0, vel:800,    track:0.70, sat:3,  range:4000,  nature:"Explosive",delivery:"Guided",pen:2,  pershot:0.33, heat:0},
+  aplaser:   {label:"Anti-Personnel Laser",   dps:1.0, vel:130000, track:0.60, sat:12, range:1500,  nature:"Energy",   delivery:"Bolt",  pen:1,  pershot:0.08, heat:0, engageBands:[0]},
+  massdriver:{label:"Mass-Driver Missile",    dps:2.5, vel:3000,   track:0.85, sat:2,  range:12000, nature:"Kinetic",  delivery:"Slug",  pen:18, pershot:1.25, heat:0, engageBands:[0]},
+  aarocket:  {label:"Light A2A Rocket",        dps:1.0, vel:800,    track:0.70, sat:3,  range:4000,  nature:"Explosive",delivery:"Guided",pen:2,  pershot:0.33, heat:0, engageBands:[1,2,3]},
+  // A SAM battery is NOT a bespoke anti-air subsystem — it is a SURFACE unit whose one weapon is a long-range air-only
+  // missile. Anti-air FALLS OUT of bands + engageBands + range: reach 40 km lets it touch a HIGH jet; [1,2,3] keeps it
+  // off ground targets; a stealthy target's signature still shrinks that reach (a low-sig F-22 is engaged only up close).
+  sam:       {label:"Surface-to-Air Missile", dps:2.0, vel:1200,   track:0.92, sat:1,  range:40000, nature:"Explosive",delivery:"Guided",pen:4,  pershot:1.0,  heat:0, engageBands:[1,2,3]},
 };
 function profileFor(key, count, fpScale){
   const w = WEAPONS[key];
@@ -602,7 +630,8 @@ function profileFor(key, count, fpScale){
   const perLauncher = (WARHEADS_REAL && w.warhead) ? w.warhead*w.sat : w.dps;
   return {key, label:w.label, dps:perLauncher*count*fpScale, vel:w.vel, track:w.track, sat:w.sat,
           range:w.range, nature:w.nature, delivery:w.delivery, pen:w.pen, pershot:w.pershot,
-          heat:w.heat, stub:!!w.stub, warhead:w.warhead||0, quantum:!!w.quantum, isPD:!!w.isPD, count};
+          heat:w.heat, stub:!!w.stub, warhead:w.warhead||0, quantum:!!w.quantum, isPD:!!w.isPD,
+          engageBands:w.engageBands||null, count};
 }
 
 /* ==================================================================
@@ -687,15 +716,21 @@ const SHIP_TYPES = {
               armour:{Kinetic:9,Energy:7,Explosive:5,Exotic:0}, loadout:{scythingtalons:1, biocannon:1}},
   // ── ATMOSPHERIC AIRCRAFT (the Apache/F-22/LAAT builds — docs/assembler/AIRCRAFT-BUILDS.md). `unitType:null` → NOT in
   //    the ground Infantry/Armor/Artillery triangle (a flyer ignores ground terrain — the sim honours that via null).
-  //    ⚠ The whole air layer is DESIGN-ONLY, so there is no altitude, no air-to-air/anti-air gate, no stealth-as-
-  //    undetectability, no fire-and-forget-from-defilade. They fight here as flat ground units at real range + speed —
-  //    the honest current-engine reality. Their real advantages are the PENDING findings the analysis calls out.
-  apache: {label:"AH-64 Apache", unitType:null, toughness:55, evasion:0.40, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:90,
+  //    THE AIR LAYER IS NOW MODELLED: each carries a `band` (0 surface / 1 low / 2 med / 3 high — its operational altitude,
+  //    a design-time choice) and a `sig` (signature, 1 = normal, <1 = stealthy → shrinks the range an enemy may engage it
+  //    at). Together with each weapon's engageBands and the 3-D gap, this gives altitude, air-to-air, anti-air, and stealth
+  //    for free (engine wiring still PENDING; this is the DESIGNED behaviour, resolved here). F-22 flies HIGH + very stealthy;
+  //    the Apache and LAAT are LOW terrain-followers with a normal signature (helicopters/gunships are seen and shot at).
+  apache: {label:"AH-64 Apache", unitType:null, band:1, sig:0.9, toughness:55, evasion:0.40, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:90,
               armour:{Kinetic:4,Energy:3,Explosive:2,Exotic:0}, loadout:{hellfire:8, chaingun:1, hydra:2}},
-  f22:    {label:"F-22 Raptor", unitType:null, toughness:26, evasion:0.55, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:600,
+  f22:    {label:"F-22 Raptor", unitType:null, band:3, sig:0.5, toughness:26, evasion:0.55, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.20, speed:600,
               armour:{Kinetic:1,Energy:1,Explosive:0,Exotic:0}, loadout:{amraam:6, sidewinder:2, vulcan:1}},
-  laat:   {label:"LAAT Gunship", unitType:null, toughness:45, evasion:0.35, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:170,
+  laat:   {label:"LAAT Gunship", unitType:null, band:1, sig:0.9, toughness:45, evasion:0.35, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:170,
               armour:{Kinetic:2,Energy:1,Explosive:0,Exotic:0}, loadout:{beamturret:4, aplaser:3, massdriver:2, aarocket:8}},
+  // ── SURFACE-TO-AIR BATTERY — the anti-air piece, built with NO new machinery: an Artillery-type SURFACE unit (band 0)
+  //    whose only weapon is the long-range air-only `sam`. It answers aircraft purely through range + engageBands.
+  samsite:{label:"SAM Battery", unitType:"Artillery", band:0, sig:1, toughness:35, evasion:0.10, shieldCap:0, shieldRegen:0, pd:0, ammoCap:0, heatCap:0, fpScale:1.0, speed:20,
+              armour:{Kinetic:2,Energy:1,Explosive:1,Exotic:0}, loadout:{sam:2}},
 };
 function buildShip(typeKey, name){
   const t = SHIP_TYPES[typeKey];
@@ -717,6 +752,7 @@ function buildShip(typeKey, name){
     // carry-class (CARRIER-DESIGN §13a): what a chassis IS, for the deployable/bay match. null = an ordinary hull.
     carryClass:t.carryClass||null, bay:t.bay||null,
     unitType:t.unitType||null,                                 // Infantry/Armor/Artillery — drives the ground terrain triangle
+    band:t.band||0, sig:(t.sig!=null?t.sig:1),                 // ATMOSPHERIC: operational band (0 surface … 3 high) + signature (stealth)
 
     // carrier hangar (StrikeCraft bay): wing pool aboard + sortie tempo (CARRIER-DESIGN §5/§6)
     wingType:t.wing?t.wing.type:null, wingPool:t.wing?t.wing.pool:0, wingMax:t.wing?t.wing.pool:0, cycleRate:t.wing?t.wing.cycleRate:0,
@@ -745,20 +781,23 @@ const SCENARIOS = {
       {side:"B", name:"Tyranids · Genestealer Broods", ships:rep(11,"genestealer","Genestealer")},
       {side:"B", name:"Tyranids · Carnifexes", ships:rep(3,"carnifex","Carnifex")},
     ]},
-  // ── COMBINED ARMS — AIR + GROUND on open plains: the atmospheric-layer aircraft (Apache/F-22/LAAT) on either side vs
-  //    the ground units we've built. ⚠ THE TEST: the air layer is design-only, so there is NO altitude and NO EngageBands
-  //    gate — every air advantage is absent and the aircraft fight as flat, fast, long-ranged ground units. What resolves
-  //    CORRECTLY: firepower, dodge, armour-vs-penetration, whole-or-dead, and the range+speed closing fight (the F-22's
-  //    40 km AMRAAMs open first; the AT-TEs must close). What is WRONG-because-PENDING: a tank cannon downs a jet, an A2A
-  //    missile hits a tank, no aircraft gets an altitude/stealth edge. See docs/combat/RESOLVER-SIM.md.
-  aircombined:{ label:"Combined arms (air + ground) — F-22/Apache + clones vs LAAT + AT-TEs + Carnifexes, open plains",
-    env:"plains", minGap:50, stances:{A:"hold", B:"close"}, salvoScale:8,
+  // ── COMBINED ARMS — AIR + GROUND on open plains, WITH the atmospheric layer live. Fleets are BAND-UNIFORM (every unit in
+  //    a fleet flies the same band) and SIG-UNIFORM, because the fleet-level band/sig aggregate reads the whole group as one
+  //    altitude/signature. THE TEST it now passes: the F-22s (HIGH + stealth, air-only AMRAAMs) can hit ONLY the air targets
+  //    and are themselves untouchable by ground fire EXCEPT the SAM up close; the Apaches/LAATs (LOW) trade CAS on the ground
+  //    and get answered by the SAM; the AT-TE's 1.2 km cannon simply cannot reach a 10 km-high jet (geometry); an AMRAAM
+  //    cannot hit a tank (engageBands). Anti-air is the SAM battery — a plain surface unit with one long air-only weapon.
+  //    See docs/combat/RESOLVER-SIM.md.
+  aircombined:{ label:"Combined arms (air + ground) — F-22 (high) + Apache (low) + clones vs LAAT + AT-TEs + SAMs + Carnifexes, open plains",
+    env:"plains", minGap:50, openGap:8000, stances:{A:"close", B:"close"}, salvoScale:8,
     fleets:[
-      {side:"A", name:"Coalition · Air — F-22 + Apache", ships:[["f22","Raptor 1"],["f22","Raptor 2"],["apache","Apache 1"],["apache","Apache 2"]]},
-      {side:"A", name:"Coalition · Infantry — Clones", ships:rep(4,"clonetrooper","Clone Squad")},
-      {side:"B", name:"Republic · Gunships — LAAT", ships:[["laat","LAAT Alpha"],["laat","LAAT Bravo"]]},
-      {side:"B", name:"Republic · Armour — AT-TE", ships:[["atte","AT-TE 1"],["atte","AT-TE 2"],["atte","AT-TE 3"]]},
-      {side:"B", name:"Wild — Carnifexes", ships:[["carnifex","Carnifex 1"],["carnifex","Carnifex 2"]]},
+      {side:"A", name:"Coalition · Air-Superiority — F-22 (HIGH, stealth)", ships:[["f22","Raptor 1"],["f22","Raptor 2"]]},
+      {side:"A", name:"Coalition · Gunships — Apache (LOW, CAS)", ships:[["apache","Apache 1"],["apache","Apache 2"]]},
+      {side:"A", name:"Coalition · Infantry — Clones (surface)", ships:rep(4,"clonetrooper","Clone Squad")},
+      {side:"B", name:"Republic · Gunships — LAAT (LOW)", ships:[["laat","LAAT Alpha"],["laat","LAAT Bravo"]]},
+      {side:"B", name:"Republic · Armour — AT-TE (surface)", ships:[["atte","AT-TE 1"],["atte","AT-TE 2"],["atte","AT-TE 3"]]},
+      {side:"B", name:"Republic · Air-Defense — SAM (surface)", ships:[["samsite","SAM 1"],["samsite","SAM 2"]]},
+      {side:"B", name:"Wild — Carnifexes (surface)", ships:[["carnifex","Carnifex 1"],["carnifex","Carnifex 2"]]},
     ]},
   // ── THE FRANCHISE CLASH — Imperial fleet (4 squadrons) vs Federation task force (3 squadrons) ──
   // Each SQUADRON is its own fleet on the same side (the sim groups fleets by `side`). Squadron D = the 50 ARC-170s,
@@ -1068,7 +1107,9 @@ function newSpaceState(scen){
   // arena bounded by the LONGEST weapon range in the whole battle, then SCALED by the environment's detection reach
   // (a nebula/flare shrinks how far anyone opens — the SensorJam lever; deep space widens it). This is the sim's
   // detection→engagement hook: a smaller opening gap means short-range weapons reach sooner and the fight starts closer.
-  const maxR = Math.max(...fleets.map(longestRange)) * activeEnv().m.range;
+  // A scenario may OVERRIDE the opening gap (scen.openGap, metres) — a combined-arms fight makes contact at a tactical
+  // distance, not at the longest missile's max range, so the short-legged units aren't slaughtered on a 40 km approach.
+  const maxR = (scen.openGap!=null ? scen.openGap : Math.max(...fleets.map(longestRange))) * activeEnv().m.range;
   const R = maxR/2;                                    // arena radius; diameter = maxR = the opening gap
   fleets.forEach(f=>{ f.pos = {x:(f.side==="A"?-R:R), y:0}; f.Separation_m = maxR; });  // opposite ends of a diameter
   return {kind:"space", fleets, salvo:0, over:false, outcome:"", arenaR:R, sep0:maxR};
@@ -1123,7 +1164,7 @@ function buildFireMix(fl, separation_m){
       const reach = w.delivery==="Guided" ? w.range*E.guidedR : w.range;
       if(!(reach<=0 || separation_m<=reach)) continue;                    // WeaponReaches gate — TRUE ranges, env-adjusted
       const k = w.key;
-      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD};
+      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD,engageBands:w.engageBands||null};
       // ENV damage-by-nature: the medium favours some weapon natures over others (a nebula scatters beams, an ion
       // storm cooks torpedo guidance, dense air drags slugs) — Kinetic/Energy/Explosive/Exotic each scaled here.
       // × the ground terrain-triangle attack multiplier (gt) for a surface unit-type.
@@ -1327,7 +1368,16 @@ function stepSpace(){
   // An attacker only engages — and splits its fire among — enemy fleets within its weapon REACH. So a fast wing
   // that has closed alone eats the enemy's UNDIVIDED fire (flak concentrates on the fighters), while the slow
   // carrier group is still out of range. Single-fleet-per-side battles are unchanged (one enemy → split of 1).
-  const canHit = (ai,dj)=> live[ai].side!==live[dj].side && liveShips(live[dj]).length>0 && fleetSep(live[ai],live[dj])<=reachOf[ai];
+  // Can attacker ai engage target fleet dj at all? All-surface (ATMO off) → the original flat reach gate, byte-for-byte.
+  // Atmospheric (ATMO on) → the 3-D gap (horizontal + Δaltitude) must be inside the attacker's longest range that CAN
+  // engage the target's BAND, shrunk by the target's SIGNATURE. So a high jet is unreachable by short-range ground fire
+  // (geometry), an air-only missile can't reach a surface fleet (engageBands → reach 0), a stealthy target is reachable
+  // only up close (sig shrinks reach). No atmospheric unit in the fight → identical to the flat gate.
+  const canHit = (ai,dj)=>{
+    if(live[ai].side===live[dj].side || liveShips(live[dj]).length===0) return false;
+    if(!ATMO) return fleetSep(live[ai],live[dj])<=reachOf[ai];
+    return pairGap3D(live[ai],live[dj]) <= reachAgainst(live[ai], bandOf(live[dj]), sigOf(live[dj]));
+  };
   const enemies = live.map((f,i)=> live.map((g,j)=>j).filter(j=> canHit(i,j)));
   const salvoEvents=[];
   // BEAM-PD (generalized dual-use, target): every non-dedicated, non-guided weapon has latent PD from tracking ×
@@ -1336,7 +1386,7 @@ function stepSpace(){
   if(BEAM_PD){
     const incMissile = live.map((f,i)=>{ let md=0;                        // incoming torpedo pressure per fleet
       for(let g=0; g<live.length; g++){ if(g===i || !canHit(g,i)) continue; const split=enemies[g].length||1;
-        md += missileFireDamage(fire[g])/split; }
+        md += missileFireDamage(fireFor(fire[g], live[g], live[i]))/split; }   // only missiles that can engage THIS fleet's band
       return md; });
     for(let i=0;i<live.length;i++){
       const fl=live[i], sep=fl.Separation_m; let pdDed=0, pdFree=0, pdIn=0;
@@ -1367,7 +1417,8 @@ function stepSpace(){
     const incoming=[];
     for(const g of attackers){
       const split = enemies[g].length; if(split<=0) continue;
-      for(const w of fire[g]) incoming.push({...w, dps:w.dps/split});
+      // ATMOSPHERIC per-pair filter: only the attacker's weapons that can engage THIS target fleet's band + 3-D gap.
+      for(const w of fireFor(fire[g], live[g], fl)) incoming.push({...w, dps:w.dps/split});
     }
     // POINT-DEFENSE — the fleet screen thins ALL incoming guided fire by one fraction (computed on the total).
     // With BEAM_PD on, the screen includes beams doing double duty (fl._pdTotal, computed above); else dedicated only.
@@ -1382,7 +1433,8 @@ function stepSpace(){
       // TARGET model: each attacker allocates its own fire per its OWN target priority; per-ship hull/shield.
       for(const g of attackers){
         const split=enemies[g].length; if(split<=0) continue;
-        const mix = fire[g].map(w=>({...w, dps:(w.delivery==="Guided"? w.dps*survive : w.dps)/split}));  // PD applied to guided
+        // ATMOSPHERIC per-pair filter (see fireFor): drop weapons that can't engage this target's band / are out of 3-D gap.
+        const mix = fireFor(fire[g], live[g], fl).map(w=>({...w, dps:(w.delivery==="Guided"? w.dps*survive : w.dps)/split}));  // PD applied to guided
         const raw = totalDamage(mix)*dt*CE.SalvoDamageScale;
         const res = allocateAttackerFire(fl, mix, raw, fl.Separation_m, dt, live[g].targetPri);
         dmg += res.toHull; absorbedTot += res.absorbed;
@@ -1483,6 +1535,14 @@ function rebuild(){
   // This is the ONLY pacing lever touched for ground; every unit's HP/damage/armour is its own role-based value.
   logLines.length=0;
   state=newSpaceState(scen);
+  // ATMOSPHERIC switch: turn the air model ON only if this scenario actually fields a unit off the surface (band>0),
+  // a stealthy unit (sig<1), or a band-restricted weapon (engageBands). An all-surface / all-space fight leaves it OFF,
+  // so canHit + fireFor fall back to the exact original flat-range gate → byte-identical to before this layer existed.
+  ATMO = false;
+  for(const f of state.fleets){ for(const s of f.ships){
+    if((s.band||0)>0 || (s.sig!=null && s.sig<1)) ATMO=true;
+    for(const w of s.weapons) if(w.engageBands) ATMO=true;
+  }}
   applyStance("A", document.getElementById("stanceA").value);
   applyStance("B", document.getElementById("stanceB").value);
   applyTargetPri("A", document.getElementById("priA").value);

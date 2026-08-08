@@ -262,47 +262,55 @@ kernel **8/8**, and assert the four behaviours: the default fight runs **to dest
 (dt 1 s → 67 salvos, dt 5 s → 13). A Playwright pass renders both themes and runs the battle to completion with **0
 console errors**.)*
 
-## The atmospheric-aircraft test — do the Apache / F-22 / LAAT resolve correctly? (2026-08-08)
+## The atmospheric layer — BUILT INTO THE SIM, and it works (2026-08-08)
 
-The scenario **"Combined arms (air + ground)"** places the three atmospheric-layer aircraft
-(`docs/assembler/AIRCRAFT-BUILDS.md`) + clone infantry against LAAT gunships + AT-TE walkers + Carnifexes on open
-plains — air units on either side. The question: does the auto-resolver handle aircraft correctly? The answer is a clean
-**two-part verdict**, and it exactly confirms what the locked atmospheric design says (`docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`).
+The scenario **"Combined arms (air + ground)"** (`aircombined`) puts the three atmospheric-layer aircraft
+(`docs/assembler/AIRCRAFT-BUILDS.md`) + clone infantry against LAAT gunships + AT-TE walkers + a **SAM battery** +
+Carnifexes on open plains. The earlier version of this section reported that the kernel resolved aircraft correctly *as
+combatants* but that the air layer itself (altitude, air-vs-surface targeting, anti-air, stealth) was **design-only and
+missing**. **That layer is now built directly into the sim's combat kernel** — and re-running the scenario shows air
+fighting like air. The whole layer is four small pieces on top of the shared kernel:
 
-**✅ The shared kernel resolves them correctly — as COMBATANTS.** Headless run: parses + renders clean, **0 throws**,
-NaN-swept clean (every unit's firepower/toughness/evasion/speed finite), decisive outcome in 27 salvos. And the damage
-model is right, proven by the kernel micro-checks (the sim's own `hitFraction` + `armourSoak`):
-- **Armour × penetration differentiates targets exactly.** An AIM-120 (Explosive, pen 5) **one-shots the unarmoured LAAT
-  for 90 MJ** but the AT-TE's Explosive-4 plate **soaks it to ~7 MJ**; the Apache's Hellfire (pen 22) **cracks any ground
-  armour 100%** (vs AT-TE plate 4, vs Carnifex plate 5). Anti-armour works; the nature matchup bites.
-- **Dodge works.** A composite-beam (light-speed) is **undodgeable (hf 0.998)**; a mass-driver slug (finite velocity) is
-  **dodged to 0.898** against the F-22's higher evasion. Beam ≠ slug, exactly as the kernel intends.
-- **Whole-or-dead casualties, the range+speed closing fight, and firepower totals all resolve** with no special-casing —
-  an aircraft is just another combatant to the kernel.
+1. **Position = hex + BAND, not a metre altitude.** Each unit carries a discrete `band` (0 surface / 1 low / 2 med /
+   3 high — a design-time choice). A per-band nominal height (`[0, 800, 4000, 10000] m`) is the *vertical leg* of the
+   **3-D gap**: `RealGap3D = √(horizontal² + Δheight²)`. That single geometry line is what makes a high jet unreachable
+   by short-range ground fire — no special "is it a plane?" rule.
+2. **`EngageBands` on each weapon** — which target bands it may fire at (`[0]` = ground-only, `[1,2,3]` = air-only,
+   absent = all). An air-to-air missile simply **cannot select a surface target**; a Hellfire cannot waste itself skyward.
+3. **Signature = stealth.** A unit's `sig` (1 normal, <1 stealthy) **shrinks the range an enemy may engage it at**
+   (`reach × sig`). This is the honest hook into the engine's already-built signature/detection model, expressed as one
+   multiplier — not a new subsystem.
+4. **Anti-air falls out of 1–3 — no bespoke code.** A **SAM battery** is just a *surface* unit (band 0) whose one weapon
+   is a long-range, air-only (`[1,2,3]`) missile. Range + `EngageBands` + `sig` do the rest.
 
-**🟠 And it exposes precisely what the atmospheric layer is missing — because the air layer is design-only.** Every gap
-below is a PENDING item the locked design already names; the sim quantifies each:
-- **No `EngageBands` gate → an air-to-air missile mows down tanks.** The F-22's AIM-120 (an *air-to-air* weapon) hit
-  ground units **49 times** and lands 100% after armour. Nothing stops an A2A weapon from hitting the surface.
-- **No altitude gate → a tank cannon fully downs a jet.** Micro-check: the AT-TE's mass-driver cannon vs the F-22 hits
-  **66% of the time and deals 100% of its per-shot damage** (pen 22 vs a jet's armour 1). A ground tank shouldn't be
-  able to swat a jet at altitude; here it can.
-- **No anti-air class → a long-range aircraft is unanswerable.** In **both** stance variants the ground side fired **zero
-  shots** — the F-22's 40 km AMRAAM out-ranges everything (3× the next weapon), and with no ground SAM (an `EngageBands:air`
-  long-range weapon) nothing can reach it. The fight is a one-sided BVR turkey-shoot.
-- **No stealth / altitude edge.** The F-22 won on **raw range + speed** (both LIVE), *not* on being unseen or high — its
-  actual identity advantage (stealth, altitude) is invisible, so it reads as a fast, long-ranged ground unit.
-- *(Correct-by-null:* aircraft carry `unitType:null`, so they correctly **skip the ground terrain triangle** — a flyer
-  ignores ground cover/rough. That one piece is already right.)*
+A global `ATMO` flag (set at rebuild only if the scenario actually fields a band>0 / sig<1 / band-restricted weapon)
+switches the new per-target filter on. **When it's off, the fire path is the exact original flat-range gate — proven
+byte-for-byte identical below — so every existing space and ground fight is untouched.**
 
-**The bottom line:** the auto-resolver **works correctly for what exists** — the shared kernel treats an aircraft as a
-combatant and resolves firepower/dodge/armour/penetration/closing cleanly and decisively. What it does **not** do is make
-an aircraft fight *like an aircraft* — no altitude, no air-vs-surface targeting, no anti-air, no stealth — which is
-exactly the design-only atmospheric layer. **The kernel is ready; the air layer is the missing piece, and this test shows
-precisely which four wires it would add** (altitude separation → `RealGap3D`, the `EngageBands` gate, a ground SAM class,
-and stealth/detection). A minor sim note: the guided-weapon PD-intercept screen prints a small "PD stopped …" figure even
-for a pd:0 defender (≤2 MJ, outcome-neutral) — flagged, not outcome-changing.
+**✅ The re-run (8 km combined-arms contact, both sides close) resolves decisively in 26 salvos, and every mechanism
+fires visibly in the play-by-play:**
+- **Air-to-air:** the F-22s' 40 km AMRAAMs **destroy both LAAT gunships on salvo 1** (90 MJ, one-shot — the LAAT is unarmoured).
+- **Anti-air:** the **SAM battery kills both F-22s** (salvo 2) and hammers the Apaches — a plain surface unit answering aircraft, with no new machinery.
+- **Altitude:** the F-22s are credited as destroyed **only by the SAM** — the AT-TE's 1.2 km mass-driver cannon *never once* touches a 10 km-high jet, because the 3-D gap (≥ 10 000 m) always exceeds its reach (1 200 m × sig). Geometry alone; no anti-air flag needed.
+- **Stealth:** the F-22's `sig 0.5` **halves** the SAM's reach against it (40 km → 20 km effective), so the jet is engageable only inside ~17.3 km horizontal — it dies only after committing to close range, exactly the stealth trade.
+- **CAS:** the surviving Apaches' **pen-22 Hellfires crack the AT-TEs' armour-8 plating** (32–37 MJ/salvo → all three AT-TEs destroyed). Anti-armour close air support works.
+- **EngageBands:** across the whole fight the AMRAAM **only ever hit air targets** — never a tank, never the SAM battery, never a Carnifex.
 
-*(Verified 2026-08-08 headless: script parses + renders clean, NaN-swept clean across all units incl. the 3 aircraft,
-both stance variants resolve decisively, and the six kernel micro-checks reproduce the armour/penetration/dodge findings
-above. Scenario `aircombined` in `resolversim.html`.)*
+**Verified by direct geometry probes (the real kernel functions `bandOf`/`sigOf`/`pairGap3D`/`reachAgainst`), all 13 pass:**
+
+| Probe | Result | Meaning |
+|-------|--------|---------|
+| AMRAAM (air-only) reach vs a GROUND target | **0** | an A2A weapon can't hit the surface |
+| AT-TE 1.2 km cannon reach vs a HIGH jet | **600 m**, gap ≥ 10 000 m | tank can NEVER reach the jet — altitude |
+| SAM reach vs the HIGH stealth jet | **20 000 m** (40 km × 0.5) | stealth halves it; hits only inside ~17.3 km |
+| SAM @17 km / @18 km horizontal | gap **19 723 < 20 000** / **20 591 > 20 000** | the stealth cut-off is exact |
+| LAAT (low) reach vs the HIGH jet | 3 000 m, gap ≥ 9 200 m | a low gunship can't reach a high jet |
+| Apache reach vs GROUND / vs AIR | **8 000 / 0** | pure CAS platform — can't shoot the LAAT |
+
+**Byte-identity, proven:** the four non-atmospheric scenarios (**jungle ground, franchise space, handoff, mirror**) produce
+**character-for-character identical** logs, hull states, and outcomes before and after the layer — a full-log diff came back
+empty. The air layer is a true no-op whenever no atmospheric unit is on the field.
+
+*(Verified 2026-08-08 headless: parses + renders clean, **0 throws**, NaN-swept clean across every unit incl. `band`/`sig`,
+13/13 geometry probes pass, the brawl resolves decisively, and the byte-identity diff is empty. Scenario `aircombined`,
+weapons `sam`, unit `samsite`, in `resolversim.html`.)*
