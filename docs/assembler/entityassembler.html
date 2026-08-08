@@ -608,7 +608,106 @@ var CAT=[
  {id:'ge_psychoframe',cat:'Enhancers',name:'Psycho-Frame / Psycommu',hosts:['ground'],
    mass:100,vol:20,crew:0,hp:0,draw:0,supply:0,caliber:1.3,
    cost:{bp:800,cr:40,rp:6,steel:60,mats:{'ree-magnetics':20}},
-   honesty:'A Newtype-responsive frame + brainwave interface — the suit reacts as an extension of the pilot. LIVE mapping: a fire-control-like sharpening (caliber ×1.3, faster/surer strikes). ⚠ PENDING: true Newtype amplification (pilot skill → combat) + funnel thought-control have no engine model; the reaction edge is the honest LIVE slice.'}
+   honesty:'A Newtype-responsive frame + brainwave interface — the suit reacts as an extension of the pilot. LIVE mapping: a fire-control-like sharpening (caliber ×1.3, faster/surer strikes). ⚠ PENDING: true Newtype amplification (pilot skill → combat) + funnel thought-control have no engine model; the reaction edge is the honest LIVE slice.'},
+ /* ---- ATMOSPHERIC AIRCRAFT PARTS (the Apache / F-22 / LAAT builds — the FIRST units against the locked atmospheric
+        layer, docs/ground/ATMOSPHERIC-LAYER-DESIGN.md). An aircraft is a GROUND unit at an altitude band + a Flight
+        drive; the whole air layer is DESIGN-ONLY, so FLIGHT, the altitude band, EngageBands (air-vs-surface targeting),
+        stealth-as-undetectability, and sortie endurance/rearm are all flagged PENDING (like the Sazabi's flight/funnels).
+        On ground today they read as ground units at the 0.42 evasion ceiling. ---- */
+ {id:'af_rotor',cat:'Chassis',name:'Rotorcraft Gunship Airframe',hosts:['ground'],
+   mass:700,vol:320,crew:2,hp:500,draw:0,supply:0,
+   cost:{bp:2100,cr:16,rp:3,steel:420,mats:{aluminium:280}},
+   honesty:'A two-crew attack-helicopter airframe (Apache-class): armoured cockpit tub + crashworthy structure → hard to one-shot, graceful degradation. ⚠ ATMOSPHERIC: Environment=Atmospheric, LOW (terrain-following/hover) band. FLIGHT + hover are PENDING (a ground unit can\'t take off); reads as a ground unit at the evasion ceiling.'},
+ {id:'af_jet',cat:'Chassis',name:'Stealth Fighter Airframe',hosts:['ground'],
+   mass:900,vol:420,crew:1,hp:320,draw:0,supply:0,
+   cost:{bp:2700,cr:60,rp:6,steel:360,mats:{aluminium:360,'ree-magnetics':40}},
+   honesty:'A single-seat 5th-gen stealth-fighter airframe (F-22-class): faceted/RAM low-observable shaping + internal weapon bays → a "marble" radar cross-section. ⚠ ATMOSPHERIC: HIGH band, see-first/shoot-first. PENDING: FLIGHT, supercruise-as-standing-energy, and the whole point — LOW-OBSERVABILITY (being unseen) has NO mock reader, so its true ~0.85 agility + stealth read as the 0.42 ground evasion ceiling here.'},
+ {id:'af_gunship',cat:'Chassis',name:'Assault Gunship Airframe',hosts:['ground'],
+   mass:1100,vol:600,crew:4,hp:450,draw:0,supply:0,
+   cost:{bp:3300,cr:22,rp:3,steel:660,mats:{aluminium:440}},
+   honesty:'A four-crew repulsorlift assault-gunship airframe (LAAT/i-class): big open-bay hull with many gun stations, deliberately LIGHT on protection — no combat shields, thin superdispersive armour → a glass cannon. ⚠ ATMOSPHERIC: LOW band. FLIGHT/hover + the hot-LZ troop-drop are PENDING.'},
+ {id:'ap_rotor',cat:'Propulsion',name:'Turboshaft + Rotor (VTOL)',hosts:['ground'],
+   mass:250,vol:100,crew:0,hp:20,draw:0,supply:0,speedFactor:1.0,
+   cost:{bp:750,cr:14,rp:2,steel:150,mats:{aluminium:100}},
+   honesty:'Twin turboshafts + a 4-blade rotor (Apache: ~3,960 shp, ~293 km/h, true VTOL). SLOW but hovers + loiters for hours. ⚠ PENDING: FLIGHT/hover (walker-with-flight gap). Loiter endurance (2.5–3 hr) is EMERGENT from fuel÷burn — the atmospheric sortie model, PENDING.'},
+ {id:'ap_jet',cat:'Propulsion',name:'Afterburning Turbofan + Thrust-Vectoring',hosts:['ground'],
+   mass:350,vol:140,crew:0,hp:15,draw:0,supply:0,speedFactor:3.5,
+   cost:{bp:1050,cr:24,rp:4,steel:210,mats:{aluminium:140}},
+   honesty:'2× F119-class afterburning turbofans with ±20° thrust-vectoring (F-22: Mach 2.25, SUPERCRUISE ~Mach 1.8 without afterburner, T/W >1.25). ⚠ PENDING: FLIGHT + supercruise-as-standing-energy; true agility (~0.85) reads as the 0.42 ground ceiling here.'},
+ {id:'ap_repulsor',cat:'Propulsion',name:'Repulsorlift + Turbine',hosts:['ground'],
+   mass:300,vol:130,crew:0,hp:20,draw:0,supply:0,speedFactor:2.2,
+   cost:{bp:900,cr:16,rp:3,steel:180,mats:{aluminium:120}},
+   honesty:'Repulsorlift + turbine (LAAT: 620 km/h, low-altitude, hover/VTOL, agile). Atmospheric-containment sealing lets it be dropped from orbit (not interplanetary alone). ⚠ PENDING: FLIGHT/hover.'},
+ {id:'af_generator',cat:'Power',name:'Gunship Power Generator',hosts:['ground'],
+   mass:200,vol:80,crew:0,hp:20,draw:0,supply:12,loud:true,
+   cost:{bp:600,cr:12,rp:2,steel:100,elec:60},
+   honesty:'An onboard generator feeding the gunship\'s laser turrets — supplies the energy weapons\' draw. Loud on sensors.'},
+ {id:'aw_chaingun',cat:'Weapons',name:'30 mm Chain Gun (M230)',hosts:['ground'],
+   mass:60,vol:22,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.09,nature:'Kinetic',delivery:'Projectile',pen:6,pershot:0.05,rate:10,range:1.5,vel:805,track:0.5,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:2,steel:36,mats:{aluminium:24}},
+   honesty:'Chin-turret 30 mm autocannon (625 rpm, HEDP: penetrates light armour AND fragments vs infantry), helmet-slaved. EngageBands: SURFACE (danger-close CAS) — the air/CAS gate is PENDING. Munitions finite (1,200 rds); rearm-at-base is the sortie model, PENDING.'},
+ {id:'aw_hellfire',cat:'Weapons',name:'AGM-114 Hellfire (guided AP missile)',hosts:['ground'],
+   mass:50,vol:18,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.18,nature:'Explosive',delivery:'Guided',pen:20,pershot:0.15,rate:0.5,range:8,vel:450,track:0.9,ammo:false,pd:false},
+   cost:{bp:200,cr:8,rp:3,steel:20,mats:{aluminium:16,electronics:20}},
+   honesty:'Laser / Longbow-MMW anti-armour missile: tandem-HEAT, HIGH penetration (defeats reactive armour), ~8–11 km — the tank-killer. ⚠ PENDING: fire-and-forget from DEFILADE (hide behind a ridge, volley 16, re-hide) — the Apache\'s signature — has no mock reader. EngageBands: SURFACE.'},
+ {id:'aw_rockets',cat:'Weapons',name:'Hydra 70 Rocket Pod',hosts:['ground'],
+   mass:45,vol:20,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.12,nature:'Explosive',delivery:'Blast',pen:2,pershot:0.02,rate:6,range:3,vel:700,track:0.2,ammo:false,pd:false},
+   cost:{bp:135,cr:4,rp:1,steel:27,mats:{aluminium:18}},
+   honesty:'70 mm unguided rocket pod (19 tubes): area saturation vs infantry/soft targets (HE/flechette) — cheap, wide, inaccurate. EngageBands: SURFACE.'},
+ {id:'aw_amraam',cat:'Weapons',name:'AIM-120 AMRAAM (BVR air-to-air)',hosts:['ground'],
+   mass:55,vol:20,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.16,nature:'Explosive',delivery:'Guided',pen:4,pershot:0.12,rate:0.5,range:10,vel:1000,track:0.95,ammo:false,pd:false},
+   cost:{bp:220,cr:9,rp:4,steel:22,mats:{aluminium:18,electronics:30}},
+   honesty:'Active-radar beyond-visual-range air-to-air missile — fire-and-forget, ~40–105 km — the F-22\'s primary KILL weapon. ⚠ EngageBands: AIR (kills aircraft) — the air-target gate is the atmospheric design, PENDING. BVR "shoot before they see you" first-shot has no mock reader; contributes firepower like any guided weapon here.'},
+ {id:'aw_sidewinder',cat:'Weapons',name:'AIM-9 Sidewinder (short-range A2A)',hosts:['ground'],
+   mass:40,vol:14,crew:0,hp:3,draw:0,supply:0,
+   weapon:{dps:0.12,nature:'Explosive',delivery:'Guided',pen:3,pershot:0.08,rate:0.5,range:2,vel:900,track:0.9,ammo:false,pd:false},
+   cost:{bp:160,cr:7,rp:3,steel:16,mats:{aluminium:12,electronics:16}},
+   honesty:'Short-range imaging-infrared dogfight missile (high off-boresight) — the within-visual-range kill if a fight closes. EngageBands: AIR (PENDING).'},
+ {id:'aw_vulcan',cat:'Weapons',name:'M61 Vulcan 20 mm Cannon',hosts:['ground'],
+   mass:60,vol:20,crew:0,hp:5,draw:0,supply:0,
+   weapon:{dps:0.10,nature:'Kinetic',delivery:'Projectile',pen:3,pershot:0.005,rate:20,range:1,vel:1050,track:0.6,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:2,steel:36,mats:{aluminium:24}},
+   honesty:'6-barrel 20 mm rotary cannon (6,600 rpm → very high saturation = a wall of rounds a dodger can\'t evade) — the last-ditch gun kill. EngageBands: AIR + SURFACE (PENDING).'},
+ {id:'aw_beamturret',cat:'Weapons',name:'Composite-Beam Laser Turret',hosts:['ground'],
+   mass:70,vol:28,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.22,nature:'Energy',delivery:'Beam',pen:0,pershot:0.06,rate:4,range:2.5,vel:299792,track:0.7,ammo:false,pd:false},
+   cost:{bp:210,cr:7,rp:3,steel:28,elec:42},
+   honesty:'Gunner-operated pin-point composite-beam laser (LAAT ball/wing turret): the gunship\'s main punch, air AND ground. Energy → draws the generator. Precision aim past the turret\'s traverse. EngageBands: AIR + SURFACE (PENDING).'},
+ {id:'aw_aplaser',cat:'Weapons',name:'Anti-Personnel Laser Turret',hosts:['ground'],
+   mass:35,vol:14,crew:0,hp:3,draw:0,supply:0,
+   weapon:{dps:0.08,nature:'Energy',delivery:'Beam',pen:0,pershot:0.008,rate:12,range:1,vel:299792,track:0.6,ammo:false,pd:false},
+   cost:{bp:105,cr:3,rp:2,steel:14,elec:20},
+   honesty:'A light rapid laser turret (LAAT chin/rear) to SWEEP and suppress a landing zone as troops disembark. Energy → draws the generator. EngageBands: SURFACE.'},
+ {id:'aw_massdriver',cat:'Weapons',name:'Mass-Driver Missile Launcher',hosts:['ground'],
+   mass:90,vol:34,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.20,nature:'Kinetic',delivery:'Guided',pen:18,pershot:0.16,rate:0.5,range:12,vel:3000,track:0.85,ammo:false,pd:false},
+   cost:{bp:270,cr:9,rp:3,steel:54,mats:{aluminium:36,electronics:20}},
+   honesty:'Dorsal mass-driver firing hypersonic anti-armour ordnance. ⚠ PENDING: OVER-THE-HORIZON targeting (hit what it can\'t directly see) has no mock reader; here it\'s a long-range high-penetration guided weapon. EngageBands: SURFACE.'},
+ {id:'aw_aarocket',cat:'Weapons',name:'Light Air-to-Air Rocket',hosts:['ground'],
+   mass:28,vol:10,crew:0,hp:2,draw:0,supply:0,
+   weapon:{dps:0.10,nature:'Explosive',delivery:'Guided',pen:2,pershot:0.03,rate:3,range:2,vel:800,track:0.7,ammo:false,pd:false},
+   cost:{bp:84,cr:3,rp:1,steel:17,mats:{aluminium:11}},
+   honesty:'Ventral wing-mounted light anti-aircraft rocket (×8 on the LAAT). EngageBands: AIR (PENDING).'},
+ {id:'as_aesa',cat:'Sensors',name:'AESA Radar (APG-77)',hosts:['ground'],
+   mass:120,vol:40,crew:0,hp:6,draw:0,supply:0,detect:400,
+   cost:{bp:360,cr:14,rp:5,steel:48,mats:{aluminium:24,electronics:80}},
+   honesty:'Active electronically-scanned array (F-22): very long detection = you see + shoot FIRST. ⚠ PENDING: LOW-PROBABILITY-OF-INTERCEPT (radiate hard, stay unheard) + sensor-fusion first-look have no mock reader; here it\'s a big detection number (the who-shoots-first line, LIVE, client-gated).'},
+ {id:'as_longbow',cat:'Sensors',name:'Longbow Mast FCR (APG-78)',hosts:['ground'],
+   mass:140,vol:45,crew:0,hp:6,draw:0,supply:0,detect:300,
+   cost:{bp:420,cr:16,rp:5,steel:56,mats:{aluminium:28,electronics:90}},
+   honesty:'Mast-mounted millimetre-wave fire-control radar above the rotor (Apache): classifies 128 targets, volleys 16 fire-and-forget missiles in ~30 s. ⚠ PENDING: the HUNT-FROM-HIDING signature — peek the dome over a ridge while the airframe stays in defilade — has no mock reader; here it\'s a long all-weather detection range (LIVE, client-gated).'},
+ {id:'ae_fusion',cat:'Enhancers',name:'Sensor Fusion / Targeting (TADS/AESA)',hosts:['ground'],
+   mass:80,vol:15,crew:0,hp:0,draw:0,supply:0,caliber:1.2,
+   cost:{bp:320,cr:12,rp:4,steel:24,mats:{aluminium:16,electronics:40}},
+   honesty:'Fused sensors + laser designator / thermal targeting (F-22 fusion, Apache TADS/PNVS): own-the-night, first-shot precision. LIVE: a fire-control sharpening (caliber ×1.2 — surer, faster strikes; UnitCaliberAtb). ⚠ PENDING: full "first-look/first-kill" initiative + MUM-T drone teaming have no mock reader.'},
+ {id:'ap_troopbay',cat:'Logistical',name:'Assault Troop Bay (×30)',hosts:['ground'],
+   mass:200,vol:300,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:400,cr:8,rp:1,steel:80,mats:{aluminium:120}},
+   honesty:'An open rapid-egress cabin carrying ~30 troopers into the LZ (LAAT). ⚠ PENDING: a surface troop-carry component / the deployable-squadron drop model has no mock reader (same flag as the AT-TE\'s troop bay) — it expresses the transport identity, not a live capacity.'}
 ];
 
 var host='ship';
@@ -733,6 +832,31 @@ var PRESETS=[
        its host (~55% mass = high evasion/AMBAC), max beam+funnel alpha, reactor covers the draw, gundarium for
        survivability — an agile alpha-striker, not a tank. */
     counts:{gm_mecha:1,gm_msreactor:1,gp_flight:1,gw_beam:2,gw_funnel:6,gw_claw:2,ga_heavyplate:3,ge_psychoframe:1,gs_radar:1}},
+  {id:'apache',name:'⬢ AH-64 Apache (attack helo)',hero:true,host:'ground',
+    /* AH-64D/E Longbow — 2-crew all-weather anti-armour CAS gunship. ~15 m, 10.4 t max, 2× T700 (~3,960 shp, 293 km/h,
+       2.5–3 hr loiter, true VTOL). Armament: M230 30 mm chain gun (1,200 rds) + up to 16 AGM-114 Hellfire (tank-killer,
+       fire-and-forget from the mast radar) + Hydra 70 rocket pods; here a realistic MIXED loadout (8 Hellfire + 2 rocket
+       pods + gun). Sensors: APG-78 Longbow MAST radar (128 targets → 16-missile volley from defilade) + M-TADS/PNVS.
+       Armoured cockpit + crashworthy → hard to one-shot. MIN-MAXED for HOVER-AND-LOITER STANDOFF ANTI-ARMOUR: light
+       (~30% budget), Hellfire-dense punch ×1.2 fire-control, tough for its size. PENDING: hover/loiter, flight,
+       fire-and-forget-from-hiding, MUM-T, sortie endurance. */
+    counts:{af_rotor:1,ap_rotor:1,aw_chaingun:1,aw_hellfire:8,aw_rockets:2,as_longbow:1,ae_fusion:1,ga_plating:2}},
+  {id:'f22',name:'⬢ F-22 Raptor (stealth fighter)',hero:true,host:'ground',
+    /* Lockheed F-22A — single-seat 5th-gen air-dominance fighter. 18.9 m, ~38 t max, 2× F119 (~70,000 lbf AB, Mach 2.25,
+       SUPERCRUISE ~Mach 1.8, thrust-vectoring, T/W >1.25). Armament (internal, stealth): 6× AIM-120 AMRAAM (BVR
+       fire-and-forget KILL weapon) + 2× AIM-9 Sidewinder + M61A2 20 mm Vulcan (480 rds). Sensors: APG-77 AESA (LPI) +
+       sensor fusion → see-first/shoot-first. RCS ≈ a marble. MIN-MAXED for SEE-FIRST/SHOOT-FIRST AIR DOMINANCE: highest
+       detection (400), AMRAAM-dense, light + evasive, ×1.2 fusion. PENDING (the whole identity): FLIGHT, stealth-as-
+       undetectability (its ~0.85 agility + low-observability read as the 0.42 ground ceiling), supercruise, BVR first-shot. */
+    counts:{af_jet:1,ap_jet:1,aw_amraam:6,aw_sidewinder:2,aw_vulcan:1,as_aesa:1,ae_fusion:1,ga_plating:1}},
+  {id:'laat',name:'⬢ LAAT Gunship (Republic)',hero:true,host:'ground',
+    /* Rothana LAAT/i "larty" — 4-crew repulsorlift assault dropship. ~17.4 m, 620 km/h, low-altitude, carries 30 clone
+       troopers into a hot LZ. THE over-gunned airframe: 4 composite-beam laser turrets (2 manned ball + 2 auto) +
+       3 anti-personnel laser turrets + 2 dorsal mass-driver missile launchers (over-horizon anti-armour) + 8 ventral
+       air-to-air rockets. NO combat shields, thin superdispersive armour → a glass cannon. MIN-MAXED to its identity:
+       HIGHEST firepower of the three (volume of fire), a generator to power the lasers, a troop bay, deliberately LIGHT
+       armour despite the guns. PENDING: flight/hover, over-horizon targeting, the hot-LZ troop-drop, no-shield fragility. */
+    counts:{af_gunship:1,ap_repulsor:1,af_generator:1,aw_beamturret:4,aw_aplaser:3,aw_massdriver:2,aw_aarocket:8,ap_troopbay:1,ga_plating:1}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
