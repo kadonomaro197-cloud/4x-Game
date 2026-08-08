@@ -1408,8 +1408,12 @@ function stepSpace(){
     }
     let minSep=Infinity;
     for(let ai=0;ai<live.length;ai++) for(let dj=ai+1;dj<live.length;dj++) if(live[ai].side!==live[dj].side){ const s=fleetSep(live[ai],live[dj]); if(s<minSep) minSep=s; }
-    if(st._lastMinSep!=null && minSep >= st._lastMinSep-1) st._standoff=(st._standoff||0)+1; else st._standoff=0;
-    st._lastMinSep=minSep;
+    // Oscillation-robust standoff test — track the CLOSEST the sides have EVER gotten (a high-water-mark), not the
+    // frame-to-frame delta. A genuine walk-in keeps setting a new record → counter resets → never a false stalemate. A
+    // kiter that oscillates its gap around a preferred range never beats its own closest approach after the first cycle,
+    // so the counter climbs to the threshold (the old delta test was reset by every down-swing → the fight capped blank).
+    if(st._bestMinSep==null || minSep < st._bestMinSep-1){ st._bestMinSep=minSep; st._standoff=0; }
+    else st._standoff=(st._standoff||0)+1;
     if(!everEngage || st._standoff>=8){ endSpace(); return; }
   } else if(ATMO){ st._standoff=0; }
   const salvoEvents=[];
@@ -1594,7 +1598,7 @@ function play(){
   playTimer=setInterval(()=>{ if(!state||state.over){ stop(); return; } stepOnce(); }, iv);
 }
 function stop(){ playing=false; clearInterval(playTimer); updatePlayBtn(); }
-function resolveAll(){ stop(); let guard=0; while(state && !state.over && guard++<6000) stepOnce(); }
+function resolveAll(){ stop(); let guard=0; while(state && !state.over && guard++<6000) stepOnce(); if(state && !state.over) endSpace(); }  // never leave a capped fight with a blank outcome
 function replay(){ stop(); rebuild(); }
 function applyStance(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side && !f.deployable).forEach(f=>f.stance=val); }  // a wing always closes to strike
 function applyTargetPri(side, val){ if(!state) return; state.fleets.filter(f=>f.side===side).forEach(f=>f.targetPri=val); }
