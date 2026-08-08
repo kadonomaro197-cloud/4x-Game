@@ -135,9 +135,11 @@ range covers the slant. So a SAM (`EngageBands ⊇ {air bands}`, long range) is 
 touch a flyer regardless of geometry; a tank gun with huge range but `{Surface}` can't accidentally snipe jets. It passes
 derive-don't-invent — it writes a variable the resolver reads at the gate.
 
-CAS also **generalizes** the existing orbital-bombardment routine (`DamageProcessor.ApplyGroundBombardment`,
-`DamageProcessor.cs:349`) past its three limits — but that's a **later, flag-gated slice** (§11 Call 6) because it touches
-the live colony-bombardment wire.
+**CAS needs no special routine.** An airborne unit firing *down* at surface units is just the core resolver doing its
+job — the 3D gap decides whether its down-fire reaches, and `EngageBands ⊇ {Surface}` lets it engage them. **Orbital
+bombardment stays entirely separate** (`DamageProcessor.ApplyGroundBombardment`, `DamageProcessor.cs:349` — a
+fleet-in-orbit whole-surface strike) — untouched, its own routine (§11 Call 6). They model different things: a precision
+engagement between two units vs a saturation strike from orbit.
 
 ### 4c. Designer expression — derive, don't invent
 
@@ -175,7 +177,8 @@ Verified against source 2026-08-08.
 | Altitude band on the unit | **NEW (one int field + a 3-value metre lookup)** | on `GroundUnit`, snapshot at `RaiseUnit` like `Range_m`/`Speed_kmh` |
 | Fuel/endurance runtime field on the aircraft | **NEW (mirrors the ammo pool)** | on `GroundUnit`, beside `MaxAmmo_kg` |
 | `EngageBands` weapon property (the air gate) | **NEW (one weapon dial, derive-clean)** | on the weapon atb; checked beside `WeaponReaches` |
-| CAS = above-hits-below, armour-aware | **EXISTS — generalize its 3 limits (later slice)** | `DamageProcessor.cs:349` |
+| CAS (airborne unit fires down at surface units) | **FALLS OUT of the core resolver** (3D gap + `EngageBands`) — no special routine | `GroundForcesProcessor.ResolveRegionCombat` |
+| Orbital bombardment (fleet → whole surface) | **EXISTS — kept SEPARATE + untouched** (Call 6) | `DamageProcessor.cs:349` |
 | Air combat domain / air map / air resolver | **NOT NEEDED — deliberately none** | `DoctrineDomain` stays `{Both,Space,Ground}` (`TargetPriority.cs:40-48`) |
 
 ---
@@ -240,8 +243,10 @@ CI-gated, one per push, both jobs green before the next.
 | **A3** | `EngageBands` weapon dial + the gate check | A SAM downs a flyer; a `{Surface}` tank gun can't, even in range |
 | **A4** | Author the Atmospheric chassis + jet drive medium-gate + F-22/Apache/SAM presets | `BaseModIntegrityTests` binds them; a jet in vacuum is rejected |
 | **A5** | Fuel pool (mirrors ammo) + basing state + the sortie loop (launch/recover order + resupply-at-base) | An aircraft launches, burns fuel, auto-returns dry, refuels, relaunches; the AI runs the same loop |
-| **A6** *(opt)* | Unify CAS through the salvo (Call 6-C) — generalize `ApplyGroundBombardment`, orbital byte-identical | CAS region+enemy-scoped; orbital unchanged; bombardment gauges green |
-| **A7** | AI values air: extend `GroundTactics.DecidePosture` — clear sky before CAS, build AA when out-ranged aloft, manage sorties | AI wins the sky then strafes; builds AA when it lacks fighters |
+| **A6** | AI values air: extend `GroundTactics.DecidePosture` — clear sky before CAS, build AA when out-ranged aloft, manage sorties | AI wins the sky then strafes; builds AA when it lacks fighters |
+
+*CAS needs no slice of its own — it's delivered by A2 (the 3D gap) + A3 (`EngageBands`); an airborne unit firing down is
+native resolver combat. Orbital bombardment (`ApplyGroundBombardment`) is left entirely separate and untouched (Call 6).*
 
 ---
 
@@ -254,7 +259,7 @@ CI-gated, one per push, both jobs green before the next.
 | **3** | Emergent vs **explicit** anti-air | **Explicit gate (B).** A weapon carries an `EngageBands` mask of which bands it can fire at, checked beside the geometric range gate. | You wanted **control** over exactly what can shoot air (so a long-ranged artillery piece isn't secretly a SAM). One small derive-clean weapon dial, not a subsystem. |
 | **4** | Band count | **3 bands (B):** Low (terrain-following) / Medium / High. | Enough spread for real lanes (interceptor vs gunship); defers near-space, which is the only band that flirts with orbit. |
 | **5** | Near-space ↔ space coupling | **Flavor only (A)** — and moot, since Call 4 defers the near-space band. The only air↔space link stays the existing orbital-bombardment edge. | Keeps the air layer a clean ground-plane overlay; space coupling is a separate later design. |
-| **6** | CAS unification timing | **Unify the function, orbital byte-identical (C).** Generalize `ApplyGroundBombardment` to take a region + enemy filter; orbital passes neither (unchanged), CAS passes both. | One "damage from above" routine, no parallel path, and orbital behavior can't change because it doesn't use the new filters. A later, flag-gated slice (A6). |
+| **6** | Orbital bombardment vs CAS | **Keep them SEPARATE (B).** Orbital bombardment (`ApplyGroundBombardment`, a fleet-in-orbit whole-surface strike) stays its own untouched routine. **CAS is not a bombardment call at all** — an airborne unit firing down at surface units is native resolver combat (the 3D gap + `EngageBands`), so it needs no special routine. | They model genuinely different things — a saturation strike from orbit vs a precision engagement between two units. Keeping them separate leaves the live colony-bombardment wire untouched, and CAS falls out of the unified resolver for free. |
 
 ---
 
@@ -271,9 +276,10 @@ CI-gated, one per push, both jobs green before the next.
 - **Docking + Carrier (`Docking/DockTools`, `CARRIER-DESIGN.md`)** — the launch/recover order the sortie loop reuses.
 - **Ammo/resupply (`GroundAmmo` / `GroundForces.ResupplyUnit`)** — the pool pattern the fuel field mirrors, and the
   rearm-at-base mechanic.
-- **Damage / `DamageProcessor.ApplyGroundBombardment`** — the CAS primitive to generalize (Call 6, slice A6).
+- **Damage / `DamageProcessor.ApplyGroundBombardment`** — orbital bombardment, kept **separate and untouched** (Call 6);
+  CAS is native resolver combat, not a bombardment call.
 - **AI / `GroundTacticalBrain` + `GroundTactics`** — no new code for the static spine; a `DecidePosture` extension for
-  air-superiority sequencing + sortie management (slice A7).
+  air-superiority sequencing + sortie management (slice A6).
 - **Designers / chassis + propulsion + weapon doors** — the Atmospheric cell + bands + medium-gate + `EngageBands`.
 
 ---
