@@ -284,6 +284,27 @@ like the build cost the tool already shows. The cradle-to-grave chain gains its 
 reader-that-bites — and put the dial on the component, never a flat per-entity number, so it stays authentic to what's
 mounted. That's the `DESIGNER-NORTH-STAR` intrinsic test applied to run-costs.)*
 
+### Verification (2026-08-06) — do components actually cost something to build and run?
+
+Checked both layers — the assembler catalog (the intention model) and the base-mod components (the engine truth):
+
+- **Build — YES, and it's structurally guaranteed.** Every one of the assembler's **43 components carries a non-zero
+  build cost** (dumped and checked: scaling from ~300 for a rifle to 14.6 M for the superlaser — no freebie, no
+  absurd), and every base-mod buildable has a mass-scaled material split + credits + build-points (§3 census). More:
+  the engine **forbids a free-to-build component** — `IndustryTools.cs:170-171` throws *"resources can't cost 0"* on
+  any design whose `ResourceCosts` sum to zero. A build that costs nothing cannot happen.
+- **Run — SPARSE, exactly as the ledger says.** Only four run-costs actually bite today: energy-weapon/warp **power
+  draw**, **crew** (as build labor), ground-unit + lab **upkeep**, and the **infrastructure-demand** grid (the one
+  live balance, §5.1). The rest write nothing — the four holes. The only three assembler parts free of
+  crew/draw/food (armour plate, fuel tank, cargo hold) are passive by nature and **still bill mass-based upkeep**, so
+  **nothing is a total freebie**.
+- **Makes sense.** Build cost scales with mass and capability; the zero-cost guard plus mass-scaling keep it
+  coherent; nothing absurd surfaced (no free superweapon, no rifle dearer than a reactor).
+- **Nothing missing.** The cost framework is the 13-axis input taxonomy (`05-MATERIAL-INPUTS-BY-DOOR.md`): **6 build
+  axes + 7 run axes, all accounted for.** The single genuinely-absent piece is the **run-cost wiring itself** — now
+  the TIER 2.5 backlog item, and **marked to-be-built in the designer** (the I/O matrix Table C run-cost surface row
+  + the `DESIGNER-NORTH-STAR` §1 dial law).
+
 ---
 
 *Out of scope but adjacent: orbital **space stations** are the parallel off-world host (`docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`)

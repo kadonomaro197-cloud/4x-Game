@@ -270,7 +270,8 @@ combinations across the whole assembled entity. This list is the Assembler's rea
 | **Power supply vs draw** | `Power.TotalOutput vs Σ (weapon beam draw + warp draw)` | Power vs Weapons+Propulsion | `WeaponSupply` / `WarpMoveCommand` |
 | **Crew required vs available** | `Σ CrewReq − Σ Crew-Reduction vs manpower pool` | all components + Enhancers + Civic | `ManpowerTools.ResolveBuild` |
 | **Ammo / magazine feed** | `magazine capacity vs Σ weapon ammo draw` | Logistical vs Weapons | dry-magazine gate |
-| **The cost surface** | `Σ credits + materials + research + crew + build-time` across all components | ALL doors + Industrial rates | industry / research / treasury |
+| **The cost surface** *(BUILD — live)* | `Σ credits + materials + research + crew + build-time` across all components | ALL doors + Industrial rates | industry / research / treasury |
+| **The RUN-cost surface** *(RUN — 🔨 PLANNED, backlog TIER 2.5)* | `Σ power draw + jobs + food + upkeep` across all components — the ongoing twin of the build cost. **Shown in the assembler now** (`renderRunCost`), each line badged live/pending | ALL doors (per-component run dials) | power grid · employment · sustenance · upkeep biller |
 | **Detection footprint** | combined signature (Power 1700 K + Propulsion 3500 K + emitters) vs observer threshold | Power + Propulsion + Sensors | detection (emergent — depends on observer) |
 | **Model count / multiplicity** | `component × COUNT`, and "this design fields **N models**" | an **Assembler dial** (the developer's #1 ask) | ground resolver bucketing (**model count pending**) |
 
