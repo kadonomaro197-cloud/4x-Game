@@ -266,8 +266,13 @@ footer{padding:6px 0 60px}
     </div>
 
     <div class="panel">
-      <div class="phead"><h2>Cost surface</h2><span class="sub">to build one</span></div>
+      <div class="phead"><h2>Cost surface</h2><span class="sub">to <b>build</b> one · one-time</span></div>
       <div class="pbody"><div class="gauges" id="cost"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Run cost — what you mount is what you pay</h2><span class="sub">to <b>keep</b> it running · every tick</span></div>
+      <div class="pbody"><div class="gauges" id="runcost"></div><p class="note" id="runNote" style="margin:12px 0 0"></p></div>
     </div>
 
     <div class="panel">
@@ -1030,6 +1035,40 @@ function renderCost(S){
     '<div class="gauge'+(bill.total?'':' muted')+'"><i>Materials</i><b>'+fmt(bill.total)+'t</b><s>'+bill.arr.length+' types (below)</s></div>';
 }
 
+/* ---------- render: RUN cost surface — the ongoing bill, a Σ over the mounted parts (Capitol-world doc §8) ----------
+   The twin of the build cost above: power draw · jobs · food · upkeep. Each badged LIVE (the engine charges it today)
+   or PENDING (the per-component dial exists but its producer/coefficient isn't wired). This is "what you mount is what
+   you pay," made honest — the four run-loops of the surface economy, per entity. */
+function renderRunCost(S){
+  var el=document.getElementById('runcost');var note=document.getElementById('runNote');
+  var UPKEEP_PER_T=0.1;                    // ground-unit rate: UpkeepCredits = Mass × 0.1 /month (FLAGGED)
+  var upkeepMo=S.mass*UPKEEP_PER_T;
+  var jobs=Math.max(0,S.crew);
+  var live='<span class="mk" style="border-color:var(--ok);color:var(--ok)">live</span>';
+  var pend='<span class="mk pend">pending</span>';
+  var part='<span class="mk pend">partial</span>';
+  var pShort=S.draw>S.supply;
+  // POWER — energy-weapon + warp draw is engine-LIVE; a generic component's draw is the C12 gap (modeled here; the
+  // engine reads 0 for non-weapon parts). JOBS = Σ CrewReq (live as crew; pending as an employment→morale producer,
+  // backlog #2). FOOD — the per-entity provisions loop is modeled; the COLONY per-capita coefficient is 0 (pending).
+  // UPKEEP — a ground unit bills mass×0.1/mo today; ships/installations are pending (the number is "what it would cost").
+  el.innerHTML=
+    '<div class="gauge'+(S.draw?'':' muted')+'"><i>Power draw</i><b>'+fmt(S.draw)+' MW</b><s>'+
+      (S.draw?(pShort?('short '+fmt(S.draw-S.supply)+' MW'):(fmt(S.supply-S.draw)+' MW spare')):'no powered parts')+' · '+live+' guns / '+pend+' C12</s></div>'+
+    '<div class="gauge'+(jobs?'':' muted')+'"><i>Jobs / crew</i><b>'+fmt(jobs)+'</b><s>watchstanders · '+live+' as crew, '+pend+' as morale (#2)</s></div>'+
+    '<div class="gauge'+(S.crew>0?'':' muted')+'"><i>Food / day</i><b>'+(S.selfSufficient?'closed loop':fmt(S.foodNet)+' cd')+'</b><s>'+
+      (S.crew>0?(S.selfSufficient?'homegrown ≥ crew':fmt(S.foodProd)+' grown vs '+fmt(S.crew)+' eaten')+' · '+part:'no crew')+'</s></div>'+
+    '<div class="gauge'+(upkeepMo?'':' muted')+'"><i>Upkeep / mo</i><b>'+fmt(upkeepMo)+' cr</b><s>'+
+      (host==='ground'?('mass × 0.1 · '+live):('mass × 0.1 · '+pend+' off-ground'))+'</s></div>';
+  note.innerHTML='The <b>RUN</b> bill — what this costs every tick it exists, the twin of the <b>build</b> bill above. '+
+    'Each line is a <b>Σ over the mounted parts</b>: what you mount is what you pay. '+
+    '<span class="mk" style="border-color:var(--ok);color:var(--ok)">live</span> = the engine charges it today · '+
+    '<span class="mk pend">pending</span> = the per-component dial exists but its producer/coefficient isn’t wired yet '+
+    '(jobs→employment = backlog #2 · per-capita food = 0 · generic power draw = C12 · off-ground upkeep). '+
+    'Build each to the shape the infrastructure grid already proves works — <b>dial → colony Σ → a reader that bites</b>. '+
+    'Detail: <span class="mono">docs/economy/CAPITOL-WORLD-INFRASTRUCTURE-2026-08-06.md §8</span>.';
+}
+
 /* ---------- render: resource bill (the materials — cradle rung) ---------- */
 function renderResources(S){
   var el=document.getElementById('resources');var note=document.getElementById('resNote');
@@ -1113,7 +1152,7 @@ function renderSplit(){
 function renderAll(){
   renderHosts();renderPresets();renderRoster();
   var S=compute();
-  renderBudgets(S);renderGates(S);renderGauges(S);renderMobility(S);renderEndurance(S);renderWeapons(S);renderRanges(S);renderCost(S);renderResources(S);renderHandoff(S);renderSplit();
+  renderBudgets(S);renderGates(S);renderGauges(S);renderMobility(S);renderEndurance(S);renderWeapons(S);renderRanges(S);renderCost(S);renderRunCost(S);renderResources(S);renderHandoff(S);renderSplit();
 }
 
 /* open on the Acclamator preset — the newest build. (activePreset defaults to 'acclamator'.) */

@@ -109,6 +109,47 @@ Ordered by **impact × cheapness** — the same ranking as the audit.
 
 ---
 
+## TIER 2.5 — The component RUN-COST vector (the unifying frame)  ⬜ NOT BUILT
+
+**One pattern, four costs — from the Capitol-world sim
+(`docs/economy/CAPITOL-WORLD-INFRASTRUCTURE-2026-08-06.md §8`).** The four "does a built world cost anything to
+*run*" loops — **power · jobs · food · upkeep** — are ONE design, not four. Every component already carries a
+**build** cost vector (materials/credits/build-points) that the Assembler sums into its cost surface. It should
+carry a **run** cost vector too, summed the same way — *"what you mount is what you pay."*
+
+The shape to build each one to is **already proven** by the infrastructure grid (§5.1 of the Capitol doc):
+**a per-component dial → a colony/entity Σ → a reader that bites** (`InfrastructureCapacityAtb.Capacity` →
+`InfrastructureProcessor` provided-vs-required → efficiency throttles all production). Build the other three to
+that exact shape and the surface economy gains its missing half.
+
+**The Entity Assembler now SHOWS this** — a **Run cost** panel (power/jobs/food/upkeep), each badged live/pending,
+sitting next to the build cost surface (`entityassembler.html`, `renderRunCost`). That's the intention document;
+here is the engine work to make each badge go green:
+
+| Run-cost | Per-component dial (exists?) | Colony/entity Σ (exists?) | Reader (exists?) | What to build | Effort |
+|----------|------------------------------|---------------------------|------------------|---------------|--------|
+| **Jobs → employment** | `CrewReq` ✅ | `GetTotalJobs` ✅ | `PopulationProcessor:74` ✅ | **the producer** — publish `CrewReq` as `EmploymentAtbDB.Jobs` (**= item #2 above**) | low |
+| **Food** | `FoodOutput` ✅ · demand ✅ | `SustenanceProcessor` ✅ | starvation + quality→morale ✅ | **one coefficient** — `PerCapitaFoodDemand` = 0 (`ColonySustenanceDB.cs:23`); set it > 0, flag-gate, baseline `MoraleTests` | low |
+| **Upkeep** | `UpkeepCredits` ⚠ (ground/lab only) | `GroundUpkeep` / `StationUpkeepProcessor` ✅ | `Money` ledger ✅ | **generalize** — a per-installation upkeep dial + a colony biller walking `ComponentInstancesDB` (mirror `GroundUpkeep.BillIfDue`) | low–med |
+| **Power** | `WeaponSupply.PowerDraw_W` ⚠ (weapons/warp only) | — (no colony power Σ) | ground-unit power gate ✅ | **the only real build** — a generic component `PowerDraw` + a colony power Σ vs Solar/reactor supply → brownout/efficiency, same shape as infra (**C12**) | med |
+
+**Why this is ONE item, not four:** three of the four are a *producer*, a *coefficient*, or a *generalization* —
+the readers and the sums already exist. Only generic **power draw** is a genuinely new subsystem, and even it
+should be built to the infrastructure grid's exact shape. **Do them together** and a built world finally costs
+power, employs people, eats food, and drains the treasury — all driven by what's mounted, closing the four holes
+the Capitol-world sim found.
+
+- **⚠ Landmine.** An upkeep/power dial on a JSON-bound `*Atb` is exact-arity (gotcha 6) — add it in lockstep
+  with every template that binds the atb, **or** put it on the design (as `GroundUnitDesign.UpkeepCredits` does)
+  when it needn't be JSON-authorable.
+- **Cradle to grave.** mineral → material → **build cost** (already summed) → component → **run cost** (this) →
+  the decision → the loss. This is the missing *middle* of the chain: today a component costs to build and costs
+  to lose, but nothing to *keep*.
+- **Gauge.** Per cost: a built entity reports a non-zero run-cost, an empty one reports zero, and the colony Σ
+  throttles/bills correctly (mirror `EconomyReadoutTests` + `MoraleTests` + `GroundUpkeepTests`).
+
+---
+
 ## TIER 3 — Engine readers the tools already flag (weld the reader; the tool keeps flagging until you do)
 
 ### 3. Guided-weapon damage — read the real warhead instead of the flat stub  ⬜ NOT BUILT
