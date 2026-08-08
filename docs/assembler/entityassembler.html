@@ -323,7 +323,7 @@ var HOSTS={
   ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
         budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:900,role:'ship'},
   ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles — a CARRIED unit whose chassis carry-class (Personnel or Vehicle) is the "deployable flag" a matching bay hauls (CARRIER-DESIGN §13a — the flag lives on the chassis, not as a boolean). Armour is soaked shot-by-shot; penetration bites here.',
-        budgetName:'Carry budget',budget:640,volCap:400,crewRef:200,role:'ground',carryClass:'Personnel · Vehicle'},
+        budgetName:'Carry budget',budget:6000,volCap:5000,crewRef:200,role:'ground',carryClass:'Personnel · Vehicle'},
   station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
         budgetName:'Structural budget',budget:22000,volCap:16000,crewRef:900,role:'station'},
   dreadnought:{name:'Dreadnought',glyph:'◆',desc:'A mobile super-capital — a warship three times a normal hull, between a ship and a Battle Station. It still dodges (barely, at its size) and is FTL-capable; it mounts anything a ship OR a station can. The tier a 1,600 m Star Destroyer needs when it overflows the ship budget.',
@@ -515,7 +515,72 @@ var CAT=[
  {id:'flagsuite',cat:'Command',name:'Flag Command Suite',hosts:['ship','station'],
    mass:120,vol:80,crew:12,hp:16,draw:4,supply:0,flagship:true,
    cost:{bp:200,cr:30,rp:5,steel:60,elec:70,mats:{'ree-magnetics':10}},
-   honesty:'A flagship’s command suite — a fleet CIC, not just the ship’s bridge. Seats a FLEET commander (CommandBerthAtb seats a leader, LIVE for site work), but fleet-command scope (AdminLevel) is DEAD in the engine — the capability, flagged.'}
+   honesty:'A flagship’s command suite — a fleet CIC, not just the ship’s bridge. Seats a FLEET commander (CommandBerthAtb seats a leader, LIVE for site work), but fleet-command scope (AdminLevel) is DEAD in the engine — the capability, flagged.'},
+ /* ---- GROUND-UNIT PARTS (base-mod scale — costs mirror the installations.json ground templates; the ground host
+        only. On ground, a weapon's penetration/per-shot are LIVE. These are what the 5 ground presets build from. ---- */
+ {id:'gm_swarm',cat:'Chassis',name:'Swarmling Frame',hosts:['ground'],
+   mass:5,vol:3,crew:0,hp:40,draw:0,supply:0,
+   cost:{bp:15,cr:1,rp:1,steel:3,mats:{aluminium:2}},
+   honesty:'A near-free organic body — the cheapest chassis (mass 5, HP 40). Built by the score (UnitsPerBuild) so a brood is thrown in numbers. Base-mod swarm-frame.'},
+ {id:'gm_human',cat:'Chassis',name:'Human Frame',hosts:['ground'],
+   mass:20,vol:8,crew:0,hp:200,draw:0,supply:0,
+   cost:{bp:60,cr:2,rp:1,steel:12,mats:{aluminium:8}},
+   honesty:'The infantry chassis — a person-sized frame carrying weapons + gear (BaseHP 200, Personnel carry-class). Base-mod human-frame.'},
+ {id:'gm_walker',cat:'Chassis',name:'Walker Frame',hosts:['ground'],
+   mass:2500,vol:1400,crew:0,hp:1000,draw:0,supply:0,
+   cost:{bp:7500,cr:25,rp:2,steel:1500,mats:{aluminium:1000}},
+   honesty:'A multi-leg war-machine chassis (Vehicle carry-class) — climbs terrain wheels can\'t. Heavy: it eats most of the ground budget. Base-mod walker-frame.'},
+ {id:'gm_vehicle',cat:'Chassis',name:'Tracked Vehicle Frame',hosts:['ground'],
+   mass:4000,vol:2200,crew:0,hp:1500,draw:0,supply:0,
+   cost:{bp:12000,cr:40,rp:2,steel:2400,mats:{aluminium:1600}},
+   honesty:'The heaviest ground chassis — a tank / monster frame (Vehicle carry-class, BaseHP 1500). Base-mod vehicle-frame.'},
+ {id:'gw_rifle',cat:'Weapons',name:'Infantry Weapon (rifle / bio-fire)',hosts:['ground'],
+   mass:10,vol:4,crew:0,hp:5,draw:0,supply:0,
+   weapon:{dps:0.016,nature:'Kinetic',delivery:'Projectile',pen:0,pershot:0.004,rate:4,range:0.5,vel:1000,track:0.5,ammo:false,pd:false},
+   cost:{bp:30,cr:1,rp:1,steel:6,mats:{aluminium:4}},
+   honesty:'A shoulder weapon — a service rifle, a fleshborer, a blaster carbine. Self-contained (integral power/ammo, no reactor or magazine). On GROUND, penetration/per-shot are LIVE. Base-mod ground-rifle.'},
+ {id:'gw_claw',cat:'Weapons',name:'Rending Claws / Talons',hosts:['ground'],
+   mass:8,vol:3,crew:0,hp:2,draw:0,supply:0,
+   weapon:{dps:0.05,nature:'Kinetic',delivery:'Projectile',pen:12,pershot:0.03,rate:2,range:0.06,vel:200,track:0.3,ammo:false,pd:false},
+   cost:{bp:24,cr:1,rp:1,steel:5,mats:{aluminium:3}},
+   honesty:'Close-combat claws / talons — short reach, HIGH penetration (rends armour). Penetration is LIVE on ground. Base-mod claw-weapon.'},
+ {id:'gw_cannon',cat:'Weapons',name:'Heavy Ground Cannon / Bio-Cannon',hosts:['ground'],
+   mass:80,vol:30,crew:0,hp:8,draw:0,supply:0,
+   weapon:{dps:0.088,nature:'Kinetic',delivery:'Projectile',pen:8,pershot:0.05,rate:1,range:4,vel:1500,track:0.3,ammo:false,pd:false},
+   cost:{bp:240,cr:8,rp:2,steel:48,mats:{aluminium:32}},
+   honesty:'A vehicle-mounted heavy gun — a tank cannon or a monster\'s bio-cannon (self-fed). Base-mod ground-cannon (Artillery reach).'},
+ {id:'ga_plating',cat:'Defense',name:'Composite / Chitin Plating',hosts:['ground'],
+   mass:25,vol:8,crew:0,hp:150,draw:0,supply:0,armour:{thick:5,vsK:1,vsE:1},
+   cost:{bp:75,cr:2,rp:1,steel:15,mats:{aluminium:10}},
+   honesty:'Body armour — plastoid plate, chitin, composite (+150 HP, +5 armour). On ground, armour is soaked shot-by-shot. Base-mod ground-plating.'},
+ {id:'ga_heavyplate',cat:'Defense',name:'Heavy Carapace Plating',hosts:['ground'],
+   mass:300,vol:80,crew:0,hp:700,draw:0,supply:0,armour:{thick:45,vsK:1.4,vsE:0.8},
+   cost:{bp:900,cr:12,rp:2,steel:180,mats:{aluminium:120}},
+   honesty:'Vehicle-scale armour — a monster\'s carapace or a walker\'s hull plate (+700 HP, +45 armour). Base-mod heavy plating (nature-tuned).'},
+ {id:'gd_seal',cat:'Defense',name:'Sealed Systems (void / NBC seal)',hosts:['ground'],
+   mass:100,vol:20,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:400,cr:8,rp:2,steel:60,mats:{aluminium:40}},
+   honesty:'Sealed life-support — the unit fights in vacuum / toxic air without bleeding out (E4 attrition). "Sealed power armour matters." Base-mod sealed-systems.'},
+ {id:'ge_powerarmor',cat:'Enhancers',name:'Power Armour / Musculature',hosts:['ground'],
+   mass:30,vol:10,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:90,cr:3,rp:2,steel:18,mats:{aluminium:12}},
+   honesty:'A strength augment — power armour, or a monster\'s musculature — so the unit shoulders a heavier weapon. Base-mod power-armor (StrengthBonus).'},
+ {id:'ge_reflex',cat:'Enhancers',name:'Reflex Booster / Adrenal',hosts:['ground'],
+   mass:15,vol:5,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:45,cr:2,rp:1,steel:9,mats:{aluminium:6}},
+   honesty:'A dodge augment — reflexes / adrenal glands (+evasion; survive by not being hit). Base-mod reflex-booster (EvasionBonus).'},
+ {id:'ge_cadre',cat:'Enhancers',name:'Training Cadre',hosts:['ground'],
+   mass:110,vol:12,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:440,cr:9,rp:2,steel:66,mats:{aluminium:44}},
+   honesty:'Veterancy baked in — an elite unit hits harder and lasts longer (TrainingMultiplier). Dear in mass/credits: elite troops cost more. Base-mod training-cadre.'},
+ {id:'gp_loco',cat:'Propulsion',name:'Locomotion Drive',hosts:['ground'],
+   mass:200,vol:60,crew:2,hp:0,draw:0,supply:0,speedFactor:1.5,
+   cost:{bp:400,cr:8,rp:1,steel:120,mats:{aluminium:80}},
+   honesty:'A designed drive — legs, tracks, hover, a bio-gait. Sets march speed + all-terrain handling. Base-mod ground-locomotion.'},
+ {id:'gs_radar',cat:'Sensors',name:'Ground Radar',hosts:['ground'],
+   mass:100,vol:30,crew:3,hp:0,draw:0,supply:0,detect:200,
+   cost:{bp:200,cr:6,rp:1,steel:40,mats:{aluminium:20,electronics:40}},
+   honesty:'A scout sensor — reveals the ground each tick (lifts fog). The recon component a vanguard carries. Base-mod ground-radar.'}
 ];
 
 var host='ship';
@@ -596,6 +661,40 @@ var PRESETS=[
             warp:1,drive:20,fueltank:100,magazine:50,ammobunker:200,cargo:100,
             habblock:25,lifecomplex:20,agridome:9,medbay:100,provisions:50,
             sensor:20,searchsensor:20,firecontrol:20,ecm:10,targeting:20,bridge:10,flagsuite:4}},
+  {id:'arc170',name:'ARC-170 (fighter)',host:'ship',
+    /* Canon Aggressive ReConnaissance-170: 2 forward + 2 tail medium laser cannons · 2 proton torpedo tubes · deflector
+       shield · Class-1.5 hyperdrive · 3 crew + astromech · ~5-day consumables. ⚠ SCALE CAVEAT: the mock catalog is
+       capital-scale (a Laser Cannon is 80 t), so this reads ~1,800 t — a REAL ARC-170 is ~22 t. Read the mass as "the
+       smallest the mock can express"; the true fighter is a fraction of the Escort. */
+    counts:{searchsensor:1,firecontrol:1,laser:4,missile:2,shield:1,armour:1,reactor:1,capacitor:2,radiator:1,
+            drive:2,warp:1,fueltank:1,magazine:1,cargo:1,provisions:1,bridge:1}},
+  {id:'miranda',name:'Miranda-class (frigate)',host:'ship',
+    /* Canon (USS Reliant config): a light Starfleet cruiser/frigate — 6 phaser + 2 pulse + 4 photon torpedo + 4 PD ·
+       strong shields · 2 warp + 2 impulse · ~220 crew. A frigate under-guns a capital by design. Phasers → energy
+       beams, torpedoes → guided missiles. */
+    counts:{laser:6,plasma:2,missile:4,pdbattery:4,shield:8,reactor:2,warp:2,drive:2,fueltank:2,capacitor:4,
+            sensor:1,firecontrol:1,quarters:2,lifesupport:2,provisions:2,medbay:1,bridge:1}},
+  {id:'termagant',name:'Termagant ×20 (ground)',host:'ground',
+    /* One gaunt; UnitsPerBuild=20 = a brood per build (cost ×20). Cheap fragile chaff — a fleshborer + rending claws
+       + light chitin + adrenal reflexes on a near-free swarm-frame, thrown in numbers. */
+    counts:{gm_swarm:1,gw_rifle:1,gw_claw:1,ga_plating:1,ge_reflex:1}},
+  {id:'clonetrooper',name:'Clone Trooper ×9 (ground)',host:'ground',
+    /* One trooper; UnitsPerBuild=9 = a squad. DC-15A + plastoid plate + the two signatures: SEALED all-environment
+       life-support + a TRAINING cadre (elite discipline) — the pricey bits. Thermal detonator omitted (minor). */
+    counts:{gm_human:1,gw_rifle:1,ga_plating:1,gd_seal:1,ge_cadre:1}},
+  {id:'genestealer',name:'Genestealer ×8 (ground)',host:'ground',
+    /* One Purestrain; UnitsPerBuild=8 = a brood. Elite vanguard: rending claws + hyper-musculature + a bio-drive to
+       close fast + chitin + void-seal + a scout radar + instinct-cadre. ~4× a clone per body (heavy augments). */
+    counts:{gm_human:1,gw_claw:1,ge_powerarmor:1,gp_loco:1,ga_plating:1,gd_seal:1,gs_radar:1,ge_cadre:1}},
+  {id:'carnifex',name:'Carnifex (ground monster)',host:'ground',
+    /* One monster (UnitsPerBuild=1). A bio-tank on a vehicle frame: 2 chitin carapaces + 2 sets of talons + a
+       bio-cannon + monstrous musculature + a bio-gait + a bio-seal. The heaviest ground unit. */
+    counts:{gm_vehicle:1,ga_heavyplate:2,gw_claw:2,gw_cannon:1,ge_powerarmor:1,gp_loco:1,gd_seal:1}},
+  {id:'atte',name:'AT-TE (gun-walker)',host:'ground',
+    /* One walker (UnitsPerBuild=1). A heavy assault-walker: a mass-driver (railgun) + 6 anti-personnel lasers, fed by a
+       reactor + magazine, on a walker frame under 4 heavy plates, with an all-terrain drive. Its canon troop-carry bay
+       is PENDING (no surface troop-carry component exists). */
+    counts:{gm_walker:1,railgun:1,laser:6,reactor:1,magazine:1,ga_heavyplate:4,gp_loco:1}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
