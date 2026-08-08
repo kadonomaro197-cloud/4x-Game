@@ -217,6 +217,75 @@ aren't* — now confirmed at whole-world scale.
   that declares a job. Wire it and every colony's morale starts moving on how well it's employed — the first of the four
   loops to come alive.
 
+---
+
+## 8. Making the costs mean something — run-costs as a component sum
+
+The costs above are exactly the point where this connects back to the designer/assembler I/O matrix. A run-cost is only
+meaningful if it's **incurred by what you mounted** — a factory should cost more to run than a solar panel *because of
+the machines in it*, not by a flat number. Cross-referenced against `docs/assembler/02-IO-MATRIX.md`,
+`05-MATERIAL-INPUTS-BY-DOOR.md` (the 13-row input taxonomy), and `06-OUTPUTS-BY-DOOR.md` (the readers), here's how it
+fits together — and it fits **remarkably** well, because the matrix already models cost as a per-component sum.
+
+### The unifying model — every component carries TWO cost vectors
+
+| Vector | When | What it sums | Who sums it today |
+|--------|------|--------------|-------------------|
+| **BUILD** (one-time) | at construction | materials · credits · build-points · research · crew-to-build | ✅ the Assembler — the **"cost surface"** (`02` Table C2), already live |
+| **RUN** (ongoing) | every tick it exists | **power · jobs · food · upkeep** · ammo · fuel | ⚠ **not summed as one surface yet** — the four holes of §5 |
+
+**"Making the costs mean something" = giving each component a RUN vector and summing it exactly like the BUILD vector
+already is.** Same machine, same operation (`Σ over mounted components`), a second cost surface. The matrix's input
+taxonomy rows **7–13 ARE that run vector** — they were always meant to be per-component; they're just not all wired.
+
+### The proof it works — the infrastructure grid is the pattern, already built
+
+The infrastructure grid (§5.1) is the **worked example** of a component-driven run-cost that fully fits together — and
+it's the template for the other three. It has all three parts:
+
+1. a **per-component dial** — `InfrastructureCapacityAtb.Capacity` (supply) and the implicit demand `Mass/1000 + CrewReq`;
+2. a **colony-level Σ** — `InfrastructureProcessor.RecalcCapacity` sums provided vs required;
+3. a **reader that bites** — efficiency = supply/demand throttles *all* production + mining.
+
+Mount more industry → demand rises → you must mount more infrastructure or the colony throttles. **That is a run-cost
+that means something, driven entirely by components.** The other three run-costs just need to be built to this same
+three-part shape — and most of the parts already exist:
+
+### The cross-reference — how close each run-cost already is
+
+| Run-cost (05 row) | Per-component dial (the source) | Dial exists? | Colony-level Σ / reader | What's missing to make it bite |
+|-------------------|--------------------------------|:---:|-------------------------|-------------------------------|
+| **Infrastructure** | `InfrastructureCapacityAtb.Capacity` + `Mass/1000+CrewReq` | ✅ | ✅ `InfrastructureProcessor` → throttles production | **nothing — this is the template** |
+| **Jobs / employment** | **`CrewReq`** (on every component) → published as `EmploymentAtbDB.Jobs` | ✅ (CrewReq) | ✅ `GetTotalJobs` → `PopulationProcessor:74` morale ±40 | **one producer** — write `Jobs = CrewReq`. Reader + Σ already live (**backlog #2**) |
+| **Food** | supply `FoodProductionAtbDB.FoodOutput`; demand = pop × rate, pop ← `PopulationSupportAtbDB` | ✅ (both dials) | ✅ `SustenanceProcessor` sums supply vs demand | **one coefficient** — `PerCapitaFoodDemand` is 0; set it > 0 and the balance goes live |
+| **Upkeep** | `UpkeepCredits` per component | ⚠ partial — exists on ground units (`GroundUnitDesign`) + labs (`CostPerDay`), **not** generic installations | ✅ `GroundUpkeep`/`StationUpkeepProcessor` bill monthly | **generalize** the dial to installations + point the biller at the colony's `ComponentInstancesDB` |
+| **Power** | `WeaponSupply.PowerDraw_W` (weapons/warp only) | ⚠ partial — **no generic component draw** (C12) | ⚠ ground-unit power gate exists; **no colony power Σ** | **one new dial** (generic `PowerDraw`) + a colony Σ vs Solar/reactor supply — the only genuine *build*, not just wire |
+| **Ammo / Fuel** | `GroundMagazineAtb.Capacity_kg` / `CargoStorageAtb('fuel')` | ✅ | ✅ dry-magazine gate / `NewtonThrust` draw | **nothing — already component-driven** |
+
+### The finding — it's ~80% CONNECT, not build
+
+Read the "missing" column: **three of the four holes are a wire or a coefficient, not a new system.** The component
+dials already exist (`CrewReq`, `FoodOutput`, `PopulationSupport`, `UpkeepCredits`, `CostPerDay`), and the colony-level
+sums/readers already exist (`GetTotalJobs`, `SustenanceProcessor`, the upkeep billers, `InfrastructureProcessor`). The
+engine has the **readers**; what's missing is a **producer** (jobs), a **coefficient** (food), a **generalization**
+(upkeep), and exactly **one genuine new dial** (generic power draw). This is the Prime-Directive payoff — the connections
+are mostly there; they just aren't run.
+
+### What it unlocks in the Assembler — the second cost surface
+
+Concretely, this is a panel: next to the Assembler's existing **build-cost surface** (`02` C2), a **run-cost surface**
+that sums the same components' run-vector — *mount this component, watch its ongoing draw / jobs / food / upkeep tick
+up.* Then every design decision has an ongoing consequence, the Capitol's four holes close into one coherent **"what you
+mount is what you pay"** model, and the run-costs finally *mean something* — because they're a sum over the parts, exactly
+like the build cost the tool already shows. The cradle-to-grave chain gains its missing middle: mineral → material →
+**build cost** → component → *(new)* **run cost** → the decision → the loss.
+
+*(Design note for whoever wires this: build each run-cost to the infrastructure grid's three-part shape — dial → Σ →
+reader-that-bites — and put the dial on the component, never a flat per-entity number, so it stays authentic to what's
+mounted. That's the `DESIGNER-NORTH-STAR` intrinsic test applied to run-costs.)*
+
+---
+
 *Out of scope but adjacent: orbital **space stations** are the parallel off-world host (`docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`)
 — they'd add the same buildings in orbit and carry their own upkeep biller (`StationUpkeepProcessor`), which is why
 "installation upkeep" above is a surface-only gap. Companions: `docs/assembler/05-MATERIAL-INPUTS-BY-DOOR.md` (per-door
