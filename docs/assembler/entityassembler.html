@@ -580,7 +580,35 @@ var CAT=[
  {id:'gs_radar',cat:'Sensors',name:'Ground Radar',hosts:['ground'],
    mass:100,vol:30,crew:3,hp:0,draw:0,supply:0,detect:200,
    cost:{bp:200,cr:6,rp:1,steel:40,mats:{aluminium:20,electronics:40}},
-   honesty:'A scout sensor — reveals the ground each tick (lifts fog). The recon component a vanguard carries. Base-mod ground-radar.'}
+   honesty:'A scout sensor — reveals the ground each tick (lifts fog). The recon component a vanguard carries. Base-mod ground-radar.'},
+ /* ---- MOBILE SUIT PARTS (Gundam-scale — a WALKER that FLIES; the Sazabi build). Flight across to space, the remote
+        funnels, and the psycho-frame's Newtype amplification are cross-domain PENDING; the rest is LIVE on ground. ---- */
+ {id:'gm_mecha',cat:'Chassis',name:'Mobile Suit Frame (gundarium)',hosts:['ground'],
+   mass:1400,vol:700,crew:0,hp:900,draw:0,supply:0,
+   cost:{bp:4200,cr:20,rp:4,steel:840,mats:{aluminium:560,'ree-magnetics':40}},
+   honesty:'A 25 m humanoid war-frame — a Gundam-scale walker (Vehicle carry-class), big + agile on a gundarium-alloy skeleton. Modeled on the walker-frame; its native domain is FLIGHT (a mobile suit fights in space), which a ground unit can\'t do — see the Flight Thruster.'},
+ {id:'gm_msreactor',cat:'Power',name:'MS Fusion Reactor',hosts:['ground'],
+   mass:300,vol:100,crew:0,hp:40,draw:0,supply:8,loud:true,
+   cost:{bp:900,cr:15,rp:4,steel:150,elec:80,fissile:40},
+   honesty:'A mobile-suit thermonuclear reactor (~4 MW canon; 8 MW game) feeding the beam weapons + funnels through E-caps. Loud — a mobile suit lights up on sensors.'},
+ {id:'gw_beam',cat:'Weapons',name:'Beam Rifle / Mega Particle Gun',hosts:['ground'],
+   mass:60,vol:24,crew:0,hp:8,draw:0,supply:0,
+   weapon:{dps:0.4,nature:'Energy',delivery:'Beam',pen:0,pershot:0.1,rate:4,range:2,vel:299792,track:0.6,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:3,steel:24,elec:36},
+   honesty:'A mobile-suit beam weapon — the beam shot rifle (10.2 MW) or the waist mega particle gun (8.8 MW). Energy: it draws the reactor. Beam damage nature (no armour-penetration bonus — that\'s a slug\'s job).'},
+ {id:'gw_funnel',cat:'Weapons',name:'Funnel (remote psycommu weapon)',hosts:['ground'],
+   mass:22,vol:8,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.42,nature:'Energy',delivery:'Beam',pen:0,pershot:0.1,rate:4,range:3,vel:299792,track:0.9,ammo:false,pd:false},
+   cost:{bp:264,cr:9,rp:5,steel:26,elec:60,mats:{'ree-magnetics':8}},
+   honesty:'A detachable all-range beam bit (10.6 MW), flown by the pilot\'s thoughts. ⚠ PENDING: the "remote / all-range" nature — a weapon that leaves the unit and strikes from every angle — has NO engine reader (combat is aggregate). Here it contributes firepower like a fixed beam; its all-range advantage is flagged, not modeled.'},
+ {id:'gp_flight',cat:'Propulsion',name:'Flight Thruster / Vernier Pack',hosts:['ground'],
+   mass:200,vol:80,crew:0,hp:10,draw:0,supply:0,speedFactor:2.6,
+   cost:{bp:600,cr:12,rp:3,steel:120,elec:40},
+   honesty:'Huge thruster + vernier output (133,000 kg) — the mobile suit\'s defining edge over a ground walker. On GROUND it gives top march speed + evasion (AMBAC agility). ⚠ PENDING: true FLIGHT — a walker taking off into space/air combat — is a cross-domain capability the engine doesn\'t model (a unit is a ground walker OR a flying ship, never both). THIS is the walker-with-flight gap.'},
+ {id:'ge_psychoframe',cat:'Enhancers',name:'Psycho-Frame / Psycommu',hosts:['ground'],
+   mass:100,vol:20,crew:0,hp:0,draw:0,supply:0,caliber:1.3,
+   cost:{bp:800,cr:40,rp:6,steel:60,mats:{'ree-magnetics':20}},
+   honesty:'A Newtype-responsive frame + brainwave interface — the suit reacts as an extension of the pilot. LIVE mapping: a fire-control-like sharpening (caliber ×1.3, faster/surer strikes). ⚠ PENDING: true Newtype amplification (pilot skill → combat) + funnel thought-control have no engine model; the reaction edge is the honest LIVE slice.'}
 ];
 
 var host='ship';
@@ -695,6 +723,16 @@ var PRESETS=[
        reactor + magazine, on a walker frame under 4 heavy plates, with an all-terrain drive. Its canon troop-carry bay
        is PENDING (no surface troop-carry component exists). */
     counts:{gm_walker:1,railgun:1,laser:6,reactor:1,magazine:1,ga_heavyplate:4,gp_loco:1}},
+  {id:'sazabi',name:'⬢ MSN-04 Sazabi (mobile suit)',hero:true,host:'ground',
+    /* Char's Counterattack MSN-04 — Neo Zeon's Newtype flagship. 25.6 m, 71.2 t, generator 3,960 kW, TOTAL THRUST
+       133,000 kg (its signature). Armament: waist mega particle gun (8.8 MW) + beam shot rifle (10.2 MW) → 2 beam
+       weapons · 2 forearm beam sabers (+ the shield tomahawk) → gw_claw ×2 · SIX psycommu funnels (10.6 MW each) ·
+       gundarium armour · psycho-frame/psycommu. THE build is a WALKER WITH FLIGHT: the Flight Thruster + the funnels'
+       all-range attack + the psycho-frame's Newtype amp are the cross-domain PENDING flags (a ground unit can't take
+       flight into space, and remote/all-range + Newtype have no reader). Min-maxed as an ACE glass-cannon: light for
+       its host (~55% mass = high evasion/AMBAC), max beam+funnel alpha, reactor covers the draw, gundarium for
+       survivability — an agile alpha-striker, not a tank. */
+    counts:{gm_mecha:1,gm_msreactor:1,gp_flight:1,gw_beam:2,gw_funnel:6,gw_claw:2,ga_heavyplate:3,ge_psychoframe:1,gs_radar:1}},
   {id:'clear',name:'Clear',host:null,counts:{}}
 ];
 
