@@ -193,7 +193,7 @@
     <div class="stage">
       <div class="mapwrap">
         <div class="maphead">
-          <div class="t"><b id="planetName">Earth</b> · <span id="mapsrc">real baked surface map</span> · one full wrap, N pole (top) → S pole (bottom), banded into 4 regions</div>
+          <div class="t"><b id="planetName">Earth</b> · <span id="mapsrc">real baked surface map</span> · <span id="griddim"></span></div>
         </div>
         <div class="poles"><span>N pole</span><span>equator</span><span>S pole</span></div>
         <div class="regionrow" id="regionrow"></div>
@@ -499,9 +499,19 @@
       worldHaz:["vacuum"], localHaz:["cryo"]}
   };
 
-  // ── STATE ── grid mirrors the game: cols = 4×(rows) proportion, row 0 = N pole.
-  const COLS=36, ROWS=9, REGIONS=4;
-  const state = {planet:"earth", showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[], storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
+  // ── STATE + REAL per-planet grid scale ──────────────────────────────────────
+  //    The game sizes the surface grid by RADIUS (PlanetHexFactory.HexPatchRadiusFor +
+  //    PlanetGridFactory): R = clamp(round(12·radius/rEarth), 2, 24), then cols = 4·(2R+1),
+  //    rows = 2R+1. So Earth ≈ 100×25 (~2500 hexes) and Luna ≈ 28×7 (~196) — a small world
+  //    has a far COARSER, smaller grid. We reproduce that and draw every world to TRUE
+  //    relative scale inside one Earth-sized frame (so the Moon renders small, like a moon).
+  const REGIONS=4, EARTH_R_KM=6371;
+  const RADIUS_KM={earth:6378, venus:6052, mars:3396, mercury:2440, ganymede:2634, luna:1737};   // sol/*.json radii
+  function patchR(km){ return Math.max(2, Math.min(24, Math.round(12*km/EARTH_R_KM))); }
+  function gridDims(pk){ const R=patchR(RADIUS_KM[pk]||EARTH_R_KM), cpr=2*R+1; return {R, cols:REGIONS*cpr, rows:cpr}; }
+  const FRAME=gridDims("earth");   // the biggest world = the shared render frame
+  const state = {planet:"earth", showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
+                 cols:FRAME.cols, rows:FRAME.rows, R:FRAME.R, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
   HAZ.night = {name:"Night", effect:"SensorJam", kind:"sensor", mag:0.7, grade:"THEORY", scope:"world", icon:"🌙",
@@ -541,12 +551,12 @@
   function stepWeather(){
     const p=PLANETS[state.planet];
     const dir=windDir(p); state.weatherStep++;
-    state.dayPhase = ((state.dayPhase+dir)%COLS+COLS)%COLS;             // the planet rotates → terminator sweeps
+    state.dayPhase = ((state.dayPhase+dir)%state.cols+state.cols)%state.cols;   // the planet rotates → terminator sweeps
     if(!p.hasWind || !state.storms.length) return;
     const kinds=stormKindsFor(p);
     state.storms.forEach(s=>{
-      s.q=((s.q+dir)%COLS+COLS)%COLS;                                   // drift longitude, wrap the seam
-      if(wrnd()<0.30) s.r=Math.max(0,Math.min(ROWS-1, s.r+(wrnd()<0.5?-1:1)));   // gentle latitude meander
+      s.q=((s.q+dir)%state.cols+state.cols)%state.cols;                          // drift longitude, wrap the seam
+      if(wrnd()<0.30) s.r=Math.max(0,Math.min(state.rows-1, s.r+(wrnd()<0.5?-1:1)));   // gentle latitude meander
       s.life--;
     });
     state.storms=state.storms.map(s=> s.life>0 ? s : (spawnStorm(kinds[Math.floor(wrnd()*kinds.length)])||s));
@@ -556,7 +566,7 @@
     if(!state.showWeather) return [];
     const out=[];
     for(const s of state.storms){
-      const dc=Math.min(Math.abs(s.q-hex.c), COLS-Math.abs(s.q-hex.c));
+      const dc=Math.min(Math.abs(s.q-hex.c), state.cols-Math.abs(s.q-hex.c));
       if(dc<=1 && Math.abs(s.r-hex.r)<=1 && out.indexOf(s.kind)<0) out.push(s.kind);
     }
     return out;
@@ -565,20 +575,21 @@
   // Day/night: dayPhase = the sub-solar column; the far quarter-wrap is night. Every world rotates.
   function isNight(hex){
     if(!state.showNight) return false;
-    const anti=(state.dayPhase + COLS/2) % COLS;                        // midnight longitude
-    const dc=Math.min(Math.abs(hex.c-anti), COLS-Math.abs(hex.c-anti));
-    return dc < COLS/4;                                                 // the dark half of the planet
+    const anti=(state.dayPhase + state.cols/2) % state.cols;            // midnight longitude
+    const dc=Math.min(Math.abs(hex.c-anti), state.cols-Math.abs(hex.c-anti));
+    return dc < state.cols/4;                                           // the dark half of the planet
   }
 
   // ── build the hex field — terrain SAMPLED FROM THE REAL MAP (or the procedural rules) ──
   function buildField(){
     const p=PLANETS[state.planet];
+    const dim=gridDims(state.planet); state.cols=dim.cols; state.rows=dim.rows; state.R=dim.R;   // scale by radius
     const hexes=[];
-    for(let c=0;c<COLS;c++){
-      const region=Math.floor(c/(COLS/REGIONS));
-      for(let r=0;r<ROWS;r++){
-        const lon=c/COLS;                 // 0..1, wraps
-        const lat=r/(ROWS-1);             // 0 = N pole → 1 = S pole (PlanetGridFactory)
+    for(let c=0;c<state.cols;c++){
+      const region=Math.floor(c/(state.cols/REGIONS));
+      for(let r=0;r<state.rows;r++){
+        const lon=c/state.cols;           // 0..1, wraps
+        const lat=r/(state.rows-1);       // 0 = N pole → 1 = S pole (PlanetGridFactory)
         const terr = p.realMap ? sampleReal(MAPS[p.realMap], lon, lat) : proceduralTerrain(p, lon, lat);
         hexes.push({c,r,region,terr});
       }
@@ -628,17 +639,19 @@
   // ── RENDER: the hex map (flat-top SVG) ──
   function renderMap(){
     const svg=document.getElementById("map");
-    const size=9.4, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75;
-    const W=hx*(COLS-1)+w+8, H=h*(ROWS)+h/2+8;
-    svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H.toFixed(1)}`);
+    const size=5.6, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.5).toFixed(1);
+    // FIXED frame sized for the biggest world (Earth) → every world drawn to TRUE relative scale.
+    const FW=hx*(FRAME.cols-1)+w+8, FH=h*FRAME.rows+h/2+8;
+    svg.setAttribute("viewBox",`0 0 ${FW.toFixed(1)} ${FH.toFixed(1)}`);
+    const offX=(FRAME.cols-state.cols)/2*hx, offY=(FRAME.rows-state.rows)/2*h;   // centre this world in the frame
     let s="";
     state.hexes.forEach((hex,i)=>{
-      const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
+      const cx=4+size+offX+hex.c*hx, cy=4+size+offY+hex.r*h+(hex.c%2?h/2:0);
       const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       const f=FEAT[hex.terr]||FEAT.barren;
       const selc = state.sel===i?' sel':'';
-      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.6" tabindex="0" data-i="${i}" class="${selc}"/>`;
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.4" data-i="${i}" class="${selc}"/>`;
       const hz=hazardsAt(hex);                       // respects the weather/night toggles inside
       let icon="";
       // night shadow (rotation) — drawn first, under the hazard tints
@@ -660,20 +673,17 @@
           if(!icon && isStormEye(hex)){ const e=state.storms.find(st=>st.q===hex.c&&st.r===hex.r); if(e) icon=HAZ[e.kind].icon; }
         }
       }
-      if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+3.3).toFixed(1)}" font-size="9.5" text-anchor="middle" pointer-events="none">${icon}</text>`;
+      if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
     });
     svg.innerHTML=s;
-    svg.querySelectorAll("polygon[data-i]").forEach(pg=>{
-      const act=()=>{ state.sel=+pg.dataset.i; renderMap(); renderReadout();
-        // fix "I tap a hex and see nothing": on a narrow screen the readout stacks below the
-        // map, so bring it into view on tap.
-        const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"});
-      };
-      pg.addEventListener("click",act);
-      pg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();act();} });
-    });
+    // event delegation (one handler, not ~2500) — a big world has thousands of hexes now
+    svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
+      if(di!=null){ state.sel=+di; renderMap(); renderReadout();
+        const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
     document.getElementById("regionrow").innerHTML =
       Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
+    const gd=document.getElementById("griddim");
+    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${state.cols*state.rows} hexes (scales with radius)`;
     renderLegend();
   }
 

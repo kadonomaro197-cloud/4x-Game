@@ -365,9 +365,13 @@ What it does:
   Venus / Mercury / Ganymede have no baked map, so they use the engine's procedural `WorldTerrain.Classify` rules
   (hot→volcanic/desert, cold→ice/barren, temperate→forest/plains) — labeled "procedural (representative)" because the
   game's exact layout is a per-save RNG seed.
-- **A clickable operational hex band** (36 columns × 9 rows = one full pole-to-pole wrap, banded into the 4 regions),
-  ocean impassable, ice handled, per-hex hazard icons (🔥/❄/⚗), rolling storm cells (🌀), and a **day/night terminator**
-  that sweeps by rotation.
+- **A clickable operational hex band at TRUE per-planet scale (rev-G).** The grid is sized by radius exactly as the
+  engine does — `R = clamp(round(12·radius/rEarth), 2, 24)`, then `cols = 4·(2R+1)`, `rows = 2R+1`
+  (`PlanetHexFactory.HexPatchRadiusFor` + `PlanetGridFactory`) — so **Earth ≈ 100×25 ≈ 2500 hexes** and **Luna ≈ 28×7
+  ≈ 196** (Mars 52×13, Venus 92×23, Mercury/Ganymede 44×11). Every world is drawn to true relative scale inside one
+  Earth-sized frame, so **a small moon renders small and coarse, a big world large and fine** — the earlier fixed 36×9
+  grid (which drew every planet the same size) is gone. Ocean impassable, ice handled, per-hex hazard icons (🔥/❄/⚗),
+  rolling storm cells (🌀), and a **day/night terminator** that sweeps by rotation.
 - **Rolling environments + day/night (rev-F).** All the atmospheric menaces roll (fire/acid storms too, not just
   dust/ash/lightning), born from source terrain and drifting by the planet's `AxialTilt` spin; the day/night terminator
   sweeps on every world (airless included). Controls: 🌀 Roll · ▶ Auto-roll · toggles for hazards / weather / day-night.
