@@ -331,6 +331,12 @@ the terrain/attrition side and **less** on the rich-multiplier side.
    `EnvironmentalResistance` map supports them.
 3. **Per-hex hazards (ruling M11) and transient weather don't exist.** Hazards are per-*region* (seeded + spread) and
    static; the prototype shows Vacuum/Toxic world-wide and Fire/Cryo/Corrosive per-region, which matches the generator.
+4. **A body's terrain-climate and its hazard-climate can disagree when it has no atmosphere record** (surfaced building
+   the real-map prototype). The terrain generator reads `AtmosphereDB.SurfaceTemperature`, but a body with *no*
+   `AtmosphereDB` blob (Mercury, Europa) falls back to a **15 °C default** (`WorldTerrain.ForBody`), so **Mercury renders
+   as a temperate barren world** even though its *hazard* layer correctly reads airless → Vacuum. Not a bug that breaks
+   anything today (combat reads neither the terrain-temp nor gravity), but a real inconsistency to know about before any
+   climate-driven terrain or condition wiring. (Bodies with a baked map — Luna — dodge it.)
 
 This doc is the specification for closing gap 1 (and flagging 2); it is not a claim any of it is built. The prototype is
 a faithful *model* of what the engine does today (LIVE), plus what it holds but ignores (DATA), plus what's proposed
@@ -347,8 +353,15 @@ What it does:
 - **Six real Sol bodies** (Earth / Mars / Luna / Mercury / Venus / Ganymede) — each condition strip value read from the
   game's `sol/*.json` (gravity, surface temp, pressure, atmosphere, radiation, day-length), each cell badged DATA or
   LIVE by whether combat reads it.
-- **A clickable operational hex band** (16 columns × 6 rows, banded into the 4 regions), terrain-coloured from the
-  body's real feature palette, ocean impassable, ice handled, a ☣ marker on hexes carrying a live attrition hazard.
+- **Terrain from the game's REAL surface maps (rev-C).** Earth, Mars and Luna sample their actual baked biome tables
+  (`EarthTerrainMap.cs` / `MarsTerrainMap.cs` / `LunaTerrainMap.cs`, the 72×36 maps the engine itself samples), through
+  the shared `RealSurfaceMaps.CharToFeature` decoder and the exact grid formula (`lon=Q/Cols, lat=R/(Rows−1)`, row 0 =
+  north pole) — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the **polar ice caps**.
+  Venus / Mercury / Ganymede have no baked map, so they use the engine's procedural `WorldTerrain.Classify` rules
+  (hot→volcanic/desert, cold→ice/barren, temperate→forest/plains) — labeled "procedural (representative)" because the
+  game's exact layout is a per-save RNG seed.
+- **A clickable operational hex band** (36 columns × 9 rows = one full pole-to-pole wrap, banded into the 4 regions),
+  ocean impassable, ice handled, a ☣ marker on hexes carrying a live attrition hazard.
 - **An engagement readout** — click a hex and it shows the two live layers (the terrain block with its real
   `GroundTerrain.cs` numbers; the surface attrition with its real `PlanetEnvironmentFactory.cs` per-hour magnitudes and
   the sealed-vs-unsealed bleed), the DATA overlays (generated-but-inert SensorJam storms), a boxed THEORY note, and a
@@ -357,9 +370,13 @@ What it does:
   "real gap" box spell out that the ground resolver reads terrain + attrition and the space resolver reads nothing.
 
 **Verification (headless, no CI):** the embedded script compiles clean, the full render path runs to completion under a
-DOM stub with zero throws, and a source-number spot-check confirms every terrain dial and hazard magnitude matches the
+DOM stub with zero throws; a source-number spot-check confirms every terrain dial and hazard magnitude matches the
 engine (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5; Vacuum/Toxic 3, Fire 23.2, Corrosive 25,
-Cryo 15 per hour) and that Venus generates the real Fire+Toxic+Corrosive set (checked via `/opt/node22/bin/node`).
+Cryo 15 per hour) and that Venus generates the real Fire+Toxic+Corrosive set; and a **terrain check** confirms the three
+baked maps are well-formed (36 rows × 72 chars, the engine's `IsWellFormed` guard), that Earth's poles sample all-ice
+with oceans and continents between, that Mars/Luna are dry with ice poles, and that the procedural worlds render the
+right character (Venus volcanic+desert no-ice · Ganymede ice+barren · Mercury no-ice temperate) — all via
+`/opt/node22/bin/node`.
 **Independently corroborated** by a 6-domain adversarial source audit (2026-08-09): space resolver environment-blind,
 no weather system, all magnitudes verified.
 
