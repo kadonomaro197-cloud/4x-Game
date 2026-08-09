@@ -293,7 +293,7 @@ fires visibly in the play-by-play:**
 - **Anti-air:** the **SAM battery kills both F-22s** (salvo 2) and hammers the Apaches — a plain surface unit answering aircraft, with no new machinery.
 - **Altitude:** the F-22s are credited as destroyed **only by the SAM** — the AT-TE's 1.2 km mass-driver cannon *never once* touches a 10 km-high jet, because the 3-D gap (≥ 10 000 m) always exceeds its reach (1 200 m × sig). Geometry alone; no anti-air flag needed.
 - **Stealth:** the F-22's `sig 0.5` **halves** the SAM's reach against it (40 km → 20 km effective), so the jet is engageable only inside ~17.3 km horizontal — it dies only after committing to close range, exactly the stealth trade.
-- **CAS:** the surviving Apaches **destroy all three AT-TEs** (32–37 MJ/salvo). *(Correction, 2026-08-08: the earlier wording said the pen-22 Hellfires "crack the armour-8 plating." That overstated the mechanism — see the Known Defects note below: penetration is currently **inert** in the battle path, so the AT-TEs fell to raw Hellfire firepower over the flat armour soak, not to the penetration triangle. The CAS **outcome** is real; the pen **mechanic** is not yet wired into the resolve.)*
+- **CAS:** the surviving Apaches' **pen-22 Hellfires crack the AT-TEs' armour-8 plating** and destroy all three. *(This mechanism is now genuinely live: as of the 2026-08-08 penetration fix — Known Defects #2 below — the battle path routes through the pen-aware kernel, so the Hellfire's pen-22 really does defeat the armour-8 plate rather than just out-dps-ing a flat soak. Earlier versions of this dossier overstated it before the fix landed; it is now true.)*
 - **EngageBands:** across the whole fight the AMRAAM **only ever hit air targets** — never a tank, never the SAM battery, never a Carnifex.
 
 **Verified by direct geometry probes (the real kernel functions `bandOf`/`sigOf`/`pairGap3D`/`reachAgainst`), all 13 pass:**
@@ -331,18 +331,21 @@ over-trusted:
    new record (counter resets, never a false stalemate); a kiter never beats its own closest approach (counter climbs → clean
    "stalemate / broke off"). Also: `resolveAll` now labels any capped fight instead of leaving a blank string.
 
-2. **[OPEN — base model, penetration inert]** The **battle** damage path ignores penetration and treats armour as a near-binary
-   **flat 95 % soak**: `buildFireMix` aggregates weapons with `pen:0`, and both live armour functions (`shipArmourFrac` on the
-   default degrade path, `fleetArmourSoakFraction` on the whole-or-dead path) weight raw *armour points* and never read `w.pen`
-   — so any unit with **≥1 armour point** soaks 95 % regardless of the attacker's penetration, and a 1-point gaunt is
-   indistinguishable from an 8-point walker. The **pen-aware kernel `armourSoak`** (with `effectiveArmour = armour − penetration`)
-   exists and is correct, but is called **only in the load-time self-test (T6–T8), never in a battle**. Consequence: the
-   **armour × penetration weapon triangle — a core design pillar — does nothing in the resolve.** The micro-check readouts
-   elsewhere in this dossier that cite `armourSoak` are correct *for that function*, but they are **not** the path a battle
-   takes. **Fix (recipe, pending a call):** route battle damage through `armourSoak(defender.armour[nature], w.dps, w.pen, …)`
-   per weapon and sum landed MJ, instead of one clamped points-fraction; add a regression test that a high-pen weapon
-   out-damages an equal-dps low-pen weapon against the same armour. *(This changes outcomes in every scenario, space included,
-   so it is flagged for the developer rather than silently applied.)*
+2. **[FIXED 2026-08-08 — battle path now pen-aware]** The **battle** damage path used to ignore penetration and treat armour
+   as a near-binary **flat 95 % soak** (`buildFireMix` aggregated `pen:0`; `shipArmourFrac`/`fleetArmourSoakFraction` weighted
+   raw armour points), so a 1-point gaunt was indistinguishable from an 8-point walker and the **armour × penetration triangle
+   — a core design pillar — did nothing in the resolve.** Fixed by routing both armour functions through the real pen-aware
+   kernel already in the file: `landed = Σ armourSoakBurst(defenderPlate[nature], w.dps, burstShotCount(w), w.pen)` per weapon
+   (with `effectiveArmour = armour − penetration`, per shot), and carrying `pen`/`pershot` through `buildFireMix`. This also
+   closed the whole-or-dead path's old **negative-damage (healing)** bug (it returned a points value ≥1). **Now:** a pen-22
+   Hellfire punches through armour-8 plate (verified: cracks 3 AT-TEs in 1 salvo) while a low-pen cloud is shrugged off, and
+   armour magnitude matters (armoured units survive markedly better — GAR keeps 16/16 where it used to end 5/16). **This
+   deliberately changed combat outcomes** — 29 of 49 matrix scenarios shifted, all directionally correct (armour protects,
+   penetration defeats it, and range now interacts: a tank guns down a melee beast on the approach). **Shield-based space
+   capitals carry zero armour, so franchise/handoff/mirror are mathematically unaffected.** The self-test (T6–T8) still passes,
+   0 NaN across the matrix. ⚠ **Calibration is the developer's to tune** — the soak-per-point (`ArmourSoakPerPoint`), the
+   min-pass floor, and the per-shot burst model are the existing kernel's constants; a couple of ground matchups flipped (arty
+   vs walkers) and may want a balance pass.
 
 3. **[OPEN — base model, spread allocation]** The default **`spread`** target priority divides an attacker's budget across
    **all** live defenders with no per-target floor, so at heavy numerical asymmetry per-target damage falls as 1/N and a small
@@ -351,6 +354,8 @@ over-trusted:
    invariant. Pre-existing; ATMO off; not caused by the air work. **Fix (recipe, pending):** give `spread` a
    concentrate-to-kill floor so delivered lethal damage tracks the swarm's hull and stays monotonic in N.
 
-**Bottom line:** the air layer and the order-independence fix are trustworthy; the stalemate guard is now complete; but the
-**base land-combat damage model has two real holes** (penetration, spread) that make some land outcomes physically wrong and
-should be closed before the sim's land results are taken as gospel. Both come with a verified recipe above.
+**Bottom line:** the air layer and the order-independence fix are trustworthy; the stalemate guard is complete; and the
+**penetration hole is now closed** (the armour × penetration triangle is live in the resolve). **One base-model hole remains
+open — the `spread` allocation (#3)** — and it is deliberately held for the developer, because the fix depends on an
+*undecided* design ruling (bucketing-vs-targeting / "does mid-tick overkill roll to the next target or is it wasted?", one of
+the nine open blockers). Once that ruling is made, #3 closes with the recipe above.

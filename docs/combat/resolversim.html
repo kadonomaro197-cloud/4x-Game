@@ -1168,7 +1168,9 @@ function buildFireMix(fl, separation_m){
       const reach = w.delivery==="Guided" ? w.range*E.guidedR : w.range;
       if(!(reach<=0 || separation_m<=reach)) continue;                    // WeaponReaches gate — TRUE ranges, env-adjusted
       const k = w.key;
-      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:0,pershot:0,heat:w.heat,stub:w.stub,isPD:w.isPD,engageBands:w.engageBands||null};
+      // pen + pershot are WEAPON properties (identical for every instance of this key), so carry them through the aggregate
+      // instead of zeroing them — the battle armour path is now pen-aware (armourSoakBurst), and burstShotCount reads pershot.
+      if(!byKey[k]) byKey[k] = {key:w.key,label:w.label,dps:0,vel:w.vel,track:w.track,sat:w.sat,range:w.range,nature:w.nature,delivery:w.delivery,pen:w.pen,pershot:w.pershot,heat:w.heat,stub:w.stub,isPD:w.isPD,engageBands:w.engageBands||null};
       // ENV damage-by-nature: the medium favours some weapon natures over others (a nebula scatters beams, an ion
       // storm cooks torpedo guidance, dense air drags slugs) — Kinetic/Energy/Explosive/Exotic each scaled here.
       // × the ground terrain-triangle attack multiplier (gt) for a surface unit-type.
@@ -1204,11 +1206,13 @@ function fleetArmourSoakFraction(fl, incoming){
     sK+=s.armour.Kinetic*t; sE+=s.armour.Energy*t; sX+=s.armour.Explosive*t; sO+=s.armour.Exotic*t;
     if(s.armour.Kinetic||s.armour.Energy||s.armour.Explosive||s.armour.Exotic) any=true; }
   if(!any||tot<=0) return 0;
-  const fK=sK/tot,fE=sE/tot,fX=sX/tot,fO=sO/tot;
-  let total=0,soak=0;
-  for(const w of incoming){ total+=w.dps;
-    soak += w.dps*(w.nature==="Kinetic"?fK:w.nature==="Energy"?fE:w.nature==="Explosive"?fX:w.nature==="Exotic"?fO:0); }
-  return total>0?soak/total:0;
+  const arm={Kinetic:sK/tot,Energy:sE/tot,Explosive:sX/tot,Exotic:sO/tot};   // toughness-weighted average plate per nature
+  // PEN-AWARE (2026-08-08): landed = Σ armourSoakBurst(avgPlate, dps, shots, pen) — same real kernel as the per-ship path.
+  // Also fixes the old bug where this returned a raw points value ≥1, making (1−frac) negative (i.e. HEALING) on this path.
+  let total=0, landed=0;
+  for(const w of incoming){ const a=arm[w.nature]||0; total+=w.dps;
+    landed += a>0 ? armourSoakBurst(a, w.dps, burstShotCount(w), w.pen||0, 1) : w.dps; }
+  return total>0 ? clamp(1 - landed/total, 0, 1) : 0;
 }
 // ApplyShield (CombatEngagement.cs:1576)
 function applyShield(fl, incoming, dt, dmg){
@@ -1260,11 +1264,16 @@ function describeFireMix(mix){
    intact for DEGRADE off, so the toggle shows engine-true vs target.
    ================================================================== */
 // per-ship nature-armour soak fraction (the one-ship form of fleetArmourSoakFraction)
+// PEN-AWARE armour soak (2026-08-08): the fraction of incoming fire this ship's plating stops, computed per weapon through
+// the real kernel (armourSoakBurst → effectiveArmour = armour − penetration, per shot). A high-pen slug punches through
+// plate that shrugs off a low-pen cloud; magnitude matters (an 8-plate walker ≠ a 1-plate gaunt). Replaces the old flat
+// armour-points-clamped-to-95% that ignored penetration entirely (the weapon triangle did nothing in the resolve).
 function shipArmourFrac(s, mix){
   if(!(s.armour.Kinetic||s.armour.Energy||s.armour.Explosive||s.armour.Exotic)) return 0;
-  let total=0, soak=0;
-  for(const w of mix){ total+=w.dps; soak += w.dps*(s.armour[w.nature]||0); }
-  return total>0 ? clamp(soak/total,0,0.95) : 0;
+  let total=0, landed=0;
+  for(const w of mix){ const a=s.armour[w.nature]||0; total+=w.dps;
+    landed += a>0 ? armourSoakBurst(a, w.dps, burstShotCount(w), w.pen||0, 1) : w.dps; }
+  return total>0 ? clamp(1 - landed/total, 0, 1) : 0;
 }
 // pour a RAW damage budget at ONE ship through its dodge → shield → armour → hull chain.
 // returns {toHull, absorbed, died, overflowRaw} — overflowRaw spills to the next focus-fire target.
