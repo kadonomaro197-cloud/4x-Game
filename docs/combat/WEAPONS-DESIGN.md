@@ -1,5 +1,9 @@
 # Weapons — Design (Taxonomy, Dodge & the Weapon Triangle)
 
+> **⚠ Two claims corrected by the 2026-08-09 ledger (`docs/DOCS-CONTRADICTIONS-2026-08-09.md`); the design law is now `docs/economy/DESIGNER-NORTH-STAR.md`:**
+> - **Delivery is FOUR design values, not six.** The §1.6 "all six Deliveries (Beam/Bolt/Slug/Cloud/Guided/Blast)" is a *design* collapse to **Contact · Beam · Projectile · Guided** — Bolt/Slug/Cloud answer the one question the engine asks (can PD shoot it down?) identically, so they are three names for one row. *(The engine `WeaponDelivery` enum still carries all six at `WeaponProfile.cs:42` — this is a designer-surface collapse, not a code change.)*
+> - **Weapon range is NOT a "v1 stub / in-out per system."** `Range_m` is a real per-weapon metre reach (`→ MaxReach → WithinWeaponRange`) that **starts battles and, under LD-30, sizes the arena** (hardcoded per-class: flak 50 / disruptor 400 / railgun 500 / missile 1000 km — themselves flagged for a designable-range pass, ledger blocker #5).
+>
 *What this is: the full weapon-design spec for the fork — how a weapon is built (the designer's decision tree),
 what it does to a target (nature vs defence), how it lands or gets dodged (delivery vs evasion), and how its
 combat identity (its triangle position) falls out of the numbers. Master combat design stays
