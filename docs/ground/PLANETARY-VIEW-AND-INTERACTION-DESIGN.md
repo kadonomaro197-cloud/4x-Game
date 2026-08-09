@@ -485,13 +485,17 @@ artillery (30 km) ~10 — the built range-layering finally becomes visible.
 a different physical spot after a regrid, so the rescale is **new-game-only** (or needs a migration step). Trimming the
 per-hex fields is a serialization-shape change ⇒ also new-game-only / version-gated (root gotcha L3).
 
-**Prototype (`planetview.html` rev-I):** the operational map is now a **fixed 64×40 window** of the fine grid
-(anchored at the N-pole / 180°W corner) — the same size on Earth or Luna, the potato mechanism made visible; a
-**Grid-scale & potato-budget panel** shows the three-rung ladder (Region → op-hex → mini-hex), the per-planet table,
-the budget cards, and the three guards, with a **mini-hex-size dial** (3 km / 5 km) that rescales the whole grid live;
-the tap **mini-hex zoom** renders the true 49-across / 1,801-tile / ~3 km grid; and the readouts carry both the op-hex
-(~146 km) and mini-hex (~3 km) distances. Verified headless (engine-pitch ratio 1.0746, per-planet cpr, bounded window,
-dial rescale, regressions) + Playwright (0 console errors, identical window width Earth vs Luna).
+**Prototype (`planetview.html` rev-I):** the map stays a **legible whole-planet overview** — drawn at a coarser
+DISPLAY grid (Earth ~100×25, resizing per world) so **Earth still looks like Earth**; the fine op-grid (332×83) is far
+too big to draw whole, which is the potato point, so its true scale is *reported* rather than drawn. The **header, the
+readout and the Grid-scale panel** carry the real numbers: op-hex ~146 km, mini-hex ~3 km. The **Grid-scale &
+potato-budget panel** shows the three-rung ladder (Region → op-hex → mini-hex), the per-planet table, the budget cards
+(including the game's FIXED render-window figure), and the three guards, with a **mini-hex-size dial** (3 km / 5 km)
+that rescales the whole model live; the tap **mini-hex zoom** renders the true 49-across / 1,801-tile / ~3 km grid.
+*(An earlier rev-I cut drew the map AS a fixed 64×40 window of the fine grid to show the potato mechanism directly —
+but a narrow cropped slice no longer reads as a recognizable planet, so the window mechanism moved into the panel and
+the map went back to the whole-planet overview.)* Verified headless (engine-pitch ratio 1.0746, per-planet cpr,
+display-vs-op-grid split, dial rescale, regressions) + Playwright (0 console errors, Earth wide / Luna small).
 
 ---
 

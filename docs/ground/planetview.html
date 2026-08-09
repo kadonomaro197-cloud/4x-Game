@@ -560,6 +560,12 @@
   function hexPitchKm(pk){ return Math.round(opHexKm(pk)); }                         // rounded op-hex km, for headers/readouts
   function miniHexKm(pk){ return opHexKm(pk)/MINI_ACROSS; }                          // realized mini pitch (≈ state.miniKm)
   function opClamped(pk){ return cprFor(pk) >= CPR_MAX; }                            // a giant hit the governor → coarser
+  // The map is drawn at a COARSER, readable DISPLAY grid (the whole recognizable planet), NOT the
+  // fine op-grid — so Earth still looks like Earth. Each display cell samples the terrain at a real
+  // op-hex location (we just draw one every ~3), and the true op/mini SCALE is reported in the
+  // header, the readout and the Scale panel. (The game pans a fixed WINDOW of the fine grid instead
+  // of downsampling — modelled in the Scale panel; here we favour a legible whole-planet overview.)
+  function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
   const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
                  cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
 
@@ -633,7 +639,7 @@
   // ── build the hex field — terrain SAMPLED FROM THE REAL MAP (or the procedural rules) ──
   function buildField(){
     const p=PLANETS[state.planet];
-    const dim=gridDims(state.planet); state.cols=dim.cols; state.rows=dim.rows; state.R=dim.R;   // scale by radius
+    const dim=displayDims(state.planet); state.cols=dim.cols; state.rows=dim.rows; state.R=dim.R;   // readable whole-planet display grid
     const hexes=[];
     for(let c=0;c<state.cols;c++){
       const region=Math.floor(c/(state.cols/REGIONS));
@@ -686,28 +692,25 @@
   }
   const cell=(k,v,badge,extra)=>`<div class="cell"><div class="k"><span>${k}</span><span class="b ${badge}">${badge}</span></div><div class="v">${v} ${extra||""}</div></div>`;
 
-  // ── RENDER: the operational map — a FIXED WINDOW of the fine grid (this IS the potato trick) ──
-  //   At the new scale Earth is ~332×83 ≈ 27k op-hexes — far too many to draw at once. So (like
-  //   the real client's DrawGlobalHexWindow) we draw a FIXED 64×40 window and pan; render cost is
-  //   the same on Earth or a gas giant. The window is anchored at the N-pole / 180°W corner.
+  // ── RENDER: the WHOLE-PLANET operational overview (recognizable) — the true op/mini SCALE is in
+  //   the header, the readout and the Scale panel. The map is drawn at the readable DISPLAY grid so
+  //   Earth still looks like Earth; the fine op-grid is far too big to draw at once (that's the
+  //   potato point — the game pans a fixed window of it; see the Scale panel).
   function renderMap(){
-    const svg=document.getElementById("map"), pk=state.planet;
-    const size=8, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.35).toFixed(1);
-    const winCols=Math.min(state.cols, WINDOW_COLS), winRows=Math.min(state.rows, WINDOW_ROWS);
-    const c0=0, r0=0;
-    const W=hx*(winCols-1)+w+8, H=h*winRows+h/2+8;
+    const svg=document.getElementById("map"), pk=state.planet, fd=gridDims(pk);
+    const size=10, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.4).toFixed(1);
+    const W=hx*(state.cols-1)+w+8, H=h*state.rows+h/2+8;
     svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H.toFixed(1)}`);
     svg.setAttribute("width", W.toFixed(0));
     svg.setAttribute("height", H.toFixed(0));
     let s="";
-    for(let c=c0;c<c0+winCols;c++) for(let r=r0;r<r0+winRows;r++){
-      const i=c*state.rows+r, hex=state.hexes[i]; if(!hex) continue;
-      const cx=4+size+(c-c0)*hx, cy=4+size+(r-r0)*h+(c%2?h/2:0);
+    state.hexes.forEach((hex,i)=>{
+      const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
       const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       const f=FEAT[hex.terr]||FEAT.barren;
       const selc = state.sel===i?' sel':'';
-      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.35" data-i="${i}" class="${selc}"/>`;
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.4" data-i="${i}" class="${selc}"/>`;
       const hz=hazardsAt(hex);                       // respects the weather/night toggles inside
       let icon="";
       if(state.showNight && isNight(hex)) s+=`<polygon points="${pts.join(' ')}" fill="#0a1730" opacity="0.40" pointer-events="none"/>`;
@@ -729,18 +732,16 @@
         }
       }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
-    }
+    });
     svg.innerHTML=s;
     svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
       if(di!=null){ state.sel=+di; renderMap(); renderReadout();
         const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
-    // window-position bar (a window is a THEATRE, not the whole globe)
     const rr=document.getElementById("regionrow"); rr.style.width=W.toFixed(0)+"px";
-    const pct=Math.round(100*winCols/state.cols);
-    rr.innerHTML = `<span>◀ operational window · cols ${c0}–${c0+winCols} of ${state.cols} · rows ${r0}–${r0+winRows} of ${state.rows} · ~${pct}% of the planet · the game pans this FIXED ${WINDOW_COLS}×${WINDOW_ROWS} window — it never draws all ${(state.cols*state.rows).toLocaleString()} ▶</span>`;
-    const pol=document.getElementById("poles"); if(pol) pol.innerHTML = `<span>N pole</span><span>row ${Math.floor(winRows/2)}</span><span>row ${winRows}/${state.rows}</span>`;
+    rr.innerHTML = Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
+    const pol=document.getElementById("poles"); if(pol) pol.innerHTML = `<span>N pole</span><span>equator</span><span>S pole</span>`;
     const gd=document.getElementById("griddim");
-    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${(state.cols*state.rows).toLocaleString()} op-hexes · 1 op-hex ≈ ${hexPitchKm(pk)} km · 1 mini ≈ ${miniHexKm(pk).toFixed(1)} km${opClamped(pk)?' · ⚠ governor-clamped':''}`;
+    if(gd) gd.textContent = `op-grid ${fd.cols}×${fd.rows} ≈ ${(fd.cols*fd.rows).toLocaleString()} op-hexes (shown at ${state.cols}×${state.rows} for legibility) · 1 op-hex ≈ ${hexPitchKm(pk)} km · 1 mini ≈ ${miniHexKm(pk).toFixed(1)} km${opClamped(pk)?' · ⚠ clamped':''}`;
     renderLegend();
   }
 
