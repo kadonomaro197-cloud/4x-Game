@@ -329,8 +329,11 @@ the terrain/attrition side and **less** on the rich-multiplier side.
 2. **The surface-hazard armour is half-built** (§3's headline finding). The one buildable seal covers only Vacuum +
    Toxic; there is no component for Fire/Cryo/Corrosive, so those hazards are un-counterable today even though the
    `EnvironmentalResistance` map supports them.
-3. **Per-hex hazards (ruling M11) and transient weather don't exist.** Hazards are per-*region* (seeded + spread) and
-   static; the prototype shows Vacuum/Toxic world-wide and Fire/Cryo/Corrosive per-region, which matches the generator.
+3. **Per-hex hazards are now the LOCKED target (ruling C, §11 Q2) but not yet built in the engine.** The engine today
+   is per-*region* (seeded + spread); the developer locked **per-hex-from-terrain** for the local menaces (fire on
+   volcanic, cryo on ice, acid on lowlands) with world-facts (vacuum/toxic) staying world-wide, and the prototype
+   (rev-D) now models exactly that. The M11 build is: derive each local hazard from the hex's own `GroundHex.Terrain`
+   instead of stamping a region band. Transient/moving weather still does not exist (separate, deferred).
 4. **A body's terrain-climate and its hazard-climate can disagree when it has no atmosphere record** (surfaced building
    the real-map prototype). The terrain generator reads `AtmosphereDB.SurfaceTemperature`, but a body with *no*
    `AtmosphereDB` blob (Mercury, Europa) falls back to a **15 °C default** (`WorldTerrain.ForBody`), so **Mercury renders
@@ -401,14 +404,28 @@ is re-read at each combat resolution. So the LIVE layers already re-evaluate con
 "weather that rolls in mid-fight" comes for free. Ruling A is the engine's existing grain, now locked as the intended
 design.
 
-### Q2 — How coarse is "one condition per planet"? → **It's already per-REGION, not per-planet.**
-The prototype's first cut treated condition as global; the engine is finer. `PlanetEnvironmentsDB` holds a list of
-`RegionEnvironment` keyed by **region index** (`PlanetEnvironmentFactory` seeds each generated hazard into ≥1 region,
-then spreads it to others at 35% — `:97-102`). So Venus really can have Fire in region 0 and Corrosive in region 1; the
-prototype models exactly this (Fire/Cryo/Corrosive per-region, Vacuum/Toxic world-wide because airlessness is global).
-**The answer:** conditions are **per-region today** (real). The finer step — **per-hex**, from the hex's own terrain +
-geography — is ruling **M11**, which is **not built**. So: per-region is the live granularity; per-hex is the next
-slice, and it's a written deferral, not an open question.
+### Q2 — How fine-grained is a planet's condition? → 🔒 **LOCKED: C — split it (world-facts world-wide, local menaces per-hex).**
+**The developer's call (2026-08-09): whole-planet facts stay world-wide; local menaces go per-hex — and *build it into
+the prototype now* ("if it works here we match it in game").** So:
+- **World-wide** (a property of the whole planet): **airlessness → Vacuum**, a **poison sky → Toxic**. Every hex of that
+  world carries it. These are the "you can't breathe *anywhere*" facts.
+- **Per-hex, derived from the hex's own terrain + geography** (the M11 intent): **Fire** on the **volcanic** ground,
+  **Cryo** on the **ice**, **Corrosive** storms over the open **lowlands**, and the DATA storms (Dust on desert/barren,
+  Ash off the peaks, Lightning on the exposed high ground). A menace appears only on the terrain that *breeds* it.
+
+*Built into `planetview.html` (rev-D):* a hazard now carries a `scope` (`world` / `local`) and, for local ones, an
+`onTerrain` set; `hazardsAt(hex)` returns the world-wide facts **plus** the local menaces whose terrain matches the hex.
+This turns "where do I land?" into a real decision — verified: on **Venus** a **volcanic** hex burns (fire + toxic =
+**−26.2/hr**) while a **lowland** hex takes acid (corrosive + toxic = **−28/hr**), and the two are *different hexes*; on
+**Ganymede** only the **ice** hexes get cryo (**−18/hr**) versus vacuum-only (**−3/hr**) elsewhere; **Luna** is uniform
+vacuum; **Earth** stays combat-benign. The map draws each local menace's icon on its hexes and a faint uniform tint for
+the world-wide fact.
+
+*Engine reality vs. this ruling:* the engine **today** is **per-region** — `PlanetEnvironmentsDB` keys `RegionEnvironment`
+by region index (`PlanetEnvironmentFactory` seeds each hazard into ≥1 region, spreads at 35%, `:97-102`), with Vacuum/
+Toxic effectively world-wide. **Ruling C makes per-hex-from-terrain the target** (the M11 slice): the build is to
+derive each local hazard from the hex's `GroundHex.Terrain` instead of stamping a whole region band. The world-wide
+half already matches (airlessness is global); the local half is the M11 engine work this prototype now specifies.
 
 ### Q3 — Weather: authored or emergent? → **The engine's established pattern is EMERGENT-from-physics + static; there is no weather system to author.**
 No transient/moving weather exists (verified: no diurnal/storm/day-night system anywhere in the engine). But the engine

@@ -208,7 +208,7 @@
       <thead><tr><th>Layer</th><th>What the ground resolver does with it</th><th>Grade</th></tr></thead>
       <tbody>
         <tr><td>Terrain (per hex)</td><td>Cover multiplier on the defender + unit-type affinity (armour/artillery) + march-cost. Real numbers from <span class="mono">GroundTerrain.cs</span>.</td><td><span class="badge LIVE">LIVE</span></td></tr>
-        <tr><td>Condition → surface hazards</td><td>An <b>attrition</b> — a per-hour health bleed on units standing in it (vacuum, toxic air, fire, cryo, corrosive). A sealed unit is exempt from vacuum/toxic. Real magnitudes from <span class="mono">PlanetEnvironmentFactory.cs</span>.</td><td><span class="badge LIVE">LIVE</span></td></tr>
+        <tr><td>Condition → surface hazards <span class="mono" style="color:var(--accent-ink)">(per-hex — ruling C)</span></td><td>An <b>attrition</b> — a per-hour health bleed. <b>Whole-planet facts</b> (airless → vacuum, poison sky → toxic) hit <b>every hex</b>; <b>local menaces</b> (fire on volcanic ground, cryo on ice, acid on the lowlands) hit only the <b>hex whose terrain breeds them</b>. A sealed unit is exempt from vacuum/toxic. Real magnitudes from <span class="mono">PlanetEnvironmentFactory.cs</span>; the per-hex split is the developer's Q2 ruling C.</td><td><span class="badge LIVE">LIVE</span></td></tr>
         <tr><td>Condition → gravity / temperature / radiation / day-length</td><td><b>Nothing.</b> The values exist on the body but no combat code reads them (temperature only matters by deciding which hazard was generated).</td><td><span class="badge DATA">DATA</span></td></tr>
         <tr><td>Storm hazards (dust / ash / lightning = SensorJam)</td><td><b>Nothing yet.</b> The generator makes them, but the resolver's attrition step skips SensorJam (it isn't a damage effect); ground detection doesn't read it either.</td><td><span class="badge DATA">DATA</span></td></tr>
         <tr><td>Gravity → movement · weather → sight · condition multipliers</td><td>The richer "environment reshapes the whole fight" model. Proposed in the design docs; <b>not wired</b>.</td><td><span class="badge THEORY">THEORY</span></td></tr>
@@ -423,50 +423,55 @@
     ice:{cls:"Open", col:"--t-ice", name:"Ice", crossRough:true}
   };
 
-  // ── HAZARD effects the generator produces (PlanetEnvironmentFactory.cs) ──
+  // ── HAZARD effects (PlanetEnvironmentFactory.cs) — Q2 ruling C (2026-08-09) ──
+  //    scope "world" = a whole-planet fact (airlessness / a poison sky) → EVERY hex.
+  //    scope "local" = a menace of the ground itself → only on the terrain that BREEDS it
+  //    (the M11 "hazards per-hex from terrain + geography" intent). onTerrain lists those.
   const HAZ = {
-    vacuum:   {name:"Vacuum exposure",   effect:"Vacuum",          kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,
-               blurb:"No air. An unsealed unit suffocates — a slow bleed a sealed suit negates."},
-    toxic:    {name:"Toxic atmosphere",  effect:"ToxicAtmosphere", kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,
-               blurb:"A poison/corrosive sky. Sealed life-support negates it; anything else bleeds."},
-    fire:     {name:"Fire tornadoes",    effect:"HeatDamage",      kind:"attrition", mag:23.2, grade:"LIVE", sealed:false,
-               blurb:"Molten surface (>400 °C). Everything not heat-hardened cooks — and no seal stops it."},
-    cryo:     {name:"Cryostorms",        effect:"HeatDamage",      kind:"attrition", mag:15.0, grade:"LIVE", sealed:false,
-               blurb:"Deep cold (<−120 °C). A steady thermal bleed the seal doesn't cover."},
-    corrosive:{name:"Corrosive superstorm",effect:"CorrosiveDamage",kind:"attrition",mag:25.0, grade:"LIVE", sealed:false,
-               blurb:"Acidic storms eat unprotected kit — and no base-mod component resists it."},
-    ash:      {name:"Ash storm",         effect:"SensorJam",       kind:"sensor",    mag:0.5,  grade:"DATA", sealed:false,
-               blurb:"Volcanic ash (tectonic worlds). GENERATED but combat ignores SensorJam today."},
-    dust:     {name:"Dust storm",        effect:"SensorJam",       kind:"sensor",    mag:0.4,  grade:"DATA", sealed:false,
-               blurb:"Dry, thin-air worlds. Generated but combat-inert (SensorJam unread)."},
-    lightning:{name:"Lightning superstorm",effect:"SensorJam",     kind:"sensor",    mag:0.6,  grade:"DATA", sealed:false,
-               blurb:"Thick atmosphere (>5 atm). Generated but combat-inert."}
+    vacuum:   {name:"Vacuum exposure",   effect:"Vacuum",          kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  scope:"world", icon:"◌",
+               blurb:"No air anywhere on this world — an unsealed unit suffocates; a sealed suit negates it."},
+    toxic:    {name:"Toxic atmosphere",  effect:"ToxicAtmosphere", kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  scope:"world", icon:"☣",
+               blurb:"A poison/corrosive sky over the whole planet — sealed life-support negates it, anything else bleeds."},
+    fire:     {name:"Fire tornadoes",    effect:"HeatDamage",      kind:"attrition", mag:23.2, grade:"LIVE", sealed:false, scope:"local", onTerrain:["volcanic"], icon:"🔥",
+               blurb:"Lava and heat vents on the VOLCANIC ground (>400 °C). Nothing not heat-hardened survives — and no seal stops it."},
+    cryo:     {name:"Cryostorms",        effect:"HeatDamage",      kind:"attrition", mag:15.0, grade:"LIVE", sealed:false, scope:"local", onTerrain:["ice"], icon:"❄",
+               blurb:"Killing cold over the ICE fields (<−120 °C). A steady thermal bleed the seal doesn't cover."},
+    corrosive:{name:"Corrosive superstorm",effect:"CorrosiveDamage",kind:"attrition",mag:25.0, grade:"LIVE", sealed:false, scope:"local", onTerrain:["plains","desert","barren","coast"], icon:"⚗",
+               blurb:"Acid storms sweep the open LOWLANDS — they eat unprotected kit, and no base-mod component resists it."},
+    ash:      {name:"Ash storm",         effect:"SensorJam",       kind:"sensor",    mag:0.5,  grade:"DATA", sealed:false, scope:"local", onTerrain:["volcanic","mountains"], icon:"🌫",
+               blurb:"Volcanic ash off the peaks. GENERATED but combat ignores SensorJam today."},
+    dust:     {name:"Dust storm",        effect:"SensorJam",       kind:"sensor",    mag:0.4,  grade:"DATA", sealed:false, scope:"local", onTerrain:["desert","barren"], icon:"🌪",
+               blurb:"Dust off the dry DESERT/BARREN ground. Generated but combat-inert (SensorJam unread)."},
+    lightning:{name:"Lightning superstorm",effect:"SensorJam",     mag:0.6, kind:"sensor",     grade:"DATA", sealed:false, scope:"local", onTerrain:["highlands","mountains"], icon:"🌩",
+               blurb:"Storms rake the exposed HIGH ground (thick atmosphere). Generated but combat-inert."}
   };
 
   // ── THE REAL SOL BODIES (sol/*.json). terrainTemp = what the terrain generator sees ──
   //    (AtmosphereDB.SurfaceTemperature, or the 15°C default when there is NO atmosphere blob).
+  //    worldHaz = whole-planet facts (every hex). localHaz = menaces the world's physics
+  //    ENABLES (PlanetEnvironmentFactory triggers), each then placed per-hex on its onTerrain.
   const PLANETS = {
     earth:{name:"Earth", tag:"temperate", g:"1.00 g", grav:"9.8 m/s²", temp:"14.8 °C", tempKnown:true,
       pressure:"1.0 atm", atmo:"N₂/O₂ — breathable", rad:"shielded (45 µT)", day:"24 h",
-      realMap:"earth", worldHaz:[], regionHaz:{0:["ash"]}},
+      realMap:"earth", worldHaz:[], localHaz:["ash"]},
     mars:{name:"Mars", tag:"thin · cold", g:"0.38 g", grav:"3.72 m/s²", temp:"−63 °C", tempKnown:true,
       pressure:"0.87 atm (game)", atmo:"CO₂ — thin", rad:"exposed", day:"24 h 37 m",
-      realMap:"mars", worldHaz:[], regionHaz:{0:["dust"],2:["ash"]}},
+      realMap:"mars", worldHaz:[], localHaz:["dust","ash"]},
     luna:{name:"Luna", tag:"airless · low-g", g:"0.17 g", grav:"1.63 m/s²", temp:"≈−20 °C mean*", tempKnown:false,
       pressure:"0 (vacuum)", atmo:"none", rad:"exposed", day:"27.3 d",
-      realMap:"luna", worldHaz:["vacuum"], regionHaz:{}},
+      realMap:"luna", worldHaz:["vacuum"], localHaz:[]},
     mercury:{name:"Mercury", tag:"airless · seared", g:"0.38 g", grav:"3.7 m/s²", temp:"≈167 °C mean*", tempKnown:false,
       pressure:"0 (vacuum)", atmo:"none", rad:"exposed", day:"58.6 d",
       realMap:null, terrainTemp:15, hydroPct:0, tectonic:true, seedE:2.7, seedM:5.1,
-      worldHaz:["vacuum"], regionHaz:{1:["ash"]}},
+      worldHaz:["vacuum"], localHaz:["ash"]},
     venus:{name:"Venus", tag:"fire · toxic", g:"0.90 g", grav:"8.87 m/s²", temp:"464 °C", tempKnown:true,
       pressure:"92 atm", atmo:"CO₂/SO₂ — crushing", rad:"exposed", day:"243 d (retro)",
       realMap:null, terrainTemp:464, hydroPct:0, tectonic:true, seedE:7.3, seedM:3.9,
-      worldHaz:["toxic"], regionHaz:{0:["fire"],1:["corrosive"],2:["lightning"],3:["dust"]}},
+      worldHaz:["toxic"], localHaz:["fire","corrosive","lightning","dust","ash"]},
     ganymede:{name:"Ganymede", tag:"ice moon · vacuum", g:"0.15 g", grav:"1.43 m/s²", temp:"−163 °C", tempKnown:true,
       pressure:"~0 (vacuum)", atmo:"trace O₂", rad:"exposed", day:"7.15 d",
       realMap:null, terrainTemp:-163, hydroPct:0, tectonic:false, seedE:4.4, seedM:6.6,
-      worldHaz:["vacuum"], regionHaz:{1:["cryo"],3:["cryo"]}}
+      worldHaz:["vacuum"], localHaz:["cryo"]}
   };
 
   // ── STATE ── grid mirrors the game: cols = 4×(rows) proportion, row 0 = N pole.
@@ -489,10 +494,13 @@
     state.hexes=hexes;
   }
 
+  // Q2 ruling C: whole-planet facts apply to EVERY hex; a local menace appears only on a
+  // hex whose OWN terrain breeds it (the M11 per-hex, from terrain + geography).
   function hazardsAt(hex){
-    const p=PLANETS[state.planet];
-    const keys=[...p.worldHaz, ...((p.regionHaz[hex.region])||[])];
-    return keys.map(k=>HAZ[k]).filter(Boolean);
+    const p=PLANETS[state.planet], out=[];
+    p.worldHaz.forEach(k=>{ if(HAZ[k]) out.push(HAZ[k]); });
+    p.localHaz.forEach(k=>{ const h=HAZ[k]; if(h && h.onTerrain && h.onTerrain.indexOf(hex.terr)>=0) out.push(h); });
+    return out;
   }
 
   // ── RENDER: planet bar + condition strip ──
@@ -534,10 +542,16 @@
       const f=FEAT[hex.terr]||FEAT.barren;
       const selc = state.sel===i?' sel':'';
       s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.6" tabindex="0" data-i="${i}" class="${selc}"/>`;
-      const haz = state.showHaz ? hazardsAt(hex).filter(z=>z.grade==="LIVE") : [];
-      if(haz.length){
-        s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.22" pointer-events="none"/>`;
-        s+=`<text x="${cx.toFixed(1)}" y="${(cy+3).toFixed(1)}" font-size="9" text-anchor="middle" pointer-events="none" opacity="0.9">☣</text>`;
+      if(state.showHaz){
+        const haz=hazardsAt(hex);
+        const localLive=haz.filter(z=>z.scope==="local" && z.grade==="LIVE");
+        const worldLive=haz.filter(z=>z.scope==="world" && z.grade==="LIVE");
+        if(worldLive.length && !localLive.length)   // whole-planet fact → faint uniform tint
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.09" pointer-events="none"/>`;
+        if(localLive.length){                        // per-hex menace → strong tint + its icon
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.30" pointer-events="none"/>`;
+          s+=`<text x="${cx.toFixed(1)}" y="${(cy+3.2).toFixed(1)}" font-size="9.5" text-anchor="middle" pointer-events="none">${localLive[0].icon}</text>`;
+        }
       }
     });
     svg.innerHTML=s;
@@ -585,7 +599,8 @@
     if(liveHaz.length){
       html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE · bleeds units/hr</span></div>`;
       liveHaz.forEach(z=>{
-        html += `<div class="haz"><div class="hn">${z.name}<small>${z.effect}${z.sealed?" · sealed suit exempt":" · no base-mod counter"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
+        const where = z.scope==="world" ? "world-wide" : "this hex ("+f.name.toLowerCase()+")";
+        html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where}${z.sealed?" · sealed suit exempt":" · no counter built"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
       });
       html += `<div class="bleed"><span class="bl">Unsealed unit loses</span><span class="bv">−${totalBleed.toFixed(1)} HP/hr</span></div>`;
       if(sealedBleed!==totalBleed)
@@ -597,7 +612,7 @@
 
     if(dataHaz.length){
       html += `<div class="sect"><div class="sh">Generated, but combat-inert <span class="badge DATA">DATA</span></div>`;
-      dataHaz.forEach(z=>{ html += `<div class="haz"><div class="hn">${z.name}<small>${z.effect} — resolver skips it</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
+      dataHaz.forEach(z=>{ const where = z.scope==="world" ? "world-wide" : "this hex"; html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where} — resolver skips it</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
       html += `</div>`;
     }
 
@@ -613,9 +628,11 @@
           : tc.cover>=1.25 ? "Cover favours whoever holds it; armour is off its game and the advance is slow. "
           : "Open ground — armour rules and the defender has nowhere to hide. ";
     if(!liveHaz.length){ s += "Nothing on the surface is killing anyone — the units alone decide it."; return s; }
+    const hasLocal = liveHaz.some(z=>z.scope==="local");
     if(sealed===0){ s += `Airless/toxic only: a <b>sealed</b> garrison is fine here, an unsealed one bleeds ${total}/hr and loses a war of patience. Sealing is the price of admission.`; }
-    else if(sealed>=15){ s += `The ground itself is lethal — even a <b>sealed</b> unit loses ${sealed}/hr, because no buildable component stops the fire/cryo/corrosive here. A long fight is a losing one; win fast or don't land.`; }
+    else if(sealed>=15){ s += `The ground itself is lethal — even a <b>sealed</b> unit loses ${sealed}/hr, because no buildable component stops the fire/cryo/corrosive on <b>this</b> hex.`; }
     else { s += `Unsealed units bleed ${total}/hr; sealing cuts it to ${sealed}/hr.`; }
+    if(hasLocal) s += ` <b>This is a per-hex menace</b> — it's the ${f.name.toLowerCase()} ground itself, so a neighbouring hex of a different terrain would spare you it. <b>Where you land is the decision.</b>`;
     return s;
   }
 
