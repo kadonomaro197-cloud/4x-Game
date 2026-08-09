@@ -382,21 +382,24 @@ no weather system, all magnitudes verified.
 
 ---
 
-## 11. The five questions — answered against the real engine
+## 11. The five questions — the developer's rulings (2026-08-09)
 
-The first cut of this doc left these five as "open, recommend X." Now that the model is re-grounded in source, four of
-the five turn out to be **already answered by the code** — the engine's own behaviour makes the call. Only one is a
-genuine build decision. Answered one by one:
+The first cut left these five as "open, recommend X"; the second cut answered them against source. **The developer is now
+locking them one by one — those rulings are recorded here as 🔒 DEVELOPER-LOCKED, with the source-grounding kept beneath
+each.**
 
-### Q1 — Does the environment read at battle-open, or re-read each tick? → **The engine already re-reads each tick.**
-Not a decision to make — it's how the code runs today. The **surface attrition** is applied in the ground hotloop
-**every tick**: `Health −= Magnitude × (Δt/3600) × (1−resist)` (`GroundForcesProcessor.cs:220-238`), so a unit that
-marches into a fire region starts bleeding on the next tick and stops when it leaves. The **terrain block** is read at
-each combat resolution (`ResolveRegionCombat` re-reads the region's terrain every time it resolves). So there is no
-"open-once vs re-read" choice for the live layers — *both already re-evaluate continuously.* **Consequence for the
-THEORY layer:** if weather or gravity is ever wired, its natural home is the same per-tick attrition loop (for a bleed)
-or the per-resolution terrain read (for a multiplier) — no new machinery, and "weather that rolls in mid-fight" comes
-for free because the loop already re-reads.
+### Q1 — Does the environment read at battle-open, or re-read each tick? → 🔒 **LOCKED: A — live / per-tick.**
+**The developer's call (2026-08-09): the environment re-reads continuously — a fight is never frozen to a one-time
+snapshot at battle-open, and this holds for the future weather/gravity layer too (a storm that rolls in *during* a long
+fight changes that fight as it happens).**
+
+*Source-grounding (why this is free):* the engine already runs this way. The **surface attrition** is applied in the
+ground hotloop **every tick** — `Health −= Magnitude × (Δt/3600) × (1−resist)` (`GroundForcesProcessor.cs:220-238`) — so
+a unit that marches into a fire region starts bleeding on the next tick and stops when it leaves; the **terrain block**
+is re-read at each combat resolution. So the LIVE layers already re-evaluate continuously, and when the THEORY layer
+(weather → sight, gravity → movement) is wired, its natural home is the *same* per-tick loop — no new machinery, and
+"weather that rolls in mid-fight" comes for free. Ruling A is the engine's existing grain, now locked as the intended
+design.
 
 ### Q2 — How coarse is "one condition per planet"? → **It's already per-REGION, not per-planet.**
 The prototype's first cut treated condition as global; the engine is finer. `PlanetEnvironmentsDB` holds a list of
