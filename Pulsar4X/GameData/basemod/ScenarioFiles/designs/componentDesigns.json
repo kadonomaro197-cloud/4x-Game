@@ -1127,6 +1127,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-environmental-hardening",
+      "Name": "Environmental Hardening",
+      "TemplateId": "environmental-hardening"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-ground-constructor",
       "Name": "Combat Engineer Kit",
       "TemplateId": "ground-constructor"

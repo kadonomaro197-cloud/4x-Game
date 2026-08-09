@@ -37,6 +37,11 @@ namespace Pulsar4X.GroundCombat
         // {Vacuum, ToxicAtmosphere} at build time. 0 = unsealed (no seal component) → byte-identical (an unsealed unit
         // bleeds on airless/toxic worlds exactly as before). The ground echo of a ship's HazardResistanceAtb.
         public double Sealing = 0.0;
+        // HARDENING — the BEST mounted Environmental Hardening's Hardening (0..1), folded into the design's
+        // EnvironmentalResistance {HeatDamage, CorrosiveDamage} at build time. 0 = unhardened (no hardening component) →
+        // byte-identical (an unhardened unit bleeds on fire/cryo/corrosive worlds exactly as before). The thermal/corrosive
+        // twin of the seal — together they cover all four damaging surface hazards.
+        public double Hardening = 0.0;
         public double Mass;            // total build mass (frame + parts) — feeds cost + transport carry-size
         public double CarryCapacity;   // frame strength + augment strength bonuses
         public double UsedCapacity;    // sum of mounted-part carry mass
@@ -126,6 +131,9 @@ namespace Pulsar4X.GroundCombat
             // G4 — the best mounted seal wins (they don't stack; a unit is sealed or it isn't). No seal → stays 0 →
             // byte-identical (no EnvironmentalResistance written, so the unit bleeds on airless/toxic worlds as before).
             double bestSealing = 0.0;
+            // HARDENING — the best mounted hardening wins (they don't stack). No hardening → stays 0 → byte-identical
+            // (nothing written to EnvironmentalResistance for HeatDamage/CorrosiveDamage).
+            double bestHardening = 0.0;
             foreach (var (d, c) in list)
             {
                 double itemMass = 0;
@@ -209,6 +217,13 @@ namespace Pulsar4X.GroundCombat
                     var seal = d.GetAttribute<GroundSealAtb>();
                     if (seal.Sealing > bestSealing) bestSealing = seal.Sealing;
                 }
+                if (d.HasAttribute<GroundHardeningAtb>())
+                {
+                    // The best hardening wins (they don't stack). Its MassPerUnit still counts against the carry budget
+                    // below (a hardened shell is gear the frame must bear).
+                    var hard = d.GetAttribute<GroundHardeningAtb>();
+                    if (hard.Hardening > bestHardening) bestHardening = hard.Hardening;
+                }
                 // A part that isn't one of the ground-specific kinds (a universal weapon or a reactor, P1/P2a) has no
                 // ground carry-mass field — count its real component mass so it still consumes the carry budget. This is
                 // what makes the two gates COMPOSE: infantry can't power the big laser because it can't CARRY the reactor.
@@ -248,6 +263,7 @@ namespace Pulsar4X.GroundCombat
             r.Range_m = maxRange_m;
             r.TrainingMultiplier = bestTraining;   // Enhancers ⚙6.2 — baked into the raised unit's Attack + toughness
             r.Sealing = bestSealing;               // G4 — folded into the design's EnvironmentalResistance at build time
+            r.Hardening = bestHardening;           // folded into the design's EnvironmentalResistance {Heat, Corrosive}
             r.UsedCapacity = used;
             r.EnergyDemand_W = energyDemand;
             r.ReactorSupply_W = reactorSupply;
@@ -312,6 +328,16 @@ namespace Pulsar4X.GroundCombat
             {
                 design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.Vacuum] = r.Sealing;
                 design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.ToxicAtmosphere] = r.Sealing;
+            }
+            // ENVIRONMENTAL HARDENING — the same fold for the two DAMAGING surface hazards the seal doesn't cover:
+            // HeatDamage (fire tornadoes AND cryostorms — one thermal effect) and CorrosiveDamage (corrosive superstorm).
+            // ONLY when hardening is mounted (> 0) → an unhardened design leaves the map empty (default), so a raised unit
+            // gets no HeatDamage/CorrosiveDamage resistance and bleeds on those worlds exactly as before → byte-identical.
+            // Independent of the seal: a unit can carry one, the other, both, or neither (Venus wants both; Ganymede this).
+            if (r.Hardening > 0.0)
+            {
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.HeatDamage] = r.Hardening;
+                design.EnvironmentalResistance[Pulsar4X.Hazards.HazardEffectType.CorrosiveDamage] = r.Hardening;
             }
             // costs = frame + every part (× count) — the same sum the ship designer does
             if (frame != null) { AddCosts(design.ResourceCosts, frame.ResourceCosts); design.IndustryPointCosts += frame.IndustryPointCosts; }
