@@ -39,6 +39,8 @@ because someone recalibrated the plotting table.
 | 4 | Hand-editable / moddable? | **YES.** |
 | 5 | How deep on first generation — every surface committed, or on demand? | **Materialize on demand.** |
 
+> **🔒 Decision 6 — the ENVIRONMENT/ATMOSPHERE layer (developer, 2026-08-09): the SAME hybrid extends to a body's environment.** A body's atmosphere, hydrosphere, temperature field, radiation, and weather are **auto-DERIVED from the physical input vector for procedural worlds**, while **authored (or once-observed-and-frozen) bodies keep their values as an OVERRIDE** — per-field (a body can author `Composition` and still derive `RadiationLevel`). This is decision #1's recipe-vs-frozen rule applied to the environment layer: the derive side reads a "recipe," the override is the "frozen detail." **The complete input-variable vector, the field-by-field override precedence, and the exact pipeline slot for the derive pass are specified in `docs/environment/PLANETARY-GENERATION-VARIABLES-DESIGN.md` §4a — that doc IS the recipe this hybrid's derive side reads for environments.** Root cause it fixes: the authored path (`SystemBodyFactory.CreateFromBlueprint`) skips the atmosphere derivations the engine already owns, which is why Sol bodies had to be hand-authored "a bunch." Design-only; no engine/`GameData` change recorded by that decision.
+
 ---
 
 ## Why the HYBRID is the load-bearing decision (it solves a real problem, not just file size)

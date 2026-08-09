@@ -205,6 +205,47 @@ If you add the inputs in this order, the hand-editing collapses fastest:
 
 ---
 
+## 4a. 🔒 LOCKED (developer, 2026-08-09): override authored, derive procedural — and the tie into star-system generation
+
+**The decision, in the developer's words:** *"keep authoring as an override, auto-derive procedural worlds… tie it into star system generation."* Design-only — nothing in the engine or `GameData/**` changes from this record.
+
+### The rule
+For every derivable field a body carries (`SurfaceTemperature`, `Pressure`, `Composition`, `HydrosphereExtent`, `Tectonics`, `RadiationLevel`, `Albedo`, …):
+
+> **If the body was authored with a value → that authored value WINS (override).**
+> **If it was left blank / the body is procedurally generated → the generator DERIVES it from the §2 input vector.**
+
+So the hand-authored Sol bodies keep exactly what's in `sol/*.json` today — **no game-file edits are needed to adopt this** — and every *generated* world gets its atmosphere, hydrosphere, temperature field, radiation, and weather computed from physics instead of rolled at random. You author the worlds you care about; the galaxy fills itself in correctly.
+
+### Why this is the RIGHT hybrid (and already half-decided)
+This is **the atmosphere/environment extension of the star-system HYBRID already locked in `SYSTEM-GENERATION-AND-PERSISTENCE-DESIGN.md` (decision #1, 2026-07-24):** *"seed/recipe for everything untouched; frozen detail for anything the player has observed."* Map the two together and they are the same rule at two layers:
+
+| System-gen hybrid (2026-07-24) | This environment decision (2026-08-09) |
+|---|---|
+| **recipe / derived** for untouched systems | **auto-derive** environment from the §2 vector for procedural worlds |
+| **frozen detail** for observed things | **authored override** for hand-authored (or, once observed, frozen) bodies |
+
+The §2 variable vector **is the "recipe"** the derive side reads; an authored or frozen value **is the "override."** They compose into one lifecycle:
+
+> **generated world → DERIVE from the vector → player observes/settles it → FREEZE the derived values into the spec file → from then on it behaves as an authored OVERRIDE** (so improving the generator later never rewrites ground the player already fought over — the exact bug the system-gen hybrid exists to kill).
+
+### Where the derive step slots into the pipeline (the tie-in)
+The generation order today (verified): `GalaxyFactory` → `StarSystemFactory.CreateSystem(seed)` (procedural) **or** `LoadFromBlueprint` (authored Sol) → `SystemBodyFactory` sets bulk/orbit/star → `AtmosphereProcessor` (temperature) → `PlanetRegionsFactory` / `PlanetEnvironmentFactory` (regions + hazards). The environment-derive pass is **one new stage, inserted after bulk/orbit/star are known and before `PlanetEnvironmentFactory`**, and it is **field-by-field override-aware**:
+
+1. **Bulk + orbit + star** are set first (mass, radius, gravity, semi-major axis, eccentricity, `LengthOfDay`, `AxialTilt`, `MagneticField`, star props) — authored on the Sol path, rolled on the procedural path. These are the **inputs**; they are authored/free on both paths (§5: axial tilt, rotation, and magnetic field stay authored).
+2. **The derive pass** computes each **output** field (`Composition`, `Pressure`, `HydrosphereExtent`, the spatial temperature field, `RadiationLevel`, tectonics-if-blank) from the §2 vector — **but writes only where the body has no authored value.** This is exactly the pattern `BaseTemperature` already uses: it is re-derived on the authored path (`SystemBodyFactory.cs:145,382`) *without* clobbering authored data. Every other derivation follows that precedent.
+3. **`PlanetEnvironmentFactory`** then reads the now-complete `AtmosphereDB` + the new radiation/temperature-field outputs and emits the hazards — unchanged in shape, just fed real derived inputs on procedural worlds.
+
+### Generation-order constraint the tie-in must respect
+Two of the §2 inputs are **cross-body reads** (a moon reads its parent giant's mass + magnetic field for tidal heating and trapped radiation belts). So the pipeline must build a **primary before its moons**, and the derive pass for a moon runs after its primary's bulk/field are set. (Open decision #6 in §7 — flagged for the implementer, not a new authoring burden.) The RNG-stream discipline from the system-gen landmines applies: the derive pass must **not** draw from the shared `StarSystem.RNG` (use a derived/dedicated stream, the `RuinsDB`/mineral-fallback precedent), or it shifts every downstream body.
+
+### What this decision does NOT change
+- No `sol/*.json` edits — authored values simply win (the data bugs in §6 are a *separate* cleanup you can do whenever).
+- No new authoring burden — procedural worlds need **zero** authored environment; the vector derives it. You only author the bodies you want to pin.
+- The override is per-FIELD, not per-body — a body can author `Composition` but leave `RadiationLevel` blank and get the derived radiation, mixing authored + derived freely.
+
+---
+
 ## 5. Corrections the verification forced (don't skip — the first pass had real errors)
 
 1. **Insolation is NOT unread.** `BaseTemperature = T★·√(R★/2d)` is the Stefan-Boltzmann equilibrium temperature ∝ (L/d²)¼ — so the generator **already** reads insolation via star temperature + radius + distance. Luminosity's genuinely-new work is the **seasonal / time-varying / spatial** flux, not the baseline. (Don't "add an insolation term" — it exists.)
@@ -227,7 +268,7 @@ The forensics surfaced silent authoring errors that partly explain the "edit a b
 
 ## 7. Open developer decisions (your calls before any build)
 
-1. **Replace vs override.** Wire the derivations into the authored path so Sol falls out of physics (kills hand-editing) — OR keep authoring as an *override* and only add derivation for procedural worlds? The `BaseTemperature` fix-pattern supports either.
+1. ~~**Replace vs override.**~~ **🔒 LOCKED (2026-08-09): keep authoring as an OVERRIDE, auto-derive PROCEDURAL worlds, tie into star-system generation.** See §4a for the rule, the pipeline slot, and the tie-in to the system-gen hybrid. (The remaining decisions below are still open.)
 2. **Runaway greenhouse.** The calibrated formula (0.035 constant, ±3.0 clamp) can't reach Venus 464 °C; the runaway multiplier lives only in procedural gen. Add a per-gas greenhouse/runaway term to the temperature formula, or keep Venus as an authored special case?
 3. **Spatial temperature field — now or later?** It's the biggest new build but unlocks ~15 environments (incl. the red-dwarf eyeball-world premise). Ship a whole-body scalar first, or build the per-latitude/day-night field now? (`PlanetRegionsDB`/`SurfaceGrid` already carry latitude to hang it on.)
 4. **Time-varying weather.** Diurnal/seasonal cycles, frost sublimation, atmospheric collapse need `AtmosphereProcessor.Process` (empty stub today) to actually recompute per tick. Is per-tick atmospheric evolution in scope, or are these generated as **static state labels** at gen time only?
