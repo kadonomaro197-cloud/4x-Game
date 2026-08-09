@@ -88,7 +88,7 @@
   .regionrow{display:flex;gap:0;margin:0 0 4px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
   .regionrow span{flex:1;text-align:center;padding:2px 0;border-bottom:2px solid var(--line-strong)}
   .mapscroll{overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
-  svg.map{display:block;margin:0 auto;touch-action:manipulation}
+  svg.map{display:block;margin:0;touch-action:manipulation}
   svg.map polygon{cursor:pointer;transition:filter .1s}
   svg.map polygon:hover{filter:brightness(1.18)}
   svg.map polygon.sel{stroke:var(--accent);stroke-width:2.2}
@@ -446,14 +446,20 @@
   function proceduralTerrain(p, lon, lat){
     const elev=field(lon,lat,p.seedE), moist=field(lon,lat,p.seedM);
     const T=p.terrainTemp, dry=p.hydroPct<20;
-    if(T<=-10){ if(elev>0.85) return "ice"; if(elev>0.70) return "highlands";
-      if(dry) return moist<0.5?"barren":"desert"; return moist>0.4?"tundra":"barren"; }
+    if(T<=-10){
+      // DRY cold world (Mars/Luna-like rock): barren/desert lowlands, ice only on peaks.
+      if(dry){ if(elev>0.85) return "ice"; if(elev>0.70) return "highlands"; return moist<0.5?"barren":"desert"; }
+      // ICY cold world (an airless ice moon — frozen water crust, no vegetation): ICE + rocky highland ridges.
+      return elev>0.85 ? "highlands" : "ice";
+    }
     if(T>=50) return elev>0.85?"volcanic":(moist>0.6?"plains":"desert");
     const mtn = p.tectonic?0.77:0.85;
     if(elev>mtn) return "mountains"; if(elev>0.70) return "highlands";
+    // DRY temperate world (no surface water → scorched/dry): desert & barren, no forests.
+    if(dry){ if(moist>0.72) return "plains"; if(moist>0.42) return "desert"; return "barren"; }
     if(moist>0.66) return T>28?"jungle":"forest"; if(moist>0.48) return "forest";
-    if(moist>0.34) return "plains"; if(moist>0.18) return dry?"desert":"plains";
-    return dry?"barren":"desert";
+    if(moist>0.34) return "plains"; if(moist>0.18) return "desert";
+    return "desert";
   }
 
   // ── TERRAIN combat dials — GroundTerrain.cs (Classify buckets + CoverDefenseMult + TerrainAttackMult) ──
@@ -528,7 +534,7 @@
       worldHaz:["toxic"], localHaz:["fire","corrosive","lightning","dust","ash"]},
     ganymede:{name:"Ganymede", tag:"ice moon · vacuum", g:"0.15 g", grav:"1.43 m/s²", temp:"−163 °C", tempKnown:true,
       pressure:"~0 (vacuum)", atmo:"trace O₂", rad:"exposed", day:"7.15 d", axialTilt:0, hasWind:false,
-      realMap:null, terrainTemp:-163, hydroPct:0, tectonic:false, seedE:4.4, seedM:6.6,
+      realMap:null, terrainTemp:-163, hydroPct:92, tectonic:false, seedE:4.4, seedM:6.6,   // water-ICE crust (frozen, not dry rock)
       worldHaz:["vacuum"], localHaz:["cryo"]}
   };
 
@@ -721,7 +727,7 @@
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.09" pointer-events="none"/>`;
         if(localLive.length){
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.30" pointer-events="none"/>`;
-          icon=localLive[0].icon;
+          if((hex.c*13+hex.r*7)%12===0) icon=localLive[0].icon;   // SPARSE scattered markers — the strong tint already shows full coverage
         }
       }
       if(state.showWeather){
@@ -739,7 +745,7 @@
         const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
     const rr=document.getElementById("regionrow"); rr.style.width=W.toFixed(0)+"px";
     rr.innerHTML = Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
-    const pol=document.getElementById("poles"); if(pol) pol.innerHTML = `<span>N pole</span><span>equator</span><span>S pole</span>`;
+    const pol=document.getElementById("poles"); if(pol){ pol.innerHTML = `<span>N pole</span><span>equator</span><span>S pole</span>`; pol.style.height=(H+24).toFixed(0)+"px"; pol.style.bottom="auto"; }
     const gd=document.getElementById("griddim");
     if(gd) gd.textContent = `op-grid ${fd.cols}×${fd.rows} ≈ ${(fd.cols*fd.rows).toLocaleString()} op-hexes (shown at ${state.cols}×${state.rows} for legibility) · 1 op-hex ≈ ${hexPitchKm(pk)} km · 1 mini ≈ ${miniHexKm(pk).toFixed(1)} km${opClamped(pk)?' · ⚠ clamped':''}`;
     renderLegend();
