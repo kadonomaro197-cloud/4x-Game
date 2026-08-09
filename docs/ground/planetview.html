@@ -80,14 +80,15 @@
   /* the map + readout */
   .stage{display:grid;grid-template-columns:1fr 356px;gap:0;background:var(--line)}
   @media(max-width:900px){.stage{grid-template-columns:1fr}}
-  .mapwrap{background:var(--sunk);padding:16px;position:relative}
+  .mapwrap{background:var(--sunk);padding:16px;position:relative;min-width:0}
   .maphead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
   .maphead .t{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-soft)}
   .maphead .t b{color:var(--ink)}
   .poles{display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;position:absolute;left:2px;top:52px;bottom:74px;pointer-events:none}
   .regionrow{display:flex;gap:0;margin:0 0 4px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
   .regionrow span{flex:1;text-align:center;padding:2px 0;border-bottom:2px solid var(--line-strong)}
-  svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
+  .mapscroll{overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+  svg.map{display:block;margin:0 auto;touch-action:manipulation}
   svg.map polygon{cursor:pointer;transition:filter .1s}
   svg.map polygon:hover{filter:brightness(1.18)}
   svg.map polygon.sel{stroke:var(--accent);stroke-width:2.2}
@@ -196,8 +197,10 @@
           <div class="t"><b id="planetName">Earth</b> · <span id="mapsrc">real baked surface map</span> · <span id="griddim"></span></div>
         </div>
         <div class="poles"><span>N pole</span><span>equator</span><span>S pole</span></div>
-        <div class="regionrow" id="regionrow"></div>
-        <svg class="map" id="map" viewBox="0 0 720 200" role="img" aria-label="Clickable surface hex map"></svg>
+        <div class="mapscroll" id="mapscroll">
+          <div class="regionrow" id="regionrow"></div>
+          <svg class="map" id="map" viewBox="0 0 720 200" role="img" aria-label="Clickable surface hex map"></svg>
+        </div>
         <div class="maptools">
           <button class="tbtn" id="hazToggle" aria-pressed="true">☣ Ground hazards</button>
           <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather</button>
@@ -254,8 +257,8 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-09 (rev-C, real surface maps).</b> No engine code, no CI. Sources, all verified at file:line:</p>
-    <p class="mono">Bodies (gravity/temperature/atmosphere) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Grid sampling (lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetGridFactory.EnsureGridForBody</span> · Procedural terrain rules for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-09 (rev-H — real surface maps, per-hex hazards, rolling weather + day/night, radius-scaled grids, per-hex distance).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Grid size + sampling (R = clamp(round(12·radius/rEarth),2,24); cols = 4·(2R+1); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Procedural terrain rules for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
@@ -509,9 +512,11 @@
   const RADIUS_KM={earth:6378, venus:6052, mars:3396, mercury:2440, ganymede:2634, luna:1737};   // sol/*.json radii
   function patchR(km){ return Math.max(2, Math.min(24, Math.round(12*km/EARTH_R_KM))); }
   function gridDims(pk){ const R=patchR(RADIUS_KM[pk]||EARTH_R_KM), cpr=2*R+1; return {R, cols:REGIONS*cpr, rows:cpr}; }
-  const FRAME=gridDims("earth");   // the biggest world = the shared render frame
+  // The real per-hex distance: the whole surface (4·π·r²) split across cols×rows hexes → the
+  // average width of one hex. This is the movement scale a march cost multiplies against.
+  function hexPitchKm(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, d=gridDims(pk); return Math.round(Math.sqrt(4*Math.PI*r*r/(d.cols*d.rows))); }
   const state = {planet:"earth", showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
-                 cols:FRAME.cols, rows:FRAME.rows, R:FRAME.R, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
+                 cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
   HAZ.night = {name:"Night", effect:"SensorJam", kind:"sensor", mag:0.7, grade:"THEORY", scope:"world", icon:"🌙",
@@ -636,17 +641,20 @@
   }
   const cell=(k,v,badge,extra)=>`<div class="cell"><div class="k"><span>${k}</span><span class="b ${badge}">${badge}</span></div><div class="v">${v} ${extra||""}</div></div>`;
 
-  // ── RENDER: the hex map (flat-top SVG) ──
+  // ── RENDER: the hex map (flat-top SVG) — FIXED readable hex size; the WINDOW sizes to the world ──
   function renderMap(){
     const svg=document.getElementById("map");
-    const size=5.6, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.5).toFixed(1);
-    // FIXED frame sized for the biggest world (Earth) → every world drawn to TRUE relative scale.
-    const FW=hx*(FRAME.cols-1)+w+8, FH=h*FRAME.rows+h/2+8;
-    svg.setAttribute("viewBox",`0 0 ${FW.toFixed(1)} ${FH.toFixed(1)}`);
-    const offX=(FRAME.cols-state.cols)/2*hx, offY=(FRAME.rows-state.rows)/2*h;   // centre this world in the frame
+    const size=10, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.4).toFixed(1);
+    // No shared frame. Each world draws at its own NATURAL extent: a fixed hex size means Earth's
+    // grid (100×25) makes a big window that scrolls, Luna's (28×7) a small one that fits — the
+    // window grows/shrinks with the planet instead of shrinking the hexes into one Earth-sized box.
+    const W=hx*(state.cols-1)+w+8, H=h*state.rows+h/2+8;
+    svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H.toFixed(1)}`);
+    svg.setAttribute("width", W.toFixed(0));
+    svg.setAttribute("height", H.toFixed(0));
     let s="";
     state.hexes.forEach((hex,i)=>{
-      const cx=4+size+offX+hex.c*hx, cy=4+size+offY+hex.r*h+(hex.c%2?h/2:0);
+      const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
       const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       const f=FEAT[hex.terr]||FEAT.barren;
@@ -680,10 +688,11 @@
     svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
       if(di!=null){ state.sel=+di; renderMap(); renderReadout();
         const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
-    document.getElementById("regionrow").innerHTML =
-      Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
+    const rr=document.getElementById("regionrow");     // region banner scrolls WITH the map, matches its width
+    rr.style.width = W.toFixed(0)+"px";
+    rr.innerHTML = Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
     const gd=document.getElementById("griddim");
-    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${state.cols*state.rows} hexes (scales with radius)`;
+    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${state.cols*state.rows} hexes · 1 hex ≈ ${hexPitchKm(state.planet)} km across`;
     renderLegend();
   }
 
@@ -764,7 +773,7 @@
     let html =
       `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1} · ${night?'🌙 night':'☀ day'}</div>
        <div class="loc">${f.name} — ${f.cls} terrain</div>
-       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure}</div>`;
+       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure} · <b style="color:var(--ink)">1 hex ≈ ${hexPitchKm(state.planet)} km across</b></div>`;
 
     html += renderMicro(hex);      // ▽ the micro-hex sub-grid (immediate visible response to a tap)
 
@@ -774,6 +783,7 @@
       <div class="row"><span>Artillery here</span><b class="${tc.arty>1?'up':(tc.arty<1?'dn':'')}">×${tc.arty.toFixed(2)}</b></div>
       <div class="row"><span>Infantry here</span><b>×1.00</b></div>
       <div class="row"><span>March cost</span><b class="${tc.move>1?'dn':''}">×${tc.move.toFixed(1)}${f.crossRough?' (ice)':''}</b></div>
+      <div class="row"><span>Hex span (avg)</span><b>≈ ${hexPitchKm(state.planet)} km · so ≈ ${Math.round(hexPitchKm(state.planet)*tc.move)} km-equiv to cross</b></div>
       </div>`;
 
     if(liveHaz.length){

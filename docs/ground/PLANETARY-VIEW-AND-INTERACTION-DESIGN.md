@@ -368,10 +368,18 @@ What it does:
 - **A clickable operational hex band at TRUE per-planet scale (rev-G).** The grid is sized by radius exactly as the
   engine does — `R = clamp(round(12·radius/rEarth), 2, 24)`, then `cols = 4·(2R+1)`, `rows = 2R+1`
   (`PlanetHexFactory.HexPatchRadiusFor` + `PlanetGridFactory`) — so **Earth ≈ 100×25 ≈ 2500 hexes** and **Luna ≈ 28×7
-  ≈ 196** (Mars 52×13, Venus 92×23, Mercury/Ganymede 44×11). Every world is drawn to true relative scale inside one
-  Earth-sized frame, so **a small moon renders small and coarse, a big world large and fine** — the earlier fixed 36×9
-  grid (which drew every planet the same size) is gone. Ocean impassable, ice handled, per-hex hazard icons (🔥/❄/⚗),
-  rolling storm cells (🌀), and a **day/night terminator** that sweeps by rotation.
+  ≈ 196** (Mars 52×13, Venus 92×23, Mercury/Ganymede 44×11). Ocean impassable, ice handled, per-hex hazard icons
+  (🔥/❄/⚗), rolling storm cells (🌀), and a **day/night terminator** that sweeps by rotation.
+- **The map window sizes itself to the world + a per-hex distance readout (rev-H).** Every hex draws at the **same fixed,
+  readable size** and the **map window grows or shrinks to fit that world** — Earth's 100×25 grid makes a wide window that
+  **scrolls sideways** inside its column, Luna's 28×7 makes a small one that fits with room to spare (the map column is
+  `min-width:0` so the big grid scrolls instead of stretching the whole page). This replaces rev-G's shared Earth-sized
+  frame, where a small moon's hexes shrank to dots — now a moon's hexes stay just as readable as Earth's, the window is
+  what changes. Alongside it, a **per-hex distance readout**: the whole surface (`4·π·r²`) split across `cols×rows` hexes
+  gives the average width of one hex — **Earth ≈ 452 km, Mars ≈ 463, Luna ≈ 440, Mercury ≈ 393, Venus ≈ 466, Ganymede
+  ≈ 424 km across** — shown in the map header (`grid 100×25 ≈ 2500 hexes · 1 hex ≈ 452 km across`) and in the tap
+  readout (both the coord line and a *Hex span* row that multiplies by the march cost, so a `×2.5` rough hex reads as
+  its real km-equivalent to cross). That is the movement scale the terrain march-cost multiplies against.
 - **Rolling environments + day/night (rev-F).** All the atmospheric menaces roll (fire/acid storms too, not just
   dust/ash/lightning), born from source terrain and drifting by the planet's `AxialTilt` spin; the day/night terminator
   sweeps on every world (airless included). Controls: 🌀 Roll · ▶ Auto-roll · toggles for hazards / weather / day-night.
