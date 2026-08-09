@@ -17,6 +17,14 @@ against the actual files and classified it. **51 raised → 45 confirmed real, 6
 
 ---
 
+## RESOLUTION STATUS (updated 2026-08-09, after the developer said "do all 3")
+
+- ✅ **Group A + B RESOLVED** (edits, no deletes): the 5 engine subsystem `CLAUDE.md` lines (Colonies employment-inert · Fleets caller-exists · GroundCombat seam-bypassed · Industry 50M→1,000,000 · Client retired-doc repoint), the 3 OLD-IS-RIGHT docs (`RESOLVER-SIM.md` target-priority + auto-retreat · `CAPITOL` food scope), and correction banners on the 6 live design docs (COMBAT-DESIGN ×7, WEAPONS-DESIGN, DETECTION-DESIGN, UNIVERSAL-ASSEMBLY, CARRIER-DESIGN, GROUND-ORDERS-CATALOG) + the 4 earthfall findings. The duplicate `DOCS-INDEX` tombstone row was removed. *(Commits: "Cleanup 1/2" + "Cleanup 2/2".)*
+- ⛔ **Group C DELETIONS ON HOLD — the archive designer docs are NOT dead.** The verification sweep found the two docs slated for deletion are the cited **design reference for ~25 LIVE files**: `COMPONENT-DESIGNER-CATEGORIES.md` by 5 engine `GroundCombat/*Atb.cs` classes, the client's `ComponentDoors.cs` (which *implements* the 11-category/37-door taxonomy the doc describes) + `ComponentDesignWindow.cs`, and ~13 NUnit tests; `COMPONENT-DESIGNER-DIALS.md` by `CombatKernel.cs`/`WeaponProfile.cs`/`InertialessDriveAtb.cs`. **Deleting them would orphan ~25 code citations** — and it reveals the deeper truth (the "unwelded blueprint" from the holistic audit): the shipped client still implements the OLD 37-door taxonomy, so this doc is the live reference for it, not superseded-in-code. Several code refs also use a **stale path** (`docs/economy/…` instead of `docs/archive/economy/…`). **Recommendation flipped DELETE → RECONCILE:** keep the docs (they document the live code), and separately repoint the code's doc-path references. Developer's call before any archive delete.
+- ⏳ **One code follow-up flagged, not done:** the `CaptureInfrastructure` order (A2.18) is design-DELETED by M18 but **built and shipping** — needs a code change, not just a doc banner.
+
+---
+
 ## Group A — LIVE contradictions (new law wins; NO warning banner)
 
 ### A1 · Engine subsystem `CLAUDE.md` files — read every session, highest priority
