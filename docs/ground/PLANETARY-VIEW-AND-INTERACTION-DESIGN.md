@@ -1,23 +1,37 @@
 # Planetary View & Interaction — the surface as a board of environments
 
-**As of 2026-08-09.** Status: **DESIGN STUDY (design-only).** No engine code, no CI. This doc + its interactive
-prototype (`docs/ground/planetview.html`) answer one question the developer put on the table:
+**As of 2026-08-09 (rev. B — re-grounded on real game data).** Status: **DESIGN STUDY (design-only).** No engine code,
+no CI. This doc + its interactive prototype (`docs/ground/planetview.html`) answer one question the developer put on the
+table:
 
 > *"design the way we view and interact with planets in general, and connect it to the auto-resolver and the
-> different settings."*
+> different settings"* — **followed by the binding constraint: *"these planet views [must] be based exclusively by
+> rules and data taken straight out the game so we know exactly what we're working with."***
 
 The headline, in one sentence: **a planet is not a dimensionless dot — it is a board of environments, and the square
 of ground you choose to fight on IS the setting the auto-resolver reads.** You don't pick a battle's environment from a
 menu; the *location picks it for you*, and your only environment decision is **where you commit**.
 
+> ### ⚠ REV-B correction — this doc's first cut invented numbers; this cut does not
+> The first version of this doc (and prototype) showed a rich stack of environment *multipliers* — low-g `closing ×1.3`,
+> dust `range ×0.6`, and so on — described as "sim-proven." **The developer's ground-truth mandate exposed that as
+> over-reach: those multipliers are a *design proposal* authored in `resolversim.html`, not what the engine does.** This
+> revision rebuilds everything from source: the worlds are the **real Sol bodies** (their gravity/atmosphere/temperature
+> read from the JSON data files), the terrain numbers are the **exact values the ground resolver applies**
+> (`GroundTerrain.cs`), and the world hazards are what the **physics-driven generator actually produces**
+> (`PlanetEnvironmentFactory.cs`). Where the engine does *nothing* with a value, this doc now says so. The three-state
+> grade (LIVE / DATA / THEORY) is the honesty spine — see §5.
+
 **Companions (read alongside):**
 - `docs/ground/GROUND-SURFACE-MAP-DESIGN.md` — THE surface board this view sits on (region ring → global cylinder →
   mini/city hex). This doc is the **front door and the interaction**; that doc is the **board**.
-- `docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md` — the env-effects catalog + the LIVE/DATA/THEORY grading this view
-  reuses verbatim (accepted resolver hooks, engine wiring deferred).
-- `docs/combat/resolversim.html` + `docs/combat/RESOLVER-SIM.md` — the working model of the *arena* a battle resolves
-  in; the multipliers this view shows are the **real values ported from that sim's surface-environment catalog**.
+- `docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md` — the env-effects catalog + the LIVE/DATA/THEORY grading, and (its own
+  headline) the honest gap: **the resolver is environment-blind; the rich multiplier model is an accepted hook, not
+  wired.** This doc's THEORY column IS that unwired proposal.
 - `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md` — the resolver anatomy (§11 the north star; §12 the ground fight).
+- **Verified source (rev-B ground truth):** `sol/*.json` (bodies) · `GroundCombat/GroundTerrain.cs` (terrain dials) ·
+  `GroundCombat/PlanetEnvironmentFactory.cs` (hazard generation) · `GroundCombat/GroundForcesProcessor.cs:220-238`
+  (attrition application) · `GroundCombat/GroundSealAtb.cs` (the seal) · `Hazards/HazardEffect.cs` (effect vocabulary).
 
 ---
 
@@ -67,121 +81,139 @@ deliberately: an operational hex band you click to read the fight it produces.
 
 ---
 
-## 3. The load-bearing connection — how the ground becomes the fight
+## 3. The load-bearing connection — how the ground becomes the fight (what's REAL)
 
-This is the heart of the whole design. It's one idea, and everything else is detail hanging off it.
+This is the heart of the design, and rev-B states it honestly. The idea is unchanged; the scope is narrower than the
+first cut claimed.
 
-> **A hex's combat environment = its terrain × the planet's condition × the weather rolling through it. That composed
-> environment IS the auto-resolver's environment setting.**
+> **A hex hands the resolver two live things: its TERRAIN (a per-hex block of multipliers) and its world's SURFACE
+> ATTRITION (a per-hour bleed on units standing there). That pair IS the ground resolver's "environment setting."**
 
-Read it as three layers of a stack, like three filters clipped over the same lens:
+A crucial clarification the first cut blurred: **"the auto-resolver" here means the GROUND resolver**
+(`GroundForcesProcessor.ResolveRegionCombat` + its attrition step). **The SPACE resolver** (`AutoResolve` /
+`CombatEngagement`) **reads nothing about location — no terrain, no hazard, no planet. It is environment-blind.** So
+this whole model lives on the ground side.
 
-- **Terrain (per-hex, local).** Open plains / dense jungle / mountains / urban ruins. This is the *ground itself* — it
-  changes with every hex. It's the cover you hide in and the speed you can advance at. **Already bends a live ground
-  fight today** (the Open/Cover/Rough terrain triangle is wired).
-- **Planet condition (global, one per world).** Gravity, temperature, atmosphere, radiation, daylight. This is the
-  *world you're on* — it's the same on every hex of that planet. Low gravity speeds everyone up and extends reach;
-  a toxic atmosphere bleeds anyone not sealed; vacuum lets rounds fly true but kills the exposed.
-- **Weather (transient, geographic).** A dust storm, a lightning storm, an ash storm, a long polar night. This is
-  *what's passing over right now* — it sits on some hexes and not others, and it moves. It mostly collapses sightlines,
-  turning a long-range duel into a blind, close brawl.
+The three layers, and what the engine actually does with each:
 
-**The composition.** These aren't three separate battles — they're one environment. Each layer contributes multipliers
-(and a couple of additive terms), and they **stack** into a single bundle. That bundle is exactly the struct the
-resolver already reads as its "environment setting" today. The current sim reads **one** environment from a dropdown;
-**composing terrain × condition × weather into that one setting is the new design call** — the rest is already proven.
+- **Terrain (per-hex, local) — 🟢 LIVE.** Each hex's dominant feature sorts into **Open / Cover / Rough**
+  (`GroundTerrain.Classify`), and the resolver applies three real multipliers off that class: a **cover** divisor on the
+  defender's incoming damage, a **unit-type affinity** (armour loves open, artillery loves rough), and a **march-cost**.
+  Shipped and gauged — this is the layer that genuinely "bends the fight" today.
+- **World condition → surface hazard — 🟢 LIVE as ATTRITION only.** A world's physics generates hazards
+  (`PlanetEnvironmentFactory`): airless → **Vacuum**, corrosive air → **ToxicAtmosphere**, >400 °C → **Fire**,
+  <−120 °C → **Cryo**, sulphur air → **Corrosive**. A unit standing in one **bleeds a fixed HP per hour**
+  (`GroundForcesProcessor.cs:220-238`), reduced by any matching resistance. That's the whole combat effect — a bleed,
+  not a reshaping of sight/closing/damage.
+- **World condition → gravity / temperature / radiation / day-length — 🟡 DATA.** These are on every body (from the
+  JSON) but **no combat code reads them.** Temperature matters only indirectly, by deciding which hazard was generated.
+
+**The "weather" layer from the first cut does not exist as a live system.** There is **no transient/moving weather** in
+the engine. The closest real thing is the *static* SensorJam hazards the generator makes (Dust / Ash / Lightning) — but
+the attrition step skips SensorJam (it isn't a damage effect) and ground detection doesn't read it, so **they are
+generated DATA that combat currently ignores.** Making them (and gravity, and temperature) reshape the fight is the
+THEORY column — the accepted-but-unwired hook from `ENVIRONMENT-CONDITIONS-DESIGN.md`.
 
 ```
-   The hex you pick                Composed environment              The auto-resolver
-   ───────────────                 ────────────────────              ─────────────────
-   terrain (this hex)     ─┐
-   condition (the planet)  ├──►  one multiplier bundle   ──►   opens the fight with it:
-   weather (rolling by)   ─┘      (the layers stack)            sight · cover · closing · damage · attrition
+   The hex you pick                                 The GROUND resolver
+   ────────────────                                 ───────────────────
+   terrain class (this hex)  --> Open/Cover/Rough --> cover / affinity / march   (LIVE)
+   world hazards (this world)--> Vacuum/Fire/... --> per-hour attrition bleed     (LIVE)
+                                                     [ the SPACE resolver reads none of this ]
 ```
 
-**Why this is the right shape** (not a menu): it satisfies the project's own laws.
-- It's a **decision that stacks** (`REALISM-VS-GAMEPLAY-AUDIT.md`) — the realism (gravity, terrain, weather) earns its
-  keep because it's the source of a real choice: *where do I commit my forces?*
-- It's **One Verb, Both Seats** (`CLAUDE.md`) — the AI reads the *same composed environment* off the *same hex* the
-  player does. There is no "player picks a rich environment, AI gets a crude one." The composition is a property of the
-  ground, not of the seat looking at it.
+**Why the shape is still right** (and still satisfies the project's laws): the terrain block + the attrition bleed *are*
+the source of a real, stacking decision — *where do I commit, and do my units need sealing to stand here?* — and the AI
+reads the exact same two things off the exact same hex (**One Verb, Both Seats**). The design ambition (wire gravity →
+movement, weather → detection) raises the ceiling later; it does not change today's honest floor.
 
 ---
 
-## 4. The composition rule (how the layers actually stack)
+## 4. The composition rule (how the two LIVE layers combine)
 
-This mirrors the `multiply()` function proven in `resolversim.html` exactly — no new math, so the design can't drift
-from the working model.
+No invented multiplier bundle — the real composition is small and exact:
 
-An environment is a small bundle of fields. Each layer supplies its own values; the composed total combines them:
+1. **Terrain block** (from the hex's Open/Cover/Rough class, `GroundTerrain.cs` — verbatim):
 
-| Field | What it controls | Combine rule | Default |
-|-------|------------------|--------------|---------|
-| `range` | detection / engagement range | **multiply** (×) | 1.0 |
-| `closing` | closing speed (how fast lines meet) | **multiply** (×) | 1.0 |
-| `dmgK` / `dmgE` / `dmgX` | kinetic / energy / exotic damage | **multiply** (×) | 1.0 |
-| `guidedR` | guided-weapon reach | **multiply** (×) | 1.0 |
-| `pd` | point-defence effectiveness | **multiply** (×) | 1.0 |
-| `eva` | cover → evasion bonus | **add** (+) | 0.0 |
-| `dot` | ambient attrition (J/s), armour-resisted | **add** (+) | 0 |
+   | Class | Defender cover (÷ incoming) | Armour affinity | Artillery affinity | March cost |
+   |-------|----------------------------|-----------------|--------------------|------------|
+   | **Open** (plains/desert/barren/coast/ice/tundra) | ÷0.90 *(favours attacker)* | ×1.30 | ×1.00 | ×1.0 |
+   | **Cover** (forest/jungle/wetland) | ÷1.25 | ×0.75 | ×0.85 | ×1.5 |
+   | **Rough** (mountains/highlands/volcanic) | ÷1.50 | ×0.70 | ×1.30 | ×2.5 |
 
-**Multiply for scaling effects, add for stacking effects.** Two layers that each cut sight (say jungle-under-a-dust-
-storm) multiply their range factors — the murk compounds. Two layers that each give cover add their evasion — you're
-in the trees *and* in the gloom. Two layers that each bleed you (toxic air on a firestorm world) add their attrition —
-both are chewing on you at once. This is precisely what the sim does, and the prototype's numeric check confirms every
-composed value stays finite and positive across all five test worlds.
+   (Infantry is ×1.00 everywhere — the neutral baseline. Ocean is **impassable**; ice is Open for combat but crossed at
+   the rough march cost.)
 
-**Worked example — Mars, mountains, mid-dust-storm:**
-- terrain (mountains) → `eva +0.30`, `closing ×0.40`
-- condition (Mars = low-g + toxic) → `closing ×1.30`, `guidedR ×1.25`, `eva +0.10`, `dot +830 J/s`
-- weather (dust storm) → `range ×0.60`, `eva +0.12`
-- **composed:** `range ×0.60`, `closing ×0.52`, `eva +52%`, `guidedR ×1.25`, `dot 830 J/s`
-- **the read:** sight is gone (dust) so it's a close fight; the mountains slow the approach to a crawl even though
-  low-g wants to speed it up; everyone's hard to hit; and the toxic air is bleeding both sides the whole time. A
-  defender who digs in here makes the attacker pay for every metre — *and the AI reads exactly the same thing.*
+2. **Surface attrition** (from the world's generated hazards): **sum the per-hour bleed** of every damaging hazard
+   present, then subtract each unit's resistance — `Health −= Σ Magnitude × (Δt/3600) × (1 − resist)`. That is an
+   *addition* of independent bleeds, exactly as the engine loops them (`GroundForcesProcessor.cs:220-238`).
+
+**Worked example — Venus, a volcanic (Rough) hex, an unsealed unit:**
+- terrain (Rough) → defender **÷1.50**, armour **×0.70**, artillery **×1.30**, march **×2.5**
+- surface attrition (Venus generates Fire + Toxic; this region also has Corrosive) → Fire **23.2/hr** + Toxic
+  **3.0/hr** + Corrosive **25.0/hr** = **−51.2 HP/hr**
+- a **sealed** unit here still loses **−48.2/hr** — sealing only negates the 3.0 toxic bleed (see §9's real gap).
+- **the read:** a fortress to *take* (rough cover), but the ground is killing everyone who stands on it — you win Venus
+  fast or you don't land, and no buildable kit stops the fire. *The AI reads the identical two numbers.*
 
 ---
 
-## 5. The environment catalog (the real numbers)
+## 5. The environment catalog (straight from source)
 
-These are the multipliers the prototype shows, ported verbatim from the surface-environment catalog in
-`resolversim.html`. The **grade** is the honesty marker from `ENVIRONMENT-CONDITIONS-DESIGN.md`:
+Every number below is read from the game. **Grade** = what the engine does with it: **🟢 LIVE** the resolver applies it
+in a fight today · **🟡 DATA** the value exists on the body but combat ignores it · **🔵 THEORY** a design proposal, not
+wired anywhere. *(Independently re-verified 2026-08-09 by a 6-domain adversarial source audit — the space resolver
+greps to zero terrain/hazard reads; no weather system exists; every magnitude below matches source.)*
 
-- **🟢 LIVE** — the engine applies this exact effect today (wired).
-- **🟡 DATA** — the data exists on the world (gravity, radiation, atmosphere) but combat reads little/none of it yet.
-- **🔵 THEORY** — an accepted hook, not yet built anywhere but the sim.
+### Terrain — 🟢 LIVE (`GroundCombat/GroundTerrain.cs`)
+The full Open/Cover/Rough dial table is in §4. The `RegionFeatureType → class` mapping (from `Classify()`, verbatim):
+**Rough** = Mountains / Highlands / Volcanic · **Cover** = Forest / Jungle / Wetland · **Open** = Plains / Desert /
+Barren / Coast / Ocean / Ice / Tundra.
 
-### Terrain (per-hex, local) — 🟢 LIVE (the terrain triangle already bends a ground fight)
-| Terrain | Effect | Read |
-|---------|--------|------|
-| Open plains | `eva −0.05`, `dmgK ×1.10` | Armour's ground — nowhere to hide, kinetic dominates. |
-| Dense jungle | `eva +0.20`, `closing ×0.66`, `dmgK ×0.90` | Cover; the advance crawls; infantry's ground. |
-| Mountains | `eva +0.30`, `closing ×0.40` | Heaviest cover, slowest close; artillery's ground. |
-| Urban / ruins | `eva +0.28`, `closing ×0.60`, `dmgK ×0.85` | The defender's fortress; the attacker bleeds. |
+### Surface hazards — generated from physics (`GroundCombat/PlanetEnvironmentFactory.cs`)
+The generator reads a body's `AtmosphereDB` (temp / pressure / hydrosphere / composition) + `SystemBodyInfoDB`
+(tectonics) at world-gen and emits only hazards that fit. This is the **only** path from a body's physics to a combat
+effect. Thresholds and magnitudes, verbatim:
 
-### Planet condition (global, one per world)
-| Condition | Grade | Effect | Read |
-|-----------|-------|--------|------|
-| Temperate | 🟢 LIVE | (baseline) | Benign — breathable, 1 g, survivable. |
-| Low gravity | 🔵 THEORY | `closing ×1.30`, `guidedR ×1.25`, `eva +0.10` | Everything moves faster and reaches farther; hard to pin. |
-| High gravity | 🔵 THEORY | `closing ×0.70`, `guidedR ×0.75`, `dmgK ×0.90`, `eva −0.05` | Movement drags, guided rounds fall short, nobody dodges. |
-| Toxic atmosphere | 🟡 DATA | `dot +830 J/s` (corrosive) | Sealed suits survive; everything else attrites. |
-| Airless / vacuum | 🟡 DATA | `dmgK ×1.10`, `guidedR ×1.10`, `dot +830 J/s` (exposure) | Rounds fly true and far; exposure kills the unsealed. |
-| Molten / firestorm | 🟡 DATA | `dmgE ×0.80`, `dot +9700 J/s` (heat) | >400 °C — cooks anything not heat-hardened. |
-| Cryogenic | 🟡 DATA | `closing ×0.80`, `dot +4200 J/s` (cold) | <−120 °C — movement stiffens; the cold gnaws. |
-| Irradiated | 🟡 DATA | `dmgX ×0.90`, `dot +170 J/s` (radiation) | Survivable in hardened kit, attritional in soft. |
+| Hazard | Effect kind | Trigger (real rule) | Magnitude | Combat grade |
+|--------|-------------|---------------------|-----------|--------------|
+| **Vacuum exposure** | `Vacuum` | pressure ≤ 0.05 atm (airless) | **−3.0 HP/hr** | 🟢 LIVE (attrition; **sealed suit exempt**) |
+| **Toxic atmosphere** | `ToxicAtmosphere` | has air **and** a sulphur/chlorine/acid gas present | **−3.0 HP/hr** | 🟢 LIVE (attrition; **sealed suit exempt**) |
+| **Fire tornadoes** | `HeatDamage` | surface temp > 400 °C | **−(20 + (T−400)×0.05, cap 50) HP/hr** | 🟢 LIVE (attrition; **no buildable counter**) |
+| **Cryostorms** | `HeatDamage` | surface temp < −120 °C | **−15.0 HP/hr** | 🟢 LIVE (attrition; **no buildable counter**) |
+| **Corrosive superstorm** | `CorrosiveDamage` | a sulphur/chlorine/acid gas present | **−25.0 HP/hr** | 🟢 LIVE (attrition; **no buildable counter**) |
+| **Ash storm** | `SensorJam` | tectonically active | ×0.5 sight | 🟡 DATA (generated; **combat skips SensorJam**) |
+| **Dust storm** | `SensorJam` | has air **and** hydrosphere < 10% | ×0.4 sight | 🟡 DATA (generated; combat-inert) |
+| **Lightning superstorm** | `SensorJam` | pressure > 5 atm | ×0.6 sight | 🟡 DATA (generated; combat-inert) |
 
-### Weather (transient, geographic) — 🔵 THEORY
-| Weather | Effect | Read |
-|---------|--------|------|
-| Dust storm | `range ×0.60`, `eva +0.12` | Sight collapses to knife range; the murk hides everyone. |
-| Lightning storm | `range ×0.50`, `guidedR ×0.80`, `dmgK ×0.90` | Sensors blind, guidance fries — a blind close brawl. |
-| Ash storm | `range ×0.55`, `eva +0.10` | Volcanic ash chokes sightlines — ambusher's cover. |
-| Long night | `range ×0.70`, `eva +0.10` | Detection cut; everyone harder to see. |
+*(The DATA line is load-bearing: SensorJam is excluded from `IsDamageEffect` — `GroundForcesProcessor.cs:1048` — so the
+dust/ash/lightning storms the generator makes bleed nobody. Only Vacuum/Toxic/Heat/Corrosive attrition is LIVE.)*
 
-**Two hexes that are NOT battles:** **ocean is impassable** to ground forces (out of the graph — a march routes around
-it, taking it needs sealift), and **ice is passable but rough**. The prototype honours both (clicking open ocean shows
-"impassable," and ice composes as rough terrain), matching the H2b water-passability lock in the surface-map doc.
+### Condition readouts — 🟡 DATA / 🔵 THEORY
+`Gravity` (m/s²), `SurfaceTemperature`, `RadiationLevel`, `MagneticField`, `LengthOfDay` all exist on the body but
+**combat reads none of them** (gravity/pressure feed only colony population-support tolerance; radiation feeds only
+ColonyCost). The first cut's low-g `closing ×1.30`, high-g drag, and the weather sight-cuts are the **🔵 THEORY**
+proposal — the accepted-but-unwired hooks — shown in the prototype clearly boxed as "design proposal," never mixed into
+the live numbers.
+
+### The real Sol bodies (what the prototype ships — read from `sol/*.json`)
+Applying the generator's rules to each body's authored data gives the real environment per world:
+
+| Body | Gravity | Surface temp | Atmosphere | LIVE surface attrition (generated) |
+|------|---------|--------------|------------|-------------------------------------|
+| **Earth** | 1.00 g | 14.8 °C | N₂/O₂ breathable, 1 atm | *(none — only an Ash Storm, which is DATA)* |
+| **Mars** | 0.38 g | −63 °C | CO₂ thin, 0.87 atm | *(none — Dust + Ash, both DATA; not cold enough for cryo)* |
+| **Luna** | 0.17 g | airless (computed) | none | **Vacuum −3/hr** |
+| **Mercury** | 0.38 g | airless (computed) | none | **Vacuum −3/hr** |
+| **Venus** | 0.90 g | 464 °C | CO₂/SO₂ crushing, 92 atm | **Fire −23.2/hr + Corrosive −25/hr + Toxic −3/hr** |
+| **Ganymede** | 0.15 g | −163 °C | trace, vacuum | **Vacuum −3/hr + Cryo −15/hr** |
+
+The game already ships the extremes — **Venus is the hell world, Mercury/Luna the airless rocks, Ganymede the frozen
+moon** — so no invented planet is needed. Earth and Mars are combat-benign (their only generated hazards are the
+combat-inert SensorJam storms), itself an honest finding: *most of the Sol map fights on terrain alone today.*
+
+**Two hexes that are NOT battles:** **ocean is impassable** (out of the movement graph — `HexPathfinder.IsImpassable`),
+and **ice is passable but crossed at the rough march cost**. The prototype honours both.
 
 ---
 
@@ -192,7 +224,7 @@ setting, and keeping them straight is what makes the connection clean:
 
 | Setting | Whose call | Set where | What it is |
 |---------|-----------|-----------|------------|
-| **Environment** | The **ground's** call | The planet view (this map) — fixed by *where you fight* | terrain × condition × weather, composed |
+| **Environment** | The **ground's** call | The planet view (this map) — fixed by *where you fight* | the hex's terrain block + the world's surface attrition (both LIVE) |
 | **Doctrine** | **Your** call | The resolver (Force Management) — your standing orders | stance (close / hold / stand-off / withdraw) + target priority |
 
 **A battle is the region's environment ✕ your doctrine, run through the one shared combat kernel.** The environment is
@@ -200,8 +232,9 @@ handed to you by the location — you can only choose it by choosing *where to c
 freely. The planet view fixes the first; the resolver takes the second. They meet on the field.
 
 This is why the prototype's readout ends with a **"Resolve a battle here"** button: in the full client that button
-opens the auto-resolver **pre-loaded with the composed environment**, and *then* you set doctrine and watch it resolve.
-The environment is not a thing you configure — it's a thing you *inherit from the ground you chose.*
+opens the ground resolver **pre-loaded with the hex's terrain block and applying its surface attrition**, and *then*
+you set doctrine and watch it resolve. The environment is not a thing you configure — it's a thing you *inherit from the
+ground you chose.*
 
 ---
 
@@ -210,19 +243,20 @@ The environment is not a thing you configure — it's a thing you *inherit from 
 The whole loop at the regional zoom, from both seats:
 
 1. **Survey the theatre.** Open zoom 3 on a world you can see (survey-fog gates this — you know the ground where you
-   settle or have scouted; `PlanetRegionsDB.Surveyed`). The hex band shows terrain colour per hex, region bands, and
-   any weather cell drawn over the hexes it covers.
-2. **Read a hex.** Click any hex → the readout composes its terrain × condition × weather into one environment and
-   shows the resulting fight: detection range, cover, closing speed, damage-by-nature, attrition, plus a plain-English
-   tactical read ("this is a blind, close fight where short punchy weapons win").
-3. **Choose your ground.** The decision the whole view exists to serve: *where do I commit?* A defender picks the hex
-   whose composed environment favours the fight they want (dig into the mountains-in-a-dust-storm; deny the attacker
-   their range). An attacker picks the approach that composes *least* against them.
+   settle or have scouted; `PlanetRegionsDB.Surveyed`). The hex band shows terrain colour per hex, region bands, and a
+   ☣ marker on hexes carrying a live surface-attrition hazard.
+2. **Read a hex.** Click any hex → the readout shows the two live things: the **terrain block** (cover / affinity /
+   march) and the **surface attrition** (per-hour bleed, and how much a sealed unit still takes), plus a plain-English
+   tactical read ("a fortress to take, but the ground is killing everyone — win fast or don't land").
+3. **Choose your ground.** The decision the whole view exists to serve: *where do I commit, and is my kit good enough to
+   stand here?* A defender picks the rough hex that quadruples their cover; an attacker avoids the fire region and lands
+   where the terrain — and the bleed — cost them least.
 4. **Commit → resolve.** March a force to the hex (the live per-hex movement), and when it meets an enemy in weapons
-   range, the auto-resolver opens with **that hex's composed environment** + your doctrine.
-5. **The AI does all of 1–4 with the same primitives.** It reads the same composed environment off the same hexes,
+   range, the **ground** resolver opens with **that hex's terrain block** and applies **that hex's attrition** each tick,
+   plus your doctrine.
+5. **The AI does all of 1–4 with the same primitives.** It reads the same terrain block + attrition off the same hexes,
    scores ground the same way, and issues moves through the same order queue. *If it couldn't, the mechanic would be
-   too complex by the project's own law* (`CLAUDE.md` "One Verb, Both Seats"). The composition being a property of the
+   too complex by the project's own law* (`CLAUDE.md` "One Verb, Both Seats"). The environment being a property of the
    *ground* — not of a UI panel — is exactly what keeps both seats able to drive it.
 
 **What this view is NOT:** it is not a new order surface. Per the M9 ruling, orders come from Force Management, not
@@ -236,14 +270,16 @@ hex.
 
 **What feeds INTO this view:**
 - `PlanetRegionsDB.SurfaceGrid` (the global cylinder hex grid) — terrain per hex. **ENGINE-WIRED.**
-- The planet's condition data — gravity/temp/atmosphere/radiation from `AtmosphereDB` / body data. **DATA-READY** (exists;
-  combat reads little of it yet — the honest gap).
-- Per-hex hazards (ruling M11 — hazards become per-hex from terrain + geography). **DESIGN** (M11 not built).
-- Weather — **DESIGN** (no transient surface-weather system exists yet; the prototype models it as a moving cell).
+- `PlanetEnvironmentsDB` (per-region generated hazards) — the surface attrition, from `PlanetEnvironmentFactory` reading
+  the body's `AtmosphereDB` + `SystemBodyInfoDB` at world-gen. **ENGINE-WIRED.**
+- The body's condition data — gravity/temp/radiation/day from `AtmosphereDB` / `SystemBodyInfoDB`. **DATA** (exists;
+  combat reads none of it directly — the honest gap).
+- Per-hex hazards (ruling M11) + transient weather — **not built** (hazards are per-region; no weather system exists).
 
 **What this view feeds INTO:**
-- The auto-resolver's environment setting — the composed bundle. Today the resolver reads **one** env; composing three
-  layers into it is **the design proposal**. The multipliers themselves are **SIM-PROVEN** in `resolversim.html`.
+- The **ground** resolver's environment: the terrain block (`ResolveRegionCombat`) + the attrition step
+  (`GroundForcesProcessor.cs:220-238`). **Both LIVE.** The rich-multiplier reshaping is the THEORY proposal, unwired.
+- Nothing feeds the **space** resolver — it is environment-blind (verified: zero `.cs` reads of terrain/hazard/planet).
 
 **What it shares STATE with:**
 - `PlanetViewWindow` (the live globe client) — same `SurfaceGrid`, same regions, same units. This view is a *zoom* of
@@ -251,38 +287,54 @@ hex.
 - The ground movement/combat system (`GroundForcesProcessor`) — same hexes units already march and fight on.
 
 **What it TRIGGERS:**
-- A battle resolution, pre-loaded with the composed environment. (Trigger is the existing movement-into-range, not a
-  new order.)
+- A battle resolution that reads the hex's terrain block and applies its surface attrition. (Trigger is the existing
+  movement-into-range, not a new order.)
 
 **The cradle-to-grave chain for the connection** (mineral → … → decision → loss):
 - The **terrain** rung is fully live: it's on the map, it's researched into no component (it's just ground), and it
   already shapes a fight.
-- The **condition** rung is data-ready: the world *has* the gravity/atmosphere numbers; the missing rung is combat
-  *reading* them. A unit's answer to a hostile condition is a **component** — a sealed-systems fit that zeroes the
-  toxic/vacuum DoT (already a designed part in the assembler), heat-hardening for firestorm worlds, etc. That's the
-  cradle-to-grave hook: you *research and build* the ability to survive an environment, and losing that component
-  re-exposes the unit. **The grave rung wires environment survival to the damage system.**
-- The **weather** rung is design-only end to end (no transient weather system yet).
+- The **condition** rung is **partly live**: the surface attrition already runs, and a unit's answer to it is a
+  **component** — the `sealed-systems` fit that zeroes vacuum/toxic bleed is **built and wired** (cradle-to-grave:
+  research → build → mount → lose → re-exposed). The **missing rung** is a heat/cryo/corrosion-hardening component — the
+  `EnvironmentalResistance` map supports those kinds, but no buildable part writes them, so fire/cryo/corrosive worlds
+  are un-counterable (§11 Q4). Building that one component closes the loop.
+- The **gravity/temperature/radiation** readouts are pure DATA — combat reads none of them; wiring them is THEORY.
+- The **weather** rung is design-only end to end (no transient weather system; the cheapest path is to wire the already-
+  generated SensorJam storms — §11 Q3).
 
 ---
 
-## 9. Build-state honesty — what's real, what's proposed, the one honest gap
+## 9. Build-state honesty — what's real, what's proposed, the real gap
 
-Straight about the layers, the way this project insists on. Three states:
+Straight about the layers, re-grounded in source. What the engine does today is **more** than the first cut credited on
+the terrain/attrition side and **less** on the rich-multiplier side.
 
-- **🟢 ENGINE-WIRED — the board.** The region ring + the global cylinder hex grid + per-hex terrain are shipped; the
-  client is fully on the globe (G6a). The terrain triangle (Open/Cover/Rough) already bends a ground fight. *You can
-  fly the zoom-2/zoom-3 view in the real game today.*
-- **🟡 SIM-PROVEN — the environment math.** Every multiplier this view shows runs live in `resolversim.html` and
-  reshapes a battle there — proven on the bench, **not yet wired into the C# resolver.**
-- **🔵 DESIGN — the composition.** The resolver reads **one** environment today. Composing terrain × condition ×
-  weather into that one setting — the heart of this view — is the new design call. And two of the three layers'
-  *sources* are design-only: **per-hex hazards (M11) and transient weather** don't exist in the engine yet.
+- **🟢 LIVE — already wired into the ground resolver.** Two things: (1) the **terrain block** — Open/Cover/Rough sets a
+  cover divisor, a unit-type affinity, and a march cost (`GroundTerrain.cs`, read by `ResolveRegionCombat`); and (2) the
+  **surface attrition** — a unit standing in a generated Vacuum/Toxic/Fire/Cryo/Corrosive hazard loses a fixed HP/hour
+  (`GroundForcesProcessor.cs:220-238`), a sealed unit exempt from Vacuum/Toxic. These are shipped and gauged. *You can
+  fly the zoom-2/zoom-3 view and fight on this terrain + attrition in the real game today.*
+- **🟡 DATA — the value exists on the body, combat ignores it.** Gravity, temperature, radiation, magnetic field,
+  day-length are all read from the JSON and stored, but **no combat code reads them** (temperature matters only by
+  deciding which hazard was generated at world-gen). The SensorJam storms (dust/ash/lightning) are *generated* but
+  excluded from the attrition step (`IsDamageEffect`, `:1048`) — so they bleed nobody and change no fight.
+- **🔵 THEORY — the design proposal, wired nowhere.** The rich "environment reshapes the whole fight" model — low-g
+  speeds the close, high-g drags it, weather cuts detection, damage-by-nature bends — is the accepted-but-unwired hook
+  from `ENVIRONMENT-CONDITIONS-DESIGN.md`. The **space** resolver is fully environment-blind (verified: zero terrain/
+  hazard reads in `GameEngine/Combat/*.cs`), so this model would be a **ground-side** build.
 
-**The one honest gap, named plainly:** the board is real and the environment math is proven, but **the wire between them
-does not exist yet.** Today combat that happens on a hex does not read that hex's composed environment. This design is
-the specification for building that wire — it is not a claim that the wire is built. The prototype is a *model* of the
-finished behaviour, not a screenshot of it.
+**The real gaps, named plainly:**
+1. **The rich model isn't wired.** Gravity, temperature, and weather do nothing to a fight. Making them matter (the
+   THEORY column) is the open design/build. The board is real; the ceiling is not built.
+2. **The surface-hazard armour is half-built** (§3's headline finding). The one buildable seal covers only Vacuum +
+   Toxic; there is no component for Fire/Cryo/Corrosive, so those hazards are un-counterable today even though the
+   `EnvironmentalResistance` map supports them.
+3. **Per-hex hazards (ruling M11) and transient weather don't exist.** Hazards are per-*region* (seeded + spread) and
+   static; the prototype shows Vacuum/Toxic world-wide and Fire/Cryo/Corrosive per-region, which matches the generator.
+
+This doc is the specification for closing gap 1 (and flagging 2); it is not a claim any of it is built. The prototype is
+a faithful *model* of what the engine does today (LIVE), plus what it holds but ignores (DATA), plus what's proposed
+(THEORY) — three registers, never blurred.
 
 ---
 
@@ -292,47 +344,96 @@ A single self-contained HTML study of zoom 3. It is a **design study, not shippe
 interaction and the connection so the developer can react to the *feel* before any engine work is authorized.
 
 What it does:
-- **Five worlds** (Earth / Mars / Kiln volcanic / Hoth ice-moon / Styx dead-world) — each with a real condition strip
-  (gravity, temp, atmosphere, radiation, daylight) and its own terrain palette + weather kind.
-- **A clickable operational hex band** (16 columns × 6 rows, banded into the 4 regions), terrain-coloured, ocean and
-  ice handled, a weather cell you can toggle and move across the hexes.
-- **An engagement readout** — click a hex and it composes terrain × condition × weather into one environment, shows
-  each layer with its LIVE/DATA/THEORY grade, the composed multiplier bundle, and a plain-English tactical read, then
-  offers **"Resolve a battle here"** (which, in the full client, opens the resolver pre-loaded with that environment).
-- **Honest grading throughout** — every effect carries its wiring status, and the "what's real vs. designed" section
-  spells out the board (built), the math (sim-proven), and the composition (design).
+- **Six real Sol bodies** (Earth / Mars / Luna / Mercury / Venus / Ganymede) — each condition strip value read from the
+  game's `sol/*.json` (gravity, surface temp, pressure, atmosphere, radiation, day-length), each cell badged DATA or
+  LIVE by whether combat reads it.
+- **A clickable operational hex band** (16 columns × 6 rows, banded into the 4 regions), terrain-coloured from the
+  body's real feature palette, ocean impassable, ice handled, a ☣ marker on hexes carrying a live attrition hazard.
+- **An engagement readout** — click a hex and it shows the two live layers (the terrain block with its real
+  `GroundTerrain.cs` numbers; the surface attrition with its real `PlanetEnvironmentFactory.cs` per-hour magnitudes and
+  the sealed-vs-unsealed bleed), the DATA overlays (generated-but-inert SensorJam storms), a boxed THEORY note, and a
+  plain-English tactical read — then offers **"Resolve a battle here."**
+- **Honest grading throughout** — every number carries its LIVE/DATA/THEORY status; the "what's real" table and the
+  "real gap" box spell out that the ground resolver reads terrain + attrition and the space resolver reads nothing.
 
 **Verification (headless, no CI):** the embedded script compiles clean, the full render path runs to completion under a
-DOM stub with zero throws, and the environment-composition math produces finite, positive values across every
-planet × terrain combination (checked via `/opt/node22/bin/node`, the same harness family as the resolver sim).
+DOM stub with zero throws, and a source-number spot-check confirms every terrain dial and hazard magnitude matches the
+engine (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5; Vacuum/Toxic 3, Fire 23.2, Corrosive 25,
+Cryo 15 per hour) and that Venus generates the real Fire+Toxic+Corrosive set (checked via `/opt/node22/bin/node`).
+**Independently corroborated** by a 6-domain adversarial source audit (2026-08-09): space resolver environment-blind,
+no weather system, all magnitudes verified.
 
 ---
 
-## 11. Open questions for the developer
+## 11. The five questions — answered against the real engine
 
-These gate turning this study into engine work; none block the design itself.
+The first cut of this doc left these five as "open, recommend X." Now that the model is re-grounded in source, four of
+the five turn out to be **already answered by the code** — the engine's own behaviour makes the call. Only one is a
+genuine build decision. Answered one by one:
 
-1. **Does composition read at battle-open, or re-read each tick?** The clean model opens the fight with the composed
-   env once. If weather can roll in *during* a long fight, the env would need re-reading per tick (cheap, but a
-   decision). Recommend **open-once** for v1; weather-during-battle is a later refinement.
-2. **How coarse is "one condition per planet"?** The prototype treats condition as global (true to the data today).
-   But a world could have banded conditions (equatorial firestorm, polar cryo). Recommend **global per world for v1**,
-   per-hex condition as an M11 follow-on.
-3. **Weather: authored or emergent?** No transient weather system exists. Is weather a scripted cell (simple, the
-   prototype's model) or generated from geography + climate (richer, more work)? Recommend **authored cells for v1**.
-4. **Sealed/hardened components as the condition answer** — the assembler already has sealed-systems parts. Confirm
-   these zero the matching DoT (toxic/vacuum → sealed; firestorm → heat-hardened) so the cradle-to-grave loop closes.
-5. **Which zoom owns "commit a force"?** Recommend the existing Force-Management order (M9), with the planet view as
-   read-only front door — *not* a new order surface on the map.
+### Q1 — Does the environment read at battle-open, or re-read each tick? → **The engine already re-reads each tick.**
+Not a decision to make — it's how the code runs today. The **surface attrition** is applied in the ground hotloop
+**every tick**: `Health −= Magnitude × (Δt/3600) × (1−resist)` (`GroundForcesProcessor.cs:220-238`), so a unit that
+marches into a fire region starts bleeding on the next tick and stops when it leaves. The **terrain block** is read at
+each combat resolution (`ResolveRegionCombat` re-reads the region's terrain every time it resolves). So there is no
+"open-once vs re-read" choice for the live layers — *both already re-evaluate continuously.* **Consequence for the
+THEORY layer:** if weather or gravity is ever wired, its natural home is the same per-tick attrition loop (for a bleed)
+or the per-resolution terrain read (for a multiplier) — no new machinery, and "weather that rolls in mid-fight" comes
+for free because the loop already re-reads.
+
+### Q2 — How coarse is "one condition per planet"? → **It's already per-REGION, not per-planet.**
+The prototype's first cut treated condition as global; the engine is finer. `PlanetEnvironmentsDB` holds a list of
+`RegionEnvironment` keyed by **region index** (`PlanetEnvironmentFactory` seeds each generated hazard into ≥1 region,
+then spreads it to others at 35% — `:97-102`). So Venus really can have Fire in region 0 and Corrosive in region 1; the
+prototype models exactly this (Fire/Cryo/Corrosive per-region, Vacuum/Toxic world-wide because airlessness is global).
+**The answer:** conditions are **per-region today** (real). The finer step — **per-hex**, from the hex's own terrain +
+geography — is ruling **M11**, which is **not built**. So: per-region is the live granularity; per-hex is the next
+slice, and it's a written deferral, not an open question.
+
+### Q3 — Weather: authored or emergent? → **The engine's established pattern is EMERGENT-from-physics + static; there is no weather system to author.**
+No transient/moving weather exists (verified: no diurnal/storm/day-night system anywhere in the engine). But the engine
+*does* already generate storm-like effects — Dust / Ash / Lightning — **emergently from physics** (dry→dust, tectonic→
+ash, thick-atmosphere→lightning), deterministically at world-gen, and **static**. That's the precedent to follow.
+**The answer:** don't build a new authored-weather system. The cheapest, engine-consistent "weather that matters" is to
+**wire the SensorJam storms the generator already makes into combat** — i.e. make `SensorJam` cut detection range in the
+resolver, the way the design docs propose. That converts a DATA layer into a LIVE one with no new content pipeline.
+(Moving/transient weather remains a separate, larger want — deferred.)
+
+### Q4 — Do sealed/hardened components close the condition→answer loop? → **Half-closed, and this is the one real gap.**
+Verified: the **sealed-systems** component (`GroundSealAtb`) is real and live — one `Sealing` dial folds into
+`EnvironmentalResistance{Vacuum, ToxicAtmosphere}` at assembly, and the attrition step reads it, so a sealed unit is
+genuinely exempt from vacuum/toxic bleed (cradle-to-grave: research → build → mount → lose). **But there is no
+Fire/Cryo/Corrosive counterpart.** On Venus a fully sealed marine still takes the fire (23.2/hr) and corrosive (25/hr)
+bleed — sealing only saves the 3/hr toxic. The `EnvironmentalResistance` map is keyed by *every* hazard kind, so the fix
+is small: **build a heat-/corrosion-hardening component** (an `*Atb` that writes `{HeatDamage:x, CorrosiveDamage:x}`,
+six-point registered like the seal). **The answer:** vacuum/toxic loop is closed and live; the thermal/corrosive loop is
+**one component away** — that's the concrete next build this whole exercise surfaced, and the highest-value one.
+
+### Q5 — Which zoom owns "commit a force"? → **Force Management already owns it; the answer is locked by ruling M9.**
+Not open. Ruling **M9** deletes every order surface outside Force Management, and the movement order already exists as a
+**queued** order (`GroundForces.OrderMoveToGlobalHex`, issuer-marked `GroundOrderIssuer.Player/Ai`). The client's old
+**direct** click-to-march was *deleted* precisely because it bypassed the queue and the AI couldn't use it (One Verb,
+Both Seats). **The answer:** the planet view is a **read-only front door** — it shows the ground and lets you read the
+fight; committing a force is the existing queued movement order, issued from Force Management, and the environment rides
+along for free because it's a property of the destination hex. Adding an order surface to the planet view would
+re-introduce exactly the bug M9 removed. Nothing to build here — just don't.
+
+**Net:** four of the five were already decided by the code (per-tick reads · per-region conditions · emergent-static
+effects · Force-Management orders); the one true build decision — **the thermal/corrosive-hardening component** — is the
+gap Q4 surfaced, and it's the recommended next slice whenever surface hazards are made to matter.
 
 ---
 
 ## 12. One-paragraph summary (for a cold read)
 
-A planet is a **board of environments**. You see it at four zooms — system, globe, regional, city — and the regional
-zoom is where battles happen. Every hex carries a composed environment: its **terrain** (the ground), the planet's
-**condition** (the world), and any **weather** rolling through. That composition **is** the setting the auto-resolver
-opens the fight with — so you choose a battle's environment by choosing **where you commit**, and the AI reads the exact
-same thing off the exact same hex. The board is **built**, the environment math is **sim-proven**, and the **wire
-between them** — composing three layers into the resolver's one environment setting — is the design this doc specifies.
-The prototype (`planetview.html`) is the working model of that finished behaviour.
+A planet is a **board of environments**, read straight from the game. You see it at four zooms — system, globe,
+regional, city — and the regional zoom is where battles happen. Each hex hands the **ground** resolver two live things:
+its **terrain block** (Open/Cover/Rough → a cover divisor, a unit-type affinity, a march cost, real numbers from
+`GroundTerrain.cs`) and its world's **surface attrition** (a per-hour bleed on units standing in a generated
+Vacuum/Toxic/Fire/Cryo/Corrosive hazard, real magnitudes from `PlanetEnvironmentFactory.cs`). You choose a battle's
+environment by choosing **where you commit**, and the AI reads the identical two numbers off the identical hex. Every
+other "environment" idea is honestly graded: gravity/temperature/radiation and the dust/ash/lightning storms are **DATA**
+the body holds but combat ignores; the rich reshaping (gravity→movement, weather→sight) is **THEORY**, unwired; the
+**space** resolver reads nothing at all. The prototype (`planetview.html`) ships the six real Sol bodies and shows only
+what the engine really does — with the one real gap it surfaced flagged: *the sealed suit stops vacuum and poison, but
+nothing built stops fire.*

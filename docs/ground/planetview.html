@@ -1,4 +1,4 @@
-<title>Planet View — the surface as a board of environments</title>
+<title>Planet View — the surface as the game actually models it</title>
 <style>
   /* ============ TOKENS — light "daylight survey chart" is the bare :root ============ */
   :root{
@@ -9,10 +9,9 @@
     --live:#1c9160; --live-bg:#dcefe6;
     --data:#b07d16; --data-bg:#f5ecd4;
     --theory:#3f6bb0; --theory-bg:#e0e8f4;
-    /* terrain (map data colours) */
-    --t-plains:#c3b25a; --t-jungle:#3f7d4e; --t-mount:#8593a0; --t-urban:#9aa0ab; --t-ocean:#2f6f88; --t-ice:#b9dce6; --t-waste:#b08a5e;
-    /* hazard tints */
-    --h-heat:#d9542f; --h-cold:#5aa7d6; --h-rad:#8a5cc0; --h-tox:#8ba033; --h-grav:#7d8794;
+    /* terrain (real RegionFeatureType palette) */
+    --t-plains:#c3b25a; --t-forest:#3f7d4e; --t-jungle:#2f6b41; --t-mount:#8593a0; --t-volcanic:#a8492c;
+    --t-desert:#cbb277; --t-barren:#9c8465; --t-coast:#4f93a0; --t-ocean:#2f6f88; --t-ice:#bcd9e4; --t-tundra:#8fa08c;
     --shadow:0 1px 2px rgba(18,32,43,.07), 0 8px 26px rgba(18,32,43,.07);
     --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -25,8 +24,8 @@
     --live:#37c489; --live-bg:#0c2a20;
     --data:#e0a63a; --data-bg:#2c2410;
     --theory:#6ba0e0; --theory-bg:#132339;
-    --t-plains:#9c8f3f; --t-jungle:#2f6b41; --t-mount:#5a6773; --t-urban:#6b7480; --t-ocean:#1f5871; --t-ice:#7fb6c6; --t-waste:#8a6a44;
-    --h-heat:#f0653a; --h-cold:#5ab0e6; --h-rad:#a06fe0; --h-tox:#a6c03e; --h-grav:#8793a0;
+    --t-plains:#9c8f3f; --t-forest:#2f6b41; --t-jungle:#255736; --t-mount:#5a6773; --t-volcanic:#8a3a22;
+    --t-desert:#9c8752; --t-barren:#75604a; --t-coast:#2f6f80; --t-ocean:#1f5871; --t-ice:#7fb6c6; --t-tundra:#5f6f5c;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
   }}
   :root[data-theme="dark"]{
@@ -37,8 +36,8 @@
     --live:#37c489; --live-bg:#0c2a20;
     --data:#e0a63a; --data-bg:#2c2410;
     --theory:#6ba0e0; --theory-bg:#132339;
-    --t-plains:#9c8f3f; --t-jungle:#2f6b41; --t-mount:#5a6773; --t-urban:#6b7480; --t-ocean:#1f5871; --t-ice:#7fb6c6; --t-waste:#8a6a44;
-    --h-heat:#f0653a; --h-cold:#5ab0e6; --h-rad:#a06fe0; --h-tox:#a6c03e; --h-grav:#8793a0;
+    --t-plains:#9c8f3f; --t-forest:#2f6b41; --t-jungle:#255736; --t-mount:#5a6773; --t-volcanic:#8a3a22;
+    --t-desert:#9c8752; --t-barren:#75604a; --t-coast:#2f6f80; --t-ocean:#1f5871; --t-ice:#7fb6c6; --t-tundra:#5f6f5c;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
   }
   *{box-sizing:border-box}
@@ -46,35 +45,41 @@
   .wrap{max-width:1200px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(14px,3vw,32px) 72px}
   h1,h2,h3{margin:0;text-wrap:balance}
   .mono{font-family:var(--mono)}
-  .cite{font-family:var(--mono);font-size:.76em;color:var(--ink-faint);word-break:break-word}
+  .cite{font-family:var(--mono);font-size:.74em;color:var(--ink-faint);word-break:break-word}
 
   header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:700;display:flex;gap:9px;align-items:center}
   header .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   h1{font-size:clamp(25px,4.2vw,40px);font-weight:820;letter-spacing:-.02em;line-height:1.04;margin:12px 0 0}
-  .sub{margin:12px 0 0;color:var(--ink-soft);max-width:74ch;font-size:15.5px}
+  .sub{margin:12px 0 0;color:var(--ink-soft);max-width:76ch;font-size:15.5px}
   .sub b{color:var(--ink);font-weight:680}
 
+  /* grade key */
+  .gradekey{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .gradekey b{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;margin-right:5px}
+  .gk-live b{background:var(--live-bg);color:var(--live)} .gk-data b{background:var(--data-bg);color:var(--data)} .gk-theory b{background:var(--theory-bg);color:var(--theory)}
+
   /* planet selector + condition strip */
-  .console{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden}
+  .console{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden}
   .planetbar{display:flex;gap:8px;flex-wrap:wrap;padding:13px 15px;background:var(--panel-2);border-bottom:1px solid var(--line);align-items:center}
   .planetbar .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-right:4px}
-  .pbtn{font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 13px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:all .13s}
+  .pbtn{font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:all .13s}
   .pbtn:hover{border-color:var(--line-strong);color:var(--ink)}
   .pbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-  .pbtn .g{font-size:15px}
-  .cond{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--line)}
-  .cell{background:var(--panel);padding:11px 14px}
-  .cell .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
-  .cell .v{font-weight:720;font-size:15px;margin-top:2px;font-variant-numeric:tabular-nums}
-  .cell .v small{font-weight:500;color:var(--ink-soft);font-size:12px}
-  .cell.warn .v{color:var(--accent-ink)}
+  .pbtn .tag{font-family:var(--mono);font-size:10px;opacity:.7}
+  .cond{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--line)}
+  .cell{background:var(--panel);padding:10px 13px}
+  .cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);display:flex;justify-content:space-between;gap:4px;align-items:center}
+  .cell .k .b{font-weight:800;font-size:8.5px;padding:1px 4px;border-radius:4px}
+  .cell .k .b.DATA{background:var(--data-bg);color:var(--data)} .cell .k .b.LIVE{background:var(--live-bg);color:var(--live)}
+  .cell .v{font-weight:720;font-size:14.5px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .cell .v small{font-weight:500;color:var(--ink-soft);font-size:11.5px}
 
   /* the map + readout */
-  .stage{display:grid;grid-template-columns:1fr 340px;gap:0;background:var(--line)}
-  @media(max-width:880px){.stage{grid-template-columns:1fr}}
+  .stage{display:grid;grid-template-columns:1fr 356px;gap:0;background:var(--line)}
+  @media(max-width:900px){.stage{grid-template-columns:1fr}}
   .mapwrap{background:var(--sunk);padding:16px;position:relative}
   .maphead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-  .maphead .t{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink-soft)}
+  .maphead .t{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-soft)}
   .maphead .t b{color:var(--ink)}
   .regionrow{display:flex;gap:0;margin:0 0 4px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
   .regionrow span{flex:1;text-align:center;padding:2px 0;border-bottom:2px solid var(--line-strong)}
@@ -91,234 +96,252 @@
 
   /* readout panel */
   .readout{background:var(--panel);padding:16px 17px;min-width:0}
-  .readout .rh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .readout .rh{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
   .readout .loc{font-weight:800;font-size:18px;letter-spacing:-.01em;margin:3px 0 2px}
   .readout .coord{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-  .compose{margin-top:14px;display:grid;gap:7px}
-  .layer{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:center;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
-  .layer .lg{font-size:15px;text-align:center}
-  .layer .ln{font-size:13px;font-weight:640}
-  .layer .ln small{display:block;font-weight:400;color:var(--ink-soft);font-size:11.5px;font-family:var(--mono)}
-  .grade{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:2px 6px;border-radius:5px;white-space:nowrap}
-  .grade.LIVE{background:var(--live-bg);color:var(--live)} .grade.DATA{background:var(--data-bg);color:var(--data)} .grade.THEORY{background:var(--theory-bg);color:var(--theory)}
-  .arrow{text-align:center;color:var(--ink-faint);font-size:15px;margin:2px 0 -1px}
-  .result{background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;padding:12px 13px;margin-top:4px}
-  .result .rk{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-ink);font-weight:700}
-  .result .rv{font-weight:800;font-size:15.5px;margin:2px 0 8px;color:var(--ink)}
-  .fx{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}
-  .fx div{font-family:var(--mono);font-size:11.5px;display:flex;justify-content:space-between;gap:6px;color:var(--ink-soft);border-bottom:1px dotted var(--line-strong);padding-bottom:2px}
-  .fx div b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
-  .fx div.up b{color:var(--live)} .fx div.dn b{color:var(--h-heat)}
-  .tac{margin-top:12px;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+  .sect{margin-top:15px}
+  .sect>.sh{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin-bottom:7px}
+  .sect>.sh .badge{font-weight:800;font-size:9px;padding:2px 6px;border-radius:5px}
+  .badge.LIVE{background:var(--live-bg);color:var(--live)} .badge.DATA{background:var(--data-bg);color:var(--data)} .badge.THEORY{background:var(--theory-bg);color:var(--theory)}
+  .row{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .row b.up{color:var(--live)} .row b.dn{color:var(--accent-ink)}
+  .haz{display:grid;grid-template-columns:1fr auto;gap:2px 9px;align-items:center;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:6px}
+  .haz .hn{font-size:12.5px;font-weight:640}
+  .haz .hn small{display:block;font-weight:400;color:var(--ink-soft);font-size:11px;font-family:var(--mono)}
+  .haz .hv{font-family:var(--mono);font-size:12.5px;font-weight:800;color:var(--accent-ink);text-align:right;white-space:nowrap}
+  .bleed{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;padding:9px 11px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .bleed .bl{font-size:12px;color:var(--accent-ink);font-weight:700}
+  .bleed .bv{font-family:var(--mono);font-weight:800;font-size:15px;color:var(--ink)}
+  .tac{margin-top:13px;font-size:13px;color:var(--ink-soft);line-height:1.5;background:var(--inset);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px}
   .tac b{color:var(--ink)}
-  .resolve{margin-top:12px;width:100%;font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:10px;padding:11px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center}
+  .flag{margin-top:9px;font-size:12px;color:var(--ink-soft);border:1px dashed var(--line-strong);border-radius:8px;padding:8px 10px}
+  .flag b{color:var(--accent-ink)}
+  .empty{color:var(--ink-faint);font-size:14px;padding:32px 4px;text-align:center;font-family:var(--mono)}
+  .resolve{margin-top:12px;width:100%;font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:10px;padding:11px;cursor:pointer}
   .resolve:hover{filter:brightness(1.06)}
-  .empty{color:var(--ink-faint);font-size:14px;padding:26px 4px;text-align:center;font-family:var(--mono)}
 
-  /* zoom ladder + explainer */
+  /* sections below */
   .sec{margin-top:44px}
   .sec h2{font-size:clamp(18px,2.4vw,23px);font-weight:760;letter-spacing:-.01em;display:flex;gap:12px;align-items:baseline}
   .sec h2 .n{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink);font-weight:700}
-  .sec p.lead{color:var(--ink-soft);max-width:76ch;margin:8px 0 20px;font-size:15px}
+  .sec p.lead{color:var(--ink-soft);max-width:78ch;margin:8px 0 20px;font-size:15px}
   .zoom{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
   @media(max-width:760px){.zoom{grid-template-columns:1fr 1fr}}
   .z{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:var(--shadow);border-top:3px solid var(--line-strong)}
   .z.here{border-top-color:var(--accent)}
-  .z .zk{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint)}
+  .z .zk{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
   .z h3{font-size:15.5px;font-weight:740;margin:3px 0 6px}
   .z p{font-size:13px;color:var(--ink-soft);margin:0}
-  .z .st{margin-top:9px;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block}
+  .z .st{margin-top:9px;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block}
   .z .st.built{background:var(--live-bg);color:var(--live)} .z .st.sim{background:var(--data-bg);color:var(--data)} .z .st.design{background:var(--theory-bg);color:var(--theory)}
 
-  .flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;margin-top:6px}
-  @media(max-width:760px){.flow{grid-template-columns:1fr;gap:8px}.flow .fa{display:none}}
-  .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center}
-  .node .ni{font-size:20px}.node .nt{font-weight:740;font-size:14.5px;margin:4px 0 3px}.node .nd{font-size:12px;color:var(--ink-soft)}
-  .node.pick{border-color:var(--accent);border-width:1.5px}
-  .fa{font-family:var(--mono);color:var(--ink-faint);font-size:18px;text-align:center}
+  table.dt{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  table.dt th,table.dt td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+  table.dt th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700}
+  table.dt td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  table.dt tr td:first-child{font-weight:640}
+  .scroll{overflow-x:auto}
 
   .note{margin-top:20px;background:var(--inset);border:1px solid var(--line);border-left:4px solid var(--data);border-radius:11px;padding:15px 17px;font-size:14px;color:var(--ink-soft)}
   .note b{color:var(--ink)}
   footer{margin-top:44px;border-top:1px solid var(--line);padding-top:20px;color:var(--ink-faint);font-size:12.5px}
-  footer .mono{font-size:11.5px}
+  footer .mono{font-size:11px}
   a{color:var(--accent-ink)}
 </style>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Planetary command · surface war-map</div>
-    <h1>A planet is a board of environments</h1>
-    <p class="sub">The surface is not a dimensionless dot — it's <b>regions</b> you own, <b>terrain</b> you cross, and <b>weather</b> that rolls through, all sitting under one <b>planetary condition</b> (its gravity, air, heat, radiation, and daylight). Where those layers stack is the ground a battle is fought on — and that stack <b>is</b> the setting the auto-resolver reads. Pick a world, click a hex, and read the fight it produces.</p>
+    <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
+    <h1>A planet, exactly as the game models it</h1>
+    <p class="sub">Every world here is a <b>real Sol body</b> read straight from the game's data files, every terrain number is what the <b>ground combat resolver actually applies</b>, and every world hazard is what the engine's <b>physics-driven generator actually produces</b>. Nothing is invented. Pick a world, click a hex, and read the fight the engine would open there — with each effect graded by whether the code <b>reads it today</b>, merely <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <div class="gradekey">
+      <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
+      <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
+      <span class="gk-theory"><b>THEORY</b>a design proposal — not wired anywhere</span>
+    </div>
   </header>
 
   <div class="console">
     <div class="planetbar" id="planetbar" role="group" aria-label="Choose a world">
-      <span class="lbl">World</span>
+      <span class="lbl">Sol body</span>
     </div>
     <div class="cond" id="cond"></div>
     <div class="stage">
       <div class="mapwrap">
         <div class="maphead">
-          <div class="t">Regional band — <b id="planetName">Earth</b> · operational zoom (each hex ≈ a theatre)</div>
+          <div class="t">Operational band — <b id="planetName">Earth</b> · each hex ≈ a theatre · terrain from the body's real surface map</div>
         </div>
         <div class="regionrow" id="regionrow"></div>
         <svg class="map" id="map" viewBox="0 0 720 300" role="img" aria-label="Clickable surface hex map"></svg>
         <div class="maptools">
-          <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather ON</button>
-          <button class="tbtn" id="wxMove">↻ Move the storm</button>
+          <button class="tbtn" id="hazToggle" aria-pressed="true">☣ Show world hazards</button>
           <div class="legend" id="legend"></div>
         </div>
       </div>
       <aside class="readout" id="readout">
-        <div class="empty">◎ click any hex on the map<br>to read its engagement environment</div>
+        <div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>
       </aside>
     </div>
   </div>
 
   <section class="sec">
     <h2><span class="n">↓</span> Four zooms, one surface</h2>
-    <p class="lead">The developer's framing — <b>"4 big slices you can zoom into at high accuracy."</b> The coarse region ring gives you ownership and the strategic <em>where</em>; the continuous hex grid gives terrain and the fight; the city sub-grid is where buildings actually sit. This prototype lives at the <b>regional / operational</b> zoom — the one where you choose your ground.</p>
+    <p class="lead">The developer's framing — <b>"4 big slices you can zoom into at high accuracy."</b> This prototype lives at the <b>regional / operational</b> zoom — the one where a battle actually happens and where the environment is decided by the ground you pick.</p>
     <div class="zoom">
-      <div class="z"><div class="zk">Zoom 1</div><h3>System</h3><p>Planets as points on the orbit map — the strategic board you already have.</p><span class="st built">BUILT</span></div>
-      <div class="z"><div class="zk">Zoom 2</div><h3>Planet globe</h3><p>One wrapping cylinder grid, banded into the 4 regions. Terrain, ownership, and weather at a glance.</p><span class="st built">BUILT · G6a</span></div>
-      <div class="z here"><div class="zk">Zoom 3 — you are here</div><h3>Regional / operational</h3><p>The war layer: units move, fight, and capture on real-distance hexes. Each hex carries a terrain and inherits the planet's condition.</p><span class="st built">BUILT · W-track</span></div>
-      <div class="z"><div class="zk">Zoom 4</div><h3>Local / city</h3><p>The build layer — each installation sits 1:1 on its own fine tile. Raze it, capture it, defend it.</p><span class="st sim">C-track follows</span></div>
+      <div class="z"><div class="zk">Zoom 1</div><h3>System</h3><p>Planets as points on the orbit map — the strategic board.</p><span class="st built">ENGINE-WIRED</span></div>
+      <div class="z"><div class="zk">Zoom 2</div><h3>Planet globe</h3><p>One wrapping cylinder grid (<span class="mono">SurfaceGrid</span>), banded into 4 regions. The client is fully on this globe.</p><span class="st built">ENGINE-WIRED · G6a</span></div>
+      <div class="z here"><div class="zk">Zoom 3 — you are here</div><h3>Regional / operational</h3><p>Units move, fight, capture on real-distance hexes. Each hex carries a terrain and inherits the world's condition.</p><span class="st built">ENGINE-WIRED · W-track</span></div>
+      <div class="z"><div class="zk">Zoom 4</div><h3>Local / city</h3><p>Each installation sits 1:1 on its own fine tile. Raze it, capture it, defend it.</p><span class="st sim">C-track follows</span></div>
     </div>
   </section>
 
   <section class="sec">
-    <h2><span class="n">→</span> How the ground becomes the fight</h2>
-    <p class="lead">This is the load-bearing connection. You don't pick a battle's environment from a menu — <b>the location picks it for you.</b> Terrain (from the hex), condition (from the planet), and weather (rolling through) compose into one environment, and the auto-resolver opens the fight with exactly that. Your only environment decision is <b>where you commit</b>.</p>
-    <div class="flow">
-      <div class="node"><div class="ni">🗺️</div><div class="nt">The hex you pick</div><div class="nd">terrain × planet condition × weather</div></div>
-      <div class="fa">▸</div>
-      <div class="node pick"><div class="ni">🌍</div><div class="nt">Composed environment</div><div class="nd">the multipliers stack</div></div>
-      <div class="fa">▸</div>
-      <div class="node"><div class="ni">⚔️</div><div class="nt">The auto-resolver</div><div class="nd">reshaped: sight · cover · closing · damage · attrition</div></div>
-    </div>
+    <h2><span class="n">→</span> How the ground becomes the fight — what's real</h2>
+    <p class="lead">You don't pick a battle's environment from a menu — <b>the location picks it for you</b>, and the AI reads the same thing off the same hex. But be exact about what "environment" means to the engine today, because it is <b>narrower</b> than it looks. The <b>ground</b> resolver reads two things; the <b>space</b> resolver reads nothing about location at all.</p>
+    <div class="scroll"><table class="dt">
+      <thead><tr><th>Layer</th><th>What the ground resolver does with it</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td>Terrain (per hex)</td><td>Cover multiplier on the defender + unit-type affinity (armour/artillery) + march-cost. Real numbers from <span class="mono">GroundTerrain.cs</span>.</td><td><span class="badge LIVE">LIVE</span></td></tr>
+        <tr><td>Condition → surface hazards</td><td>An <b>attrition</b> — a per-hour health bleed on units standing in it (vacuum, toxic air, fire, cryo, corrosive). A sealed unit is exempt from vacuum/toxic. Real magnitudes from <span class="mono">PlanetEnvironmentFactory.cs</span>.</td><td><span class="badge LIVE">LIVE</span></td></tr>
+        <tr><td>Condition → gravity / temperature / radiation / day-length</td><td><b>Nothing.</b> The values exist on the body but no combat code reads them (temperature only matters by deciding which hazard was generated).</td><td><span class="badge DATA">DATA</span></td></tr>
+        <tr><td>Storm hazards (dust / ash / lightning = SensorJam)</td><td><b>Nothing yet.</b> The generator makes them, but the resolver's attrition step skips SensorJam (it isn't a damage effect); ground detection doesn't read it either.</td><td><span class="badge DATA">DATA</span></td></tr>
+        <tr><td>Gravity → movement · weather → sight · condition multipliers</td><td>The richer "environment reshapes the whole fight" model (closing speed, detection range, damage-by-nature). Proposed in the design docs; <b>not wired</b>.</td><td><span class="badge THEORY">THEORY</span></td></tr>
+        <tr><td>The <b>space</b> auto-resolver</td><td><b>Nothing.</b> <span class="mono">AutoResolve</span> / <span class="mono">CombatEngagement</span> read no terrain, no hazard, no planet — space combat is environment-blind.</td><td><span class="badge DATA">DATA</span></td></tr>
+      </tbody>
+    </table></div>
     <div class="note">
-      <b>Two settings meet on the field.</b> The <b>environment</b> is the ground's call — fixed by where you fight (this map). Your <b>doctrine</b> — stance (close / hold / stand-off / withdraw) and target priority — is your call, set in the resolver. A battle is the region's environment ✕ your doctrine, run through the one shared kernel. The planet view is the front door; the resolver is the room.
+      <b>So "wired to the auto-resolver" means the GROUND resolver, and it means two live wires:</b> the terrain triangle and the surface-attrition bleed. Everything else this view shows is either data the game holds but combat ignores, or a design proposal. That honesty is the point of the grades — the panel to the right never blurs the three.
     </div>
   </section>
 
   <section class="sec">
-    <h2><span class="n">⚑</span> What's real vs. what's designed</h2>
-    <p class="lead">Straight about the layers, the way this project insists on.</p>
-    <div class="zoom">
-      <div class="z"><div class="zk">Built engine</div><h3>The board</h3><p>The region ring + the global hex grid + per-hex terrain are shipped (the client is on the globe). The terrain triangle (Open/Cover/Rough) already bends a ground fight.</p><span class="st built">ENGINE-WIRED</span></div>
-      <div class="z"><div class="zk">Proven on the bench</div><h3>The environment math</h3><p>Every multiplier this panel shows runs live in <span class="mono">resolversim.html</span> and reshapes a battle there — sim-proven, not yet wired into the C# resolver.</p><span class="st sim">SIM-PROVEN</span></div>
-      <div class="z"><div class="zk">The design proposal</div><h3>Composition</h3><p>The resolver reads <em>one</em> environment today. Composing terrain × condition × weather into that one setting — the heart of this view — is the new design call.</p><span class="st design">DESIGN</span></div>
-      <div class="z"><div class="zk">Honest gap</div><h3>Per-hex hazards</h3><p>Ruling M11 makes hazards per-hex from terrain + geography; the data (gravity, radiation, atmosphere) exists but combat reads almost none of it yet.</p><span class="st design">DATA-READY</span></div>
+    <h2><span class="n">⚑</span> The real gap this surfaces</h2>
+    <p class="lead">Grounding the view in real data turned up a genuine cradle-to-grave hole, worth the developer's eye.</p>
+    <div class="note" style="border-left-color:var(--accent)">
+      <b>The only surface-hazard armour the game can build is the sealed suit — and it only stops vacuum and toxic air.</b> The <span class="mono">sealed-systems</span> component (the one buildable seal) folds into a unit's <span class="mono">EnvironmentalResistance</span> for <span class="mono">Vacuum</span> and <span class="mono">ToxicAtmosphere</span> only. There is <b>no</b> base-mod component that resists <b>fire, cryo, or corrosive</b> attrition — so on <b>Venus</b>, a fully sealed marine still burns from the fire tornadoes (≈23/hr) and the corrosive superstorm (25/hr); sealing only saves them the 3/hr toxic bleed. The engine <em>supports</em> heat/corrosion resistance (the <span class="mono">EnvironmentalResistance</span> map is keyed by every hazard kind) — but the component that writes it was never built. A real "you can't hold this world without the right kit" decision is one component away.
     </div>
   </section>
 
   <footer>
-    <p><b>Prototype · design study, 2026-08-09.</b> No engine code, no CI. Environment multipliers are the real values ported from <span class="mono">docs/combat/resolversim.html</span> (the surface-environment catalog); the surface model is <span class="mono">docs/ground/GROUND-SURFACE-MAP-DESIGN.md</span>; the effect grading follows <span class="mono">docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md</span> (LIVE = wired · DATA = data-ready · THEORY = to-build). Full write-up: <span class="mono">docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-09.</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies + their gravity/temperature/atmosphere → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GameEngine/GroundCombat/GroundTerrain.cs</span> · Hazard generation rules + magnitudes → <span>GameEngine/GroundCombat/PlanetEnvironmentFactory.cs</span> · Attrition application (Health −= Magnitude × Δt/3600 × (1−resist)) → <span>GameEngine/GroundCombat/GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GameEngine/GroundCombat/GroundSealAtb.cs</span> · Hazard-effect vocabulary → <span>GameEngine/Hazards/HazardEffect.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
 <script>
 "use strict";
 (function(){
-  // ── ENV CATALOG (surface) — real multipliers ported from resolversim.html ──
-  // multiplicative fields default 1.0; eva is additive (default 0); dot is additive J/s.
-  const E = (o)=>Object.assign({range:1,eva:0,closing:1,dmgK:1,dmgE:1,dmgX:1,guidedR:1,pd:1,dot:0,dotKind:""},o);
-  const ENV = {
-    // terrain (local, per-hex)
-    plains:   {g:"▭", name:"Open plains",       kind:"terrain", grade:"LIVE",   m:E({eva:-0.05,dmgK:1.1}),           blurb:"Open ground — armour dominates (×1.3 on the triangle), nowhere to hide."},
-    jungle:   {g:"🌴", name:"Dense jungle",      kind:"terrain", grade:"LIVE",   m:E({eva:0.20,closing:0.66,dmgK:0.9}), blurb:"Cover: +evasion, the advance crawls (×0.66); infantry's ground, armour ×0.75."},
-    mountains:{g:"⛰", name:"Mountains",          kind:"terrain", grade:"LIVE",   m:E({eva:0.30,closing:0.4}),         blurb:"Rough: heavy cover, the slowest close; artillery ×1.3, armour ×0.7."},
-    urban:    {g:"🏙", name:"Urban / ruins",     kind:"terrain", grade:"LIVE",   m:E({eva:0.28,closing:0.6,dmgK:0.85}), blurb:"Cover among structures — the defender's fortress, the attacker bleeds."},
-    // planet condition (global)
-    temperate:{g:"⬖", name:"Temperate",          kind:"condition",grade:"LIVE",  m:E({}),                             blurb:"The benign baseline — breathable, 1 g, survivable. Nothing extra bites."},
-    lowg:     {g:"⬆", name:"Low gravity",        kind:"condition",grade:"THEORY",m:E({closing:1.3,guidedR:1.25,eva:0.1}), blurb:"Everything moves faster and reaches farther; harder to pin."},
-    highg:    {g:"⬇", name:"High gravity",       kind:"condition",grade:"THEORY",m:E({closing:0.7,guidedR:0.75,dmgK:0.9,eva:-0.05}), blurb:"Movement drags, guided rounds fall short, nobody dodges well."},
-    toxic:    {g:"☣", name:"Toxic atmosphere",   kind:"condition",grade:"DATA",  m:E({dot:830,dotKind:"corrosive"}),  blurb:"A corrosive bath — sealed suits survive, everything else attrites."},
-    vacuum:   {g:"◌", name:"Airless / vacuum",   kind:"condition",grade:"DATA",  m:E({dmgK:1.1,guidedR:1.1,dot:830,dotKind:"exposure"}), blurb:"No air: rounds fly true and far, but exposure kills the unsealed."},
-    firestorm:{g:"🔥", name:"Molten / firestorm", kind:"condition",grade:"DATA",  m:E({dmgE:0.8,dot:9700,dotKind:"heat"}), blurb:">400 °C — a searing bath that cooks anything not heat-hardened."},
-    cryo:     {g:"❄", name:"Cryogenic",          kind:"condition",grade:"DATA",  m:E({closing:0.8,dot:4200,dotKind:"cold"}), blurb:"<−120 °C — movement stiffens, the cold gnaws through the fight."},
-    radsurface:{g:"☢",name:"Irradiated",         kind:"condition",grade:"DATA",  m:E({dmgX:0.9,dot:170,dotKind:"radiation"}), blurb:"A steady radiation bath — survivable in hardened kit, attritional in soft."},
-    // weather (transient, geographic)
-    duststorm:{g:"🌪", name:"Dust storm",         kind:"weather", grade:"THEORY",m:E({range:0.6,eva:0.12}),          blurb:"Sight collapses to knife range; the murk hides everyone."},
-    lightning:{g:"🌩", name:"Lightning storm",    kind:"weather", grade:"THEORY",m:E({range:0.5,guidedR:0.8,dmgK:0.9}), blurb:"Sensors blind out, guidance fries — a blind, close brawl."},
-    ashstorm: {g:"🌫", name:"Ash storm",          kind:"weather", grade:"THEORY",m:E({range:0.55,eva:0.1}),          blurb:"Volcanic ash chokes sightlines — ambusher's cover."},
-    night:    {g:"☾", name:"Long night",         kind:"weather", grade:"THEORY",m:E({range:0.7,eva:0.1}),           blurb:"Polar dark or a long night — detection cut, everyone harder to see."}
-  };
-  const TERR_COLOR = {plains:"--t-plains",jungle:"--t-jungle",mountains:"--t-mount",urban:"--t-urban",ocean:"--t-ocean",ice:"--t-ice",waste:"--t-waste"};
+  // ══════════════════════════════════════════════════════════════════════════
+  //  GROUND TRUTH — every number below is read from the game's source/data.
+  // ══════════════════════════════════════════════════════════════════════════
 
-  // ── PLANETS: global condition + terrain palette + weather kind ──
+  // ── TERRAIN: RegionFeatureType → Open/Cover/Rough, with the REAL combat dials ──
+  //    GroundTerrain.cs: Classify() mapping + CoverDefenseMult + TerrainAttackMult.
+  //    cover = the divisor on the DEFENDER's incoming damage (>1 protects).
+  //    move  = HexPathfinder.HexMoveMult (open 1 / cover 1.5 / rough 2.5).
+  const TCLASS = {
+    Open:  {cover:0.9,  armor:1.3, arty:1.0,  move:1.0, blurb:"Open ground — armour dominates (×1.3), the defender is exposed (cover ×0.9)."},
+    Cover: {cover:1.25, armor:0.75,arty:0.85, move:1.5, blurb:"Cover — the defender takes ¼ less, armour struggles (×0.75), the advance is slow."},
+    Rough: {cover:1.5,  armor:0.7, arty:1.3,  move:2.5, blurb:"Rough — a fortress edge (defender ×1.5), artillery owns the high ground (×1.3), armour bogs (×0.7)."}
+  };
+  // RegionFeatureType → class (GroundTerrain.Classify, verbatim buckets)
+  const FEAT = {
+    plains:{cls:"Open",  col:"--t-plains", name:"Plains"},
+    forest:{cls:"Cover", col:"--t-forest", name:"Forest"},
+    jungle:{cls:"Cover", col:"--t-jungle", name:"Jungle"},
+    mountains:{cls:"Rough",col:"--t-mount", name:"Mountains"},
+    volcanic:{cls:"Rough",col:"--t-volcanic",name:"Volcanic"},
+    desert:{cls:"Open",  col:"--t-desert", name:"Desert"},
+    barren:{cls:"Open",  col:"--t-barren", name:"Barren"},
+    coast:{cls:"Open",   col:"--t-coast",  name:"Coast"},
+    ocean:{cls:"Open",   col:"--t-ocean",  name:"Ocean", impassable:true},
+    ice:{cls:"Open",     col:"--t-ice",    name:"Ice", crossRough:true},
+    tundra:{cls:"Open",  col:"--t-tundra", name:"Tundra"}
+  };
+
+  // ── HAZARD effects the generator produces (PlanetEnvironmentFactory.cs) ──
+  //    mag = per-HOUR attrition for damage kinds; for SensorJam it is the sim's
+  //    multiplier (combat never reads it). LIVE = IsDamageEffect (bleeds units).
+  const HAZ = {
+    vacuum:   {name:"Vacuum exposure",   effect:"Vacuum",          kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  worldwide:true,
+               blurb:"No air. An unsealed unit suffocates — a slow bleed a sealed suit negates."},
+    toxic:    {name:"Toxic atmosphere",  effect:"ToxicAtmosphere", kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  worldwide:true,
+               blurb:"A poison/corrosive sky. Sealed life-support negates it; anything else bleeds."},
+    fire:     {name:"Fire tornadoes",    effect:"HeatDamage",      kind:"attrition", mag:23.2, grade:"LIVE", sealed:false, worldwide:false,
+               blurb:"Molten surface (>400 °C). Everything not heat-hardened cooks — and no seal stops it."},
+    cryo:     {name:"Cryostorms",        effect:"HeatDamage",      kind:"attrition", mag:15.0, grade:"LIVE", sealed:false, worldwide:false,
+               blurb:"Deep cold (<−120 °C). A steady thermal bleed the seal doesn't cover."},
+    corrosive:{name:"Corrosive superstorm",effect:"CorrosiveDamage",kind:"attrition",mag:25.0, grade:"LIVE", sealed:false, worldwide:false,
+               blurb:"Acidic storms eat unprotected kit — and no base-mod component resists it."},
+    ash:      {name:"Ash storm",         effect:"SensorJam",       kind:"sensor",    mag:0.5,  grade:"DATA", sealed:false, worldwide:false,
+               blurb:"Volcanic ash (tectonic worlds). GENERATED but combat ignores SensorJam today."},
+    dust:     {name:"Dust storm",        effect:"SensorJam",       kind:"sensor",    mag:0.4,  grade:"DATA", sealed:false, worldwide:false,
+               blurb:"Dry, thin-air worlds. Generated but combat-inert (SensorJam unread)."},
+    lightning:{name:"Lightning superstorm",effect:"SensorJam",     kind:"sensor",    mag:0.6,  grade:"DATA", sealed:false, worldwide:false,
+               blurb:"Thick atmosphere (>5 atm). Generated but combat-inert."}
+  };
+
+  // ── THE REAL SOL BODIES (from the sol/*.json data files) ──
+  //    g = authored Gravity ÷ 9.80665 (or G·M/R² for moons with no Gravity field).
+  //    Generated hazards computed by applying PlanetEnvironmentFactory's rules to
+  //    each body's authored pressure / temperature / composition / tectonics.
   const PLANETS = {
-    earth:{name:"Earth",   g:"🌍", gravity:"1.0 g", temp:"15 °C", atmo:"Breathable", rad:"Shielded", day:"Day/night",
-      conditions:["temperate"], terrains:["plains","jungle","mountains","urban","plains","jungle"], ocean:true, ice:false, wx:"duststorm"},
-    mars:{name:"Mars",     g:"🔴", gravity:"0.38 g", temp:"−60 °C", atmo:"Thin / toxic", rad:"Exposed", day:"Day",
-      conditions:["lowg","toxic"], terrains:["waste","waste","mountains","plains","waste","mountains"], ocean:false, ice:true, wx:"duststorm"},
-    kiln:{name:"Kiln (volcanic)", g:"🌋", gravity:"1.4 g", temp:"430 °C", atmo:"Choking / hot", rad:"High", day:"Day",
-      conditions:["highg","firestorm"], terrains:["waste","mountains","waste","mountains","urban","waste"], ocean:false, ice:false, wx:"ashstorm"},
-    hoth:{name:"Hoth (ice moon)", g:"🪐", gravity:"0.2 g", temp:"−140 °C", atmo:"Trace", rad:"Exposed", day:"Long night",
-      conditions:["lowg","cryo"], terrains:["ice","ice","mountains","ice","plains","ice"], ocean:false, ice:true, wx:"night"},
-    styx:{name:"Styx (dead world)", g:"☢", gravity:"0.9 g", temp:"−30 °C", atmo:"None", rad:"Lethal", day:"Day",
-      conditions:["vacuum","radsurface"], terrains:["waste","urban","waste","mountains","urban","waste"], ocean:false, ice:false, wx:"ashstorm"}
+    earth:{name:"Earth", tag:"temperate", g:"1.00 g", grav:"9.8 m/s²", temp:"14.8 °C", tempKnown:true,
+      pressure:"1.0 atm", atmo:"N₂/O₂ — breathable", hydro:"71%", rad:"shielded (45 µT)", day:"24 h",
+      hasAir:true, worldHaz:[], regionHaz:{0:["ash"]}, src:"earth.json",
+      terrains:["plains","forest","jungle","mountains","desert","coast"], ocean:true, ice:false},
+    mars:{name:"Mars", tag:"thin · cold", g:"0.38 g", grav:"3.72 m/s²", temp:"−63 °C", tempKnown:true,
+      pressure:"0.87 atm (game)", atmo:"CO₂ — thin", hydro:"0%", rad:"exposed", day:"24 h 37 m",
+      hasAir:true, worldHaz:[], regionHaz:{0:["dust"],2:["ash"]}, src:"mars.json",
+      terrains:["desert","barren","mountains","volcanic","desert","barren"], ocean:false, ice:true},
+    luna:{name:"Luna", tag:"airless · low-g", g:"0.17 g", grav:"1.63 m/s²", temp:"≈−20 °C mean*", tempKnown:false,
+      pressure:"0 (vacuum)", atmo:"none", hydro:"0%", rad:"exposed", day:"27.3 d",
+      hasAir:false, worldHaz:["vacuum"], regionHaz:{}, src:"luna.json",
+      terrains:["barren","plains","mountains","barren","plains","mountains"], ocean:false, ice:false},
+    mercury:{name:"Mercury", tag:"airless · seared", g:"0.38 g", grav:"3.7 m/s²", temp:"≈167 °C mean*", tempKnown:false,
+      pressure:"0 (vacuum)", atmo:"none", hydro:"0%", rad:"exposed", day:"58.6 d",
+      hasAir:false, worldHaz:["vacuum"], regionHaz:{1:["ash"]}, src:"mercury.json",
+      terrains:["barren","mountains","barren","plains","mountains","barren"], ocean:false, ice:false},
+    venus:{name:"Venus", tag:"fire · toxic", g:"0.90 g", grav:"8.87 m/s²", temp:"464 °C", tempKnown:true,
+      pressure:"92 atm", atmo:"CO₂/SO₂ — crushing", hydro:"0%", rad:"exposed", day:"243 d (retro)",
+      hasAir:true, worldHaz:["toxic"], regionHaz:{0:["fire"],1:["corrosive"],2:["lightning"],3:["dust"]}, src:"venus.json",
+      terrains:["barren","volcanic","mountains","plains","volcanic","barren"], ocean:false, ice:false},
+    ganymede:{name:"Ganymede", tag:"ice moon · vacuum", g:"0.15 g", grav:"1.43 m/s²", temp:"−163 °C", tempKnown:true,
+      pressure:"~0 (vacuum)", atmo:"trace O₂", hydro:"0%", rad:"exposed", day:"7.15 d",
+      hasAir:false, worldHaz:["vacuum"], regionHaz:{1:["cryo"],3:["cryo"]}, src:"jupiter.json → moon-ganymede",
+      terrains:["ice","barren","mountains","ice","barren","mountains"], ocean:false, ice:true}
   };
 
   // ── STATE ──
-  const COLS=16, ROWS=6, REGIONS=4, colsPerRegion=COLS/REGIONS;   // 16/4 = 4 cols per region (integer banding)
-  const state = {planet:"earth", weather:true, wxCol:6, sel:null, hexes:[]};
+  const COLS=16, ROWS=6, REGIONS=4;
+  const state = {planet:"earth", showHaz:true, sel:null, hexes:[]};
 
-  // ── build the hex field (flat-top) ──
+  // ── build the hex field (flat-top) — terrain from the body's real palette ──
   function buildField(){
     const p=PLANETS[state.planet];
     const hexes=[];
-    let seed=({earth:7,mars:19,kiln:31,hoth:5,styx:23})[state.planet]||11;
+    let seed=({earth:7,mars:19,luna:5,mercury:11,venus:31,ganymede:23})[state.planet]||11;
     const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
     for(let c=0;c<COLS;c++){
-      const region=Math.floor(c/ (COLS/REGIONS));
+      const region=Math.floor(c/(COLS/REGIONS));
       for(let r=0;r<ROWS;r++){
-        // terrain: pick from the region's own slice of the planet terrain palette, biased by latitude
-        let terr;
         const pool=p.terrains;
-        terr = pool[(region*1 + r) % pool.length];
-        if(rnd()<0.32) terr = pool[Math.floor(rnd()*pool.length)];
-        // poles → ice on cold worlds; mid ocean band on earth
+        let terr = pool[(region + r) % pool.length];
+        if(rnd()<0.30) terr = pool[Math.floor(rnd()*pool.length)];
         if(p.ocean && (r===2||r===3) && rnd()<0.5) terr="ocean";
-        if(p.ice && (r===0||r===ROWS-1) && rnd()<0.7) terr="ice";
+        if(p.ice && (r===0||r===ROWS-1) && rnd()<0.65) terr="ice";
         hexes.push({c,r,region,terr});
       }
     }
     state.hexes=hexes;
   }
 
-  // ── which weather hexes ──
-  function wxHexes(){
-    if(!state.weather) return new Set();
-    const s=new Set(); const w=state.wxCol;
-    state.hexes.forEach((h,i)=>{ const dc=Math.min(Math.abs(h.c-w),COLS-Math.abs(h.c-w)); if(dc<=1 && h.r>=1 && h.r<=4) s.add(i); });
-    return s;
-  }
-
-  // ── compose the environment at a hex ──
-  function composeAt(hex){
+  // ── which hazards are present at a hex (world-wide + its region's) ──
+  function hazardsAt(hex){
     const p=PLANETS[state.planet];
-    const layers=[];
-    // terrain layer (ocean/ice/waste have no terrain-env; treat waste as plains-like open, ocean impassable)
-    if(ENV[hex.terr]) layers.push({key:hex.terr, role:"Terrain"});
-    else if(hex.terr==="waste") layers.push({key:"plains", role:"Terrain", nameOver:"Barren / open"});
-    else if(hex.terr==="ice")   layers.push({key:"mountains", role:"Terrain", nameOver:"Ice field (rough)"});
-    // planet conditions
-    p.conditions.forEach(k=> { if(ENV[k] && k!=="temperate") layers.push({key:k, role:"Condition"}); });
-    if(p.conditions.length===1 && p.conditions[0]==="temperate") layers.push({key:"temperate", role:"Condition"});
-    // weather
-    const wx=wxHexes();
-    const idx=state.hexes.indexOf(hex);
-    if(wx.has(idx)) layers.push({key:p.wx, role:"Weather"});
-    return layers;
-  }
-
-  function multiply(layers){
-    const t={range:1,eva:0,closing:1,dmgK:1,dmgE:1,dmgX:1,guidedR:1,pd:1,dot:0};
-    layers.forEach(l=>{ const m=ENV[l.key].m;
-      t.range*=m.range; t.closing*=m.closing; t.dmgK*=m.dmgK; t.dmgE*=m.dmgE; t.dmgX*=m.dmgX; t.guidedR*=m.guidedR; t.pd*=m.pd;
-      t.eva+=m.eva; t.dot+=m.dot; });
-    return t;
+    const keys=[...p.worldHaz, ...((p.regionHaz[hex.region])||[])];
+    return keys.map(k=>HAZ[k]).filter(Boolean);
   }
 
   // ── RENDER: planet bar + condition strip ──
@@ -327,21 +350,23 @@
     bar.querySelectorAll(".pbtn").forEach(b=>b.remove());
     Object.entries(PLANETS).forEach(([k,p])=>{
       const b=document.createElement("button"); b.className="pbtn"; b.setAttribute("aria-pressed", k===state.planet);
-      b.innerHTML=`<span class="g">${p.g}</span>${p.name}`;
+      b.innerHTML=`${p.name} <span class="tag">${p.tag}</span>`;
       b.onclick=()=>{ state.planet=k; state.sel=null; buildField(); renderAll(); };
       bar.appendChild(b);
     });
   }
   function renderCond(){
     const p=PLANETS[state.planet];
-    const warnGrav = p.gravity!=="1.0 g", warnAtmo = !/Breathable/.test(p.atmo), warnRad=!/Shielded/.test(p.rad), warnTemp=!/15 °C/.test(p.temp);
     document.getElementById("cond").innerHTML =
-      cell("Gravity",p.gravity, warnGrav) + cell("Temperature",p.temp, warnTemp) + cell("Atmosphere",p.atmo, warnAtmo) +
-      cell("Radiation",p.rad, warnRad) + cell("Daylight",p.day, /night/i.test(p.day)) +
-      cell("Planet-wide env", p.conditions.filter(c=>c!=="temperate").map(c=>ENV[c].g+" "+ENV[c].name).join(" + ")||"⬖ none (benign)", p.conditions.some(c=>c!=="temperate"));
+      cell("Gravity",p.g,"DATA","<small>"+p.grav+"</small>") +
+      cell("Surface temp",p.temp,"DATA", p.tempKnown?"":"<small>computed*</small>") +
+      cell("Pressure",p.pressure,"LIVE","") +
+      cell("Atmosphere",p.atmo,"LIVE","") +
+      cell("Radiation",p.rad,"DATA","") +
+      cell("Day length",p.day,"DATA","");
     document.getElementById("planetName").textContent=p.name;
   }
-  const cell=(k,v,warn)=>`<div class="cell${warn?' warn':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const cell=(k,v,badge,extra)=>`<div class="cell"><div class="k"><span>${k}</span><span class="b ${badge}">${badge}</span></div><div class="v">${v} ${extra||""}</div></div>`;
 
   // ── RENDER: the hex map (flat-top SVG) ──
   function renderMap(){
@@ -349,17 +374,20 @@
     const size=17, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75;
     const W=hx*(COLS-1)+w+8, H=h*(ROWS)+h/2+8;
     svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-    const wx=wxHexes();
     let s="";
     state.hexes.forEach((hex,i)=>{
       const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
       const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
-      const fill=`var(${TERR_COLOR[hex.terr]||'--t-waste'})`;
-      const isWx=wx.has(i), selc = state.sel===i?' sel':'';
+      const f=FEAT[hex.terr]||FEAT.barren;
+      const fill=`var(${f.col})`;
+      const selc = state.sel===i?' sel':'';
       s+=`<polygon points="${pts.join(' ')}" fill="${fill}" stroke="var(--line-strong)" stroke-width="1" tabindex="0" data-i="${i}" class="${selc}"/>`;
-      if(isWx){ s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.24" pointer-events="none"/>`;
-                s+=`<text x="${cx}" y="${cy+4}" font-size="12" text-anchor="middle" pointer-events="none">${ENV[PLANETS[state.planet].wx].g}</text>`; }
+      const haz = state.showHaz ? hazardsAt(hex).filter(z=>z.grade==="LIVE") : [];
+      if(haz.length){
+        s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.20" pointer-events="none"/>`;
+        s+=`<text x="${cx}" y="${cy+4}" font-size="12" text-anchor="middle" pointer-events="none" opacity="0.85">☣</text>`;
+      }
     });
     svg.innerHTML=s;
     svg.querySelectorAll("polygon[data-i]").forEach(pg=>{
@@ -367,72 +395,91 @@
       pg.addEventListener("click",act);
       pg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();act();} });
     });
-    // region labels
     document.getElementById("regionrow").innerHTML =
       Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
-    // legend
     const terrs=[...new Set(state.hexes.map(h=>h.terr))];
-    document.getElementById("legend").innerHTML = terrs.map(t=>`<span><i style="background:var(${TERR_COLOR[t]})"></i>${t}</span>`).join("");
+    document.getElementById("legend").innerHTML = terrs.map(t=>`<span><i style="background:var(${(FEAT[t]||FEAT.barren).col})"></i>${(FEAT[t]||{name:t}).name}</span>`).join("");
   }
 
   // ── RENDER: the readout panel ──
   function renderReadout(){
     const el=document.getElementById("readout");
-    if(state.sel==null){ el.innerHTML=`<div class="empty">◎ click any hex on the map<br>to read its engagement environment</div>`; return; }
-    const hex=state.hexes[state.sel], p=PLANETS[state.planet];
-    if(hex.terr==="ocean"){ el.innerHTML=`<div class="rh">Grid ${coord(hex)}</div><div class="loc">Open ocean</div>
-      <div class="tac" style="margin-top:12px">🌊 <b>Impassable to ground forces.</b> Ocean is out of the ground graph — a march routes around it; taking this tile needs sealift, not a battle. (Ice is passable, rough.)</div>`; return; }
-    const layers=composeAt(hex), tot=multiply(layers);
-    const worstGrade = layers.some(l=>ENV[l.key].grade==="THEORY")?"THEORY":layers.some(l=>ENV[l.key].grade==="DATA")?"DATA":"LIVE";
-    const layerHTML = layers.map(l=>{ const e=ENV[l.key];
-      return `<div class="layer"><span class="lg">${e.g}</span><span class="ln">${l.nameOver||e.name}<small>${l.role}</small></span><span class="grade ${e.grade}">${e.grade}</span></div>`;
-    }).join(`<div class="arrow">＋</div>`);
-    el.innerHTML =
+    if(state.sel==null){ el.innerHTML=`<div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>`; return; }
+    const hex=state.hexes[state.sel], p=PLANETS[state.planet], f=FEAT[hex.terr]||FEAT.barren;
+    if(f.impassable){
+      el.innerHTML=`<div class="rh">Grid ${coord(hex)}</div><div class="loc">Open ocean</div>
+        <div class="tac" style="border-left-color:var(--t-ocean)">🌊 <b>Impassable to ground forces.</b> Ocean is left out of the movement graph (<span class="mono">HexPathfinder.IsImpassable</span>) — a march routes around it and it can't be ordered onto. Taking this tile needs sealift, not a battle. (Ice is passable, but crossed at the rough march cost.)</div>`;
+      return;
+    }
+    const tc=TCLASS[f.cls];
+    const haz=hazardsAt(hex);
+    const liveHaz=haz.filter(z=>z.kind==="attrition");
+    const dataHaz=haz.filter(z=>z.kind==="sensor");
+    const totalBleed=liveHaz.reduce((a,z)=>a+z.mag,0);
+    const sealedBleed=liveHaz.reduce((a,z)=>a+(z.sealed?0:z.mag),0);
+
+    let html =
       `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1}</div>
-       <div class="loc">${cap(hex.terr)} theatre</div>
-       <div class="coord">on ${p.name} · ${p.gravity} · ${p.atmo.toLowerCase()}</div>
-       <div class="compose">${layerHTML}</div>
-       <div class="arrow" style="font-size:18px;color:var(--accent)">▾ composes to ▾</div>
-       <div class="result">
-         <div class="rk">Auto-resolver environment</div>
-         <div class="rv">${layers.map(l=>ENV[l.key].g).join(" ")} <span class="grade ${worstGrade}" style="vertical-align:2px">${worstGrade}</span></div>
-         <div class="fx">
-           ${fxrow("Detection / range", tot.range, "×", true)}
-           ${fxrow("Cover (evasion)", tot.eva, "＋", false, true)}
-           ${fxrow("Closing speed", tot.closing, "×", true)}
-           ${fxrow("Kinetic dmg", tot.dmgK, "×", true)}
-           ${fxrow("Energy dmg", tot.dmgE, "×", true)}
-           ${fxrow("Guided reach", tot.guidedR, "×", true)}
-           ${tot.dot>0?`<div class="dn"><span>Attrition</span><b>${tot.dot} J/s</b></div>`:``}
-         </div>
-       </div>
-       <div class="tac">${tacRead(layers,tot)}</div>
-       <button class="resolve" onclick="alert('In the full client this opens the Auto-Resolver pre-loaded with the ${layers.map(l=>ENV[l.key].name).join(' + ')} environment.\\n\\nYou then set doctrine (stance + target priority) and watch the fight resolve — resolversim.html is the working model of that arena.');">⚔ Resolve a battle here</button>`;
+       <div class="loc">${f.name} — ${f.cls} terrain</div>
+       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure}</div>`;
+
+    // TERRAIN (LIVE)
+    html += `<div class="sect"><div class="sh">Terrain effect <span class="badge LIVE">LIVE · resolver reads it</span></div>
+      <div class="row"><span>Defender cover</span><b class="${tc.cover>1?'up':'dn'}">÷${tc.cover.toFixed(2)}</b></div>
+      <div class="row"><span>Armour here</span><b class="${tc.armor>1?'up':'dn'}">×${tc.armor.toFixed(2)}</b></div>
+      <div class="row"><span>Artillery here</span><b class="${tc.arty>1?'up':(tc.arty<1?'dn':'')}">×${tc.arty.toFixed(2)}</b></div>
+      <div class="row"><span>Infantry here</span><b>×1.00</b></div>
+      <div class="row"><span>March cost</span><b class="${tc.move>1?'dn':''}">×${tc.move.toFixed(1)}</b></div>
+      </div>`;
+
+    // SURFACE HAZARD ATTRITION (LIVE)
+    if(liveHaz.length){
+      html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE · bleeds units/hr</span></div>`;
+      liveHaz.forEach(z=>{
+        html += `<div class="haz"><div class="hn">${z.name}<small>${z.effect}${z.sealed?" · sealed suit exempt":" · no base-mod counter"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
+      });
+      html += `<div class="bleed"><span class="bl">Unsealed unit loses</span><span class="bv">−${totalBleed.toFixed(1)} HP/hr</span></div>`;
+      if(sealedBleed!==totalBleed)
+        html += `<div class="bleed" style="background:var(--live-bg);border-color:var(--live)"><span class="bl" style="color:var(--live)">Sealed unit loses</span><span class="bv">−${sealedBleed.toFixed(1)} HP/hr</span></div>`;
+      html += `</div>`;
+    } else {
+      html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE</span></div><div class="row"><span>No damaging hazard here</span><b class="up">survivable</b></div></div>`;
+    }
+
+    // DATA overlays
+    if(dataHaz.length){
+      html += `<div class="sect"><div class="sh">Generated, but combat-inert <span class="badge DATA">DATA</span></div>`;
+      dataHaz.forEach(z=>{ html += `<div class="haz"><div class="hn">${z.name}<small>${z.effect} — resolver skips it</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
+      html += `</div>`;
+    }
+
+    // THE HANDOFF
+    html += `<div class="tac"><b>The fight the engine opens here:</b> ${tacRead(f,tc,liveHaz,totalBleed,sealedBleed,p)}</div>`;
+
+    // THEORY note
+    html += `<div class="flag"><b>Design proposal (THEORY):</b> ${p.g} would slow/speed the close and the storms would cut sight — but the resolver reads <b>none</b> of that today. It reads the terrain block and the attrition bleed above. Wiring gravity→movement and weather→detection is the open design call.</div>`;
+
+    html += `<button class="resolve" onclick="alert('In the full client this opens the ground Auto-Resolver on this hex — pre-loaded with the ${f.cls} terrain block and the surface attrition shown. You then set doctrine (stance + target priority) and watch it resolve. The space resolver stays environment-blind.');">⚔ Resolve a battle here</button>`;
+
+    el.innerHTML = html;
   }
-  function fxrow(label,val,op,mult,addPct){
-    const one = mult ? Math.abs(val-1)<0.001 : Math.abs(val)<0.001;
-    const disp = mult ? "×"+val.toFixed(2) : (val>=0?"+":"")+(addPct?(val*100).toFixed(0)+"%":val.toFixed(2));
-    let cls=""; if(!one){ if(mult) cls = val>1?"up":"dn"; else cls = val>0?"up":"dn"; }
-    return `<div class="${cls}"><span>${label}</span><b>${one?"—":disp}</b></div>`;
+
+  function tacRead(f,tc,liveHaz,total,sealed,p){
+    let s = tc.cover>=1.5 ? "This is a fortress — the defender soaks half again, so an attacker pays dearly to take it; bring artillery, not armour. "
+          : tc.cover>=1.25 ? "Cover favours whoever holds it; armour is off its game and the advance is slow. "
+          : "Open ground — armour rules and the defender has nowhere to hide. ";
+    if(!liveHaz.length){ s += "Nothing on the surface is killing anyone — the units alone decide it."; return s; }
+    if(sealed===0){ s += `Airless/toxic only: a <b>sealed</b> garrison is fine here, an unsealed one bleeds ${total}/hr and loses a war of patience. Sealing is the price of admission.`; }
+    else if(sealed>=15){ s += `The ground itself is lethal — even a <b>sealed</b> unit loses ${sealed}/hr, because no buildable component stops the fire/cryo/corrosive here. A long fight is a losing one; win fast or don't land.`; }
+    else { s += `Unsealed units bleed ${total}/hr; sealing cuts it to ${sealed}/hr.`; }
+    return s;
   }
-  function tacRead(layers,tot){
-    const bits=[];
-    layers.forEach(l=>bits.push(`<b>${ENV[l.key].name}:</b> ${ENV[l.key].blurb}`));
-    let verdict="";
-    if(tot.range<=0.6) verdict=" The sightlines are gone — this is a blind, close fight where short punchy weapons win and long-range gunnery is wasted.";
-    else if(tot.closing<=0.55) verdict=" Movement is molasses — the approach is the whole battle; whoever holds the ground makes the attacker pay for every metre.";
-    else if(tot.dot>=4000) verdict=" The ground itself is killing everyone — bring sealed, hardened units or don't commit; a long fight here is a losing one.";
-    else if(tot.closing>=1.2||tot.guidedR>=1.2) verdict=" Fast and far-reaching — a war of maneuver; the fight will be decided at range before lines ever meet.";
-    else verdict=" A clean, honest fight — the units decide it, not the ground.";
-    return "Where you'd be fighting: " + bits.join(" &nbsp;·&nbsp; ") + "<br><br><b>The read:</b>" + verdict;
-  }
+
   const coord=(h)=>`Q${String(h.c).padStart(2,'0')} R${h.r}`;
-  const cap=(s)=> s.charAt(0).toUpperCase()+s.slice(1);
 
   function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); }
 
-  document.getElementById("wxToggle").addEventListener("click",e=>{ state.weather=!state.weather; e.target.setAttribute("aria-pressed",state.weather); e.target.textContent = state.weather?"🌦 Weather ON":"🌦 Weather OFF"; renderMap(); renderReadout(); });
-  document.getElementById("wxMove").addEventListener("click",()=>{ state.wxCol=(state.wxCol+3)%COLS; renderMap(); renderReadout(); });
+  document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Show world hazards":"☣ Hazards hidden"; renderMap(); });
 
   buildField(); renderAll();
 })();
