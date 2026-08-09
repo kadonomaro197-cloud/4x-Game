@@ -588,7 +588,7 @@ Systems 7 and 8 can be built in parallel with Systems 4–6 because they are mod
 
 ## What Already Exists
 
-> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those two as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
+> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + the live dashboards (`docs/SYSTEM-CONNECTION-MAP.md` / `docs/TESTING-TRACKER.md` / `docs/DOCS-INDEX.md`; the `SYSTEMS-STATUS-AND-TEST-PLAN` this used to name was RETIRED 2026-07-27) — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
 
 | Component | Status | Notes |
 |-----------|--------|-------|

@@ -568,7 +568,7 @@ Cheapest end-to-end proof, because the grave-end target already exists and is al
 - **Diplomacy / espionage / internal politics** (`docs/society/DIPLOMACY-DESIGN.md`, `docs/society/ESPIONAGE-AND-INTELLIGENCE-DESIGN.md`, `docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md`) — Foreign Minister, Spymaster, Interior Minister are delegates of this exact shape.
 - **Survey / detection** (`docs/combat/DETECTION-DESIGN.md`) — the survey fog is the free LOD brake; the sensor O(n²) risk is the performance landmine to watch.
 - **Commerce** (`docs/economy/RESOURCES-AND-MATERIALS-DESIGN.md`, `docs/economy/OFF-WORLD-INFRASTRUCTURE-DESIGN.md`) — the Trade Minister is blocked on the trade-money wire (`Ledger` has no `Trade` category; `ExchangeCatalog`/`TradeAgreement` are inert data).
-- **Performance** (`docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`, `Benchmarks/`, `PerformanceReadoutSmokeTests`) — the scaling gauge is the first build.
+- **Performance** (`docs/TESTING-TRACKER.md`, `Benchmarks/`, `PerformanceReadoutSmokeTests`) — the scaling gauge is the first build.
 - **Survey (the eXplore arm) is fully built** — geological + jump-point/gravitational survey each have a component, order, processor, completion events, and fog-of-war reveal; minerals hidden by default (`Masked<T>`), jump points hidden until surveyed, discovering one reveals the far-side system + adds to `KnownSystems`. **One content gap: no ruins/artifacts** beyond jump points — net-new, becomes its own system (deferred).
 
 ---
