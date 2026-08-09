@@ -197,7 +197,7 @@ And the **full colony economy UI lives in `ColonyManagementWindow`** (Summary / 
 Mining — see the Window Inventory). The minerals→refined→components loop is already see-and-do.
 
 **So this is not a build task — it's a *verify* task.** CI can't build the client, and these docs were stale, so
-the only way to know the real state is to run it (see `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` §5B). If something
+the only way to know the real state is to run it (the live state dashboards are `docs/SYSTEM-CONNECTION-MAP.md` for connections, `docs/TESTING-TRACKER.md` for gauges, `docs/DOCS-INDEX.md` for currency, and `docs/CLIENT-TEST-CHECKLIST.md` for the runtime backlog — the old `SYSTEMS-STATUS-AND-TEST-PLAN.md` was RETIRED 2026-07-27). If something
 is actually broken live, fix *that* — don't rebuild panels that already render. `InstallationsDB` itself remains
 dead/vestigial; do not resurrect it.
 

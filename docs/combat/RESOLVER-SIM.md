@@ -19,9 +19,12 @@ flagged **MODEL** in the Honesty tab (the shipped engine does none of them yet �
    its firepower and evasion**, so its fire slackens as it is ground down and you watch the tide turn. This is the
    parked **aggregate force-condition** model; the *Damage* control flips back to engine whole-or-dead.
 2. **Target priority (per side).** The **A/B targets** dial decides who a fleet shoots first — **Spread** (combatants
-   before utility), **Finish wounded**, **Break the heaviest**, **Biggest threat**. In the engine this is *authored but
-   dropped* (the `TargetPriority` enum + parser exist, `FleetDoctrine.TrySetDoctrine` throws it away — `CARRIER-DESIGN
-   §13d`); wiring it is a field-add + a read.
+   before utility), **Finish wounded**, **Break the heaviest**, **Biggest threat**. In the engine this is **LIVE (corrected
+   2026-08-09 — earlier text here wrongly said it was "dropped"; that was true only before it was wired 2026-08-04)**:
+   `FleetDoctrineDB.Targeting` is set by `ParseTargetPriority` and copied through `TrySetDoctrine` (`FleetDoctrineDB.cs:51/67`),
+   then `ApplyCasualties` reads it to order the defender's casualty buckets (`CombatEngagement.cs:884`, called `:784`).
+   *Heaviest*/*BiggestThreat* change behaviour; *FinishWounded*/*Closest*/*Backfield* fall back to `Balanced` until the
+   per-ship-health / per-target-position models land.
 3. **Carriers + a deployable fighter wing** (`CARRIER-DESIGN.md`, design-locked). A **carrier** stands off and launches
    a wing of evasive **strike fighters** as a *deployable sub-fleet* that fights on the normal salvo math; a hurt
    fighter **docks to rearm and relaunches** (the launch/dock loop — a fighter's "retreat" is recover-to-host, §13b);
@@ -76,11 +79,14 @@ they merge. The damage underneath the movement is the engine's **real** combat k
 5. **Resolve the damage with the real kernel** — dodge, shield nature-matchup, point-defense interception of guided
    fire, fire-split conservation (an attacker facing two targets divides its guns, never doubles them), the flat
    armour bounce, and **whole-or-dead** casualties.
-6. **Break off only on an order.** There is **no automatic casualty retreat** — everyone fights until the battle is
-   decided. A fleet leaves only when you set its doctrine to **Withdraw**, and then it runs from the enemy and clears
-   the fight *only if it can open the gap past the longest weapon range* — i.e. **only if it is faster** than its
-   pursuers. Order a slower fleet to withdraw and it gets caught and ground down as it flees. (That mirrors the
-   engine: retreat is a withdraw *doctrine*, not a threshold.)
+6. **Break off only on an order.** In *this sim* there is **no automatic casualty retreat** — everyone fights until the
+   battle is decided; a fleet leaves only when you set its doctrine to **Withdraw**, and then it runs and clears the fight
+   *only if it can open the gap past the longest weapon range* — i.e. **only if it is faster** than its pursuers. Order a
+   slower fleet to withdraw and it gets caught and ground down as it flees. **⚠ Correction 2026-08-09: this is a SIM
+   simplification, it does NOT mirror the engine. The shipped engine DOES auto-retreat on a casualty threshold —
+   `RetreatCasualtyThreshold = 0.5` (`CombatEngagement.cs:48`), checked by `ShouldRetreat` (`:1662`, called `:815`),
+   modulated by personality. The sim omits that threshold on purpose (it's a watch-the-math tool); don't read "no
+   auto-retreat" as an engine fact.**
 
 Each weapon fires at its **own** range, so as the sides close the guns light up **longest-first** — the log calls out
 each one as it "opens up," and the arena draws a labelled range band per weapon. The **step size** (1 / 2 / 5 s) sets
