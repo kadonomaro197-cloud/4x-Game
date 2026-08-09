@@ -109,6 +109,35 @@
   .lg b{font-size:11px}
   .lg b.gr{font-weight:800;font-size:9px;padding:1px 4px;border-radius:4px}
   b.gr.LIVE{background:var(--live-bg);color:var(--live)} b.gr.DATA{background:var(--data-bg);color:var(--data)} b.gr.THEORY{background:var(--theory-bg);color:var(--theory)}
+  /* grid-scale + potato-budget panel */
+  .scalepanel{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .scalepanel .sph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+  .scalepanel .sph .tt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .scalepanel .sph .tt b{color:var(--accent-ink)}
+  .dial{display:inline-flex;gap:4px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+  .dial button{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  .dial button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ladder{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+  .rung{flex:1;min-width:120px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  .rung .rk{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .rung .rv{font-weight:800;font-size:15px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .rung .rs{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:1px}
+  .rung.hi{border-color:var(--accent);background:var(--accent-soft)}
+  .rung.hi .rv{color:var(--accent-ink)}
+  table.pt{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mono)}
+  table.pt th,table.pt td{padding:4px 7px;border-bottom:1px solid var(--line);text-align:right}
+  table.pt th{font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.pt td:first-child,table.pt th:first-child{text-align:left;color:var(--ink)}
+  table.pt tr.cur td{background:var(--accent-soft)}
+  table.pt tr.cur td:first-child{font-weight:800;color:var(--accent-ink)}
+  .budget{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px}
+  .bcard{background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px;border-left:3px solid var(--live)}
+  .bcard.warn{border-left-color:var(--data)}
+  .bcard .bk{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+  .bcard .bvv{font-weight:800;font-size:13px;margin-top:2px}
+  .bcard .bd{font-size:11px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
+  .guards{margin-top:9px;font-size:11.5px;color:var(--ink-soft);background:var(--inset);border:1px dashed var(--line-strong);border-radius:9px;padding:9px 11px;line-height:1.5}
+  .guards b{color:var(--ink)} .guards .g{color:var(--accent-ink);font-weight:700}
   /* micro-hex sub-grid (zoom into a tapped hex) */
   .micro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:2px}
   .micro .mh{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -196,7 +225,7 @@
         <div class="maphead">
           <div class="t"><b id="planetName">Earth</b> · <span id="mapsrc">real baked surface map</span> · <span id="griddim"></span></div>
         </div>
-        <div class="poles"><span>N pole</span><span>equator</span><span>S pole</span></div>
+        <div class="poles" id="poles"><span>N pole</span><span>equator</span><span>S pole</span></div>
         <div class="mapscroll" id="mapscroll">
           <div class="regionrow" id="regionrow"></div>
           <svg class="map" id="map" viewBox="0 0 720 200" role="img" aria-label="Clickable surface hex map"></svg>
@@ -209,6 +238,7 @@
           <button class="tbtn" id="wxAuto" aria-pressed="false">▶ Auto-roll</button>
         </div>
         <div class="biglegend" id="biglegend"></div>
+        <div class="scalepanel" id="scalepanel"></div>
       </div>
       <aside class="readout" id="readout">
         <div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>
@@ -257,8 +287,8 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-09 (rev-H — real surface maps, per-hex hazards, rolling weather + day/night, radius-scaled grids, per-hex distance).</b> No engine code, no CI. Sources, all verified at file:line:</p>
-    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Grid size + sampling (R = clamp(round(12·radius/rEarth),2,24); cols = 4·(2R+1); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Procedural terrain rules for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-09 (rev-I — mini-hex-anchored grid scaling + the potato budget; real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
@@ -502,20 +532,35 @@
       worldHaz:["vacuum"], localHaz:["cryo"]}
   };
 
-  // ── STATE + REAL per-planet grid scale ──────────────────────────────────────
-  //    The game sizes the surface grid by RADIUS (PlanetHexFactory.HexPatchRadiusFor +
-  //    PlanetGridFactory): R = clamp(round(12·radius/rEarth), 2, 24), then cols = 4·(2R+1),
-  //    rows = 2R+1. So Earth ≈ 100×25 (~2500 hexes) and Luna ≈ 28×7 (~196) — a small world
-  //    has a far COARSER, smaller grid. We reproduce that and draw every world to TRUE
-  //    relative scale inside one Earth-sized frame (so the Moon renders small, like a moon).
+  // ── STATE + THE GRID-SCALE MODEL (mini-hex anchored; potato-bounded) ─────────
+  //  The developer's rule: the FINEST tile (the mini / "city" hex, where units actually
+  //  fight) is a real tactical size — a few km — and BOUNDED at ≤50 across, so a weak PC
+  //  ("potato") survives; ONE operational / "regional" hex is then exactly (mini × 49) wide,
+  //  and its COUNT scales per planet to hold that size (big world → many, small moon → few).
+  //  Hex real size uses the ENGINE's own flat-to-flat HEXAGON pitch
+  //  (GroundMiniHex.CoarseHexPitchKmForBody, verified): pitch = √(2·areaPerHex/√3) — NOT the
+  //  √(area) square-cell figure — so these km MATCH what the ground resolver actually reads.
+  //  Engine reconciliation: cpr = 2·patchR+1, patchR = round(BaseHexRadius·r/rEarth); to hit
+  //  a ~3 km mini we set BaseHexRadius ≈ 41 (Earth cpr ≈ 83), MaxHexRadius ≈ 43 (the giant
+  //  clamp = potato governor), CityPatchRadius 6 → 24 (mini disk = 49 across).
   const REGIONS=4, EARTH_R_KM=6371;
   const RADIUS_KM={earth:6378, venus:6052, mars:3396, mercury:2440, ganymede:2634, luna:1737};   // sol/*.json radii
-  function patchR(km){ return Math.max(2, Math.min(24, Math.round(12*km/EARTH_R_KM))); }
-  function gridDims(pk){ const R=patchR(RADIUS_KM[pk]||EARTH_R_KM), cpr=2*R+1; return {R, cols:REGIONS*cpr, rows:cpr}; }
-  // The real per-hex distance: the whole surface (4·π·r²) split across cols×rows hexes → the
-  // average width of one hex. This is the movement scale a march cost multiplies against.
-  function hexPitchKm(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, d=gridDims(pk); return Math.round(Math.sqrt(4*Math.PI*r*r/(d.cols*d.rows))); }
-  const state = {planet:"earth", showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
+  const ENGINE_K = Math.sqrt(2*Math.PI/Math.sqrt(3));   // 1.9046 — engine hexagon pitch: opHexKm = ENGINE_K·r/cpr
+  const MINI_RADIUS = 24;                               // CityPatchRadius: the mini-hex disk radius
+  const MINI_ACROSS = 2*MINI_RADIUS+1;                  // 49  (a hex disk is always ODD across; ≤ the 50 cap)
+  const MINI_TILES  = 3*MINI_RADIUS*MINI_RADIUS + 3*MINI_RADIUS + 1;   // 1801 tiles per DEVELOPED op-hex (lazy)
+  const CPR_MAX = 87, CPR_MIN = 5;                      // potato governor (giant clamp) / tiny-moon floor
+  const WINDOW_COLS = 64, WINDOW_ROWS = 40;             // the FIXED render window — bounded ⇒ potato-safe on ANY world
+  function opTargetKm(){ return state.miniKm * MINI_ACROSS; }                       // one op-hex = mini × 49
+  function cprFor(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM;
+    return Math.max(CPR_MIN, Math.min(CPR_MAX, Math.round(ENGINE_K*r/opTargetKm()))); }
+  function gridDims(pk){ const cpr=cprFor(pk); return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
+  function opHexKm(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, d=gridDims(pk);          // realized op-hex pitch (engine formula)
+    return Math.sqrt(2*(4*Math.PI*r*r/(d.cols*d.rows))/Math.sqrt(3)); }
+  function hexPitchKm(pk){ return Math.round(opHexKm(pk)); }                         // rounded op-hex km, for headers/readouts
+  function miniHexKm(pk){ return opHexKm(pk)/MINI_ACROSS; }                          // realized mini pitch (≈ state.miniKm)
+  function opClamped(pk){ return cprFor(pk) >= CPR_MAX; }                            // a giant hit the governor → coarser
+  const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
                  cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
@@ -641,40 +686,42 @@
   }
   const cell=(k,v,badge,extra)=>`<div class="cell"><div class="k"><span>${k}</span><span class="b ${badge}">${badge}</span></div><div class="v">${v} ${extra||""}</div></div>`;
 
-  // ── RENDER: the hex map (flat-top SVG) — FIXED readable hex size; the WINDOW sizes to the world ──
+  // ── RENDER: the operational map — a FIXED WINDOW of the fine grid (this IS the potato trick) ──
+  //   At the new scale Earth is ~332×83 ≈ 27k op-hexes — far too many to draw at once. So (like
+  //   the real client's DrawGlobalHexWindow) we draw a FIXED 64×40 window and pan; render cost is
+  //   the same on Earth or a gas giant. The window is anchored at the N-pole / 180°W corner.
   function renderMap(){
-    const svg=document.getElementById("map");
-    const size=10, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.4).toFixed(1);
-    // No shared frame. Each world draws at its own NATURAL extent: a fixed hex size means Earth's
-    // grid (100×25) makes a big window that scrolls, Luna's (28×7) a small one that fits — the
-    // window grows/shrinks with the planet instead of shrinking the hexes into one Earth-sized box.
-    const W=hx*(state.cols-1)+w+8, H=h*state.rows+h/2+8;
+    const svg=document.getElementById("map"), pk=state.planet;
+    const size=8, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.35).toFixed(1);
+    const winCols=Math.min(state.cols, WINDOW_COLS), winRows=Math.min(state.rows, WINDOW_ROWS);
+    const c0=0, r0=0;
+    const W=hx*(winCols-1)+w+8, H=h*winRows+h/2+8;
     svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H.toFixed(1)}`);
     svg.setAttribute("width", W.toFixed(0));
     svg.setAttribute("height", H.toFixed(0));
     let s="";
-    state.hexes.forEach((hex,i)=>{
-      const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
+    for(let c=c0;c<c0+winCols;c++) for(let r=r0;r<r0+winRows;r++){
+      const i=c*state.rows+r, hex=state.hexes[i]; if(!hex) continue;
+      const cx=4+size+(c-c0)*hx, cy=4+size+(r-r0)*h+(c%2?h/2:0);
       const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       const f=FEAT[hex.terr]||FEAT.barren;
       const selc = state.sel===i?' sel':'';
-      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.4" data-i="${i}" class="${selc}"/>`;
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.35" data-i="${i}" class="${selc}"/>`;
       const hz=hazardsAt(hex);                       // respects the weather/night toggles inside
       let icon="";
-      // night shadow (rotation) — drawn first, under the hazard tints
       if(state.showNight && isNight(hex)) s+=`<polygon points="${pts.join(' ')}" fill="#0a1730" opacity="0.40" pointer-events="none"/>`;
       if(state.showHaz){
         const live=hz.filter(z=>z.kind==="attrition");
         const localLive=live.filter(z=>z.scope==="local"), worldLive=live.filter(z=>z.scope==="world");
-        if(worldLive.length && !localLive.length)    // whole-planet fact → faint uniform tint
+        if(worldLive.length && !localLive.length)
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.09" pointer-events="none"/>`;
-        if(localLive.length){                         // a danger on the ground → strong tint + its icon
+        if(localLive.length){
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.30" pointer-events="none"/>`;
           icon=localLive[0].icon;
         }
       }
-      if(state.showWeather){                           // a rolling storm overhead → blue tint
+      if(state.showWeather){
         const sight=hz.filter(z=>z.kind==="sensor" && z.name!=="Night");
         if(sight.length){
           s+=`<polygon points="${pts.join(' ')}" fill="var(--theory)" opacity="0.24" pointer-events="none"/>`;
@@ -682,17 +729,18 @@
         }
       }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
-    });
+    }
     svg.innerHTML=s;
-    // event delegation (one handler, not ~2500) — a big world has thousands of hexes now
     svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
       if(di!=null){ state.sel=+di; renderMap(); renderReadout();
         const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
-    const rr=document.getElementById("regionrow");     // region banner scrolls WITH the map, matches its width
-    rr.style.width = W.toFixed(0)+"px";
-    rr.innerHTML = Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
+    // window-position bar (a window is a THEATRE, not the whole globe)
+    const rr=document.getElementById("regionrow"); rr.style.width=W.toFixed(0)+"px";
+    const pct=Math.round(100*winCols/state.cols);
+    rr.innerHTML = `<span>◀ operational window · cols ${c0}–${c0+winCols} of ${state.cols} · rows ${r0}–${r0+winRows} of ${state.rows} · ~${pct}% of the planet · the game pans this FIXED ${WINDOW_COLS}×${WINDOW_ROWS} window — it never draws all ${(state.cols*state.rows).toLocaleString()} ▶</span>`;
+    const pol=document.getElementById("poles"); if(pol) pol.innerHTML = `<span>N pole</span><span>row ${Math.floor(winRows/2)}</span><span>row ${winRows}/${state.rows}</span>`;
     const gd=document.getElementById("griddim");
-    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${state.cols*state.rows} hexes · 1 hex ≈ ${hexPitchKm(state.planet)} km across`;
+    if(gd) gd.textContent = `grid ${state.cols}×${state.rows} ≈ ${(state.cols*state.rows).toLocaleString()} op-hexes · 1 op-hex ≈ ${hexPitchKm(pk)} km · 1 mini ≈ ${miniHexKm(pk).toFixed(1)} km${opClamped(pk)?' · ⚠ governor-clamped':''}`;
     renderLegend();
   }
 
@@ -721,8 +769,8 @@
   // ── MICRO-HEXES: zoom into one operational hex → its fine city / mini-hex sub-grid ──
   //    (the game's CityGrid / mini-hex zoom; v1 inherits the theatre terrain, M4 = per-tile
   //    variation — the patches here are illustrative of that finer layer.)
-  function microTiles(hex){
-    const R=3, tiles=[]; let seed=(hex.c*131+hex.r*17+state.planet.length*7)&0x7fffffff;
+  function microTiles(hex, R){
+    R = R||MINI_RADIUS; const tiles=[]; let seed=(hex.c*131+hex.r*17+state.planet.length*7)&0x7fffffff;
     const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
     const rel={ plains:["plains","plains","forest","coast"], forest:["forest","forest","plains","jungle"],
       jungle:["jungle","jungle","forest","wetland"], desert:["desert","desert","barren","plains"],
@@ -736,18 +784,21 @@
     return tiles;
   }
   function renderMicro(hex){
-    const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex), size=11, sq3=Math.sqrt(3);
+    // The REAL mini-hex grid: a 49-across disk (CityPatchRadius 24 → 1,801 tiles), each ≈ 3 km.
+    const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex, MINI_RADIUS), sq3=Math.sqrt(3);
+    const size=Math.max(3, 320/(1.5*MINI_ACROSS));   // shrink to fit the panel — the fine texture IS the point
     let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
     const pos=tiles.map(t=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2); minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y); return {t,x,y}; });
-    const pad=size+3, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
+    const pad=size+2, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
     let s="";
     pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad, pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
-      s+=`<polygon points="${pts.join(' ')}" fill="var(${(FEAT[t.terr]||FEAT.barren).col})" stroke="var(--sunk)" stroke-width="1"><title>${(FEAT[t.terr]||{name:t.terr}).name}</title></polygon>`;
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${(FEAT[t.terr]||FEAT.barren).col})" stroke="var(--sunk)" stroke-width="0.4"/>`;
     });
-    return `<div class="micro"><div class="mh"><span>▽ Micro-hex zoom — inside this <b>${f.name}</b> theatre</span><span><b>${tiles.length}</b> tiles</span></div>
-      <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Micro-hex sub-grid">${s}</svg>
-      <div class="cap">The game's city / mini-hex sub-grid — each building sits 1:1 on a tile. v1 inherits the theatre's terrain; per-tile variation (M4) is the future slice, so these patches are illustrative.</div></div>`;
+    const mk=miniHexKm(state.planet).toFixed(1);
+    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> op-hex</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
+      <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Mini-hex sub-grid">${s}</svg>
+      <div class="cap">The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, where units actually fight, each ≈ <b>${mk} km</b> across. Bounded at <b>≤50 across</b> (${MINI_ACROSS} realized) so a weak PC survives, and built LAZILY only for a developed op-hex. v1 inherits the theatre terrain; per-tile variation (M4) is the future slice.</div></div>`;
   }
 
   // ── RENDER: the readout panel ──
@@ -773,7 +824,7 @@
     let html =
       `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1} · ${night?'🌙 night':'☀ day'}</div>
        <div class="loc">${f.name} — ${f.cls} terrain</div>
-       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure} · <b style="color:var(--ink)">1 hex ≈ ${hexPitchKm(state.planet)} km across</b></div>`;
+       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure} · <b style="color:var(--ink)">op-hex ≈ ${hexPitchKm(state.planet)} km · mini ≈ ${miniHexKm(state.planet).toFixed(1)} km</b></div>`;
 
     html += renderMicro(hex);      // ▽ the micro-hex sub-grid (immediate visible response to a tap)
 
@@ -783,7 +834,8 @@
       <div class="row"><span>Artillery here</span><b class="${tc.arty>1?'up':(tc.arty<1?'dn':'')}">×${tc.arty.toFixed(2)}</b></div>
       <div class="row"><span>Infantry here</span><b>×1.00</b></div>
       <div class="row"><span>March cost</span><b class="${tc.move>1?'dn':''}">×${tc.move.toFixed(1)}${f.crossRough?' (ice)':''}</b></div>
-      <div class="row"><span>Hex span (avg)</span><b>≈ ${hexPitchKm(state.planet)} km · so ≈ ${Math.round(hexPitchKm(state.planet)*tc.move)} km-equiv to cross</b></div>
+      <div class="row"><span>Op-hex span</span><b>≈ ${hexPitchKm(state.planet)} km · ≈ ${Math.round(hexPitchKm(state.planet)*tc.move).toLocaleString()} km-equiv to cross</b></div>
+      <div class="row"><span>Mini-hex (fight tile)</span><b>≈ ${miniHexKm(state.planet).toFixed(1)} km · ${MINI_ACROSS} across (≤50)</b></div>
       </div>`;
 
     if(liveHaz.length){
@@ -841,7 +893,43 @@
 
   const coord=(h)=>`Q${String(h.c).padStart(2,'0')} R${h.r}`;
 
-  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); }
+  // ── RENDER: the grid-scale + potato-budget panel (the heart of the mini-anchored model) ──
+  function renderScalePanel(){
+    const el=document.getElementById("scalepanel"); if(!el) return;
+    const pk=state.planet, p=PLANETS[pk], d=gridDims(pk), r=RADIUS_KM[pk]||EARTH_R_KM;
+    const op=opHexKm(pk), total=d.cols*d.rows, mini=miniHexKm(pk), circ=2*Math.PI*r;
+    const dialBtn=(km)=>`<button data-mini="${km}" aria-pressed="${state.miniKm===km}">${km} km</button>`;
+    let html = `<div class="sph">
+        <div class="tt">Grid scale — the mini-hex is the anchor; the <b>op-hex count scales per planet</b></div>
+        <div class="dial">mini-hex size: ${dialBtn(3)}${dialBtn(5)}</div>
+      </div>`;
+    html += `<div class="ladder">
+      <div class="rung"><div class="rk">Region (¼ planet)</div><div class="rv">${Math.round(circ/4).toLocaleString()} km</div><div class="rs">4 longitude bands · the strategic glance</div></div>
+      <div class="rung"><div class="rk">Operational hex</div><div class="rv">≈ ${Math.round(op)} km</div><div class="rs">${total.toLocaleString()} on ${p.name} · where a battle happens${opClamped(pk)?' · ⚠ clamped':''}</div></div>
+      <div class="rung hi"><div class="rk">Mini hex (fight tile)</div><div class="rv">≈ ${mini.toFixed(1)} km</div><div class="rs">${MINI_ACROSS} across (≤50) · ${MINI_TILES.toLocaleString()} tiles · the anchor</div></div>
+    </div>`;
+    html += `<div class="scroll"><table class="pt"><thead><tr><th>World</th><th>radius</th><th>op-hex</th><th>op grid</th><th>op-hexes</th><th>mini</th></tr></thead><tbody>`;
+    Object.entries(PLANETS).forEach(([k,pp])=>{
+      const dd=gridDims(k), t=dd.cols*dd.rows, o=opHexKm(k), m=miniHexKm(k);
+      html += `<tr class="${k===pk?'cur':''}"><td>${pp.name}</td><td>${(RADIUS_KM[k]||0).toLocaleString()} km</td><td>${Math.round(o)} km</td><td>${dd.cols}×${dd.rows}</td><td>${t.toLocaleString()}${opClamped(k)?' ⚠':''}</td><td>${m.toFixed(1)} km</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    const saveMB=(total*300/1e6);
+    html += `<div class="budget">
+      <div class="bcard"><div class="bk">Render / frame</div><div class="bvv">${(WINDOW_COLS*WINDOW_ROWS).toLocaleString()} hexes — FIXED</div><div class="bd">A ${WINDOW_COLS}×${WINDOW_ROWS} window — the same on Earth or a gas giant. Never grows with the planet.</div></div>
+      <div class="bcard"><div class="bk">Mini per fight</div><div class="bvv">${MINI_TILES.toLocaleString()} tiles — CAPPED</div><div class="bd">The ≤50-across ceiling, built LAZILY only for an op-hex actually being fought in.</div></div>
+      <div class="bcard"><div class="bk">Op-hexes stored · ${p.name}</div><div class="bvv">${total.toLocaleString()} — lazy DATA</div><div class="bd">Cheap terrain bytes, O(1) lookup, generated only where there's action — not a per-frame cost.</div></div>
+      <div class="bcard warn"><div class="bk">Save size (rough)</div><div class="bvv">≈ ${saveMB.toFixed(1)} MB / body</div><div class="bd">Needs the per-hex trim guard (③) or the disk path near-doubles it.</div></div>
+    </div>`;
+    html += `<div class="guards"><b>To ship this potato-safe (verified against source), three engine guards ride WITH the constant change:</b>
+      <span class="g">①</span> the client render window must be a FIXED span (modelled here), not "2 region bands" — else it balloons ~9×;
+      <span class="g">②</span> retire the redundant per-region DISK grid (else Earth stores ~39k hexes, not ~${Math.round(total/1000)}k);
+      <span class="g">③</span> trim the heavy per-hex <span class="mono">GroundHex</span> fields + build the grid on develop/survey, not on merely opening the view.
+      The distance, movement, region-band and combat-range math all AUTO-recompute (they read radius + grid dims) — no change needed. The rescale is <b>new-game-only</b> (a saved hex (Q,R) would address a different spot after a regrid).</div>`;
+    el.innerHTML = html;
+  }
+
+  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); }
 
   document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
@@ -850,6 +938,11 @@
   document.getElementById("wxAuto").addEventListener("click",e=>{
     if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
     else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
+  });
+  // mini-hex size dial → rescales the whole grid (op-hex count changes to hold the mini size)
+  document.getElementById("scalepanel").addEventListener("click",e=>{
+    const t=e.target, mk=t&&t.getAttribute&&t.getAttribute("data-mini");
+    if(mk!=null){ state.miniKm=+mk; state.sel=null; buildField(); renderAll(); }
   });
 
   buildField(); renderAll();

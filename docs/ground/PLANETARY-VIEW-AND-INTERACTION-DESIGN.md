@@ -409,6 +409,92 @@ no weather system, all magnitudes verified.
 
 ---
 
+## 10a. Grid scale — the mini-hex is the anchor, the op-hex count scales per planet (rev-I, 2026-08-09)
+
+**The developer's rule (plain English):** *"the game needs to be playable on potatoes, so the regional-hex and mini-hex
+numbers change so the regional-hex number can scale large or small enough that the mini-hexes are at most 50, a few km
+across."* This is the DESIGN, verified against source by a blast-radius workflow (6 parallel surveyors + 3 adversarial
+verifiers, all re-checked at file:line).
+
+**The method — fix the finest tile first, derive everything upward.** There are three surface layers: the 4 coarse
+**regions** (strategic glance), the **operational / "regional" hex** (`SurfaceGrid`, where a battle happens), and the
+**mini / "city" hex** (`CityGrid`, the finest tile, where units actually fight). Today they are mis-scaled: an
+operational hex is ~450–486 km and one mini-hex is ~35 km — nowhere near "a few km," and every conventional weapon
+out-ranges its own tile.
+
+The fix pins the **mini-hex** as a real tactical size and BOUNDS it, then derives the rest:
+
+1. **Mini-hex = a few km (default 3 km), grid capped at ≤50 across.** A hex disk is always an ODD number across
+   (`2·R+1`), so `CityPatchRadius = 24` gives **49 across, 1,801 tiles** — the honest realization of "≤50." Both bounds
+   are the **potato ceiling**, and the grid is built LAZILY, only for an op-hex actually being fought in.
+2. **One operational hex is then exactly `mini × 49` wide** (≈147 km at 3 km) — so its city tiling comes out at 49
+   across by construction.
+3. **The operational grid dims scale per planet to hold that size.** Hex real size uses the engine's own flat-to-flat
+   HEXAGON pitch — `pitch = √(2·areaPerHex/√3) = ENGINE_K·r/cpr` with `ENGINE_K = √(2π/√3) ≈ 1.9046`
+   (`GroundMiniHex.CoarseHexPitchKmForBody`) — **not** the `√(area)` square-cell figure, which is ~7.5% smaller
+   (the rev-H readout used the wrong one; rev-I corrects it). Solve `colsPerRegion = round(ENGINE_K·r / opTargetKm)`;
+   then `cols = 4·cpr`, `rows = cpr`. **Big world → many op-hexes, small moon → few** ("large or small enough").
+4. **Engine reconciliation:** `cpr = 2·patchR+1`, `patchR = round(BaseHexRadius·r/rEarth)`, so `BaseHexRadius ≈ 41`
+   (Earth `patchR 41`), `MaxHexRadius 24 → ≈ 43` (the giant clamp = **potato governor**: a gas giant coarsens instead
+   of exploding — its mini-hex grows past 3 km, the intended flex), `CityPatchRadius 6 → 24`.
+
+**The per-planet table (3 km mini, engine hexagon pitch):**
+
+| World | radius | op-hex | op grid | op-hexes | mini-hex |
+|-------|-------:|-------:|--------:|---------:|---------:|
+| Earth | 6,378 km | ≈146 km | 332×83 | 27,556 | 2.99 km |
+| Venus | 6,052 km | ≈148 km | 312×78 | 24,336 | 3.02 km |
+| Mars | 3,396 km | ≈147 km | 176×44 | 7,744 | 3.00 km |
+| Ganymede | 2,634 km | ≈148 km | 136×34 | 4,624 | 3.01 km |
+| Mercury | 2,440 km | ≈145 km | 128×32 | 4,096 | 2.96 km |
+| Luna | 1,737 km | ≈144 km | 92×23 | 2,116 | 2.94 km |
+
+*(The **5 km** alternate keeps op-hexes at 250 km and drops Earth to 200×50 = 10,000 — ~2.8× lighter. It's the dial in
+the prototype; pick it if the local build shows save size biting.)*
+
+**Why this is potato-safe (the budget, verified) — three things stay bounded no matter the planet:**
+
+- **Render / frame is a FIXED window.** The client draws a bounded sliding window (`DrawGlobalHexWindow`), not the whole
+  grid — so Earth (27,556) and a gas giant cost the **same** to draw. ⚠ **Required change:** today the window is sized
+  to *"2 region bands"* (`winCols = 2·colsPerRegion+1`), which balloons ~9× to ~11,000 hexes/frame at the finer grid;
+  it must be a **fixed span** (e.g. 64×40 ≈ 2,560), independent of `colsPerRegion`. The prototype models the fixed
+  window.
+- **Mini cost is CAPPED** at 1,801 tiles per developed op-hex (the ≤50-across ceiling) and lazy — bounded by *activity*,
+  not planet size.
+- **Op-hexes are lazy DATA** — cheap terrain bytes, O(1) `HexAt` lookup, generated only where there's action; not a
+  per-frame cost.
+
+**What auto-recomputes for free (no code change):** per-hex real distance and crossing time, the region-band math
+(`RegionOfColumn`/`BandCentreColumn`, `cols` stays divisible by `regionCount`), unit march speed, and the whole ground
+**combat-range gate** — all read `(radius, cols, rows)` and rescale automatically. Finer hexes are in fact the **fix**
+for "weapons out-range the whole map": at a 3 km mini-hex a tank cannon (4 km) spans ~1 tile, a laser (20 km) ~7, tube
+artillery (30 km) ~10 — the built range-layering finally becomes visible.
+
+**The three engine guards that must ship WITH the constant change (from the adversarial verify):**
+
+1. **Fixed render window** (above) — else the per-frame draw balloons ~9× and it is NOT potato-safe.
+2. **Retire the redundant per-region DISK grid** (`PlanetHexFactory.EnsureHexesForBody`) — it shares the same constants,
+   so it *also* scales ~9× and would store ~16,900 disk hexes ON TOP of the 27,556 cylinder hexes (a ~1.75× undercount
+   if left live). Cheapest save-size win.
+3. **Trim the heavy per-hex `GroundHex` payload** (the always-serialized `Masked<long>` deposit-assay block + the
+   always-allocated empty `List<int>` installation list) to non-default-only, **and** build the grid on
+   *develop/survey*, not on merely *opening the planet view* (today an open persists the whole cylinder; a zoom persists
+   a 1,801-tile city with nothing built).
+
+**Save-load:** the constants embed no dims, so **new games are clean**; the hazard is that a stored hex `(Q,R)` addresses
+a different physical spot after a regrid, so the rescale is **new-game-only** (or needs a migration step). Trimming the
+per-hex fields is a serialization-shape change ⇒ also new-game-only / version-gated (root gotcha L3).
+
+**Prototype (`planetview.html` rev-I):** the operational map is now a **fixed 64×40 window** of the fine grid
+(anchored at the N-pole / 180°W corner) — the same size on Earth or Luna, the potato mechanism made visible; a
+**Grid-scale & potato-budget panel** shows the three-rung ladder (Region → op-hex → mini-hex), the per-planet table,
+the budget cards, and the three guards, with a **mini-hex-size dial** (3 km / 5 km) that rescales the whole grid live;
+the tap **mini-hex zoom** renders the true 49-across / 1,801-tile / ~3 km grid; and the readouts carry both the op-hex
+(~146 km) and mini-hex (~3 km) distances. Verified headless (engine-pitch ratio 1.0746, per-planet cpr, bounded window,
+dial rescale, regressions) + Playwright (0 console errors, identical window width Earth vs Luna).
+
+---
+
 ## 11. The five questions — the developer's rulings (2026-08-09)
 
 The first cut left these five as "open, recommend X"; the second cut answered them against source. **The developer is now
