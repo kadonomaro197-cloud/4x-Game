@@ -366,7 +366,17 @@ What it does:
   (hot→volcanic/desert, cold→ice/barren, temperate→forest/plains) — labeled "procedural (representative)" because the
   game's exact layout is a per-save RNG seed.
 - **A clickable operational hex band** (36 columns × 9 rows = one full pole-to-pole wrap, banded into the 4 regions),
-  ocean impassable, ice handled, a ☣ marker on hexes carrying a live attrition hazard.
+  ocean impassable, ice handled, per-hex hazard icons (🔥/❄/⚗), rolling storm cells (🌀), and a **day/night terminator**
+  that sweeps by rotation.
+- **Rolling environments + day/night (rev-F).** All the atmospheric menaces roll (fire/acid storms too, not just
+  dust/ash/lightning), born from source terrain and drifting by the planet's `AxialTilt` spin; the day/night terminator
+  sweeps on every world (airless included). Controls: 🌀 Roll · ▶ Auto-roll · toggles for hazards / weather / day-night.
+- **Micro-hex zoom (rev-F).** Tapping an operational hex opens its **micro-hex sub-grid** (the game's city / mini-hex
+  layer — a 37-tile disk inheriting the theatre's terrain, M4 per-tile variation illustrated) right in the readout, so a
+  tap always produces a visible zoom-in (the readout also scrolls into view on a narrow screen — the "I tap and see
+  nothing" fix).
+- **A comprehensive legend** — terrain swatches, the ground-hazard icons, the rolling-storm + night overlays, and the
+  LIVE/DATA/THEORY grade key.
 - **An engagement readout** — click a hex and it shows the two live layers (the terrain block with its real
   `GroundTerrain.cs` numbers; the surface attrition with its real `PlanetEnvironmentFactory.cs` per-hour magnitudes and
   the sealed-vs-unsealed bleed), the DATA overlays (generated-but-inert SensorJam storms), a boxed THEORY note, and a
@@ -450,6 +460,15 @@ passes.
 C, the wrapping cylinder, `AxialTilt` for direction, `LengthOfDay` available for speed) all exist, so the engine build
 is a small storm-cell processor (hourly, like the other hazard processors) that spawns from source terrain and drifts
 by rotation. Emergent, data-driven, no authoring — exactly the pattern the rest of the surface already follows.
+
+*Extended (rev-F, developer follow-up "make the OTHER environments roll too + a day/night cycle"):* the rolling now
+covers **every atmospheric menace** the world breeds — **fire tornadoes and acid superstorms roll**, not just the
+sight-storms — each still born from its source terrain (ruling C) and spreading downwind; a hex it rolls over picks up
+that attrition *temporarily* on top of its terrain baseline. And a **day/night terminator** was added: it's the same
+emergent idea one layer up — the whole planet's lit hemisphere, sweeping by rotation (so it runs on **airless worlds
+too**, Mercury's stark day/night included), cutting detection on the dark side. Both are driven by `AxialTilt`/rotation,
+both wrap the seam. So the surface is a living hazard-scape: storms and night roll across it, and with Q1 they change a
+fight live and then clear.
 
 ### Q4 — Do sealed/hardened components close the condition→answer loop? → **Half-closed, and this is the one real gap.**
 Verified: the **sealed-systems** component (`GroundSealAtb`) is real and live — one `Sealing` dial folds into

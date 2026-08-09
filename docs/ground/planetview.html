@@ -84,7 +84,7 @@
   .maphead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
   .maphead .t{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-soft)}
   .maphead .t b{color:var(--ink)}
-  .poles{display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;position:absolute;left:2px;top:52px;bottom:74px}
+  .poles{display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;position:absolute;left:2px;top:52px;bottom:74px;pointer-events:none}
   .regionrow{display:flex;gap:0;margin:0 0 4px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
   .regionrow span{flex:1;text-align:center;padding:2px 0;border-bottom:2px solid var(--line-strong)}
   svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
@@ -97,6 +97,25 @@
   .tbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
   .legend{display:flex;gap:5px 12px;flex-wrap:wrap;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
   .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  /* comprehensive legend */
+  .biglegend{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:5px}
+  .lgrow{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
+  .lgh{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;font-size:9.5px;min-width:74px;font-weight:700}
+  .lg{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .lg i{display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid var(--line-strong)}
+  .lg i.tint{border:none;border-radius:3px}
+  .tint.amber{background:var(--accent);opacity:.55} .tint.blue{background:var(--theory);opacity:.6} .tint.night{background:#0a1730;opacity:.85}
+  .lg b{font-size:11px}
+  .lg b.gr{font-weight:800;font-size:9px;padding:1px 4px;border-radius:4px}
+  b.gr.LIVE{background:var(--live-bg);color:var(--live)} b.gr.DATA{background:var(--data-bg);color:var(--data)} b.gr.THEORY{background:var(--theory-bg);color:var(--theory)}
+  /* micro-hex sub-grid (zoom into a tapped hex) */
+  .micro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:2px}
+  .micro .mh{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .micro .mh b{color:var(--ink)}
+  svg.microsvg{width:100%;height:auto;display:block}
+  svg.microsvg polygon{cursor:pointer}
+  svg.microsvg polygon:hover{filter:brightness(1.15)}
+  .micro .cap{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
 
   /* readout panel */
   .readout{background:var(--panel);padding:16px 17px;min-width:0}
@@ -182,10 +201,11 @@
         <div class="maptools">
           <button class="tbtn" id="hazToggle" aria-pressed="true">☣ Ground hazards</button>
           <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather</button>
-          <button class="tbtn" id="wxRoll">🌀 Roll weather</button>
+          <button class="tbtn" id="nightToggle" aria-pressed="true">🌙 Day/night</button>
+          <button class="tbtn" id="wxRoll">🌀 Roll</button>
           <button class="tbtn" id="wxAuto" aria-pressed="false">▶ Auto-roll</button>
-          <div class="legend" id="legend"></div>
         </div>
+        <div class="biglegend" id="biglegend"></div>
       </div>
       <aside class="readout" id="readout">
         <div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>
@@ -481,7 +501,14 @@
 
   // ── STATE ── grid mirrors the game: cols = 4×(rows) proportion, row 0 = N pole.
   const COLS=36, ROWS=9, REGIONS=4;
-  const state = {planet:"earth", showHaz:true, showWeather:true, sel:null, hexes:[], storms:[], weatherStep:0, autoTimer:null};
+  const state = {planet:"earth", showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[], storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
+
+  // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
+  HAZ.night = {name:"Night", effect:"SensorJam", kind:"sensor", mag:0.7, grade:"THEORY", scope:"world", icon:"🌙",
+               blurb:"The dark side — detection is cut until the terminator rolls past and the sun comes up."};
+  // Which local kinds are ATMOSPHERIC (can roll on the wind). Cryo is a cold surface, not a
+  // wind-borne storm, so it stays a terrain-fixed baseline; fire/acid/dust/ash/lightning roll.
+  const ATMOSPHERIC = {fire:1, corrosive:1, dust:1, ash:1, lightning:1};
 
   // ── WEATHER (Q3 ruling A + emergent DRIFT) ───────────────────────────────────
   //    A storm is not placed — it is BORN over its source terrain (dust off desert,
@@ -491,7 +518,11 @@
   //    worlds have no air → no weather. The SensorJam effect is ruling A (wire it into
   //    combat); the MOVEMENT is the design answer to "can storms roll?" — graded DESIGN.
   function windDir(p){ return (p.axialTilt!=null && p.axialTilt>90) ? -1 : 1; }   // −1 = west
-  function stormKindsFor(p){ return (p.localHaz||[]).filter(k=>HAZ[k] && HAZ[k].kind==="sensor"); }
+  // Every ATMOSPHERIC menace the world breeds rolls on the wind — fire tornadoes and acid
+  // superstorms included, not just the sight-storms (the developer's "make the other
+  // environments roll too"). Needs air; airless worlds have no rolling weather (but still
+  // rotate → day/night below).
+  function stormKindsFor(p){ return p.hasWind ? (p.localHaz||[]).filter(k=>ATMOSPHERIC[k]) : []; }
   let _wseed=20260809;
   function wrnd(){ _wseed=(_wseed*1103515245+12345)&0x7fffffff; return (_wseed>>8)/0x7fffff; }
   function sourceHexesFor(kind){ const ot=HAZ[kind].onTerrain||[]; return state.hexes.filter(h=>ot.indexOf(h.terr)>=0); }
@@ -508,8 +539,10 @@
     for(let i=0;i<n;i++){ const s=spawnStorm(kinds[i%kinds.length]); if(s) state.storms.push(s); }
   }
   function stepWeather(){
-    const p=PLANETS[state.planet]; if(!p.hasWind || !state.storms.length) return;
+    const p=PLANETS[state.planet];
     const dir=windDir(p); state.weatherStep++;
+    state.dayPhase = ((state.dayPhase+dir)%COLS+COLS)%COLS;             // the planet rotates → terminator sweeps
+    if(!p.hasWind || !state.storms.length) return;
     const kinds=stormKindsFor(p);
     state.storms.forEach(s=>{
       s.q=((s.q+dir)%COLS+COLS)%COLS;                                   // drift longitude, wrap the seam
@@ -518,16 +551,24 @@
     });
     state.storms=state.storms.map(s=> s.life>0 ? s : (spawnStorm(kinds[Math.floor(wrnd()*kinds.length)])||s));
   }
-  // the storm (if any) currently over a hex — covers its cell + immediate ring, wrapping.
-  function stormAt(hex){
-    if(!state.showWeather) return null;
+  // the storm kinds currently over a hex — a cell covers its eye + immediate ring, wrapping.
+  function stormsOver(hex){
+    if(!state.showWeather) return [];
+    const out=[];
     for(const s of state.storms){
       const dc=Math.min(Math.abs(s.q-hex.c), COLS-Math.abs(s.q-hex.c));
-      if(dc<=1 && Math.abs(s.r-hex.r)<=1) return HAZ[s.kind];
+      if(dc<=1 && Math.abs(s.r-hex.r)<=1 && out.indexOf(s.kind)<0) out.push(s.kind);
     }
-    return null;
+    return out;
   }
   function isStormEye(hex){ return state.showWeather && state.storms.some(s=>s.q===hex.c && s.r===hex.r); }
+  // Day/night: dayPhase = the sub-solar column; the far quarter-wrap is night. Every world rotates.
+  function isNight(hex){
+    if(!state.showNight) return false;
+    const anti=(state.dayPhase + COLS/2) % COLS;                        // midnight longitude
+    const dc=Math.min(Math.abs(hex.c-anti), COLS-Math.abs(hex.c-anti));
+    return dc < COLS/4;                                                 // the dark half of the planet
+  }
 
   // ── build the hex field — terrain SAMPLED FROM THE REAL MAP (or the procedural rules) ──
   function buildField(){
@@ -546,12 +587,16 @@
     seedStorms();   // storms are born over their source terrain (Q3)
   }
 
-  // Q2 ruling C: whole-planet facts apply to EVERY hex; a local menace appears only on a
-  // hex whose OWN terrain breeds it (the M11 per-hex, from terrain + geography).
+  // Q2 ruling C (whole-planet facts everywhere; local menaces from the hex's own terrain) +
+  // Q3 (the atmospheric ones ROLL) + day/night. A hex's environment = the world facts, its
+  // terrain-fixed baseline, whatever storm is rolling over it right now, and night.
   function hazardsAt(hex){
-    const p=PLANETS[state.planet], out=[];
-    p.worldHaz.forEach(k=>{ if(HAZ[k]) out.push(HAZ[k]); });
-    p.localHaz.forEach(k=>{ const h=HAZ[k]; if(h && h.onTerrain && h.onTerrain.indexOf(hex.terr)>=0) out.push(h); });
+    const p=PLANETS[state.planet], out=[], seen=new Set();
+    const add=(h)=>{ if(h){ const key=h.effect+"|"+h.name; if(!seen.has(key)){ seen.add(key); out.push(h);} } };
+    p.worldHaz.forEach(k=>add(HAZ[k]));                                                        // whole-planet facts
+    p.localHaz.forEach(k=>{ const h=HAZ[k]; if(h && h.onTerrain && h.onTerrain.indexOf(hex.terr)>=0) add(h); }); // terrain baseline
+    stormsOver(hex).forEach(k=>add(HAZ[k]));                                                    // rolling storms overhead
+    if(isNight(hex)) add(HAZ.night);                                                            // the dark side
     return out;
   }
 
@@ -594,33 +639,96 @@
       const f=FEAT[hex.terr]||FEAT.barren;
       const selc = state.sel===i?' sel':'';
       s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.6" tabindex="0" data-i="${i}" class="${selc}"/>`;
+      const hz=hazardsAt(hex);                       // respects the weather/night toggles inside
+      let icon="";
+      // night shadow (rotation) — drawn first, under the hazard tints
+      if(state.showNight && isNight(hex)) s+=`<polygon points="${pts.join(' ')}" fill="#0a1730" opacity="0.40" pointer-events="none"/>`;
       if(state.showHaz){
-        const haz=hazardsAt(hex);
-        const localLive=haz.filter(z=>z.scope==="local" && z.grade==="LIVE");
-        const worldLive=haz.filter(z=>z.scope==="world" && z.grade==="LIVE");
-        if(worldLive.length && !localLive.length)   // whole-planet fact → faint uniform tint
+        const live=hz.filter(z=>z.kind==="attrition");
+        const localLive=live.filter(z=>z.scope==="local"), worldLive=live.filter(z=>z.scope==="world");
+        if(worldLive.length && !localLive.length)    // whole-planet fact → faint uniform tint
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.09" pointer-events="none"/>`;
-        if(localLive.length){                        // per-hex menace → strong tint + its icon
+        if(localLive.length){                         // a danger on the ground → strong tint + its icon
           s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.30" pointer-events="none"/>`;
-          s+=`<text x="${cx.toFixed(1)}" y="${(cy+3.2).toFixed(1)}" font-size="9.5" text-anchor="middle" pointer-events="none">${localLive[0].icon}</text>`;
+          icon=localLive[0].icon;
         }
       }
-      // moving weather (Q3): a drifting storm cell tints blue; its eye carries the icon
-      if(stormAt(hex)){
-        s+=`<polygon points="${pts.join(' ')}" fill="var(--theory)" opacity="0.26" pointer-events="none"/>`;
-        if(isStormEye(hex)) s+=`<text x="${cx.toFixed(1)}" y="${(cy+3.4).toFixed(1)}" font-size="10" text-anchor="middle" pointer-events="none">🌀</text>`;
+      if(state.showWeather){                           // a rolling storm overhead → blue tint
+        const sight=hz.filter(z=>z.kind==="sensor" && z.name!=="Night");
+        if(sight.length){
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--theory)" opacity="0.24" pointer-events="none"/>`;
+          if(!icon && isStormEye(hex)){ const e=state.storms.find(st=>st.q===hex.c&&st.r===hex.r); if(e) icon=HAZ[e.kind].icon; }
+        }
       }
+      if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+3.3).toFixed(1)}" font-size="9.5" text-anchor="middle" pointer-events="none">${icon}</text>`;
     });
     svg.innerHTML=s;
     svg.querySelectorAll("polygon[data-i]").forEach(pg=>{
-      const act=()=>{ state.sel=+pg.dataset.i; renderMap(); renderReadout(); };
+      const act=()=>{ state.sel=+pg.dataset.i; renderMap(); renderReadout();
+        // fix "I tap a hex and see nothing": on a narrow screen the readout stacks below the
+        // map, so bring it into view on tap.
+        const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"});
+      };
       pg.addEventListener("click",act);
       pg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();act();} });
     });
     document.getElementById("regionrow").innerHTML =
       Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
-    const terrs=[...new Set(state.hexes.map(h=>h.terr))];
-    document.getElementById("legend").innerHTML = terrs.map(t=>`<span><i style="background:var(${(FEAT[t]||FEAT.barren).col})"></i>${(FEAT[t]||{name:t}).name}</span>`).join("");
+    renderLegend();
+  }
+
+  // ── RENDER: the comprehensive legend ──
+  function renderLegend(){
+    const el=document.getElementById("biglegend"); if(!el) return;
+    const p=PLANETS[state.planet];
+    const terrs=[...new Set(state.hexes.map(h=>h.terr))].filter(t=>FEAT[t]);
+    const sw=(c,n)=>`<span class="lg"><i style="background:var(${c})"></i>${n}</span>`;
+    const ic=(g,n)=>`<span class="lg"><b>${g}</b>${n}</span>`;
+    // which live/rolling menaces this world can show
+    const liveKinds=[...new Set([...(p.worldHaz||[]), ...(p.localHaz||[])])].filter(k=>HAZ[k] && HAZ[k].kind==="attrition");
+    const rollKinds=stormKindsFor(p);
+    let html = `<div class="lgrow"><b class="lgh">Terrain</b>${terrs.map(t=>sw(FEAT[t].col, FEAT[t].name)).join("")}</div>`;
+    html += `<div class="lgrow"><b class="lgh">On the ground</b>`;
+    liveKinds.forEach(k=>{ html+=ic(HAZ[k].icon, HAZ[k].name+(HAZ[k].scope==="world"?" (world-wide)":"")); });
+    html += `<span class="lg"><i class="tint amber"></i>attrition zone</span></div>`;
+    html += `<div class="lgrow"><b class="lgh">Rolling &amp; sky</b>`;
+    if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
+    else html+=`<span class="lg" style="opacity:.6">— no weather (airless)</span>`;
+    html += `<span class="lg"><i class="tint night"></i>🌙 night (terminator)</span></div>`;
+    html += `<div class="lgrow"><b class="lgh">Read</b><span class="lg"><b class="gr LIVE">LIVE</b>reads it now</span><span class="lg"><b class="gr DATA">DATA</b>exists, ignored</span><span class="lg"><b class="gr THEORY">THEORY</b>proposed</span></div>`;
+    el.innerHTML = html;
+  }
+
+  // ── MICRO-HEXES: zoom into one operational hex → its fine city / mini-hex sub-grid ──
+  //    (the game's CityGrid / mini-hex zoom; v1 inherits the theatre terrain, M4 = per-tile
+  //    variation — the patches here are illustrative of that finer layer.)
+  function microTiles(hex){
+    const R=3, tiles=[]; let seed=(hex.c*131+hex.r*17+state.planet.length*7)&0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const rel={ plains:["plains","plains","forest","coast"], forest:["forest","forest","plains","jungle"],
+      jungle:["jungle","jungle","forest","wetland"], desert:["desert","desert","barren","plains"],
+      barren:["barren","barren","desert","highlands"], mountains:["mountains","mountains","highlands","barren"],
+      highlands:["highlands","highlands","mountains","barren"], volcanic:["volcanic","volcanic","barren","mountains"],
+      ice:["ice","ice","tundra","barren"], tundra:["tundra","tundra","ice","barren"],
+      coast:["coast","coast","plains","ocean"], wetland:["wetland","wetland","jungle","plains"], ocean:["ocean"] };
+    const pal=rel[hex.terr]||[hex.terr];
+    for(let q=-R;q<=R;q++) for(let r=Math.max(-R,-q-R); r<=Math.min(R,-q+R); r++)
+      tiles.push({q,r,terr: rnd()<0.30 ? pal[Math.floor(rnd()*pal.length)] : hex.terr});
+    return tiles;
+  }
+  function renderMicro(hex){
+    const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex), size=11, sq3=Math.sqrt(3);
+    let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+    const pos=tiles.map(t=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2); minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y); return {t,x,y}; });
+    const pad=size+3, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
+    let s="";
+    pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad, pts=[];
+      for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${(FEAT[t.terr]||FEAT.barren).col})" stroke="var(--sunk)" stroke-width="1"><title>${(FEAT[t.terr]||{name:t.terr}).name}</title></polygon>`;
+    });
+    return `<div class="micro"><div class="mh"><span>▽ Micro-hex zoom — inside this <b>${f.name}</b> theatre</span><span><b>${tiles.length}</b> tiles</span></div>
+      <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Micro-hex sub-grid">${s}</svg>
+      <div class="cap">The game's city / mini-hex sub-grid — each building sits 1:1 on a tile. v1 inherits the theatre's terrain; per-tile variation (M4) is the future slice, so these patches are illustrative.</div></div>`;
   }
 
   // ── RENDER: the readout panel ──
@@ -640,10 +748,15 @@
     const totalBleed=liveHaz.reduce((a,z)=>a+z.mag,0);
     const sealedBleed=liveHaz.reduce((a,z)=>a+(z.sealed?0:z.mag),0);
 
+    const rollingNow=stormsOver(hex);            // storm kinds rolling over this hex right now
+    const night=isNight(hex);
+
     let html =
-      `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1}</div>
+      `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1} · ${night?'🌙 night':'☀ day'}</div>
        <div class="loc">${f.name} — ${f.cls} terrain</div>
        <div class="coord">on ${p.name} · ${p.g} · ${p.pressure}</div>`;
+
+    html += renderMicro(hex);      // ▽ the micro-hex sub-grid (immediate visible response to a tap)
 
     html += `<div class="sect"><div class="sh">Terrain effect <span class="badge LIVE">LIVE · resolver reads it</span></div>
       <div class="row"><span>Defender cover</span><b class="${tc.cover>1?'up':'dn'}">÷${tc.cover.toFixed(2)}</b></div>
@@ -656,8 +769,10 @@
     if(liveHaz.length){
       html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE · bleeds units/hr</span></div>`;
       liveHaz.forEach(z=>{
-        const where = z.scope==="world" ? "world-wide" : "this hex ("+f.name.toLowerCase()+")";
-        html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where}${z.sealed?" · sealed suit exempt":" · no counter built"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
+        const baseline = z.onTerrain ? z.onTerrain.indexOf(hex.terr)>=0 : (z.scope==="world");
+        const rolling = !baseline && rollingNow.some(k=>HAZ[k]===z);
+        const where = z.scope==="world" ? "world-wide" : (rolling ? "🌀 rolled in" : "this hex ("+f.name.toLowerCase()+")");
+        html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where}${z.sealed?" · sealed exempt":" · no counter built"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
       });
       html += `<div class="bleed"><span class="bl">Unsealed unit loses</span><span class="bv">−${totalBleed.toFixed(1)} HP/hr</span></div>`;
       if(sealedBleed!==totalBleed)
@@ -667,17 +782,21 @@
       html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE</span></div><div class="row"><span>No damaging hazard here</span><b class="up">survivable</b></div></div>`;
     }
 
-    if(dataHaz.length){
-      html += `<div class="sect"><div class="sh">Static storm source here <span class="badge DATA">DATA</span></div>`;
-      dataHaz.forEach(z=>{ const where = z.scope==="world" ? "world-wide" : "this terrain breeds it"; html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where} — resolver skips SensorJam today</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
-      html += `</div>`;
+    // rolling weather (sight storms) + the day/night terminator
+    const sensorHaz=haz.filter(z=>z.kind==="sensor");
+    const nightOn=sensorHaz.some(z=>z.name==="Night");
+    const rollSensor=sensorHaz.filter(z=> z.name!=="Night" && rollingNow.some(k=>HAZ[k]===z));
+    const staticSensor=sensorHaz.filter(z=> z.name!=="Night" && !rollingNow.some(k=>HAZ[k]===z));
+    if(rollSensor.length || nightOn){
+      html += `<div class="sect"><div class="sh">Rolling over now <span class="badge THEORY">DESIGN · Q3</span></div>`;
+      rollSensor.forEach(z=>{ html += `<div class="haz" style="border-color:var(--theory)"><div class="hn">${z.icon} ${z.name} <span style="opacity:.7">🌀</span><small>${z.effect} · drifting ${windDir(p)<0?"west ◄":"east ►"} · cuts detection</small></div><div class="hv" style="color:var(--theory)">×${z.mag} sight</div></div>`; });
+      if(nightOn) html += `<div class="haz" style="border-color:var(--theory)"><div class="hn">🌙 Night<small>SensorJam · the terminator is over this hex · cuts detection</small></div><div class="hv" style="color:var(--theory)">×0.7 sight</div></div>`;
+      html += `<div class="tac" style="border-left-color:var(--theory);margin-top:8px"><b>It's moving.</b> Storms are born over their source terrain and roll with ${p.name}'s spin; night sweeps as it rotates. Both pass — with Q1 (per-tick), they change a fight live, then clear.</div></div>`;
     }
-
-    const wx=stormAt(hex);
-    if(wx){
-      html += `<div class="sect"><div class="sh">Weather rolling over now <span class="badge THEORY">DESIGN · Q3</span></div>
-        <div class="haz" style="border-color:var(--theory)"><div class="hn">${wx.icon} ${wx.name} <span style="opacity:.7">🌀</span><small>${wx.effect} · drifting ${windDir(p)<0?"west ◄":"east ►"} · cuts detection where it is</small></div><div class="hv" style="color:var(--theory)">×${wx.mag} sight</div></div>
-        <div class="tac" style="border-left-color:var(--theory);margin-top:8px"><b>It's moving.</b> This storm was born over its source terrain and is rolling with ${p.name}'s spin; it will pass and another may blow in. Wiring the SensorJam cut into the fight is ruling A; the drift is the answer to "can storms roll?" — a blind, close brawl while it's overhead.</div></div>`;
+    if(staticSensor.length){
+      html += `<div class="sect"><div class="sh">Storm SOURCE terrain here <span class="badge DATA">DATA</span></div>`;
+      staticSensor.forEach(z=>{ html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · this terrain breeds it (spawns storms) — resolver skips SensorJam today</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
+      html += `</div>`;
     }
 
     html += `<div class="tac"><b>The fight the engine opens here:</b> ${tacRead(f,tc,liveHaz,totalBleed,sealedBleed)}</div>`;
@@ -706,6 +825,7 @@
 
   document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
+  document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
   document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderReadout(); });
   document.getElementById("wxAuto").addEventListener("click",e=>{
     if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
