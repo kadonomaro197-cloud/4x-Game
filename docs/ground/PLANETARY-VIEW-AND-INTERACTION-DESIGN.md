@@ -333,7 +333,9 @@ the terrain/attrition side and **less** on the rich-multiplier side.
    is per-*region* (seeded + spread); the developer locked **per-hex-from-terrain** for the local menaces (fire on
    volcanic, cryo on ice, acid on lowlands) with world-facts (vacuum/toxic) staying world-wide, and the prototype
    (rev-D) now models exactly that. The M11 build is: derive each local hazard from the hex's own `GroundHex.Terrain`
-   instead of stamping a region band. Transient/moving weather still does not exist (separate, deferred).
+   instead of stamping a region band. **Moving weather is now a greenlit emergent design (§11 Q3):** storms drift from
+   their source terrain by the planet's `AxialTilt` rotation across the wrapping cylinder — the engine build is a small
+   storm-cell processor, not an authored system.
 4. **A body's terrain-climate and its hazard-climate can disagree when it has no atmosphere record** (surfaced building
    the real-map prototype). The terrain generator reads `AtmosphereDB.SurfaceTemperature`, but a body with *no*
    `AtmosphereDB` blob (Mercury, Europa) falls back to a **15 °C default** (`WorldTerrain.ForBody`), so **Mercury renders
@@ -427,14 +429,27 @@ Toxic effectively world-wide. **Ruling C makes per-hex-from-terrain the target**
 derive each local hazard from the hex's `GroundHex.Terrain` instead of stamping a whole region band. The world-wide
 half already matches (airlessness is global); the local half is the M11 engine work this prototype now specifies.
 
-### Q3 — Weather: authored or emergent? → **The engine's established pattern is EMERGENT-from-physics + static; there is no weather system to author.**
-No transient/moving weather exists (verified: no diurnal/storm/day-night system anywhere in the engine). But the engine
-*does* already generate storm-like effects — Dust / Ash / Lightning — **emergently from physics** (dry→dust, tectonic→
-ash, thick-atmosphere→lightning), deterministically at world-gen, and **static**. That's the precedent to follow.
-**The answer:** don't build a new authored-weather system. The cheapest, engine-consistent "weather that matters" is to
-**wire the SensorJam storms the generator already makes into combat** — i.e. make `SensorJam` cut detection range in the
-resolver, the way the design docs propose. That converts a DATA layer into a LIVE one with no new content pipeline.
-(Moving/transient weather remains a separate, larger want — deferred.)
+### Q3 — Weather: authored or emergent, and can storms roll? → 🔒 **LOCKED: A — emergent, wire the generated storms; AND yes, make them MOVE, emergently.**
+**The developer's call (2026-08-09): don't author a weather system — wire the storms the generator *already* makes
+(Dust / Ash / Lightning) into combat (ruling A); and the follow-up they asked for — "is there no way to make this roll?"
+— *yes*, make storms drift across the planet, but keep it emergent, not hand-scripted.**
+
+*The emergent-drift design (built into the prototype, rev-E):* a storm is not placed — it is **born over its source
+terrain** (dust off the desert, ash off a volcano, lightning over the high ground — the same physics that already
+generates it) and then **drifts with the planet's rotation** across the wrapping cylinder grid. The drift direction
+comes from **real data**: a body's `AxialTilt` gives its spin sense — a tilt near 180° means retrograde, so **Venus
+(177°) rolls its storms WEST**, while **Earth/Mars (prograde) roll EAST**; **airless worlds have no air, so no weather**
+(Luna/Mercury/Ganymede stay clear). No authoring, no fluid-sim — a storm's path is a consequence of the world's real
+rotation, and it wraps the seam like everything else on the cylinder. The prototype seeds storm cells, drifts them one
+column per weather-step (a "🌀 Roll weather" / "▶ Auto-roll" control), and reports "weather rolling over now" when a cell
+covers the clicked hex; combined with **Q1 (per-tick reads)**, a storm that rolls over a fight blinds it *live*, then
+passes.
+
+*Grade:* wiring the SensorJam cut into the resolver is **the near-term A build** (a DATA→LIVE flip, no new content). The
+**moving** layer is the **design proposal** the developer greenlit — its ingredients (per-hex storm sources from ruling
+C, the wrapping cylinder, `AxialTilt` for direction, `LengthOfDay` available for speed) all exist, so the engine build
+is a small storm-cell processor (hourly, like the other hazard processors) that spawns from source terrain and drifts
+by rotation. Emergent, data-driven, no authoring — exactly the pattern the rest of the surface already follows.
 
 ### Q4 — Do sealed/hardened components close the condition→answer loop? → **Half-closed, and this is the one real gap.**
 Verified: the **sealed-systems** component (`GroundSealAtb`) is real and live — one `Sealing` dial folds into
