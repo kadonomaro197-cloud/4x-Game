@@ -1087,6 +1087,10 @@
   // ── RENDER: the readout panel ──
   function renderReadout(){
     const el=document.getElementById("readout");
+    // PRESERVE an in-progress float-tag edit across a re-render (weather auto-roll rebuilds this panel every tick)
+    const _ae=document.activeElement;
+    const _keep=(_ae && _ae.id==="tagInput") ? {v:_ae.value, s:_ae.selectionStart, e:_ae.selectionEnd} : null;
+    const _restore=()=>{ if(_keep){ const i=document.getElementById("tagInput"); if(i){ i.value=_keep.v; try{i.setSelectionRange(_keep.s,_keep.e);}catch(_){} i.focus(); } } };
     if(state.sel==null){ el.innerHTML=`<div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>`; return; }
     const hex=state.hexes[state.sel], p=PLANETS[state.planet], f=FEAT[hex.terr]||FEAT.barren;
     if(f.impassable){
@@ -1197,6 +1201,7 @@
     html += `<button class="resolve" onclick="alert('In the full client this opens the ground Auto-Resolver on this hex — pre-loaded with the ${f.cls} terrain block and the surface attrition shown. You then set doctrine (stance + target priority) and watch it resolve. The space resolver stays environment-blind.');">⚔ Resolve a battle here</button>`;
 
     el.innerHTML = html;
+    _restore();   // keep the tag input alive if the user was mid-type when this re-rendered
   }
 
   function tacRead(f,tc,liveHaz,total,sealed){
@@ -1256,10 +1261,11 @@
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
   document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
   document.getElementById("resToggle").addEventListener("click",e=>{ state.showRes=!state.showRes; e.target.setAttribute("aria-pressed",state.showRes); e.target.textContent = state.showRes?"⛏ Resources":"⛏ Resources off"; renderMap(); });
-  document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderReadout(); });
+  const tagEditing=()=>{ const a=document.activeElement; return a && a.id==="tagInput"; };   // don't churn the readout while naming a hex
+  document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); if(!tagEditing()) renderReadout(); });
   document.getElementById("wxAuto").addEventListener("click",e=>{
     if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
-    else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
+    else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); if(!tagEditing()) renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
   });
   // mini-hex size dial → rescales the whole grid (op-hex count changes to hold the mini size)
   document.getElementById("scalepanel").addEventListener("click",e=>{
