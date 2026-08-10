@@ -292,8 +292,8 @@
   </section>
 
   <section class="sec">
-    <h2><span class="n">⌂</span> A self-sufficient city — and why the ground you build on matters</h2>
-    <p class="lead">This is a colony that <b>stands on its own</b>: it houses its people, feeds them, powers itself, and runs a closed <b>extract → refine → fabricate</b> loop from the ore under its feet — no imports. Every building sits <b>1:1 on one tile</b> of the city grid (the engine's <span class="mono">CityTile</span>) and carries one or more production <b>components</b>. That's the key design call (ground ruling #13): the boost rides the <b>component, not the building shell</b> — because Pulsar sums production <b>per component attribute</b> (a farm's <span class="mono">FoodProductionAtbDB</span>, a habitat's <span class="mono">PopulationSupportAtbDB</span>), each already gated by the body's environment. So a <b>mixed-use</b> building boosts each function by its <em>own</em> affinity — watch the <b>Highland Outpost</b>: its mining loves the mountain (+50%) while its housing hates it (×0.70). Real components + real production numbers; the terrain multiplier is the proposal → <b>THEORY</b>. Then hit the demo button to build the Agriculture component on the wrong ground and watch the city starve.</p>
+    <h2><span class="n">⌂</span> A major coastal capital — the regional hex is labelled, the mini-hexes are the city</h2>
+    <p class="lead">This is Earth's <b>capital</b> — the <b>🏛 gold-ringed regional hex on the coastline</b> in the map above. It shows the two-level model you asked for: the <b>regional hex carries the LABEL</b> ("this place is the Capital City"), and its <b>mini-hexes are where the buildings actually sit</b> (the engine's <span class="mono">CityGrid</span> / <span class="mono">CityTile</span> — one building per tile). The city <b>stands on its own</b>: it houses, feeds, powers and supplies its <b>12 M</b> people, running a closed <b>extract → refine → fabricate</b> loop from local ore. And each building's <b>component</b> is boosted by the ground it sits on (ruling #13, on the component, not the shell): the <b>port &amp; campus</b> take the waterfront (coast), the <b>farm</b> the wet delta, the <b>mine</b> the hills — while the mixed <b>Highland Outpost</b> shows why it's per-component (mining +50%, housing ×0.70 on the <em>same</em> mountain tile). Real components + real production; the terrain multiplier is the proposal → <b>THEORY</b>. Hit the demo button to misplace the farm and watch the capital starve.</p>
     <div id="cityhost"></div>
   </section>
 
@@ -327,7 +327,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-L — TWO-TIER RESOURCE DEPOSITS: the regional hex flags that ore is present; the mini-hexes pinpoint the exact ore tiles + tonnage (the roll-up pattern, like buildings M16); on rev-K's self-sufficient city + component-level terrain-affinity, rev-J's resource nodes, rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-M — A LOCATED MAJOR CAPITAL: a temperate-coastline regional hex is LABELLED 🏛 Capital City on the Earth map; its 12 M-colonist self-sufficient city lives on that hex's MINI-hexes — the regional-label / mini-building split the developer specified; on rev-L's two-tier resources, rev-K's component-level terrain-affinity, rev-J's resource nodes, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · the city's buildings + what each produces (food/mining/refining/build/research/pop-support) → <span>GameData/basemod/TemplateFiles/installations.json</span> (food-production / mine / refinery / factory / research-lab / infrastructure) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · self-sufficiency loops (food demand vs output; support vs population) → <span>ColonySustenanceDB / FoodProductionAtbDB / SustenanceProcessor / PopulationProcessor</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -574,9 +574,9 @@
   //    each function by its own affinity. The components + what each produces are REAL (installations.json → LIVE);
   //    only the multiplier is new (THEORY — no building/component terrain-affinity exists in the engine yet).
   const COMP = {
-    housing:  {name:"Habitation",  icon:"🏙", makes:"Pop support",         base:5.0,  fmt:v=>v.toFixed(1)+" M", real:"PopulationSupportAtbDB → GetPopulationSupportValue",
+    housing:  {name:"Habitation",  icon:"🏙", makes:"Pop support",         base:12.0, fmt:v=>v.toFixed(1)+" M", real:"PopulationSupportAtbDB → GetPopulationSupportValue",
                aff:{plains:1.20,coast:1.20,forest:1.10,wetland:1.10,tundra:0.90,desert:0.85,barren:0.85,highlands:0.85,mountains:0.70,volcanic:0.50,ice:0.50}},
-    food:     {name:"Agriculture", icon:"🌾", makes:"Food output",         base:4000, fmt:v=>Math.round(v).toLocaleString()+"/day", real:"FoodProductionAtbDB → GetTotalFoodOutput",
+    food:     {name:"Agriculture", icon:"🌾", makes:"Food output",         base:9000, fmt:v=>Math.round(v).toLocaleString()+"/day", real:"FoodProductionAtbDB → GetTotalFoodOutput",
                aff:{wetland:1.50,plains:1.40,coast:1.25,jungle:1.20,forest:1.15,tundra:0.55,highlands:0.70,mountains:0.50,desert:0.50,barren:0.40,volcanic:0.30,ice:0.10}},
     mining:   {name:"Extraction",  icon:"⛏", makes:"Mineral extraction",  base:250,  fmt:v=>Math.round(v)+"/day", real:"MineResourcesAtbDB → MineResourcesProcessor",
                aff:{mountains:1.50,volcanic:1.40,highlands:1.30,barren:1.15,desert:1.00,tundra:0.80,plains:0.70,forest:0.60,jungle:0.60,coast:0.50,wetland:0.40,ocean:0,ice:0}},
@@ -597,10 +597,10 @@
   //    Outpost is MIXED (mining + a small barracks) — the same tile boosts its mining and penalises its
   //    housing, which is exactly why affinity belongs on the component. The balance math (food vs demand,
   //    support vs population, mine→refine→build) is what the engine computes; population is a demo figure.
-  const CITY_POP = 5.0, FOOD_PER_M = 1000;   // M colonists; food units/day demanded per M (demo calibration)
+  const CITY_POP = 12.0, FOOD_PER_M = 1000;  // M colonists (a MAJOR capital); food units/day demanded per M
   // comps: production components on this building. s = a component's scale (default 1).
   const CITY = [
-    {q:0,r:0,  terr:"plains",    name:"Colony Hub",      icon:"🏙", comps:[{c:"housing"}]},
+    {q:0,r:0,  terr:"plains",    name:"Capitol District", icon:"🏙", comps:[{c:"housing"}]},
     {q:1,r:0,  terr:"plains",    name:"Fabricator",      icon:"🏗", comps:[{c:"build"}]},
     {q:1,r:-1, terr:"highlands", name:"Mine",            icon:"⛏", comps:[{c:"mining"}]},
     {q:0,r:-1, terr:"highlands"},
@@ -612,11 +612,11 @@
     {q:2,r:-2, terr:"volcanic"},
     {q:1,r:-2, terr:"mountains", name:"Highland Outpost", icon:"⛏", mixed:true, comps:[{c:"mining"},{c:"housing",s:0.2}]},
     {q:0,r:-2, terr:"tundra"},
-    {q:-1,r:-1,terr:"plains"},
+    {q:-1,r:-1,terr:"coast"},
     {q:-2,r:0, terr:"ocean"},
-    {q:-2,r:1, terr:"coast"},
+    {q:-2,r:1, terr:"ocean"},
     {q:-2,r:2, terr:"ocean"},
-    {q:-1,r:2, terr:"forest"},
+    {q:-1,r:2, terr:"coast"},
     {q:0,r:2,  terr:"forest"},
   ];
   const cityState = {sel:null, misplace:false};   // misplace = the "what if you build the farm wrong" demo
@@ -710,6 +710,7 @@
   function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
   const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, showRes:true, sel:null, hexes:[],
                  cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
+  let capital=null;   // the REGIONAL hex labelled "Capital City" on Earth (its buildings sit on its mini-hexes)
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
   HAZ.night = {name:"Night", effect:"SensorJam", kind:"sensor", mag:0.7, grade:"THEORY", scope:"world", icon:"🌙",
@@ -823,6 +824,24 @@
     });
   }
 
+  // ── REGIONAL-HEX LABELS: a regional hex can be designated a "Thing" (Capital City, Mining District…) — the
+  //   coarse "what is this place" tag. The buildings live on its MINI-hexes (the CityGrid). Here we pick a
+  //   temperate COASTLINE for the capital (harbour + hinterland, the classic capital site), deterministic on
+  //   Earth's fixed display grid. The label is a strategic annotation the player assigns; the substrate is real
+  //   (a regional hex carries InstallationIds + a NameDB, its CityGrid holds the buildings — the M16 roll-up).
+  function findCapitalHex(){
+    const nAt=(c,r)=> (r>=0 && r<state.rows) ? state.hexes.find(h=>h.c===((c%state.cols+state.cols)%state.cols) && h.r===r) : null;
+    const cands=state.hexes.filter(h=>{ const latDeg=90-180*(h.r/(state.rows-1)); return h.terr==="coast" && Math.abs(latDeg)>=25 && Math.abs(latDeg)<=55; });
+    if(!cands.length) return null;
+    const score=h=>{ let water=0,land=0; const latDeg=90-180*(h.r/(state.rows-1));   // a REAL shoreline (harbour + hinterland)…
+      for(let dc=-1;dc<=1;dc++)for(let dr=-1;dr<=1;dr++){ if(!dc&&!dr)continue; const n=nAt(h.c+dc,h.r+dr); if(!n)continue;
+        if(n.terr==="ocean"||n.terr==="coast") water++; else if(TWEIGHT[n.terr]>0) land++; }
+      return (water>0&&land>0?100:0) - Math.abs(Math.abs(latDeg)-40)*0.8 - Math.abs(h.c/state.cols-0.20)*8; };   // …prefer ~40° temperate, a chosen longitude
+    cands.sort((a,b)=>score(b)-score(a));
+    return cands[0];
+  }
+  function isCapital(hex){ return state.planet==="earth" && capital && hex.c===capital.c && hex.r===capital.r; }
+
   // Q2 ruling C (whole-planet facts everywhere; local menaces from the hex's own terrain) +
   // Q3 (the atmospheric ones ROLL) + day/night. A hex's environment = the world facts, its
   // terrain-fixed baseline, whatever storm is rolling over it right now, and night.
@@ -905,6 +924,12 @@
         s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.42).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
         s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="none" stroke="${m.col}" stroke-width="${(size*0.15).toFixed(1)}" pointer-events="none"/>`;
       }
+      if(isCapital(hex)){                              // the REGIONAL-hex LABEL: 🏛 Capital City (a gold-ringed civic marker)
+        s+=`<polygon points="${pts.join(' ')}" fill="#e0a63a" opacity="0.22" pointer-events="none"/>`;
+        s+=`<polygon points="${pts.join(' ')}" fill="none" stroke="#e0a63a" stroke-width="2.3" pointer-events="none"/>`;
+        s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.34).toFixed(1)}" font-size="${(size*1.05).toFixed(0)}" text-anchor="middle" pointer-events="none">🏛</text>`;
+        icon="";                                       // the civic marker owns this hex — no hazard glyph on top
+      }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
     });
     svg.innerHTML=s;
@@ -932,7 +957,9 @@
     let html = `<div class="lgrow"><b class="lgh">Terrain</b>${terrs.map(t=>sw(FEAT[t].col, FEAT[t].name)).join("")}</div>`;
     html += `<div class="lgrow"><b class="lgh">On the ground</b>`;
     liveKinds.forEach(k=>{ html+=ic(HAZ[k].icon, HAZ[k].name+(HAZ[k].scope==="world"?" (world-wide)":"")); });
-    html += `<span class="lg"><i class="tint amber"></i>attrition zone</span></div>`;
+    html += `<span class="lg"><i class="tint amber"></i>attrition zone</span>`;
+    if(state.planet==="earth" && capital) html += `<span class="lg"><b>🏛</b>Capital City (labelled regional hex)</span>`;
+    html += `</div>`;
     html += `<div class="lgrow"><b class="lgh">Rolling &amp; sky</b>`;
     if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
     else html+=`<span class="lg" style="opacity:.6">— no weather (airless)</span>`;
@@ -1024,9 +1051,13 @@
     });
     return { tot, foodDemand: CITY_POP*FOOD_PER_M, foodTerr: cityState.misplace?"barren":"wetland" };
   }
+  function latBand(latDeg){ const a=Math.abs(latDeg||0), h=(latDeg||0)>=0?"N":"S";
+    return (a<23?"tropical":a<45?"temperate":a<66?"subpolar":"polar")+" "+h; }
   function renderCity(){
     const host=document.getElementById("cityhost"); if(!host) return;
     const L=cityLedger(), sq3=Math.sqrt(3), size=28;
+    const nBld=CITY.filter(t=>t.comps).length;
+    const capTxt = capital ? `Earth · regional hex <span class="mono">(Q${String(capital.c).padStart(2,'0')} R${capital.r})</span> · ${latBand(capital.latDeg)} coastline` : "a temperate coastline";
     // ── the CityGrid — one building per tile, each carrying its production components ──
     let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
     const pos=CITY.map((t,i)=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2);
@@ -1081,9 +1112,16 @@
       ? `<div class="verdict">✅ <b>SELF-SUFFICIENT.</b> This colony houses its ${CITY_POP.toFixed(1)} M people with headroom, feeds them with a surplus, powers itself, and runs a closed extract→refine→fabricate loop from local ore — no imports required. Research ticks over at ${L.tot.research.toFixed(1)} RP/day.</div>`
       : `<div class="verdict" style="background:var(--accent-soft);border-color:var(--accent)">⚠ <b style="color:var(--accent-ink)">NOT self-sufficient</b> — the food supply (${Math.round(L.tot.food).toLocaleString()}/day) no longer covers demand (${L.foodDemand.toLocaleString()}/day). ${cityState.misplace?"The Agriculture component was moved onto BARREN ground (×0.40): same component, wrong hex, and the city STARVES.":""}</div>`;
 
-    host.innerHTML = `<div class="citywrap">
+    host.innerHTML = `
+    <div style="display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;margin-bottom:12px;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);background:var(--inset);border:1px solid var(--line);border-left:3px solid #e0a63a;border-radius:9px;padding:9px 12px">
+      <span style="font-weight:800;color:var(--accent-ink);letter-spacing:.03em">🏛 CAPITAL CITY</span>
+      <span>📍 ${capTxt}</span>
+      <span>👥 ${CITY_POP.toFixed(0)} M colonists</span>
+      <span style="color:var(--ink-faint)">— the regional hex is <b style="color:var(--ink-soft)">labelled</b>; these <b style="color:var(--ink-soft)">${nBld}</b> buildings sit on its <b style="color:var(--ink-soft)">mini-hexes</b></span>
+    </div>
+    <div class="citywrap">
       <div>
-        <svg class="citysvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Self-sufficient city on a CityGrid">${g}</svg>
+        <svg class="citysvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Coastal capital city on a CityGrid">${g}</svg>
         <div class="citylegend">${leg}</div>
         <div class="movesim">
           <span>Terrain-affinity demo:</span>
@@ -1128,6 +1166,11 @@
       `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1} · ${night?'🌙 night':'☀ day'}</div>
        <div class="loc">${f.name} — ${f.cls} terrain</div>
        <div class="coord">on ${p.name} · ${p.g} · ${p.pressure} · <b style="color:var(--ink)">op-hex ≈ ${hexPitchKm(state.planet)} km · mini ≈ ${miniHexKm(state.planet).toFixed(1)} km</b></div>`;
+
+    if(isCapital(hex)){
+      html += `<div class="sect"><div class="sh">Regional-hex label <span class="badge THEORY">DESIGN</span></div>
+        <div class="tac" style="border-left-color:#e0a63a"><b>🏛 Capital City.</b> This <b>regional hex</b> is labelled the capital — the coarse "what is this place" tag. Its actual <b>buildings sit on the mini-hexes</b> (the CityGrid ▽ below, shown in full in the city section further down). <b>Any regional hex can be labelled a Thing</b> — capital, mining district, spaceport, staging area — the label is the strategic annotation, the buildings are the fine detail: the same regional-flag / mini-specific split as the resources.</div></div>`;
+    }
 
     html += renderMicro(hex);      // ▽ the micro-hex sub-grid (immediate visible response to a tap)
 
@@ -1284,6 +1327,6 @@
     if(raw!=null){ const idx=+raw; if(CITY[idx]&&CITY[idx].b){ cityState.sel=(cityState.sel===idx?null:idx); renderCity(); } }
   });
 
-  buildField(); renderAll(); renderCity();
+  buildField(); capital=findCapitalHex(); if(capital) capital.latDeg=90-180*(capital.r/(state.rows-1)); renderAll(); renderCity();
 })();
 </script>
