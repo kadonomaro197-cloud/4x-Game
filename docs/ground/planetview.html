@@ -244,6 +244,18 @@
   .civfoot{padding:4px 17px 16px;font-size:11.5px;color:var(--ink-soft);line-height:1.6}
   .civfoot .gr{font-weight:800;font-size:9px;padding:1px 5px;border-radius:4px}
   .civfoot .gr.LIVE{background:var(--live-bg);color:var(--live)} .civfoot .gr.THEORY{background:var(--theory-bg);color:var(--theory)}
+  /* the two gauges (morale/legitimacy) + commerce */
+  .gauges{padding:12px 17px 2px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:11px}
+  .gauge{background:var(--inset);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .gauge .gh{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--ink);display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+  .gauge .gh span{font-weight:500;color:var(--ink-faint);font-size:10.5px} .gauge .gh .gnew{margin-left:auto;color:var(--theory);background:var(--theory-bg);padding:1px 6px;border-radius:5px;font-size:9px}
+  .gbar{height:12px;border-radius:6px;background:var(--sunk);overflow:hidden;margin:8px 0 6px;position:relative}
+  .gbar span{position:absolute;left:0;top:0;bottom:0;background:var(--live);border-radius:6px}
+  .gbar.leg span{background:var(--accent)} .gbar.com span{background:var(--data)}
+  .gv{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums} .gv b{font-weight:800} .gv .up{color:var(--live)}
+  .gtag{font-family:var(--sans);font-size:10.5px;color:var(--live);background:var(--live-bg);padding:1px 6px;border-radius:5px;margin-left:4px}
+  .gbreak{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
+  .gbreak .gsub{color:var(--ink-soft)} .gbreak .gnewi{color:var(--theory)}
 
   /* sections below */
   .sec{margin-top:44px}
@@ -278,7 +290,7 @@
   <header>
     <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
     <h1>A planet, exactly as the game models it</h1>
-    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. A whole <b>developed civilization</b> spans Earth (five dashed provinces, placed on the ground that suits each — capital on the coast, mines in the hills, foundry on the plains, farms on the delta, the shield on a ridge): click a province and each <b>mini-hex is a district</b> — a cluster of real installations whose outputs sum — and scroll below the map for <b>the civilization's books</b>, every number the real shipped output of those installations. You can drop a <b>float tag</b> (a name of your choosing) on any hex. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. A whole <b>developed civilization</b> spans Earth, its capital grown into a <b>super-city</b> (an ecumenopolis of stacked arcologies, an entertainment strip, a financial exchange and a metro police force) with four supporting provinces placed on the ground that suits each — mines in the hills, foundry on the plains, farms on the delta, the shield on a ridge. Click a province and each <b>mini-hex is a district</b> — a cluster of real installations whose outputs sum — and scroll below the map for <b>the civilization's books</b>: ~27 M people, and <b>two live gauges</b> built from the real morale coefficients — <b>morale → migration</b> and <b>legitimacy → rebellion</b> — plus <b>commerce income</b>. You can drop a <b>float tag</b> (a name of your choosing) on any hex. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
     <div class="gradekey">
       <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
       <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
@@ -360,7 +372,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-O — A WHOLE CIVILIZATION ACROSS FIVE PROVINCES: a 5 km mini-hex (~22 km²) is a DISTRICT — a cluster of real installations, not one building (the chassis answer: a mine alone is 1 km²) — and each province's districts sum to real books. Five provinces are placed logically (coast capital / hill mines / plains foundry / delta farms / ridge shield), and below the map the whole civilization's outputs read straight: 1.4 M housed, jobs vs workforce, minerals/materials/build/research per day, and a labour economy RECALIBRATED AT THE SOURCE designers this session (mine/factory crew cut 10×, infrastructure given service employment) so services ≈ 82% of jobs and heavy industry ≈ 14% — realistic, not two buildings eating the workforce; food demand 0.00001 → one farm feeds 300 M. 5 km is the default. On rev-N's float-tags-on-mini-hexes, rev-L's two-tier resources, rev-K's component-level terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; three CREW coeffs were tuned at the SOURCE component designers (not fudged downstream); nothing chased to a target. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (89/100 → migration +3.9%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The four new civic dials were derived from a grounded source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -653,6 +665,16 @@
                dial:"Class 1,000 / 24 mo (default); Crew = Class×0.25", real:"naval-academy → NavalAcademyAtb"},
     bunker:   {name:"Bunker",           icon:"🛡", comp:null,        crew:50,    out:{fortify:0.25},
                dial:"+0.25 local fortify, +0.12 to each neighbour (default)", real:"bunker → GroundDefenseAtb"},
+    // ── THE NEW CIVIC DIALS (wired at the source in civicderived.html this session) — the metropolis-vs-village levers.
+    //    Their OUTPUTS are PROPOSED (each needs one small engine add): amenity → a new MoraleInputs.CivicAmenity line,
+    //    order → a new LegitimacyInputs.PublicOrder input, commerce → a new ColonyCommerce category on the LIVE Ledger.
+    //    Their CREW (jobs) is real — entertainment/police/markets employ SERVICE workers, like the rest of a real city.
+    amenity:  {name:"Entertainment Complex", icon:"🎭", comp:null,    crew:40,    out:{amenity:20},
+               dial:"NEW CivicAmenity morale line (UNCAPPED) — comfort is pegged at +20 and saturated, so this is the clean QoL axis", real:"recreation → NEW MoraleInputs.CivicAmenity"},
+    police:   {name:"Police Precinct",   icon:"🚔", comp:null,        crew:60,    out:{order:20},
+               dial:"NEW PublicOrder input → props LegitimacyDB, holds off RebellionDB (the governability gauge, not happiness)", real:"security → NEW LegitimacyInputs.PublicOrder"},
+    market:   {name:"Trade Hub",         icon:"🏦", comp:"logistics", crew:50,    out:{commerce:5000, amenity:5},
+               dial:"NEW ColonyCommerce income → the LIVE faction Ledger (the pipe tax already uses) + a little amenity morale", real:"market → NEW Ledger category (reuses tax plumbing)"},
   };
   // metric display metadata (label · icon · formatter) — how the summed outputs READ
   function fmtBig(n){ n=+n||0; return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+" k":Math.round(n).toString(); }
@@ -667,6 +689,9 @@
     pads:     {label:"Launch pads",        icon:"🛰", fmt:v=>Math.round(v)},
     officers: {label:"Officers trained",   icon:"🎓", fmt:v=>Math.round(v).toLocaleString()+"/24mo"},
     fortify:  {label:"Fortification",      icon:"🛡", fmt:v=>"+"+Math.round(v*100)+"%"},
+    amenity:  {label:"Amenity (morale)",   icon:"🎭", fmt:v=>fmtBig(v)+" pts"},
+    order:    {label:"Public order",       icon:"🚔", fmt:v=>fmtBig(v)+" pts"},
+    commerce: {label:"Commerce",           icon:"🏦", fmt:v=>fmtBig(v)+" cr/mo"},
     support:  {label:"Support capacity",   icon:"⚙", fmt:v=>fmtBig(v)},
     crew:     {label:"Jobs (workers)",     icon:"👷", fmt:v=>fmtBig(v)},
   };
@@ -676,47 +701,55 @@
   // disk) and author their own ground (terr) — a river delta INSIDE a plains province, hills at its edge
   // (M4 per-tile variation). Each district is a STACK of real installations: [id, count]. want[] = the
   // ground the province itself prefers (placement finds the nearest such hex to the capital).
+  //  SCALED to a SUPER-CITY (rev-P): New Terra is the ecumenopolis — dense arcologies + the new civic
+  //  districts (Entertainment → amenity morale, Financial → commerce, Metro Police → legitimacy). District
+  //  COUNTS are authoring (how big the city is), transparently — no number chased to a target. The
+  //  supporting provinces are scaled to match. ~26 M people, morale ~89 (a migration magnet), legitimacy
+  //  ~75 (firmly governed), ~600 k cr/mo of commerce.
   const CIV = [
-    {key:"capital", tag:"New Terra", role:"Capital — government, science & trade", icon:"🏛",
-     want:["coast","plains"], blurb:"The seat, on a temperate harbour: housing, the grand campus, and the spaceport that ties the whole civilization to orbit.",
+    {key:"capital", tag:"New Terra", role:"Super-city — the ecumenopolis capital", icon:"🏙",
+     want:["coast","plains"], blurb:"The super-city: stacked arcologies, an entertainment strip, a financial exchange, a metro police force and the grand campus — cranked to the ceiling and pulling migration from the whole world.",
      districts:[
-       {q:0,  r:0,  terr:"coast",  name:"Capitol District",   icon:"🏛", stack:[["infra",10],["academy",1]]},
-       {q:-8, r:3,  terr:"coast",  name:"Harbor Residential", icon:"🏘", stack:[["infra",60]]},
-       {q:7,  r:-3, terr:"plains", name:"Uptown Residential", icon:"🏙", stack:[["infra",50]]},
-       {q:-6, r:-8, terr:"coast",  name:"Grand Campus",       icon:"🔬", stack:[["lab",40]]},
-       {q:9,  r:6,  terr:"coast",  name:"Meridian Spaceport", icon:"🚀", stack:[["spaceport",6],["launch",4]]},
+       {q:0,   r:0,   terr:"coast",  name:"Arcology Core",        icon:"🏙", stack:[["infra",1200],["police",40],["academy",2]]},
+       {q:-9,  r:3,   terr:"coast",  name:"Skyward Arcology",     icon:"🏢", stack:[["infra",1000]]},
+       {q:8,   r:-3,  terr:"plains", name:"Highrise Residential", icon:"🏘", stack:[["infra",1000]]},
+       {q:-6,  r:-9,  terr:"coast",  name:"Grand Campus",         icon:"🔬", stack:[["lab",240]]},
+       {q:10,  r:6,   terr:"coast",  name:"Meridian Spaceport",   icon:"🚀", stack:[["spaceport",12],["launch",8]]},
+       {q:4,   r:10,  terr:"coast",  name:"Entertainment District",icon:"🎭", stack:[["amenity",400],["infra",150]]},
+       {q:-11, r:-2,  terr:"coast",  name:"Financial District",   icon:"🏦", stack:[["market",120],["infra",150]]},
+       {q:1,   r:-12, terr:"plains", name:"Metro Police HQ",      icon:"🚔", stack:[["police",90]]},
      ]},
     {key:"mining", tag:"Ferrum Basin", role:"Mining & primary smelting", icon:"⛏",
-     want:["mountains","highlands","volcanic","barren"], blurb:"In the ore-rich hills: the deep cuts feed the smelters, and a township houses the miners — the civilization's biggest labour sink.",
+     want:["mountains","highlands","volcanic","barren"], blurb:"In the ore-rich hills: the deep cuts feed the smelters, an arcology houses the miners, and a precinct keeps a hard company town in order.",
      districts:[
-       {q:0,  r:-2, terr:"mountains", name:"Deep Cut Mine",    icon:"⛏", stack:[["mine",12]]},
-       {q:8,  r:2,  terr:"highlands", name:"East Lode Mine",   icon:"⛏", stack:[["mine",10]]},
-       {q:-8, r:4,  terr:"highlands", name:"Smelter Row",      icon:"🏭", stack:[["refinery",8]]},
-       {q:-3, r:9,  terr:"highlands", name:"Miners' Township", icon:"🏘", stack:[["infra",30]]},
+       {q:0,  r:-2, terr:"mountains", name:"Deep Cut Mine",    icon:"⛏", stack:[["mine",30]]},
+       {q:8,  r:2,  terr:"highlands", name:"East Lode Mine",   icon:"⛏", stack:[["mine",24]]},
+       {q:-8, r:4,  terr:"highlands", name:"Smelter Row",      icon:"🏭", stack:[["refinery",16]]},
+       {q:-3, r:9,  terr:"highlands", name:"Miners' Arcology", icon:"🏘", stack:[["infra",250],["police",15]]},
      ]},
     {key:"foundry", tag:"The Foundry", role:"Heavy manufacturing", icon:"🏗",
-     want:["plains","desert","barren"], blurb:"On the open plains beside the ore road: the works turn refined metal into ships, kit and installations — and swallow a quarter-million workers doing it.",
+     want:["plains","desert","barren"], blurb:"On the open plains beside the ore road: the works turn refined metal into fleets, and a workers' arcology with its own amenities keeps a million hands housed and content.",
      districts:[
-       {q:-7, r:-4, terr:"plains", name:"North Works",        icon:"🏗", stack:[["factory",6]]},
-       {q:6,  r:-2, terr:"plains", name:"South Works",        icon:"🏗", stack:[["factory",6]]},
-       {q:8,  r:6,  terr:"plains", name:"Foundry Refineries", icon:"🏭", stack:[["refinery",6]]},
-       {q:-6, r:8,  terr:"plains", name:"Workers' City",      icon:"🏙", stack:[["infra",60]]},
+       {q:-7, r:-4, terr:"plains", name:"North Works",        icon:"🏗", stack:[["factory",12]]},
+       {q:6,  r:-2, terr:"plains", name:"South Works",        icon:"🏗", stack:[["factory",12]]},
+       {q:8,  r:6,  terr:"plains", name:"Foundry Refineries", icon:"🏭", stack:[["refinery",14]]},
+       {q:-6, r:8,  terr:"plains", name:"Workers' Arcology",  icon:"🏙", stack:[["infra",500],["amenity",60]]},
      ]},
     {key:"agri", tag:"Verdant Reach", role:"Agriculture — the breadbasket", icon:"🌾",
      want:["plains","forest","coast"], blurb:"The wet delta and the river plains: the farms feed the whole civilization many times over — because shipped food demand is almost nothing.",
      districts:[
-       {q:-6, r:-3, terr:"wetland", name:"Delta Farms",   icon:"🌾", stack:[["food",20]]},
-       {q:5,  r:-5, terr:"wetland", name:"River Farms",   icon:"🌾", stack:[["food",20]]},
-       {q:7,  r:4,  terr:"plains",  name:"Plains Farms",  icon:"🌾", stack:[["food",20]]},
-       {q:-7, r:6,  terr:"plains",  name:"Farm Country",  icon:"🏘", stack:[["infra",20]]},
+       {q:-6, r:-3, terr:"wetland", name:"Delta Farms",   icon:"🌾", stack:[["food",60]]},
+       {q:5,  r:-5, terr:"wetland", name:"River Farms",   icon:"🌾", stack:[["food",60]]},
+       {q:7,  r:4,  terr:"plains",  name:"Plains Farms",  icon:"🌾", stack:[["food",60]]},
+       {q:-7, r:6,  terr:"plains",  name:"Farm Country",  icon:"🏘", stack:[["infra",200]]},
      ]},
     {key:"bastion", tag:"Bastion", role:"Frontier defense", icon:"🛡",
-     want:["forest","highlands","coast","jungle"], blurb:"The forward shield: the wall of bunkers, the war college that trains officers, and a launch range to move a garrison off-world fast.",
+     want:["forest","highlands","coast","jungle"], blurb:"The forward shield: the wall of bunkers, the war college that trains officers, a launch range, and a garrison town held firmly in order.",
      districts:[
-       {q:0,  r:-3, terr:"highlands", name:"The Wall",         icon:"🛡", stack:[["bunker",12]]},
-       {q:-8, r:2,  terr:"forest",    name:"War College",      icon:"🎓", stack:[["academy",1]]},
-       {q:8,  r:3,  terr:"coast",     name:"Launch Range",     icon:"🛰", stack:[["launch",4]]},
-       {q:-2, r:8,  terr:"plains",    name:"Border Township",  icon:"🏘", stack:[["infra",16]]},
+       {q:0,  r:-3, terr:"highlands", name:"The Wall",         icon:"🛡", stack:[["bunker",30]]},
+       {q:-8, r:2,  terr:"forest",    name:"War College",      icon:"🎓", stack:[["academy",2]]},
+       {q:8,  r:3,  terr:"coast",     name:"Launch Range",     icon:"🛰", stack:[["launch",8]]},
+       {q:-2, r:8,  terr:"plains",    name:"Border Arcology",  icon:"🏘", stack:[["infra",150],["police",20]]},
      ]},
   ];
   const civState = {misplace:false};   // affinity demo: build the breadbasket on barren instead of the delta
@@ -725,7 +758,7 @@
   //    (the real shipped default) × terrain affinity (ruling #13; ×1 for the parts with no affinity). Crew
   //    (= JOBS, the employment morale band) and km² never take affinity. `eff` lets the demo override terrain.
   function distAgg(d){
-    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
     const base=Object.assign({},o);
     d.stack.forEach(([k,n])=>{ const I=INST[k]; if(!I) return;
       const terr = (civState.misplace && (I.comp==="food")) ? "barren" : d.terr;   // demo: farms to barren
@@ -736,15 +769,27 @@
     return {o, base};
   }
   function regionAgg(region){
-    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
     region.districts.forEach(d=>{ const {o}=distAgg(d); for(const k in t) t[k]+=o[k]||0; });
     return t;
   }
   function civAgg(){
-    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
     (state.regionHex||[]).forEach((h,i)=>{ if(!h) return; const r=regionAgg(CIV[i]); for(const k in t) t[k]+=r[k]||0; });
     t.workforce = t.pop*WORKFORCE_FRAC; t.foodDemand = t.pop*PER_CAPITA_FOOD;
     t.employ = t.workforce>0 ? t.crew/t.workforce : 0;   // jobs / workforce (the morale ratio)
+    // ── THE TWO GAUGES (illustrative, built from the REAL ColonyMoraleDB coefficients + the NEW civic lines) ──
+    //   MORALE = 50 baseline + employment(+15/−25) + comfort(cap +20, saturated on Earth) + food-quality(0 default)
+    //            + the NEW uncapped CivicAmenity line; clamped 0..100 → runs MigrationRate (±5%/mo).
+    //   LEGITIMACY = 50 baseline + the NEW PublicOrder input (proposed cap +30); clamped 0..100 → RebellionDB.
+    const clamp=(x)=>Math.max(0,Math.min(100,x));
+    t.mJobs    = t.employ>=1 ? 15 : Math.max(-25, 15-(1-t.employ)*40);   // ColonyMoraleDB.cs:133-142 (interp. illustrative)
+    t.mComfort = 20;                                                     // Earth base infrastructure pegs MaxComfortBonus
+    t.mAmenity = Math.min(30, t.amenity*0.003);                         // NEW uncapped line (proposed coeff)
+    t.morale   = clamp(50 + t.mJobs + t.mComfort + t.mAmenity);
+    t.migration= (t.morale-50)/50*5;                                    // MaxMigrationRate 0.05/mo
+    t.lOrder   = Math.min(30, t.order*0.0075);                          // NEW PublicOrder → legitimacy (proposed coeff)
+    t.legit    = clamp(50 + t.lOrder);
     return t;
   }
 
@@ -1451,22 +1496,39 @@
     // per-province cards
     const rcard=(i)=>{ const region=CIV[i], h=state.regionHex[i]; if(!h) return ""; const R=regionAgg(region);
       const head=Object.keys(METRIC).filter(k=>R[k]>0 && k!=="support" && k!=="crew").sort((a,b)=>{
-        const order={pop:0,minerals:1,build:2,food:3,research:4,refine:5,officers:6,fortify:7,cargo:8,pads:9}; return (order[a]??9)-(order[b]??9); }).slice(0,3);
+        const order={pop:0,amenity:0.5,commerce:0.8,minerals:1,build:2,food:3,order:3.5,research:4,refine:5,officers:6,fortify:7,cargo:8,pads:9}; return (order[a]??9)-(order[b]??9); }).slice(0,3);
       const chips=head.map(k=>`<span>${METRIC[k].icon} ${METRIC[k].fmt(R[k])}</span>`).join("");
       return `<div class="pcard"><div class="pch"><b>${region.icon} ${tags[tagKey(h)]||region.tag}</b><button class="pjump" data-jump="${i}">open ▸</button></div>
         <div class="pcr">${region.role} · hex ${coord(h)} · ${region.districts.length} districts</div>
         <div class="pcm">${chips}</div>
         <div class="pcj">👷 ${fmtBig(R.crew)} jobs · 🏢 ${fmtBig(R.pop)} housed</div></div>`; };
+    const sgn=(x)=>(x>=0?'+':'−')+Math.round(Math.abs(x));
+    const governed = C.legit>=60?'firmly governed':(C.legit>=45?'restive':'⚠ rebellion risk');
+    const markets = (jobsByInst.market||0)/INST.market.crew;
     el.innerHTML =
-      `<div class="civhead"><div><h3>The civilization on this map — <b>five provinces, one economy</b></h3>
-        <p>Every number is the <b>real shipped output</b> of the installations clustered in each province (<span class="mono">installations.json</span>), summed. A mini-hex is a <b>district</b> (~${(0.866*miniHexKm('earth')*miniHexKm('earth')).toFixed(0)} km² — a cluster), a regional hex a <b>province</b>, and this is all five added up. The only proposed term is the <b>terrain-affinity</b> multiplier (ruling #13).</p></div></div>
+      `<div class="civhead"><div><h3>The super-city on this map — <b>one metropolis, five provinces</b></h3>
+        <p>New Terra is the <b>ecumenopolis</b>: stacked arcologies plus the new civic districts — <b>🎭 entertainment</b>, <b>🏦 a financial exchange</b>, <b>🚔 a metro police force</b> — cranked to the ceiling and pulling migration from the whole world. Every production number is the <b>real shipped output</b> (<span class="mono">installations.json</span>), summed. The two <b>gauges</b> below are built from the <b>real <span class="mono">ColonyMoraleDB</span> coefficients</b> plus the new civic lines wired at the source in <span class="mono">civicderived.html</span>.</p></div></div>
       <div class="bigms">${head}</div>
+      <div class="gauges">
+        <div class="gauge"><div class="gh">😊 Morale — <span>are they happy</span> <b class="gnew">→ migration</b></div>
+          <div class="gbar"><span style="width:${C.morale.toFixed(0)}%"></span></div>
+          <div class="gv"><b>${Math.round(C.morale)}</b>/100 → migration <b class="up">${C.migration>=0?'+':''}${C.migration.toFixed(1)}%/mo</b> ${C.migration>2?'<span class="gtag">a magnet — it snowballs</span>':''}</div>
+          <div class="gbreak">50 base &nbsp;${sgn(C.mJobs)} jobs &nbsp;${sgn(C.mComfort)} comfort <span class="gsub">(cap +20, pegged)</span> &nbsp;${sgn(C.mAmenity)} amenity <span class="gsub gnewi">(NEW · uncapped)</span></div></div>
+        <div class="gauge"><div class="gh">🏛 Legitimacy — <span>are they governable</span> <b class="gnew">→ rebellion</b></div>
+          <div class="gbar leg"><span style="width:${C.legit.toFixed(0)}%"></span></div>
+          <div class="gv"><b>${Math.round(C.legit)}</b>/100 → <b>${governed}</b></div>
+          <div class="gbreak">50 base &nbsp;${sgn(C.lOrder)} public order <span class="gsub gnewi">(NEW · props LegitimacyDB → holds off RebellionDB)</span></div></div>
+        <div class="gauge"><div class="gh">🏦 Commerce — <span>the trade income</span> <b class="gnew">NEW</b></div>
+          <div class="gbar com"><span style="width:${Math.min(100,C.commerce/8000).toFixed(0)}%"></span></div>
+          <div class="gv"><b>${METRIC.commerce.fmt(C.commerce)}</b> into the faction Ledger</div>
+          <div class="gbreak">${Math.round(markets)} trade hubs · a new ColonyCommerce faucet on the LIVE tax pipe, atop population tax</div></div>
+      </div>
       <div class="civreality">
         <div class="crx"><span class="crh">👷 Employment</span> ${empVerdict} <span class="crn"><b>Services ${Math.round(svcShare*100)}%</b> of all jobs · heavy industry <b>${Math.round(heavyShare*100)}%</b> · the rest farms/labs/ports/garrison. That realistic mix is a SOURCE recalibration made this session (not a downstream fudge): mine &amp; factory crew cut 10× in <span class="mono">industrialderived.html</span>, and infrastructure given service employment (crew = Support×0.2) in <span class="mono">civicderived.html</span> — so housing is the main employer, as in a real country, instead of two buildings eating the workforce.</span></div>
         <div class="crx"><span class="crh">🌾 Food</span> The farms make <b>${METRIC.food.fmt(C.food)}</b>; the whole civilization eats <b>${C.foodDemand.toFixed(0)}/day</b> (pop × the shipped <span class="mono">0.00001</span> per-capita demand). <b>One agri-complex feeds 300 M.</b> Food scarcity is a calibration dial, not a structural gap — surface it honestly. <button id="misplaceBtn" class="mbtn" aria-pressed="${civState.misplace}">${civState.misplace?"↩ farms back to the delta":"⚠ build the breadbasket on barren"}</button> ${civState.misplace?`<span class="crwarn">→ on barren (×0.40) the farms make just ${METRIC.food.fmt(C.food)} — still a surplus, because demand is almost nothing.</span>`:''}</div>
       </div>
       <div class="pcards">${CIV.map((_,i)=>rcard(i)).join("")}</div>
-      <div class="civfoot"><b class="gr LIVE">LIVE</b> the per-unit OUTPUTS and the food/workforce math are the real engine (installations.json · <span class="mono">ColonyManpowerDB</span> · <span class="mono">SustenanceProcessor</span>); jobs = each installation's <span class="mono">CrewReq</span> (the civic audit's one-line fix — the +15/−25 band is otherwise a dead wire). &nbsp;<b class="gr THEORY">RECAL</b> three CREW coeffs were tuned at the SOURCE designers this session — mine ×0.005→×0.0005, factory ×5→×0.5 (<span class="mono">industrialderived.html</span>), infrastructure 10→Support×0.2 (<span class="mono">civicderived.html</span>). &nbsp;<b class="gr THEORY">THEORY</b> the terrain-affinity multiplier (ruling #13) and per-hex mining. District COUNTS are authoring; no number chased to a target.</div>`;
+      <div class="civfoot"><b class="gr LIVE">LIVE</b> the per-unit OUTPUTS and the food/workforce math are the real engine (installations.json · <span class="mono">ColonyManpowerDB</span> · <span class="mono">SustenanceProcessor</span>); jobs = each installation's <span class="mono">CrewReq</span> (the civic audit's one-line fix — the +15/−25 band is otherwise a dead wire). &nbsp;<b class="gr THEORY">RECAL</b> three CREW coeffs were tuned at the SOURCE designers this session — mine ×0.005→×0.0005, factory ×5→×0.5 (<span class="mono">industrialderived.html</span>), infrastructure 10→Support×0.2 (<span class="mono">civicderived.html</span>). &nbsp;<b class="gr THEORY">NEW</b> the two GAUGES are illustrative — built from the real <span class="mono">ColonyMoraleDB</span> coefficients composed with the new civic lines wired this session: amenity morale (uncapped) + public-order legitimacy, each a one-time engine add; commerce is a new <span class="mono">ColonyCommerce</span> category on the LIVE Ledger. &nbsp;<b class="gr THEORY">THEORY</b> the terrain-affinity multiplier (ruling #13) and per-hex mining. District COUNTS are authoring (a super-city is big on purpose); no number chased to a target.</div>`;
   }
 
   function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); renderCiv(); }

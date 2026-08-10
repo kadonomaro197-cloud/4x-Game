@@ -213,8 +213,9 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 <button class="chip" type="button" data-v="academy" aria-pressed="false" title="Trains ONE kind of leader - pick the type below (Navy / Ground / Governance / Science / Diplomacy / Intelligence / Commerce). It names the school.">Officers </button>
 <button class="chip" type="button" data-v="residency" aria-pressed="false" title="Planetary HOUSING: Colonists Housed = capacity added; Living Comfort feeds morale (capped at +20). Jobs are NOT a building - they are emitted by every industry building's CrewReq.">Residency </button>
 <button class="chip" type="button" data-v="medical" aria-pressed="false" title="Health: patient capacity + care quality -> lower mortality, higher morale.">Medical </button>
-<button class="chip" type="button" data-v="recreation" aria-pressed="false" title="Comfort DIRECTLY: parks and arenas whose whole job is morale (capped at +20, adds to housing comfort).">Recreation </button>
-<button class="chip" type="button" data-v="security" aria-pressed="false" title="Order: suppresses unrest and props legitimacy - the rebellion track, not the comfort band.">Security </button>
+<button class="chip" type="button" data-v="recreation" aria-pressed="false" title="ENTERTAINMENT / amenities: theaters, parks, arenas. Feeds a NEW uncapped CivicAmenity morale line (comfort is pegged at +20 and saturated on developed worlds) - the QoL axis that separates a metropolis from a village.">Entertainment </button>
+<button class="chip" type="button" data-v="security" aria-pressed="false" title="LAW ENFORCEMENT / public order: feeds a NEW PublicOrder input on LegitimacyInputs - props legitimacy, holds a discontented colony off the RebellionDB track. The governability gauge, distinct from happiness.">Law enforcement </button>
+<button class="chip" type="button" data-v="market" aria-pressed="false" title="TRADE: commerce throughput -> a NEW ColonyCommerce income category on the existing faction Ledger (the pipe tax already uses), and its bustle also feeds the amenity morale line.">Trade / Market </button>
 <button class="chip" type="button" data-v="admin" aria-pressed="false" title="Governance: span of control for delegated officers (the AdminSpaceAtb seats governors and ministers sit in).">Administration </button></div>
 <div class="chips" id="leaderrow" style="display:none;margin-top:7px">
 <button class="chip lchip" type="button" data-leader="navy" aria-pressed="true" title="Naval Academy - admirals and fleet commanders.">Navy</button>
@@ -258,6 +259,20 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 </div>
 </div>
 <p class="sub" style="margin-top:11px"><b>Teal</b> = you set it. <b>Grey</b> = the formula decided it. Pick <b>Food</b> and drag <b>Quality</b>: the mass goes up <b>cubically</b> - that is what a properly priced luxury dial looks like. Then pick <b>A space habitat</b> and drag: <b>a million colonists, and the cost never moves.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>WIRED THIS SESSION — the metropolis-vs-village dials (developer request, grounded against source)</h2>
+<p class="big">"Distinguish rural India from New York City with the SAME buildings; add entertainment/influence, law enforcement, and trade." The difference is <b>TWO gauges the engine already keeps</b>, cranked by <b>count × dial</b> — nothing hand-labels a colony "city."</p>
+<div class="scroll"><table class="t">
+<tr><th>New dial / building</th><th>Writes to (real variable, file)</th><th>Gauge</th><th>Grade</th></tr>
+<tr><td><b>Jobs</b> — already on every building via <code>CrewReq</code></td><td><code>EmploymentAtbDB.Jobs</code> → the +15/−25 employment term (<code>ColonyMoraleDB.cs:39</code>)</td><td>MORALE</td><td><b class="g">BUILD-NOW</b> — dead until a producer declares it (this door's headline)</td></tr>
+<tr><td><b>Entertainment / amenities</b> (Entertainment)</td><td>NEW <code>CivicAmenity</code> line on <code>MoraleInputs</code> (<code>ColonyMoraleDB.cs:200-218</code>)</td><td>MORALE (uncapped)</td><td><b class="a">NEW-INPUT</b> — 1 field + 1 coeff + 1 tally line</td></tr>
+<tr><td><b>Law enforcement</b> (Law enforcement)</td><td>NEW <code>PublicOrder</code> input on <code>LegitimacyInputs</code> → <code>LegitimacyDB.Legitimacy</code> → holds off <code>RebellionDB</code></td><td>LEGITIMACY</td><td><b class="a">NEW-INPUT</b> — 1 field + 1 coeff; also un-blocks the <code>SowUnrest</code> no-op</td></tr>
+<tr><td><b>Trade / Market</b></td><td>NEW <code>ColonyCommerce</code> category on the faction <code>Ledger</code> (the live tax pipe) + the amenity line</td><td>MONEY (+ amenity)</td><td><b class="a">NEW-INPUT</b> — reuses the Ledger plumbing</td></tr>
+<tr><td><b>Influence / prestige</b></td><td>does NOT exist — only orbital "sphere of influence"; nearest hook is legitimacy</td><td>—</td><td><b class="r">NEW-SCORE — defer</b> (a whole resource, not a dial)</td></tr>
+</table></div>
+<div class="okbox"><b>The two gauges, and why it works.</b> <b>MORALE</b> = are they happy → runs <code>MigrationRate</code> (a high-morale colony sucks population in, a low one drains out). <b>LEGITIMACY</b> = are they governable → runs toward <code>RebellionDB</code>. A metropolis cranks BOTH high (jobs + amenities + policing + commerce) and <b>snowballs</b> as migration compounds it; a village runs the same buildings at idle and stays small. <b>Neither gauge can be written directly</b> — both are re-derived every month from a list of input line-items, so each dial adds ONE input to a tally the engine re-sums (the exact seam tax/food already use). <b>Build order:</b> Jobs (free JSON) first, then the amenity + public-order lines (same cheap one-input pattern), then the commerce term. Composed downstream in <code>docs/ground/planetview.html</code> as a super-city's morale / legitimacy / commerce books.</div>
 </div></section>
 
 <section class="band"><div class="w">
@@ -350,8 +365,11 @@ const CIV = {
  priced:true, dials:2, kind:'comfort', unit:' served',
  noun:['Park','Recreation Center','Grand Concourse']},
  security: {n1:'Coverage', lo:0, hi:20000, def:2000, n2:'Response', l2:0, h2:10, def2:3,
- priced:true, dials:2, kind:'order', unit:' covered',
- noun:['Watch Post','Security Station','Precinct HQ']},
+ priced:true, dials:2, kind:'order', unit:' policed',
+ noun:['Watch Post','Precinct HQ','Metropolitan Police']},
+ market: {n1:'Commerce throughput', lo:0, hi:50000, def:5000, n2:'Market amenity', l2:0, h2:20, def2:5,
+ priced:true, dials:2, kind:'commerce', unit:' commerce/mo',
+ noun:['Bazaar','Trade Hub','Grand Exchange']},
  admin: {n1:'Admin capacity', lo:0, hi:50, def:5, n2:'Efficiency', l2:0, h2:3, def2:1,
  priced:true, dials:2, kind:'governance', unit:' span',
  noun:['Town Hall','Administration Center','Capitol Complex']}
@@ -411,6 +429,7 @@ const STOCK={
  medical:{d1:Math.round(unlin(2000,0,20000)), d2:Math.round(unlin(3,0,10))},
  recreation:{d1:Math.round(unlin(3000,0,30000)), d2:Math.round(unlin(5,0,20))},
  security:{d1:Math.round(unlin(2000,0,20000)), d2:Math.round(unlin(3,0,10))},
+ market:{d1:Math.round(unlin(5000,0,50000)), d2:Math.round(unlin(5,0,20))},
  admin:{d1:Math.round(unlin(5,0,50)), d2:Math.round(unlin(1,0,3))}
 };
 
@@ -489,16 +508,21 @@ function render(){
   note = ' <b>Health is its own morale input.</b> <code>Patient Capacity</code> covers the population; <code>Care Quality</code> lowers mortality and adds morale. A colony that can treat its people keeps more of them.';
   verdict = ' <b>A new morale consumer on a different axis from comfort.</b> Capacity is bulk, quality is the quadratic premium - a flagship hospital costs.';
  } else if(C.kind==='comfort'){
-  const c = Math.min(MAX_COMFORT, v2);
-  moraleTxt = '+'+c.toFixed(0)+(v2>MAX_COMFORT?' < cap 20':''); moraleCls=v2>MAX_COMFORT?'a':'g';
-  provides = fmt(v)+' served, comfort +'+c.toFixed(0);
-  note = ' <b>Recreation buys comfort DIRECTLY.</b> Where the Residency\'s comfort is a side-effect of housing, this building\'s whole job is morale - parks, arenas, the concourse. <code>Amenity Quality</code> is the morale it adds (capped at +20 like all comfort).';
-  verdict = ' <b>Comfort now has two producers</b> - housing (Residency) and leisure (Recreation) - and they ADD, so a happy colony is built, not wished for. Total capped at +20 by <code>MaxComfortBonus</code>.';
+  moraleTxt = '+'+v2.toFixed(0)+' amenity'; moraleCls='g';
+  provides = fmt(v)+' served, amenity +'+v2.toFixed(0)+' morale (UNCAPPED)';
+  note = ' <b>ENTERTAINMENT / amenities - the QoL axis a metropolis has and a village does not.</b> Parks, theaters, arenas, the concourse. It CANNOT ride the housing <code>Comfort</code> band - that is capped at +20 (<code>MaxComfortBonus</code>) and Earth\'s base infrastructure already pegs it, so a comfort building adds ZERO on a developed world. Instead it feeds a NEW <code>CivicAmenity</code> line on <code>MoraleInputs</code> (one field + one coefficient + one line in <code>ComputeMorale</code>, the exact pattern tax/food already use) - an UNCAPPED happiness axis every civic building can stack.';
+  verdict = ' <b>This is the developer\'s "entertainment centers" ask, grounded.</b> Comfort is pegged and food-quality is food-only, so the amenity line is the clean, un-saturated QoL lever that makes New York != a rural town. NEEDS a one-time engine add (the new morale line); the buildings that feed it are pure data after that.';
  } else if(C.kind==='order'){
-  moraleTxt = '-'+(v2*2).toFixed(0)+' unrest'; moraleCls='g';
-  provides = fmt(v)+' covered, response '+v2.toFixed(0)+' (suppresses unrest, props legitimacy)';
-  note = ' <b>Security acts on the OTHER stability track: legitimacy.</b> <code>Coverage</code> is the population it polices; <code>Response</code> is how hard it suppresses unrest. It does not make people happy - it keeps a discontented colony from tipping into rebellion.';
-  verdict = ' <b>The lever an authoritarian or militarist government leans on</b> - order without morale, a real and different choice. Feeds the <code>LegitimacyProcessor</code> / rebellion track, not the comfort band.';
+  moraleTxt = '+'+(v2*2).toFixed(0)+' legitimacy'; moraleCls='g';
+  provides = fmt(v)+' policed, response '+v2.toFixed(0)+' (props legitimacy, holds off rebellion)';
+  note = ' <b>LAW ENFORCEMENT acts on the OTHER gauge: legitimacy, not happiness.</b> <code>Coverage</code> is the population it polices; <code>Response</code> is how hard. It feeds a NEW <code>PublicOrder</code> input on <code>LegitimacyInputs</code> - which already keeps neutral-sentinel slots for exactly this - so it props the live <code>LegitimacyDB.Legitimacy</code> score and holds a discontented colony off the <code>RebellionDB</code> track. (Note: "unrest" is not a stored variable - it is computed inline as (50-morale)/50 - so a police building writes LEGITIMACY, which is the real lever.)';
+  verdict = ' <b>The governability lever, distinct from morale</b> - a city can be entertained but ungoverned, or policed but miserable. The lever an authoritarian/militarist government leans on (order without morale). BONUS: a persistent legitimacy input is exactly what the <code>SowUnrest</code> espionage action is documented as waiting on, so this un-blocks that no-op too. NEEDS a one-time engine add (the new legitimacy input).';
+ } else if(C.kind==='commerce'){
+  const buzz = Math.min(MAX_COMFORT, v2);
+  moraleTxt = '+'+buzz.toFixed(0)+' amenity'; moraleCls='g';
+  provides = fmt(v)+' commerce/mo to the Ledger, market buzz +'+buzz.toFixed(0)+' amenity morale';
+  note = ' <b>The door\'s first MONEY building.</b> <code>Commerce throughput</code> pays credits into the faction <code>Ledger</code> each month through a NEW <code>ColonyCommerce</code> transaction category - the SAME pipe colony tax already flows through, so it is one new faucet, not new plumbing. <code>Market amenity</code> feeds the NEW civic-amenity morale line, because a bustling market lifts spirits as well as the books.';
+  verdict = ' <b>Trade connects money to attractiveness.</b> A commercial metropolis both earns and pulls migration; a subsistence village does neither - the same template, opposite settlements. (Commerce income + the amenity line are one-time engine adds; the Ledger they ride is already live.)';
  } else {
   moraleTxt = v.toFixed(0)+' span'; moraleCls='';
   provides = fmt(v)+' admin capacity at efficiency '+v2.toFixed(0)+' (span of control for delegates)';
@@ -537,12 +561,14 @@ function render(){
  set('v_cost', fmt(credits)+' cr - '+fmt(bp)+' BP'+(research>0?' - '+fmt(research)+' RP':''));
 
  set('l_m1','Provides'); set('m_1',fmt(out)); set('s_m1',provides);
- set('l_m2', (C.kind==='survival'||C.kind==='governance')?'Effect':(C.kind==='order')?'Stability effect':'Morale effect'); set('m_2',moraleTxt);
+ set('l_m2', (C.kind==='survival'||C.kind==='governance')?'Effect':(C.kind==='order')?'Legitimacy effect':(C.kind==='commerce')?'Income + amenity':'Morale effect'); set('m_2',moraleTxt);
  set('s_m2', job==='food'? 'food-quality bonus above baseline'
 : job==='academy'? 'to the first graduate'
 : C.kind==='survival'? 'people kept alive - survival, not morale'
 : C.kind==='health'? 'health -> lower mortality + morale'
-: C.kind==='order'? 'unrest suppressed -> legitimacy'
+: C.kind==='comfort'? 'amenity morale (uncapped, a NEW line)'
+: C.kind==='order'? 'legitimacy propped -> holds off rebellion'
+: C.kind==='commerce'? 'commerce -> Ledger + amenity morale'
 : C.kind==='governance'? 'span of control for delegates'
 : 'comfort, capped at +20');
  $('m_2').parentElement.className='mt '+moraleCls;
