@@ -257,6 +257,25 @@
   .gtag.storm{color:var(--accent-ink);background:var(--accent-soft)}
   .gbreak{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
   .gbreak .gsub{color:var(--ink-soft)} .gbreak .gnewi{color:var(--theory)}
+  /* the "build a Venator?" panel */
+  .vgrid{display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:11px}
+  @media(max-width:760px){.vgrid{grid-template-columns:1fr}}
+  .vcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+  .vcard.vwide{}
+  .vh{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);margin-bottom:8px}
+  .vh span{font-weight:500;color:var(--ink-faint)}
+  .vrow{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .vrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .vscroll{overflow-x:auto}
+  table.vtab{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+  table.vtab th,table.vtab td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  table.vtab th{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.vtab td:first-child,table.vtab th:first-child{text-align:left;color:var(--ink)}
+  table.vtab b{color:var(--accent-ink)}
+  .vpass{color:var(--live)} .vfail{color:var(--accent-ink)} .vsame{color:var(--live)}
+  .vnote{font-size:11.5px;color:var(--ink-soft);line-height:1.55;margin-top:8px} .vnote b{color:var(--ink)}
+  .vbottom{margin-top:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;padding:11px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .vbottom b{color:var(--accent-ink)}
 
   /* sections below */
   .sec{margin-top:44px}
@@ -333,6 +352,12 @@
   </div>
 
   <section class="sec">
+    <h2><span class="n">⚓</span> Could New Terra build a Venator here?</h2>
+    <p class="lead">A worked example against the <b>real engine construction model</b> (grounded at file:line). The headline surprise: <b>50% and 90% population give the identical build time</b> — in the shipped game population is a <b>yes/no crew gate</b>, not a speed dial. What actually gates it is having a <b>shipyard</b> (a factory can't assemble a ship) and the <b>refined materials</b>.</p>
+    <div id="venator"></div>
+  </section>
+
+  <section class="sec">
     <h2><span class="n">↓</span> Four zooms, one surface</h2>
     <p class="lead">The developer's framing — <b>"4 big slices you can zoom into at high accuracy."</b> This prototype lives at the <b>regional / operational</b> zoom — the one where a battle actually happens and where the environment is decided by the ground you pick.</p>
     <div class="zoom">
@@ -373,7 +398,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-Q — CAN THIS WORLD BUILD A VENATOR? a worked build-time analysis against the REAL engine construction model (a shipyard added to New Terra + a "⚓ Could New Terra build a Venator?" panel): the headline — 50% and 90% population give the IDENTICAL build time, because population is a BINARY 884-crew gate (met thousands-of-times over at both), never a throttle; the real gates are having a SHIPYARD (a factory can't assemble a ship) and the refined materials. Cost = mass×0.1 = ~2.0M engine points (the design-tool's 28,860 is a mock); ~3.3 months on a maxed shipyard, ~27 years on a stock one. Earth (homeworld) already has all 15 minerals. Grounded by a 4-agent source dig at file:line. On rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -676,7 +701,12 @@
                dial:"NEW PublicOrder input → props LegitimacyDB, holds off RebellionDB (the governability gauge, not happiness)", real:"security → NEW LegitimacyInputs.PublicOrder"},
     market:   {name:"Trade Hub",         icon:"🏦", comp:"logistics", crew:300,   out:{commerce:5000, amenity:5},
                dial:"NEW ColonyCommerce income → the LIVE faction Ledger (the pipe tax already uses) + a little amenity morale; a big finance/commerce workforce (crew 300)", real:"market → NEW Ledger category (reuses tax plumbing)"},
+    shipyard:  {name:"Shipyard",         icon:"⚓", comp:null,        crew:10000,  out:{shipAssembly:200},
+               dial:"ship-assembly rate = Crew Size×0.02 = 200/day (stock, Crew 10,000); the ONLY building that can ASSEMBLE a ship — factories can't. Dial Crew up (max 1,000,000 → 20,000/day) to build one hull faster; more yards = more hulls in PARALLEL", real:"shipyard → IndustryAtb(ship-assembly) · ShipDesign.IndustryTypeID"},
   };
+  // The Venator (from PREMADE-UNIT-COSTS + the engine cost formula). mockBP = the design-tool figure; engineBP =
+  // the REAL engine cost = MassPerUnit_kg × 0.1 (ShipDesign.cs:267) — ~69× bigger, the honest number.
+  const VENATOR = {name:"Venator-class Star Destroyer", massT:19986, crew:884, materialsT:22748, mockBP:28860, engineBP:Math.round(19986*1000*0.1)};
   // metric display metadata (label · icon · formatter) — how the summed outputs READ
   function fmtBig(n){ n=+n||0; return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+" k":Math.round(n).toString(); }
   const METRIC = {
@@ -693,6 +723,7 @@
     amenity:  {label:"Amenity (morale)",   icon:"🎭", fmt:v=>fmtBig(v)+" pts"},
     order:    {label:"Public order",       icon:"🚔", fmt:v=>fmtBig(v)+" pts"},
     commerce: {label:"Commerce",           icon:"🏦", fmt:v=>fmtBig(v)+" cr/mo"},
+    shipAssembly:{label:"Ship assembly",   icon:"⚓", fmt:v=>Math.round(v).toLocaleString()+" pts/day"},
     support:  {label:"Support capacity",   icon:"⚙", fmt:v=>fmtBig(v)},
     crew:     {label:"Jobs (workers)",     icon:"👷", fmt:v=>fmtBig(v)},
   };
@@ -719,6 +750,7 @@
        {q:4,   r:10,  terr:"coast",  name:"Entertainment District",icon:"🎭", stack:[["amenity",400],["infra",150]]},
        {q:-11, r:-2,  terr:"coast",  name:"Financial District",   icon:"🏦", stack:[["market",120],["infra",150]]},
        {q:1,   r:-12, terr:"plains", name:"Metro Police HQ",      icon:"🚔", stack:[["police",90]]},
+       {q:12,  r:-6,  terr:"coast",  name:"Naval Yards",          icon:"⚓", stack:[["shipyard",1]]},
      ]},
     {key:"mining", tag:"Ferrum Basin", role:"Mining & primary smelting", icon:"⛏",
      want:["mountains","highlands","volcanic","barren"], blurb:"In the ore-rich hills: the deep cuts feed the smelters, an arcology houses the miners, and a precinct keeps a hard company town in order.",
@@ -759,7 +791,7 @@
   //    (the real shipped default) × terrain affinity (ruling #13; ×1 for the parts with no affinity). Crew
   //    (= JOBS, the employment morale band) and km² never take affinity. `eff` lets the demo override terrain.
   function distAgg(d){
-    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
+    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
     const base=Object.assign({},o);
     d.stack.forEach(([k,n])=>{ const I=INST[k]; if(!I) return;
       const terr = (civState.misplace && (I.comp==="food")) ? "barren" : d.terr;   // demo: farms to barren
@@ -770,12 +802,12 @@
     return {o, base};
   }
   function regionAgg(region){
-    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
     region.districts.forEach(d=>{ const {o}=distAgg(d); for(const k in t) t[k]+=o[k]||0; });
     return t;
   }
   function civAgg(){
-    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,crew:0,km2:0};
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
     (state.regionHex||[]).forEach((h,i)=>{ if(!h) return; const r=regionAgg(CIV[i]); for(const k in t) t[k]+=r[k]||0; });
     t.workforce = t.pop*WORKFORCE_FRAC; t.foodDemand = t.pop*PER_CAPITA_FOOD;
     t.employ = t.workforce>0 ? t.crew/t.workforce : 0;   // jobs / workforce (the morale ratio)
@@ -1539,7 +1571,51 @@
       <div class="civfoot"><b class="gr LIVE">LIVE</b> the per-unit OUTPUTS and the food/workforce math are the real engine (installations.json · <span class="mono">ColonyManpowerDB</span> · <span class="mono">SustenanceProcessor</span>); jobs = each installation's <span class="mono">CrewReq</span> (the civic audit's one-line fix — the +15/−25 band is otherwise a dead wire). &nbsp;<b class="gr THEORY">RECAL</b> three CREW coeffs were tuned at the SOURCE designers this session — mine ×0.005→×0.0005, factory ×5→×0.5 (<span class="mono">industrialderived.html</span>), infrastructure 10→Support×0.2 (<span class="mono">civicderived.html</span>). &nbsp;<b class="gr THEORY">NEW</b> the two GAUGES are illustrative — built from the real <span class="mono">ColonyMoraleDB</span> coefficients composed with the new civic lines wired this session: amenity morale (uncapped) + public-order legitimacy, each a one-time engine add; commerce is a new <span class="mono">ColonyCommerce</span> category on the LIVE Ledger. &nbsp;<b class="gr THEORY">THEORY</b> the terrain-affinity multiplier (ruling #13) and per-hex mining. District COUNTS are authoring (a super-city is big on purpose); no number chased to a target.</div>`;
   }
 
-  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); renderCiv(); }
+  // ── RENDER: could this world build a Venator? — the REAL engine construction model, worked + honest ──
+  function renderVenator(){
+    const el=document.getElementById("venator"); if(!el) return;
+    if(state.planet!=="earth"){ el.innerHTML=`<div class="civnote" style="border:1px solid var(--line);border-radius:12px">The civilization and its shipyard are on Earth — switch to Earth.</div>`; return; }
+    const C=civAgg(), V=VENATOR;
+    const yardRate=C.shipAssembly||0, stockRate=200, maxRate=1000000*0.02;
+    const daysFor=(cost,rate)=> rate>0 ? cost/rate : Infinity;
+    const dur=(d)=> !isFinite(d)?'∞ — no shipyard': d>=365?(d/365).toFixed(1)+' yr' : d>=30?(d/30).toFixed(1)+' mo' : Math.round(d)+' d';
+    const rateRow=(label,rate,note)=>`<tr><td>${label}${note?` <span style="color:var(--ink-faint);font-size:10px">${note}</span>`:''}</td><td>${Math.round(rate).toLocaleString()}/day</td><td><b>${dur(daysFor(V.engineBP,rate))}</b></td><td>${dur(daysFor(V.mockBP,rate))}</td></tr>`;
+    const pops=[{k:'50%',f:0.5},{k:'90%',f:0.9},{k:'100% (now)',f:1.0}];
+    const popRow=(p)=>{ const wf=C.workforce*p.f, pass=wf>=V.crew;
+      return `<tr><td>${p.k}</td><td>${fmtBig(wf)}</td><td>${pass?`<b class="vpass">✓ crews it</b>`:`<b class="vfail">✗ can't crew</b>`}</td><td><b>${dur(daysFor(V.engineBP,yardRate))}</b></td></tr>`; };
+    el.innerHTML = `
+      <div class="vgrid">
+        <div class="vcard"><div class="vh">⚓ The Venator <span>Star Destroyer</span></div>
+          <div class="vrow"><span>Mass</span><b>${V.massT.toLocaleString()} t</b></div>
+          <div class="vrow"><span>Crew — the gate</span><b>${V.crew}</b></div>
+          <div class="vrow"><span>Refined materials</span><b>${V.materialsT.toLocaleString()} t</b></div>
+          <div class="vrow"><span>Cost · engine <span class="mono" style="font-size:10px">mass×0.1</span></span><b>${V.engineBP.toLocaleString()} pts</b></div>
+          <div class="vrow"><span>Cost · design-tool</span><b>${V.mockBP.toLocaleString()} pts</b></div>
+        </div>
+        <div class="vcard vwide">
+          <div class="vh">Build time = cost ÷ (shipyard rate × infra eff)</div>
+          <div class="vscroll"><table class="vtab"><thead><tr><th>Shipyard</th><th>Rate</th><th>Engine cost</th><th>Tool cost</th></tr></thead><tbody>
+            ${rateRow("New Terra's Naval Yards", yardRate, "stock, Crew 10k")}
+            ${rateRow("A maxed shipyard", maxRate, "Crew 1,000,000")}
+          </tbody></table></div>
+          <div class="vnote">Rate = <b>Crew Size × 0.02</b>. A <b>factory can't build a ship</b> (wrong industry type) — so the world's yard sets the pace. More yards = more hulls in <b>parallel</b>, not one hull faster. Slower is realistic: this is <b>months per hull, not days</b>.</div>
+        </div>
+      </div>
+      <div class="vgrid" style="margin-top:11px">
+        <div class="vcard vwide"><div class="vh">👷 Population 50% vs 90% → <b class="vsame">identical</b></div>
+          <div class="vscroll"><table class="vtab"><thead><tr><th>Population</th><th>Workforce</th><th>Crew gate (884)</th><th>Build time</th></tr></thead><tbody>
+            ${pops.map(popRow).join("")}
+          </tbody></table></div>
+          <div class="vnote">Population is a <b>binary crew gate</b> (need 884 free workers), never a throttle — and 884 is nothing against millions, so <b>every level clears it and builds at the identical rate</b>. It could only ever <em>block</em> (not slow) a build if the city fell below ~1,770 people.</div>
+        </div>
+        <div class="vcard"><div class="vh">🪨 Resources</div>
+          <div class="vnote" style="margin-top:6px">This world is <b>Earth, the homeworld</b> → the engine guarantees <b>all 15 minerals</b> (<span class="mono">randomHW</span>) + a million units of each in stock. No resource upgrade needed here — just a <b>refinery</b> to make the ${V.materialsT.toLocaleString()} t of materials. A <b>captured</b> world lacks the rare metals, and a <b>missing material hard-stalls</b> the build.</div>
+        </div>
+      </div>
+      <div class="vbottom"><b>Bottom line:</b> build a <b>shipyard</b> (the real blocker — factories can't), and a Venator takes ~<b>${dur(daysFor(V.engineBP,maxRate))}</b> on a maxed yard (${dur(daysFor(V.engineBP,stockRate))} on a stock one) by the engine's true mass-based cost. <b>50% and 90% population are identical</b> — the crew gate is cleared thousands of times over at both.</div>`;
+  }
+
+  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); renderCiv(); renderVenator(); }
 
   document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
