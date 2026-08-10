@@ -207,7 +207,7 @@
   <header>
     <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
     <h1>A planet, exactly as the game models it</h1>
-    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>. Pick a world, click a hex, read the fight — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, one mineral per hex, never in the sea or the ice. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
     <div class="gradekey">
       <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
       <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
@@ -234,6 +234,7 @@
           <button class="tbtn" id="hazToggle" aria-pressed="true">☣ Ground hazards</button>
           <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather</button>
           <button class="tbtn" id="nightToggle" aria-pressed="true">🌙 Day/night</button>
+          <button class="tbtn" id="resToggle" aria-pressed="true">⛏ Resources</button>
           <button class="tbtn" id="wxRoll">🌀 Roll</button>
           <button class="tbtn" id="wxAuto" aria-pressed="false">▶ Auto-roll</button>
         </div>
@@ -287,8 +288,8 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-09 (rev-I — mini-hex-anchored grid scaling + the potato budget; real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
-    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span>. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-J — RESOURCE NODES: located mineral deposits across the surface, terrain-weighted, one mineral per hex, honestly graded; on rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
@@ -485,6 +486,43 @@
     ice:{cls:"Open", col:"--t-ice", name:"Ice", crossRough:true}
   };
 
+  // ── RESOURCE NODES — located mineral deposits per hex (Industry/HexMinerals.SeedDeposits) ──
+  //    The engine seeds a body's MineralsDB onto specific surface hexes: terrain-WEIGHTED
+  //    (mountains/volcanic richest, NEVER ocean/ice), ONE mineral per deposit hex (a legible
+  //    map — "iron here, copper there"), each carrying a share of the body's real tonnage
+  //    (LocatableFraction 0.6). Stored on GroundHex.DepositMineralId / DepositAmount; the
+  //    per-faction fog view is GroundHex.DepositAssay (Masked). The 15 minerals + credit values
+  //    are the REAL base-mod set (GameData/basemod/TemplateFiles/minerals.json). Node COUNT here
+  //    is scaled by each mineral's terrestrial ABUNDANCE (iron everywhere; tungsten a lone
+  //    strategic node), and the tonnages are representative (real amounts are a per-save RNG roll).
+  const MINERALS = {
+    iron:                 {name:"Iron",                val:10,   col:"#b06a4f", nodes:6, lo:4e6,  hi:30e6},
+    silicon:              {name:"Silicon",             val:15,   col:"#9aa7b3", nodes:6, lo:4e6,  hi:30e6},
+    regolith:             {name:"Regolith",            val:1,    col:"#c9b184", nodes:6, lo:5e6,  hi:40e6},
+    aluminium:            {name:"Aluminium",           val:15,   col:"#b8c2cc", nodes:5, lo:3e6,  hi:22e6},
+    water:                {name:"Water",               val:5,    col:"#4aa3d8", nodes:5, lo:2e6,  hi:18e6},
+    hydrocarbons:         {name:"Hydrocarbons",        val:5,    col:"#2f2a24", nodes:4, lo:1e6,  hi:12e6},
+    graphite:             {name:"Graphite",            val:25,   col:"#54545e", nodes:3, lo:4e5,  hi:4e6},
+    nickel:               {name:"Nickel",              val:25,   col:"#8fb08a", nodes:3, lo:4e5,  hi:4e6},
+    titanium:             {name:"Titanium",            val:75,   col:"#7f93a8", nodes:3, lo:3e5,  hi:3e6},
+    chromium:             {name:"Chromium",            val:40,   col:"#57c4c9", nodes:2, lo:8e4,  hi:9e5},
+    fissionables:         {name:"Fissionables",        val:500,  col:"#7bd43a", nodes:2, lo:4e4,  hi:5e5},
+    copper:               {name:"Copper",              val:50,   col:"#d67c3b", nodes:2, lo:6e4,  hi:7e5},
+    "rare-earth-elements":{name:"Rare Earth Elements", val:1000, col:"#b559d6", nodes:2, lo:2e4,  hi:3e5},
+    lithium:              {name:"Lithium",             val:100,  col:"#d98fb8", nodes:1, lo:1e4,  hi:1.2e5},
+    tungsten:             {name:"Tungsten",            val:250,  col:"#5b6470", nodes:1, lo:8e3,  hi:9e4}
+  };
+  // Iterate common → rare, so the common minerals grab the richest hexes first (as the engine
+  // iterates minerals.Minerals). Every mineral tries to claim `nodes` hexes; a small world with
+  // little mineable ground simply seeds fewer (the weighted pick runs dry — matching the engine).
+  const MINERAL_ORDER = ["iron","silicon","regolith","aluminium","water","hydrocarbons","graphite",
+                         "nickel","titanium","chromium","fissionables","copper","rare-earth-elements",
+                         "lithium","tungsten"];
+  // Terrain richness — VERBATIM from HexMinerals.TerrainWeight. 0 ⇒ no deposits there (ocean/ice).
+  const TWEIGHT = { mountains:1.0, volcanic:1.0, highlands:0.8, barren:0.7, desert:0.5, plains:0.35,
+                    tundra:0.3, forest:0.3, jungle:0.3, wetland:0.25, coast:0.15, ocean:0.0, ice:0.0 };
+  function fmtT(t){ return t>=1e6 ? (t/1e6).toFixed(1)+" Mt" : t>=1e3 ? Math.round(t/1e3)+" kt" : Math.round(t)+" t"; }
+
   // ── HAZARD effects (PlanetEnvironmentFactory.cs) — Q2 ruling C (2026-08-09) ──
   //    scope "world" = a whole-planet fact (airlessness / a poison sky) → EVERY hex.
   //    scope "local" = a menace of the ground itself → only on the terrain that BREEDS it
@@ -572,7 +610,7 @@
   // header, the readout and the Scale panel. (The game pans a fixed WINDOW of the fine grid instead
   // of downsampling — modelled in the Scale panel; here we favour a legible whole-planet overview.)
   function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
-  const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, sel:null, hexes:[],
+  const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, showRes:true, sel:null, hexes:[],
                  cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
@@ -657,7 +695,34 @@
       }
     }
     state.hexes=hexes;
-    seedStorms();   // storms are born over their source terrain (Q3)
+    seedStorms();      // storms are born over their source terrain (Q3)
+    seedDeposits();    // mineral deposits located per-hex, terrain-weighted (HexMinerals)
+  }
+
+  // ── RESOURCE NODES: seed located deposits onto hexes (mirrors Industry/HexMinerals.SeedDeposits) ──
+  //    Terrain-WEIGHTED weighted-random pick over mineable land (never ocean/ice), ONE mineral per
+  //    hex, deterministic per world+grid. Representative tonnages (real amounts are a per-save RNG).
+  function seedDeposits(){
+    state.hexes.forEach(h=>{ h.dep=null; });
+    const land = state.hexes.filter(h=> (TWEIGHT[h.terr]||0) > 0);
+    if(!land.length) return;
+    let seed = (state.planet.length*911 + state.cols*7 + state.rows*13 + 4242) & 0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const used=new Set();
+    const wpick=()=>{                                   // weighted by terrain richness, skipping taken hexes
+      let tot=0; for(const h of land) if(!used.has(h)) tot+=TWEIGHT[h.terr];
+      if(tot<=0) return null;
+      let r=rnd()*tot;
+      for(const h of land){ if(used.has(h)) continue; r-=TWEIGHT[h.terr]; if(r<=0) return h; }
+      return null;
+    };
+    MINERAL_ORDER.forEach(id=>{
+      const m=MINERALS[id];
+      for(let i=0;i<m.nodes;i++){
+        const h=wpick(); if(!h) break; used.add(h);
+        h.dep={ m:id, amt: Math.round(m.lo + rnd()*(m.hi-m.lo)) };
+      }
+    });
   }
 
   // Q2 ruling C (whole-planet facts everywhere; local menaces from the hex's own terrain) +
@@ -737,6 +802,11 @@
           if(!icon && isStormEye(hex)){ const e=state.storms.find(st=>st.q===hex.c&&st.r===hex.r); if(e) icon=HAZ[e.kind].icon; }
         }
       }
+      if(state.showRes && hex.dep){                    // located mineral deposit — a themed halo + the mineral-coloured node
+        const m=MINERALS[hex.dep.m], ny=cy-size*0.30;
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.40).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="${m.col}" pointer-events="none"/>`;
+      }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
     });
     svg.innerHTML=s;
@@ -769,6 +839,13 @@
     if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
     else html+=`<span class="lg" style="opacity:.6">— no weather (airless)</span>`;
     html += `<span class="lg"><i class="tint night"></i>🌙 night (terminator)</span></div>`;
+    // resources present on this world (highest credit-value first), each a mineral-coloured node
+    const mins=[...new Set(state.hexes.filter(h=>h.dep).map(h=>h.dep.m))].sort((a,b)=>MINERALS[b].val-MINERALS[a].val);
+    if(mins.length){
+      html += `<div class="lgrow"><b class="lgh">Resources</b>`;
+      mins.forEach(id=>{ html+=`<span class="lg"><i style="background:${MINERALS[id].col};border-radius:50%"></i>${MINERALS[id].name}</span>`; });
+      html += `<span class="lg"><b class="gr LIVE">LIVE</b>located per-hex (HexMinerals)</span></div>`;
+    }
     html += `<div class="lgrow"><b class="lgh">Read</b><span class="lg"><b class="gr LIVE">LIVE</b>reads it now</span><span class="lg"><b class="gr DATA">DATA</b>exists, ignored</span><span class="lg"><b class="gr THEORY">THEORY</b>proposed</span></div>`;
     el.innerHTML = html;
   }
@@ -844,6 +921,21 @@
       <div class="row"><span>Op-hex span</span><b>≈ ${hexPitchKm(state.planet)} km · ≈ ${Math.round(hexPitchKm(state.planet)*tc.move).toLocaleString()} km-equiv to cross</b></div>
       <div class="row"><span>Mini-hex (fight tile)</span><b>≈ ${miniHexKm(state.planet).toFixed(1)} km · ${MINI_ACROSS} across (≤50)</b></div>
       </div>`;
+
+    if(hex.dep){
+      const m=MINERALS[hex.dep.m], val=hex.dep.amt*m.val;
+      html += `<div class="sect"><div class="sh">Resource node <span class="badge LIVE">LIVE · located deposit</span></div>
+        <div class="haz" style="border-color:${m.col}">
+          <div class="hn"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${m.col};border:1px solid var(--line-strong);vertical-align:-2px;margin-right:7px"></span>${m.name}
+            <small>${fmtT(hex.dep.amt)} located · ${m.val} cr/unit · seeded on ${f.name.toLowerCase()} (terrain-weighted)</small></div>
+          <div class="hv">⛏ ${(val/1e6).toFixed(1)}M cr</div></div>
+        <div class="row"><span>Build a mine on this hex</span><b>PlaceInstallationOnHexOrder <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
+        <div class="row"><span>One mineral per deposit hex</span><b>HexMinerals <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
+        <div class="row"><span>Never on ocean / ice</span><b>weight 0 <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
+        <div class="row"><span>Assay (who knows the tonnage)</span><b>None→Partial→Full <span class="badge DATA" style="font-size:8px;padding:1px 4px">DATA</span></b></div>
+        <div class="flag" style="margin-top:8px"><b>Per-hex mining (THEORY):</b> today the colony mines the <b>body-wide pool</b> — this located tonnage is the spatial picture, not yet the mined source. A mine that draws <b>this</b> deposit (and depletes <b>this</b> hex) is the flagged follow-up. The <b>space survey</b> reveals the deposit's location + type (Partial assay); a <b>ground scout</b> on the hex reveals the exact tonnes (Full).</div>
+        </div>`;
+    }
 
     if(liveHaz.length){
       html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE · bleeds units/hr</span></div>`;
@@ -941,6 +1033,7 @@
   document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
   document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
+  document.getElementById("resToggle").addEventListener("click",e=>{ state.showRes=!state.showRes; e.target.setAttribute("aria-pressed",state.showRes); e.target.textContent = state.showRes?"⛏ Resources":"⛏ Resources off"; renderMap(); });
   document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderReadout(); });
   document.getElementById("wxAuto").addEventListener("click",e=>{
     if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
