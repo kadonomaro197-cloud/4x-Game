@@ -240,7 +240,7 @@
   <header>
     <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
     <h1>A planet, exactly as the game models it</h1>
-    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, one mineral per hex, never in the sea or the ice. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
     <div class="gradekey">
       <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
       <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
@@ -327,7 +327,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-K — THE SELF-SUFFICIENT CITY + the TERRAIN-AFFINITY production boost, ground ruling #13: buildings placed 1:1 on CityGrid tiles, each earning a boost to its own output from the ground that makes sense — graded THEORY; on rev-J's resource nodes, rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-L — TWO-TIER RESOURCE DEPOSITS: the regional hex flags that ore is present; the mini-hexes pinpoint the exact ore tiles + tonnage (the roll-up pattern, like buildings M16); on rev-K's self-sufficient city + component-level terrain-affinity, rev-J's resource nodes, rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · the city's buildings + what each produces (food/mining/refining/build/research/pop-support) → <span>GameData/basemod/TemplateFiles/installations.json</span> (food-production / mine / refinery / factory / research-lab / infrastructure) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · self-sufficiency loops (food demand vs output; support vs population) → <span>ColonySustenanceDB / FoodProductionAtbDB / SustenanceProcessor / PopulationProcessor</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -900,10 +900,10 @@
           if(!icon && isStormEye(hex)){ const e=state.storms.find(st=>st.q===hex.c&&st.r===hex.r); if(e) icon=HAZ[e.kind].icon; }
         }
       }
-      if(state.showRes && hex.dep){                    // located mineral deposit — a themed halo + the mineral-coloured node
-        const m=MINERALS[hex.dep.m], ny=cy-size*0.30;
-        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.40).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
-        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="${m.col}" pointer-events="none"/>`;
+      if(state.showRes && hex.dep){                    // TIER 1 — the REGIONAL hex flags resources PRESENT (general): a RING
+        const m=MINERALS[hex.dep.m], ny=cy-size*0.30;   //   (the mini-hexes below pinpoint the specific ore tiles — filled dots)
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.42).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="none" stroke="${m.col}" stroke-width="${(size*0.15).toFixed(1)}" pointer-events="none"/>`;
       }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
     });
@@ -942,7 +942,7 @@
     if(mins.length){
       html += `<div class="lgrow"><b class="lgh">Resources</b>`;
       mins.forEach(id=>{ html+=`<span class="lg"><i style="background:${MINERALS[id].col};border-radius:50%"></i>${MINERALS[id].name}</span>`; });
-      html += `<span class="lg"><b class="gr LIVE">LIVE</b>located per-hex (HexMinerals)</span></div>`;
+      html += `<span class="lg"><b class="gr LIVE">LIVE</b>regional ⭘ flags it · mini-hex ● pinpoints it</span></div>`;
     }
     html += `<div class="lgrow"><b class="lgh">Read</b><span class="lg"><b class="gr LIVE">LIVE</b>reads it now</span><span class="lg"><b class="gr DATA">DATA</b>exists, ignored</span><span class="lg"><b class="gr THEORY">THEORY</b>proposed</span></div>`;
     el.innerHTML = html;
@@ -965,6 +965,27 @@
       tiles.push({q,r,terr: rnd()<0.30 ? pal[Math.floor(rnd()*pal.length)] : hex.terr});
     return tiles;
   }
+  // TIER 2 — the SPECIFIC deposits, pinpointed to individual mini-hexes inside a regional hex (the developer's
+  //   "the regional hex delineates THAT there are resources; the mini hexes get specific"). Terrain-weighted like
+  //   HexMinerals but one zoom finer, deterministic per regional hex; the tonnage partitions the regional total.
+  function miniDeposits(hex){
+    if(!hex || !hex.dep) return [];
+    const tiles=microTiles(hex, MINI_RADIUS), mineable=tiles.filter(t=>(TWEIGHT[t.terr]||0)>0);
+    if(!mineable.length) return [];
+    let seed=(hex.c*929+hex.r*131+state.planet.length*7+77)&0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const amt=hex.dep.amt, k = amt>1e7?5 : amt>3e6?4 : amt>7e5?3 : amt>1e5?2 : 1;   // richer deposit → more ore tiles
+    const picks=[], used=new Set(); let guard=0;
+    while(picks.length<k && guard++<k*25){
+      let tot=0; for(const t of mineable) if(!used.has(t)) tot+=TWEIGHT[t.terr];
+      if(tot<=0) break; let r=rnd()*tot, pick=null;
+      for(const t of mineable){ if(used.has(t)) continue; r-=TWEIGHT[t.terr]; if(r<=0){pick=t;break;} }
+      if(pick){ used.add(pick); picks.push(pick); }
+    }
+    if(!picks.length) return [];
+    const share=Math.max(1, Math.round(amt/picks.length));
+    return picks.map(t=>({q:t.q,r:t.r,terr:t.terr,m:hex.dep.m,amt:share}));
+  }
   function renderMicro(hex){
     // The REAL mini-hex grid: a 49-across disk (CityPatchRadius 24 → 1,801 tiles), each ≈ 3 km.
     const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex, MINI_RADIUS), sq3=Math.sqrt(3);
@@ -972,15 +993,23 @@
     let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
     const pos=tiles.map(t=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2); minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y); return {t,x,y}; });
     const pad=size+2, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
-    let s="";
-    pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad, pts=[];
+    let s=""; const posByQR={};
+    pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad; posByQR[t.q+","+t.r]={cx,cy}; const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       s+=`<polygon points="${pts.join(' ')}" fill="var(${(FEAT[t.terr]||FEAT.barren).col})" stroke="var(--sunk)" stroke-width="0.4"/>`;
     });
+    // the SPECIFIC ore tiles — filled mineral nodes on their exact mini-hexes (tier 2)
+    const deps=miniDeposits(hex);
+    deps.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return; const m=MINERALS[d.m];
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.7).toFixed(1)}" fill="none" stroke="var(--panel)" stroke-width="${(size*0.7).toFixed(1)}" opacity="0.85"/>`;
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.35).toFixed(1)}" fill="${m.col}" stroke="var(--ink)" stroke-width="0.5"/>`;
+    });
     const mk=miniHexKm(state.planet).toFixed(1);
-    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> op-hex</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
+    const depNote = deps.length ? ` · <b style="color:var(--accent-ink)">⛏ ${deps.length} ore ${deps.length>1?'tiles':'tile'} pinpointed</b>` : '';
+    const depCap = deps.length ? `The <b>${MINERALS[hex.dep.m].name}</b> flagged on this regional hex is pinpointed here to <b>${deps.length}</b> specific mini-hex${deps.length>1?'es':''} (the highlighted nodes) — that's where a mine actually sits. The regional hex says <em>there's ore in this ~${hexPitchKm(state.planet)} km area</em>; the mini-hexes say <em>exactly where</em>. ` : '';
+    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> op-hex${depNote}</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
       <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Mini-hex sub-grid">${s}</svg>
-      <div class="cap">The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, where units actually fight, each ≈ <b>${mk} km</b> across. Bounded at <b>≤50 across</b> (${MINI_ACROSS} realized) so a weak PC survives, and built LAZILY only for a developed op-hex. v1 inherits the theatre terrain; per-tile variation (M4) is the future slice.</div></div>`;
+      <div class="cap">${depCap}The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, where units actually fight, each ≈ <b>${mk} km</b> across. Bounded at <b>≤50 across</b> (${MINI_ACROSS} realized) so a weak PC survives, built LAZILY only for a developed op-hex.</div></div>`;
   }
 
   // ── RENDER: the self-sufficient CITY + the terrain-affinity feature (ruling #13) ──
@@ -1113,17 +1142,21 @@
       </div>`;
 
     if(hex.dep){
-      const m=MINERALS[hex.dep.m], val=hex.dep.amt*m.val;
+      const m=MINERALS[hex.dep.m], val=hex.dep.amt*m.val, deps=miniDeposits(hex);
+      const dot=`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${m.col};border:1px solid var(--line-strong);vertical-align:-2px;margin-right:7px"></span>`;
+      const gb=(g)=>`<span class="badge ${g}" style="font-size:8px;padding:1px 4px">${g}</span>`;
       html += `<div class="sect"><div class="sh">Resource node <span class="badge LIVE">LIVE · located deposit</span></div>
         <div class="haz" style="border-color:${m.col}">
-          <div class="hn"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${m.col};border:1px solid var(--line-strong);vertical-align:-2px;margin-right:7px"></span>${m.name}
-            <small>${fmtT(hex.dep.amt)} located · ${m.val} cr/unit · seeded on ${f.name.toLowerCase()} (terrain-weighted)</small></div>
-          <div class="hv">⛏ ${(val/1e6).toFixed(1)}M cr</div></div>
-        <div class="row"><span>Build a mine on this hex</span><b>PlaceInstallationOnHexOrder <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
-        <div class="row"><span>One mineral per deposit hex</span><b>HexMinerals <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
-        <div class="row"><span>Never on ocean / ice</span><b>weight 0 <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></b></div>
-        <div class="row"><span>Assay (who knows the tonnage)</span><b>None→Partial→Full <span class="badge DATA" style="font-size:8px;padding:1px 4px">DATA</span></b></div>
-        <div class="flag" style="margin-top:8px"><b>Per-hex mining (THEORY):</b> today the colony mines the <b>body-wide pool</b> — this located tonnage is the spatial picture, not yet the mined source. A mine that draws <b>this</b> deposit (and depletes <b>this</b> hex) is the flagged follow-up. The <b>space survey</b> reveals the deposit's location + type (Partial assay); a <b>ground scout</b> on the hex reveals the exact tonnes (Full).</div>
+          <div class="hn">${dot}${m.name}<small>${fmtT(hex.dep.amt)} in this REGIONAL hex · ${m.val} cr/unit · on ${f.name.toLowerCase()} (terrain-weighted)</small></div>
+          <div class="hv">⛏ ${(val/1e6).toFixed(1)}M cr</div></div>`;
+      if(deps.length){
+        html += `<div class="row" style="border-bottom:none;padding-bottom:2px"><span>Specific deposits — pinpointed in the mini-hex grid ▽</span><b>${deps.length} ore ${deps.length>1?'tiles':'tile'}</b></div>`;
+        deps.forEach(d=> html += `<div class="row"><span>&nbsp;&nbsp;↳ mini-hex <span class="mono">(${d.q},${d.r})</span> · ${FEAT[d.terr].name}</span><b>${fmtT(d.amt)}</b></div>`);
+      }
+      html += `<div class="row"><span>Regional hex flags presence + type</span><b>space survey · Partial ${gb("DATA")}</b></div>
+        <div class="row"><span>Mini-hex pinpoint + exact tonnes</span><b>ground scout · Full ${gb("DATA")}</b></div>
+        <div class="row"><span>Build a mine on the exact ore tile</span><b>PlaceInstallationOnHexOrder ${gb("LIVE")}</b></div>
+        <div class="flag" style="margin-top:8px"><b>Two tiers (a roll-up, like buildings M16):</b> the <b>regional hex</b> only says <em>there is ${m.name} somewhere in this ~${hexPitchKm(state.planet)} km area</em> — what a <b>space survey</b> reveals (type + presence). The <b>mini-hexes</b> say <em>which exact tiles hold it, and how much</em> — what a <b>ground scout</b> reveals, and where a mine actually sits. Engine today: <span class="mono">GroundHex.DepositMineralId</span> locates on the regional hex (LIVE); pinpointing down to a <span class="mono">CityTile</span> is the same fine-truth / coarse-aggregate roll-up buildings already use (the finer-grain refinement). <b>Per-hex mining (THEORY):</b> v1 still mines the body-wide pool — drawing from the exact ore tile is the follow-up.</div>
         </div>`;
     }
 
