@@ -174,6 +174,39 @@
   .resolve{margin-top:12px;width:100%;font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:10px;padding:11px;cursor:pointer}
   .resolve:hover{filter:brightness(1.06)}
 
+  /* the self-sufficient city */
+  .citywrap{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:18px;margin-top:8px}
+  @media(max-width:820px){.citywrap{grid-template-columns:1fr}}
+  svg.citysvg{width:100%;height:auto;display:block;background:var(--sunk);border:1px solid var(--line);border-radius:12px}
+  svg.citysvg polygon{cursor:pointer;transition:filter .1s}
+  svg.citysvg polygon:hover{filter:brightness(1.15)}
+  svg.citysvg polygon.selb{stroke:var(--accent);stroke-width:2.4}
+  .citylegend{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:8px;display:flex;gap:5px 12px;flex-wrap:wrap}
+  .citylegend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+  table.cty{width:100%;border-collapse:collapse;font-size:12px}
+  table.cty th,table.cty td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+  table.cty th{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.cty td:first-child,table.cty th:first-child{text-align:left}
+  table.cty td .bi{margin-right:6px}
+  table.cty tr.selr td{background:var(--accent-soft)}
+  .boost{font-family:var(--mono);font-weight:800;font-size:11px;padding:1px 5px;border-radius:5px}
+  .boost.up{background:var(--live-bg);color:var(--live)} .boost.dn{background:var(--accent-soft);color:var(--accent-ink)} .boost.flat{background:var(--sunk);color:var(--ink-faint)}
+  .ledger{margin-top:12px;display:grid;grid-template-columns:1fr;gap:6px}
+  .lrow{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;background:var(--inset);border:1px solid var(--line);border-left:3px solid var(--live);border-radius:8px;padding:8px 11px}
+  .lrow.deficit{border-left-color:var(--accent)}
+  .lrow .lk{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+  .lrow .lb{height:7px;border-radius:4px;background:var(--sunk);overflow:hidden;position:relative}
+  .lrow .lb span{position:absolute;left:0;top:0;bottom:0;background:var(--live);border-radius:4px}
+  .lrow.deficit .lb span{background:var(--accent)}
+  .lrow .lv{font-family:var(--mono);font-size:11.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .verdict{margin-top:12px;background:var(--live-bg);border:1px solid var(--live);border-radius:10px;padding:11px 13px;font-size:13.5px;color:var(--ink);font-weight:600}
+  .verdict b{color:var(--live)}
+  .cityflag{margin-top:10px;font-size:12.5px;color:var(--ink-soft);border:1px dashed var(--line-strong);border-radius:9px;padding:10px 12px;line-height:1.5}
+  .cityflag b{color:var(--accent-ink)}
+  .movesim{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .movesim button{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  .movesim button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
   /* sections below */
   .sec{margin-top:44px}
   .sec h2{font-size:clamp(18px,2.4vw,23px);font-weight:760;letter-spacing:-.01em;display:flex;gap:12px;align-items:baseline}
@@ -259,6 +292,12 @@
   </section>
 
   <section class="sec">
+    <h2><span class="n">⌂</span> A self-sufficient city — and why the ground you build on matters</h2>
+    <p class="lead">This is a colony that <b>stands on its own</b>: it houses its people, feeds them, powers itself, and runs a closed <b>extract → refine → fabricate</b> loop from the ore under its feet — no imports. Every building sits <b>1:1 on one tile</b> of the city grid (the engine's <span class="mono">CityTile</span>) and carries one or more production <b>components</b>. That's the key design call (ground ruling #13): the boost rides the <b>component, not the building shell</b> — because Pulsar sums production <b>per component attribute</b> (a farm's <span class="mono">FoodProductionAtbDB</span>, a habitat's <span class="mono">PopulationSupportAtbDB</span>), each already gated by the body's environment. So a <b>mixed-use</b> building boosts each function by its <em>own</em> affinity — watch the <b>Highland Outpost</b>: its mining loves the mountain (+50%) while its housing hates it (×0.70). Real components + real production numbers; the terrain multiplier is the proposal → <b>THEORY</b>. Then hit the demo button to build the Agriculture component on the wrong ground and watch the city starve.</p>
+    <div id="cityhost"></div>
+  </section>
+
+  <section class="sec">
     <h2><span class="n">→</span> How the ground becomes the fight — what's real</h2>
     <p class="lead">You don't pick a battle's environment from a menu — <b>the location picks it for you</b>, and the AI reads the same thing off the same hex. But be exact about what "environment" means to the engine today. The <b>ground</b> resolver reads two things; the <b>space</b> resolver reads nothing about location at all.</p>
     <div class="scroll"><table class="dt">
@@ -288,8 +327,8 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-J — RESOURCE NODES: located mineral deposits across the surface, terrain-weighted, one mineral per hex, honestly graded; on rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
-    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-K — THE SELF-SUFFICIENT CITY + the TERRAIN-AFFINITY production boost, ground ruling #13: buildings placed 1:1 on CityGrid tiles, each earning a boost to its own output from the ground that makes sense — graded THEORY; on rev-J's resource nodes, rev-I's mini-hex-anchored grid + potato budget, real surface maps, per-hex hazards, rolling weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · the city's buildings + what each produces (food/mining/refining/build/research/pop-support) → <span>GameData/basemod/TemplateFiles/installations.json</span> (food-production / mine / refinery / factory / research-lab / infrastructure) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · self-sufficiency loops (food demand vs output; support vs population) → <span>ColonySustenanceDB / FoodProductionAtbDB / SustenanceProcessor / PopulationProcessor</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
@@ -522,6 +561,65 @@
   const TWEIGHT = { mountains:1.0, volcanic:1.0, highlands:0.8, barren:0.7, desert:0.5, plains:0.35,
                     tundra:0.3, forest:0.3, jungle:0.3, wetland:0.25, coast:0.15, ocean:0.0, ice:0.0 };
   function fmtT(t){ return t>=1e6 ? (t/1e6).toFixed(1)+" Mt" : t>=1e3 ? Math.round(t/1e3)+" kt" : Math.round(t)+" t"; }
+
+  // ── PRODUCTION COMPONENTS + THE TERRAIN-AFFINITY FEATURE (ground ruling #13) ──────────────────
+  //    THE ANSWER to "the building, or the COMPONENTS on it?" → the COMPONENTS. In Pulsar, production
+  //    is read PER-COMPONENT-ATTRIBUTE, not per building: GetTotalFoodOutput sums each FoodProductionAtbDB
+  //    component's FoodOutput × HealthPercent (ComponentInstancesDBExtensions.cs:52); GetPopulationSupportValue
+  //    sums each PopulationSupportAtbDB (:85) and ALREADY gates each component by the body's environment
+  //    (GravityToleranceAtb/PressureToleranceAtb — "out of tolerance ⇒ contributes nothing"). Terrain-affinity
+  //    is that SAME per-component environment modifier one zoom finer: a multiplier on THAT component's output,
+  //    read off the HEX terrain, multiplied in beside HealthPercent. So it rides the production *Atb (like
+  //    penetration rides GroundWeaponAtb, ruling #2) — NOT the building shell — and a MIXED-use building boosts
+  //    each function by its own affinity. The components + what each produces are REAL (installations.json → LIVE);
+  //    only the multiplier is new (THEORY — no building/component terrain-affinity exists in the engine yet).
+  const COMP = {
+    housing:  {name:"Habitation",  icon:"🏙", makes:"Pop support",         base:5.0,  fmt:v=>v.toFixed(1)+" M", real:"PopulationSupportAtbDB → GetPopulationSupportValue",
+               aff:{plains:1.20,coast:1.20,forest:1.10,wetland:1.10,tundra:0.90,desert:0.85,barren:0.85,highlands:0.85,mountains:0.70,volcanic:0.50,ice:0.50}},
+    food:     {name:"Agriculture", icon:"🌾", makes:"Food output",         base:4000, fmt:v=>Math.round(v).toLocaleString()+"/day", real:"FoodProductionAtbDB → GetTotalFoodOutput",
+               aff:{wetland:1.50,plains:1.40,coast:1.25,jungle:1.20,forest:1.15,tundra:0.55,highlands:0.70,mountains:0.50,desert:0.50,barren:0.40,volcanic:0.30,ice:0.10}},
+    mining:   {name:"Extraction",  icon:"⛏", makes:"Mineral extraction",  base:250,  fmt:v=>Math.round(v)+"/day", real:"MineResourcesAtbDB → MineResourcesProcessor",
+               aff:{mountains:1.50,volcanic:1.40,highlands:1.30,barren:1.15,desert:1.00,tundra:0.80,plains:0.70,forest:0.60,jungle:0.60,coast:0.50,wetland:0.40,ocean:0,ice:0}},
+    refine:   {name:"Refining",    icon:"🏭", makes:"Refinery points",     base:300,  fmt:v=>Math.round(v)+"/day", real:"RefineResourcesAtbDB → RefineResourcesProcessor",
+               aff:{barren:1.20,desert:1.15,plains:1.10,highlands:1.05,tundra:1.00,volcanic:0.90,coast:0.90,forest:0.85,wetland:0.80}},
+    build:    {name:"Fabrication", icon:"🏗", makes:"Build points",        base:100,  fmt:v=>Math.round(v)+"/day", real:"ConstructionAtb → IndustryJob2",
+               aff:{plains:1.20,coast:1.15,barren:1.10,desert:1.05,highlands:0.95,forest:0.85,jungle:0.80,mountains:0.70,volcanic:0.70}},
+    research: {name:"Research",    icon:"🔬", makes:"Research points",     base:30,   fmt:v=>v.toFixed(1)+"/day", real:"ResearchPointsAtbDB → ResearchProcessor",
+               aff:{coast:1.15,plains:1.10,forest:1.05,wetland:1.00,barren:0.90,volcanic:0.80,ice:0.80}},
+    logistics:{name:"Logistics",   icon:"🚀", makes:"Off-world throughput", base:50,  fmt:v=>Math.round(v)+"/day", real:"Spaceport → CargoStorage/Logistics",
+               aff:{plains:1.15,coast:1.10,desert:1.00,barren:1.00,forest:0.80,mountains:0.70,jungle:0.70,volcanic:0.70}},
+  };
+  function affMult(ckey, terr){ const c=COMP[ckey]; return (c && c.aff && (terr in c.aff)) ? c.aff[terr] : 1.0; }
+
+  // ── THE SELF-SUFFICIENT CITY — a coastal-plains capital on a CityGrid (radius-2, 19 tiles) ──
+  //    A building is a SHELL placed 1:1 on ONE tile (CityTile.BuildingInstanceId); it carries one or
+  //    more production COMPONENTS, each earning ITS OWN affinity boost off this tile. The Highland
+  //    Outpost is MIXED (mining + a small barracks) — the same tile boosts its mining and penalises its
+  //    housing, which is exactly why affinity belongs on the component. The balance math (food vs demand,
+  //    support vs population, mine→refine→build) is what the engine computes; population is a demo figure.
+  const CITY_POP = 5.0, FOOD_PER_M = 1000;   // M colonists; food units/day demanded per M (demo calibration)
+  // comps: production components on this building. s = a component's scale (default 1).
+  const CITY = [
+    {q:0,r:0,  terr:"plains",    name:"Colony Hub",      icon:"🏙", comps:[{c:"housing"}]},
+    {q:1,r:0,  terr:"plains",    name:"Fabricator",      icon:"🏗", comps:[{c:"build"}]},
+    {q:1,r:-1, terr:"highlands", name:"Mine",            icon:"⛏", comps:[{c:"mining"}]},
+    {q:0,r:-1, terr:"highlands"},
+    {q:-1,r:0, terr:"coast",     name:"Spaceport",       icon:"🚀", comps:[{c:"logistics"}]},
+    {q:-1,r:1, terr:"coast",     name:"Research Campus",  icon:"🔬", comps:[{c:"research"}]},
+    {q:0,r:1,  terr:"wetland",   name:"Agri-Complex",    icon:"🌾", comps:[{c:"food"}]},
+    {q:2,r:0,  terr:"barren",    name:"Refinery",        icon:"🏭", comps:[{c:"refine"}]},
+    {q:2,r:-1, terr:"barren"},
+    {q:2,r:-2, terr:"volcanic"},
+    {q:1,r:-2, terr:"mountains", name:"Highland Outpost", icon:"⛏", mixed:true, comps:[{c:"mining"},{c:"housing",s:0.2}]},
+    {q:0,r:-2, terr:"tundra"},
+    {q:-1,r:-1,terr:"plains"},
+    {q:-2,r:0, terr:"ocean"},
+    {q:-2,r:1, terr:"coast"},
+    {q:-2,r:2, terr:"ocean"},
+    {q:-1,r:2, terr:"forest"},
+    {q:0,r:2,  terr:"forest"},
+  ];
+  const cityState = {sel:null, misplace:false};   // misplace = the "what if you build the farm wrong" demo
 
   // ── HAZARD effects (PlanetEnvironmentFactory.cs) — Q2 ruling C (2026-08-09) ──
   //    scope "world" = a whole-planet fact (airlessness / a poison sky) → EVERY hex.
@@ -885,6 +983,98 @@
       <div class="cap">The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, where units actually fight, each ≈ <b>${mk} km</b> across. Bounded at <b>≤50 across</b> (${MINI_ACROSS} realized) so a weak PC survives, and built LAZILY only for a developed op-hex. v1 inherits the theatre terrain; per-tile variation (M4) is the future slice.</div></div>`;
   }
 
+  // ── RENDER: the self-sufficient CITY + the terrain-affinity feature (ruling #13) ──
+  const affBadge=(m)=> m>1 ? `<span class="boost up">+${Math.round((m-1)*100)}%</span>` : (m<1 ? `<span class="boost dn">×${m.toFixed(2)}</span>` : `<span class="boost flat">×1</span>`);
+  function cityLedger(){
+    const tot={housing:0,food:0,mining:0,refine:0,build:0,research:0,logistics:0};
+    CITY.forEach(t=>{ if(!t.comps) return;
+      t.comps.forEach(cc=>{ const c=COMP[cc.c], s=cc.s||1;
+        const terr = (cc.c==="food" && cityState.misplace) ? "barren" : t.terr;   // misplace demo: the FOOD component
+        tot[cc.c] += c.base * s * affMult(cc.c, terr);
+      });
+    });
+    return { tot, foodDemand: CITY_POP*FOOD_PER_M, foodTerr: cityState.misplace?"barren":"wetland" };
+  }
+  function renderCity(){
+    const host=document.getElementById("cityhost"); if(!host) return;
+    const L=cityLedger(), sq3=Math.sqrt(3), size=28;
+    // ── the CityGrid — one building per tile, each carrying its production components ──
+    let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+    const pos=CITY.map((t,i)=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2);
+      minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y); return {t,i,x,y}; });
+    const pad=size+7, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
+    const bcol=m=> m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--ink-faint)');
+    const btxt=m=> m>1?`+${Math.round((m-1)*100)}%`:(m<1?`×${m.toFixed(2)}`:`×1`);
+    let g="";
+    pos.forEach(({t,i,x,y})=>{
+      const cx=x-minx+pad, cy=y-miny+pad, pts=[];
+      for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
+      const f=FEAT[t.terr]||FEAT.barren, sel=(cityState.sel===i&&t.comps)?' selb':'';
+      g+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.7" data-ci="${i}" class="${sel}"/>`;
+      if(t.comps){
+        const icons = t.mixed ? t.comps.map(cc=>COMP[cc.c].icon).join("") : t.icon;
+        g+=`<text x="${cx.toFixed(1)}" y="${(cy-2).toFixed(1)}" font-size="${(size*(t.mixed?0.6:0.82)).toFixed(0)}" text-anchor="middle" pointer-events="none">${icons}</text>`;
+        // one affinity badge per component (mixed shows both — the whole point)
+        t.comps.forEach((cc,ci)=>{ const m=affMult(cc.c,t.terr), yy=cy+size*(0.5+ci*0.32);
+          g+=`<text x="${cx.toFixed(1)}" y="${yy.toFixed(1)}" font-size="${(size*0.38).toFixed(0)}" text-anchor="middle" fill="${bcol(m)}" font-weight="800" pointer-events="none">${btxt(m)}</text>`;
+        });
+      }
+    });
+    const terrs=[...new Set(CITY.map(t=>t.terr))].filter(t=>FEAT[t]);
+    const leg = terrs.map(t=>`<span><i style="background:var(${FEAT[t].col})"></i>${FEAT[t].name}</span>`).join("");
+
+    // ── the roster — ONE ROW PER COMPONENT (the affinity is per component, so the table is too) ──
+    let rows="";
+    CITY.filter(t=>t.comps).forEach(t=>{ const i=CITY.indexOf(t);
+      t.comps.forEach((cc,ci)=>{ const c=COMP[cc.c], s=cc.s||1, m=affMult(cc.c,t.terr);
+        rows+=`<tr data-cr="${i}" class="${cityState.sel===i?'selr':''}">
+          <td>${ci===0?`<span class="bi">${t.icon}</span>${t.name}${t.mixed?' <span style="color:var(--ink-faint);font-size:9.5px">·mixed</span>':''}`:''}</td>
+          <td>${c.icon} ${c.name} <span style="color:var(--ink-faint);font-size:10.5px">${c.makes}</span></td>
+          <td>${FEAT[t.terr].name}</td><td>${affBadge(m)}</td><td>${c.fmt(c.base*s*m)}</td></tr>`;
+      });
+    });
+
+    // ── the self-sufficiency ledger (sums each component TYPE across the whole city) ──
+    const pct=(a,b)=>Math.max(0,Math.min(100, b>0?(a/b*100):100));
+    const line=(k,supply,demand,supTxt,demTxt,note)=>{
+      const ok=supply>=demand, p=pct(supply,demand);
+      return `<div class="lrow ${ok?'':'deficit'}"><div class="lk">${k}</div>
+        <div><div class="lb"><span style="width:${p.toFixed(0)}%"></span></div><div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px">${supTxt} ${note?'· '+note:''} vs need ${demTxt}</div></div>
+        <div class="lv" style="color:${ok?'var(--live)':'var(--accent-ink)'}">${ok?'✓ +':'✗ '}${ok?fmtNum(supply-demand):fmtNum(demand-supply)}</div></div>`;
+    };
+    let led = line("Housing", L.tot.housing, CITY_POP, L.tot.housing.toFixed(1)+" M supported", CITY_POP.toFixed(1)+" M pop", "🏙×"+CITY.filter(t=>t.comps&&t.comps.some(c=>c.c==="housing")).length)
+            + line("Food", L.tot.food, L.foodDemand, Math.round(L.tot.food).toLocaleString()+"/day", L.foodDemand.toLocaleString()+"/day", affBadge(affMult("food",L.foodTerr))+(cityState.misplace?" ⚠ on barren":""))
+            + `<div class="lrow"><div class="lk">Power</div><div><div class="lb"><span style="width:100%"></span></div><div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px">bundled in the Habitation component (power + utilities + housing)</div></div><div class="lv" style="color:var(--live)">✓ met</div></div>`
+            + `<div class="lrow"><div class="lk">Industry loop</div><div><div class="lb"><span style="width:100%"></span></div><div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px">extraction ${Math.round(L.tot.mining)} → refining ${Math.round(L.tot.refine)} cap → fabrication ${Math.round(L.tot.build)} BP/day — builds its own kit</div></div><div class="lv" style="color:var(--live)">✓ closed</div></div>`;
+
+    const selfSuff = (L.tot.housing>=CITY_POP) && (L.tot.food>=L.foodDemand);
+    const verdict = selfSuff
+      ? `<div class="verdict">✅ <b>SELF-SUFFICIENT.</b> This colony houses its ${CITY_POP.toFixed(1)} M people with headroom, feeds them with a surplus, powers itself, and runs a closed extract→refine→fabricate loop from local ore — no imports required. Research ticks over at ${L.tot.research.toFixed(1)} RP/day.</div>`
+      : `<div class="verdict" style="background:var(--accent-soft);border-color:var(--accent)">⚠ <b style="color:var(--accent-ink)">NOT self-sufficient</b> — the food supply (${Math.round(L.tot.food).toLocaleString()}/day) no longer covers demand (${L.foodDemand.toLocaleString()}/day). ${cityState.misplace?"The Agriculture component was moved onto BARREN ground (×0.40): same component, wrong hex, and the city STARVES.":""}</div>`;
+
+    host.innerHTML = `<div class="citywrap">
+      <div>
+        <svg class="citysvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Self-sufficient city on a CityGrid">${g}</svg>
+        <div class="citylegend">${leg}</div>
+        <div class="movesim">
+          <span>Terrain-affinity demo:</span>
+          <button id="misplaceBtn" aria-pressed="${cityState.misplace}">${cityState.misplace?"↩ Agriculture back on wetland":"⚠ build the Agriculture component on barren"}</button>
+        </div>
+      </div>
+      <div>
+        <div class="scroll"><table class="cty">
+          <thead><tr><th>Building</th><th>Component</th><th>On tile</th><th>Affinity</th><th>Output</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+        <div class="citylegend" style="margin-top:8px"><span><b class="boost up">+%</b> boost — the hex fits this component</span><span><b class="boost dn">×0.x</b> penalty — wrong ground</span><span><b class="gr THEORY" style="font-weight:800;font-size:9px;padding:1px 4px;border-radius:4px;background:var(--theory-bg);color:var(--theory)">THEORY</b> the affinity boost (ruling #13, not yet built)</span></div>
+        <div class="ledger">${led}</div>
+        ${verdict}
+        <div class="cityflag"><b>The feature (ruling #13) — on the COMPONENT, not the building shell (THEORY):</b> production in Pulsar is summed <b>per component attribute</b> (<span class="mono">GetTotalFoodOutput</span> reads each <span class="mono">FoodProductionAtbDB</span>; <span class="mono">GetPopulationSupportValue</span> reads each <span class="mono">PopulationSupportAtbDB</span> — and already gates each by the body's gravity/pressure tolerance). Terrain-affinity is that <b>same per-component environment modifier one zoom finer</b>: a multiplier on <b>that component's</b> output, read off <span class="mono">CityTile.Terrain</span>, multiplied in beside <span class="mono">HealthPercent</span>. So it rides the production <span class="mono">*Atb</span> (like penetration rides <span class="mono">GroundWeaponAtb</span>, ruling #2) — which is why the <b>Highland Outpost</b> above boosts its <b>⛏ mining +50%</b> and penalises its <b>🏙 housing ×0.70</b> on the <em>same</em> mountain tile. The components + what they produce are <b>LIVE</b>; only the multiplier is new.</div>
+      </div>
+    </div>`;
+  }
+  function fmtNum(n){ return Math.abs(n)>=1000? Math.round(n).toLocaleString() : (Number.isInteger(n)?n:(+n).toFixed(1)); }
+
   // ── RENDER: the readout panel ──
   function renderReadout(){
     const el=document.getElementById("readout");
@@ -935,6 +1125,15 @@
         <div class="row"><span>Assay (who knows the tonnage)</span><b>None→Partial→Full <span class="badge DATA" style="font-size:8px;padding:1px 4px">DATA</span></b></div>
         <div class="flag" style="margin-top:8px"><b>Per-hex mining (THEORY):</b> today the colony mines the <b>body-wide pool</b> — this located tonnage is the spatial picture, not yet the mined source. A mine that draws <b>this</b> deposit (and depletes <b>this</b> hex) is the flagged follow-up. The <b>space survey</b> reveals the deposit's location + type (Partial assay); a <b>ground scout</b> on the hex reveals the exact tonnes (Full).</div>
         </div>`;
+    }
+
+    // terrain-affinity feature (ruling #13) — what a COMPONENT would gain (or lose) if built on THIS ground
+    const affList = Object.keys(COMP).map(k=>({k,m:affMult(k,hex.terr)})).filter(o=>o.m!==1).sort((a,b)=>b.m-a.m);
+    if(affList.length){
+      const chips = affList.slice(0,3).map(o=>`${COMP[o.k].icon} ${COMP[o.k].name} ${affBadge(o.m)}`).join(" ");
+      const worst = affList[affList.length-1];
+      html += `<div class="sect"><div class="sh">Terrain affinity <span class="badge THEORY">THEORY · ruling #13</span></div>
+        <div class="tac" style="border-left-color:var(--theory)"><b>A component built here would get:</b> ${chips}${worst.m<1?` &nbsp;—&nbsp; but ${COMP[worst.k].name} would suffer ${affBadge(worst.m)}`:""}. The boost rides the <b>component</b> (its production <span class="mono">*Atb</span>), not the building shell — so <b>${FEAT[hex.terr].name}</b> is prime ${COMP[affList[0].k].makes.toLowerCase()} ground. See the self-sufficient city below. <em>(Components + production are real; the terrain multiplier is the proposal — not wired.)</em></div></div>`;
     }
 
     if(liveHaz.length){
@@ -1044,7 +1243,14 @@
     const t=e.target, mk=t&&t.getAttribute&&t.getAttribute("data-mini");
     if(mk!=null){ state.miniKm=+mk; state.sel=null; buildField(); renderAll(); }
   });
+  // the self-sufficient city — select a building (tile or roster row), or run the misplace demo
+  document.getElementById("cityhost").addEventListener("click",e=>{
+    const t=e.target;
+    if(t && t.id==="misplaceBtn"){ cityState.misplace=!cityState.misplace; renderCity(); return; }
+    const raw=(t&&t.getAttribute)?(t.getAttribute("data-ci")??t.getAttribute("data-cr")):null;
+    if(raw!=null){ const idx=+raw; if(CITY[idx]&&CITY[idx].b){ cityState.sel=(cityState.sel===idx?null:idx); renderCity(); } }
+  });
 
-  buildField(); renderAll();
+  buildField(); renderAll(); renderCity();
 })();
 </script>
