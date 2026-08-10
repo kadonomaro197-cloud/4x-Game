@@ -254,6 +254,7 @@
   .gbar.leg span{background:var(--accent)} .gbar.com span{background:var(--data)}
   .gv{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums} .gv b{font-weight:800} .gv .up{color:var(--live)}
   .gtag{font-family:var(--sans);font-size:10.5px;color:var(--live);background:var(--live-bg);padding:1px 6px;border-radius:5px;margin-left:4px}
+  .gtag.storm{color:var(--accent-ink);background:var(--accent-soft)}
   .gbreak{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
   .gbreak .gsub{color:var(--ink-soft)} .gbreak .gnewi{color:var(--theory)}
 
@@ -372,7 +373,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (89/100 → migration +3.9%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The four new civic dials were derived from a grounded source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -645,8 +646,8 @@
   //  on the plains). Every per-unit number below is the REAL shipped default from installations.json —
   //  the district total is just count × per-unit × terrain-affinity (ruling #13, the only THEORY term).
   const INST = {
-    infra:    {name:"Infrastructure",   icon:"🏢", comp:"housing",   crew:1000,  out:{pop:5000, support:1000},
-               dial:"Support Colonists 5,000 (max); crew RECALIBRATED to Support×0.2 = 1,000 — SERVICE employment (utilities/transit/medical/admin), the sector that staffs a country, and it prices the once-free Support dial", real:"infrastructure → PopulationSupportAtbDB (civic recal)"},
+    infra:    {name:"Infrastructure",   icon:"🏢", comp:"housing",   crew:2500,  out:{pop:5000, support:1000},
+               dial:"Support Colonists 5,000 (max); crew = Support×k SERVICE employment, and k is a DENSITY dial — a super-city runs k=0.5 = 2,500 (nearly its whole workforce in services), a frontier town k=0.2; the count of arcologies can't move employment, only k can", real:"infrastructure → PopulationSupportAtbDB (civic recal · density-scaled)"},
     food:     {name:"Food Production",  icon:"🌾", comp:"food",      crew:60,    out:{food:3000},
                dial:"Food Output 3,000/day (default); Crew = Output×0.02", real:"food-production → FoodProductionAtbDB"},
     mine:     {name:"Mine",             icon:"⛏", comp:"mining",    crew:500,   km2:1, out:{minerals:10},
@@ -669,12 +670,12 @@
     //    Their OUTPUTS are PROPOSED (each needs one small engine add): amenity → a new MoraleInputs.CivicAmenity line,
     //    order → a new LegitimacyInputs.PublicOrder input, commerce → a new ColonyCommerce category on the LIVE Ledger.
     //    Their CREW (jobs) is real — entertainment/police/markets employ SERVICE workers, like the rest of a real city.
-    amenity:  {name:"Entertainment Complex", icon:"🎭", comp:null,    crew:40,    out:{amenity:20},
-               dial:"NEW CivicAmenity morale line (UNCAPPED) — comfort is pegged at +20 and saturated, so this is the clean QoL axis", real:"recreation → NEW MoraleInputs.CivicAmenity"},
-    police:   {name:"Police Precinct",   icon:"🚔", comp:null,        crew:60,    out:{order:20},
+    amenity:  {name:"Entertainment Complex", icon:"🎭", comp:null,    crew:150,   out:{amenity:20},
+               dial:"NEW CivicAmenity morale line (UNCAPPED) — comfort is pegged at +20 and saturated, so this is the clean QoL axis; a big hospitality/retail sector (crew 150)", real:"recreation → NEW MoraleInputs.CivicAmenity"},
+    police:   {name:"Police Precinct",   icon:"🚔", comp:null,        crew:100,   out:{order:20},
                dial:"NEW PublicOrder input → props LegitimacyDB, holds off RebellionDB (the governability gauge, not happiness)", real:"security → NEW LegitimacyInputs.PublicOrder"},
-    market:   {name:"Trade Hub",         icon:"🏦", comp:"logistics", crew:50,    out:{commerce:5000, amenity:5},
-               dial:"NEW ColonyCommerce income → the LIVE faction Ledger (the pipe tax already uses) + a little amenity morale", real:"market → NEW Ledger category (reuses tax plumbing)"},
+    market:   {name:"Trade Hub",         icon:"🏦", comp:"logistics", crew:300,   out:{commerce:5000, amenity:5},
+               dial:"NEW ColonyCommerce income → the LIVE faction Ledger (the pipe tax already uses) + a little amenity morale; a big finance/commerce workforce (crew 300)", real:"market → NEW Ledger category (reuses tax plumbing)"},
   };
   // metric display metadata (label · icon · formatter) — how the summed outputs READ
   function fmtBig(n){ n=+n||0; return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+" k":Math.round(n).toString(); }
@@ -785,8 +786,15 @@
     const clamp=(x)=>Math.max(0,Math.min(100,x));
     t.mJobs    = t.employ>=1 ? 15 : Math.max(-25, 15-(1-t.employ)*40);   // ColonyMoraleDB.cs:133-142 (interp. illustrative)
     t.mComfort = 20;                                                     // Earth base infrastructure pegs MaxComfortBonus
-    t.mAmenity = Math.min(30, t.amenity*0.003);                         // NEW uncapped line (proposed coeff)
-    t.morale   = clamp(50 + t.mJobs + t.mComfort + t.mAmenity);
+    t.mAmenity = Math.min(15, t.amenity*0.0015);                        // NEW uncapped line (proposed coeff)
+    // WEATHER → MORALE (developer ask): a NEW transient morale input, fed by the rolling-storm system already
+    //   in this prototype — count the civ's provinces with a storm overhead right now (stormsOver reads the
+    //   showWeather toggle). Earth's mild storms nudge it; a storm-world (Venus) would crush it. Live: it
+    //   updates as the weather rolls (▶ Auto-roll), so you watch morale dip when a storm crosses the city.
+    let stormProv=0; (state.regionHex||[]).forEach(h=>{ if(h && stormsOver(h).length) stormProv++; });
+    t.stormProvinces = stormProv;
+    t.mWeather = -stormProv*6;                                          // NEW WeatherMorale line (proposed coeff)
+    t.morale   = clamp(50 + t.mJobs + t.mComfort + t.mAmenity + t.mWeather);
     t.migration= (t.morale-50)/50*5;                                    // MaxMigrationRate 0.05/mo
     t.lOrder   = Math.min(30, t.order*0.0075);                          // NEW PublicOrder → legitimacy (proposed coeff)
     t.legit    = clamp(50 + t.lOrder);
@@ -1475,7 +1483,7 @@
     // headline cards — the numbers a player actually reads
     const card=(icon,val,label,sub,cls)=>`<div class="bigm ${cls||''}"><i>${icon}</i><b>${val}</b><u>${label}</u>${sub?`<s>${sub}</s>`:''}</div>`;
     const employPct=Math.round(C.employ*100);
-    const employCls = C.employ<0.9?'':(C.employ<=1.1?'good':'warn');
+    const employCls = C.employ<0.7?'':(C.employ<=1.1?'good':'warn');
     let head =
       card("🏢", fmtBig(C.pop), "People housed", `${(km2).toFixed(0)} km² built · ${state.regionHex.filter(Boolean).length} provinces`) +
       card("👷", fmtBig(C.crew), "Jobs", `of ${fmtBig(C.workforce)} workforce (½ of pop)`, employCls) +
@@ -1488,10 +1496,10 @@
       card("🛡", METRIC.fortify.fmt(C.fortify), "Fortification", "the wall of bunkers") +
       card("🚀", METRIC.cargo.fmt(C.cargo)+" · "+Math.round(C.pads)+" pads", "Off-world", "spaceport + launch ranges");
     // the two honest reality-checks — employment and food
-    const empVerdict = C.employ<0.9
-      ? `<b>${employPct}% employed — a growing economy.</b> Jobs fill ${employPct}% of the workforce; the rest is headroom the civilization grows into (more industry raises the ratio; more housing adds people faster than jobs). Not a fudged number and not an artifact — a realistic young power.`
+    const empVerdict = C.employ<0.7
+      ? `<b>${employPct}% employed — a growing economy.</b> Jobs fill ${employPct}% of the workforce; the rest is headroom the city grows into. Not a fudged number and not an artifact.`
       : C.employ<=1.1
-      ? `<b>Near full employment</b> (${employPct}%) — the morale sweet spot (the +15 employment bonus). Population and industry are matched.`
+      ? `<b>${employPct}% employed — near full, a mature service economy.</b> A dense metropolis runs its service coefficient high (<b>k≈0.5</b> — nearly its whole working-age workforce in utilities/transit/healthcare/education/admin/retail/finance), so the +15 employment morale bonus is nearly maxed. That's the density lever, set at the SOURCE; the count of arcologies can't move employment — each adds people AND jobs in fixed proportion — <b>only the coefficient can</b>, which is why "fewer housing blocks" never reaches full and the service dial is the real answer.`
       : `<b>Labour-bound</b> — <b>${employPct}%</b>: more jobs than workers, so industry runs understaffed until the population grows or automates.`;
     // per-province cards
     const rcard=(i)=>{ const region=CIV[i], h=state.regionHex[i]; if(!h) return ""; const R=regionAgg(region);
@@ -1512,8 +1520,8 @@
       <div class="gauges">
         <div class="gauge"><div class="gh">😊 Morale — <span>are they happy</span> <b class="gnew">→ migration</b></div>
           <div class="gbar"><span style="width:${C.morale.toFixed(0)}%"></span></div>
-          <div class="gv"><b>${Math.round(C.morale)}</b>/100 → migration <b class="up">${C.migration>=0?'+':''}${C.migration.toFixed(1)}%/mo</b> ${C.migration>2?'<span class="gtag">a magnet — it snowballs</span>':''}</div>
-          <div class="gbreak">50 base &nbsp;${sgn(C.mJobs)} jobs &nbsp;${sgn(C.mComfort)} comfort <span class="gsub">(cap +20, pegged)</span> &nbsp;${sgn(C.mAmenity)} amenity <span class="gsub gnewi">(NEW · uncapped)</span></div></div>
+          <div class="gv"><b>${Math.round(C.morale)}</b>/100 → migration <b class="up">${C.migration>=0?'+':''}${C.migration.toFixed(1)}%/mo</b> ${C.stormProvinces>0?`<span class="gtag storm">⛈ ${C.stormProvinces} storm${C.stormProvinces===1?'':'s'} over the city</span>`:(C.migration>2?'<span class="gtag">a magnet — it snowballs</span>':'')}</div>
+          <div class="gbreak">50 base &nbsp;${sgn(C.mJobs)} jobs &nbsp;${sgn(C.mComfort)} comfort <span class="gsub">(cap +20, pegged)</span> &nbsp;${sgn(C.mAmenity)} amenity <span class="gsub gnewi">(NEW)</span> &nbsp;${sgn(C.mWeather)} weather <span class="gsub gnewi">(NEW · roll ▶ to watch it dip)</span></div></div>
         <div class="gauge"><div class="gh">🏛 Legitimacy — <span>are they governable</span> <b class="gnew">→ rebellion</b></div>
           <div class="gbar leg"><span style="width:${C.legit.toFixed(0)}%"></span></div>
           <div class="gv"><b>${Math.round(C.legit)}</b>/100 → <b>${governed}</b></div>
@@ -1524,7 +1532,7 @@
           <div class="gbreak">${Math.round(markets)} trade hubs · a new ColonyCommerce faucet on the LIVE tax pipe, atop population tax</div></div>
       </div>
       <div class="civreality">
-        <div class="crx"><span class="crh">👷 Employment</span> ${empVerdict} <span class="crn"><b>Services ${Math.round(svcShare*100)}%</b> of all jobs · heavy industry <b>${Math.round(heavyShare*100)}%</b> · the rest farms/labs/ports/garrison. That realistic mix is a SOURCE recalibration made this session (not a downstream fudge): mine &amp; factory crew cut 10× in <span class="mono">industrialderived.html</span>, and infrastructure given service employment (crew = Support×0.2) in <span class="mono">civicderived.html</span> — so housing is the main employer, as in a real country, instead of two buildings eating the workforce.</span></div>
+        <div class="crx"><span class="crh">👷 Employment</span> ${empVerdict} <span class="crn"><b>Services ${Math.round(svcShare*100)}%</b> of all jobs · heavy industry <b>${Math.round(heavyShare*100)}%</b> · the rest farms/labs/ports/garrison. That realistic mix is a SOURCE recalibration made this session (not a downstream fudge): mine &amp; factory crew cut 10× in <span class="mono">industrialderived.html</span>, and infrastructure given service employment (crew = Support×<b>k</b>, the DENSITY dial — a super-city runs <b>k=0.5</b>) in <span class="mono">civicderived.html</span> — so housing is the main employer, as in a real country, instead of two buildings eating the workforce.</span></div>
         <div class="crx"><span class="crh">🌾 Food</span> The farms make <b>${METRIC.food.fmt(C.food)}</b>; the whole civilization eats <b>${C.foodDemand.toFixed(0)}/day</b> (pop × the shipped <span class="mono">0.00001</span> per-capita demand). <b>One agri-complex feeds 300 M.</b> Food scarcity is a calibration dial, not a structural gap — surface it honestly. <button id="misplaceBtn" class="mbtn" aria-pressed="${civState.misplace}">${civState.misplace?"↩ farms back to the delta":"⚠ build the breadbasket on barren"}</button> ${civState.misplace?`<span class="crwarn">→ on barren (×0.40) the farms make just ${METRIC.food.fmt(C.food)} — still a surplus, because demand is almost nothing.</span>`:''}</div>
       </div>
       <div class="pcards">${CIV.map((_,i)=>rcard(i)).join("")}</div>
@@ -1538,10 +1546,10 @@
   document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
   document.getElementById("resToggle").addEventListener("click",e=>{ state.showRes=!state.showRes; e.target.setAttribute("aria-pressed",state.showRes); e.target.textContent = state.showRes?"⛏ Resources":"⛏ Resources off"; renderMap(); });
   const tagEditing=()=>{ const a=document.activeElement; return a && a.id==="tagInput"; };   // don't churn the readout while naming a hex
-  document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); if(!tagEditing()) renderReadout(); });
+  document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderCiv(); if(!tagEditing()) renderReadout(); });
   document.getElementById("wxAuto").addEventListener("click",e=>{
     if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
-    else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); if(!tagEditing()) renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
+    else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); renderCiv(); if(!tagEditing()) renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
   });
   // mini-hex size dial → rescales the whole grid (op-hex count changes to hold the mini size)
   document.getElementById("scalepanel").addEventListener("click",e=>{
