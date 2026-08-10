@@ -1035,8 +1035,8 @@
     if(dev){
       CITY.forEach(b=>{ const p=posByQR[b.q+","+b.r]; if(!p) return;
         const m=affMult(b.comps[0].c, b.terr), ring=m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--line-strong)');
-        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*2.1).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.5).toFixed(1)}"/>`;
-        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.95).toFixed(1)}" font-size="${(size*2.5).toFixed(0)}" text-anchor="middle" pointer-events="none">${b.icon}</text>`;
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.35).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.32).toFixed(1)}"/>`;
+        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.55).toFixed(1)}" font-size="${(size*1.55).toFixed(0)}" text-anchor="middle" pointer-events="none">${b.icon}</text>`;
       });
     }
     const mk=miniHexKm(state.planet).toFixed(1);
