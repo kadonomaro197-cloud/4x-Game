@@ -192,7 +192,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 <tr><td><b>mine</b></td><td><code>Area</code> 10k-100M</td><td><code>Area x 0.00001</code> minerals</td><td><code>Area x 0.05</code></td><td><b class="g">flat</b></td></tr>
 <tr><td><b>automine</b></td><td><code>Size</code> 5-5,000</td><td><code>Size x 0.005</code></td><td><code>Size x 2000</code></td><td><b class="g">flat</b></td></tr>
 <tr><td><b>refinery</b></td><td><code>Size</code> 1k-10k</td><td><code>Size x 0.1</code> refinery points</td><td><code>Size</code></td><td><b class="g">flat - and crew = exactly 1 per point</b></td></tr>
-<tr><td><b>factory</b></td><td><code>Size</code> 1k-tech cap</td><td><code>Size x 0.1</code> x three point types</td><td><code>Size x 1000</code></td><td><b class="g">flat</b> <s>crew Sizex5, BP Sizex20</s></td></tr>
+<tr><td><b>factory</b></td><td><code>Size</code> 1k-tech cap</td><td><code>Size x 0.1</code> x three point types</td><td><code>Size x 1000</code></td><td><b class="g">flat</b> <s>crew Sizex5 → <b class="a">x0.5</b> (recal), BP Sizex20</s></td></tr>
 <tr><td><b>shipyard</b></td><td><code>Slip Size</code> - <code>Crew Size</code></td><td><code>Crew Size x 0.02</code> assembly points</td><td><code>Slip Size x 8</code>, crew = <code>Crew Size</code></td><td><b class="g">both dials priced</b></td></tr>
 <tr><td><b>local-construction</b></td><td><code>Level</code> 1-256</td><td><code>Level x 5</code> construction points</td><td><code>Level x 5000</code></td><td><b class="g">flat</b> <s>crew Levelx55</s></td></tr>
 <tr><td><b>launch-complex</b></td><td><code>Max Tonnage</code> 10k-10M</td><td>the tonnage it can lift</td><td><code>Max Tonnage x 0.01</code></td><td><b class="g">flat</b></td></tr>
@@ -207,10 +207,11 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 <p class="big">Two ways to dig, and the obvious worry is that one strictly dominates. It does not, and the numbers say why.</p>
 <div class="scroll"><table class="t">
 <tr><th>At its shipped setting</th><th>Output</th><th>Mass</th><th>Output per kg</th><th>Crew</th><th>Mounts on</th><th>Its justification</th></tr>
-<tr><td><b>mine</b> <s>Area 1,000,000</s></td><td>10.0</td><td>50 t</td><td><b class="g">0.0002</b> <- wins x80</td><td><b class="r">5,000</b></td><td>colony - station</td><td><b>output per kilogram</b></td></tr>
+<tr><td><b>mine</b> <s>Area 1,000,000</s></td><td>10.0</td><td>50 t</td><td><b class="g">0.0002</b> <- wins x80</td><td><b class="a">500</b> <s>was 5,000</s></td><td>colony - station</td><td><b>output per kilogram</b></td></tr>
 <tr><td><b>automine</b> <s>Size 5</s></td><td>0.025</td><td>10 t</td><td>0.0000025</td><td><b class="g">0</b> <- wins</td><td><b class="g">colony - SHIP CARGO</b> <- wins</td><td><b>unmanned, and transportable</b></td></tr>
 </table></div>
-<p class="sub" style="margin-top:11px"><b>The mine is eighty times better per kilogram; the automine needs nobody and fits in a hold.</b> Each wins an axis outright, so neither is clutter - which is exactly the rule the Power door produced (<em>every option behind a door must win at least one axis</em>), satisfied here without anyone having to fix anything. <b>And it is the right pair of axes:</b> crew is a genuinely scarce pool (<code>ManpowerTools</code>), and "fits in a cargo hold" is what makes an automine the thing you drop on an asteroid you have not colonised. <b>The 5,000-crew figure on a full-size mine is steep and worth a look</b>, but it is a calibration question, not a structural one.</p>
+<p class="sub" style="margin-top:11px"><b>The mine is eighty times better per kilogram; the automine needs nobody and fits in a hold.</b> Each wins an axis outright, so neither is clutter - which is exactly the rule the Power door produced (<em>every option behind a door must win at least one axis</em>), satisfied here without anyone having to fix anything. <b>And it is the right pair of axes:</b> crew is a genuinely scarce pool (<code>ManpowerTools</code>), and "fits in a cargo hold" is what makes an automine the thing you drop on an asteroid you have not colonised. <b>The 5,000-crew figure on a full-size mine was steep</b> — a calibration question, not a structural one, and this campaign has now <b>answered it</b>.</p>
+<div class="okbox" style="border-left-color:var(--flag)"><b>CREW CALIBRATION DECISION (the source tweak — done here, not fudged downstream).</b> The two steep crew coefficients are cut <b>10×</b> so no single template swallows a colony's whole workforce: <b>mine</b> <code>Area×0.005 → ×0.0005</code> (5,000 → <b>500</b> per 1 km²), <b>factory</b> <code>Size×5 → ×0.5</code> (25,000 → <b>2,500</b> per default plant). The refinery's clean <b>1 crew per output point</b> is the anchor; mining and manufacturing stay the most hands-on jobs, just not <em>50×</em> the refinery. <b>And cutting them exposes the real employment lever:</b> with realistic industry crew the shipped set employs almost nobody, because <em>only</em> mines and factories carry labour — so the other half of this fix lives in the Civic door, where <b>infrastructure</b> now carries <b>service employment</b> (crew scaled to the population it houses — the sector that actually staffs a country). Downstream, <code>docs/ground/planetview.html</code> composes these recalibrated numbers into the civilization's books.</div>
 </div></section>
 
 <section class="band"><div class="w">
@@ -356,11 +357,12 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 </div></footer>
 <script>
 
-// -- the shipped arithmetic, verbatim from installations.json -----------------------------------------------
-// mine Area 10000..1e8 out = Area*0.00001 Mass = Area*0.05 Crew = Area*0.005
+// -- shipped arithmetic from installations.json, EXCEPT the two mine/factory CREW coeffs, RECALIBRATED
+//    this campaign (the flagged "steep crew" calibration question, now answered — see the decision box) ------
+// mine Area 10000..1e8 out = Area*0.00001 Mass = Area*0.05 Crew = Area*0.0005  (shipped x0.005=5,000/km2 -> recal x0.0005=500)
 // automine Size 5..5000 out = Size*0.005 Mass = Size*2000 Crew = 0 (ShipCargo mount)
-// refinery Size 1000..10000 out = Size*0.1 Mass = Size Crew = [Mass]*0.1
-// factory Size 1000..cap out = Size*0.1 x3 Mass = Size*1000 Crew = Size*5 BP = Size*20
+// refinery Size 1000..10000 out = Size*0.1 Mass = Size Crew = [Mass]*0.1   (unchanged — the clean anchor, 1 crew/point)
+// factory Size 1000..cap out = Size*0.1 x3 Mass = Size*1000 Crew = Size*0.5 BP = Size*20  (shipped Crew Size*5=25,000 -> recal Size*0.5=2,500)
 // + Fighter Construction Points 0..1000 <- a real slider, NOT in the DataDict, no industry type
 // shipyard Slip Size - Crew Size out = CrewSize*0.02 Mass = SlipSize*8 Crew = CrewSize (1:1)
 // research-lab Mass = 100000 CONSTANT - Vol 1000 - Crew 20 - RC 10 - Cr 120 - BP = [Mass]/2
@@ -368,7 +370,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgroun
 // bunker Mass = 50000 CONSTANT - Crew 50 - Cr 200
 // LocalFortify 0..1 - AdjacentProjection 0..1 <- both FREE. TileFootprint 1..40 cost-no-benefit
 const IND = {
- mine: {d1:'Area', lo:10000, hi:1e8, def:1e6, out:a=>a*0.00001, mass:(a,b)=>a*0.05*(1+3*b), crew:(a,b)=>a*0.005*(1-b),
+ mine: {d1:'Area', lo:10000, hi:1e8, def:1e6, out:a=>a*0.00001, mass:(a,b)=>a*0.05*(1+3*b), crew:(a,b)=>a*0.0005*(1-b),  /* RECALIBRATED this campaign: crew coeff x0.005 -> x0.0005, so a 1 km2 mine is 500 crew not 5,000 (see the crew-calibration decision) */
  cr:()=>120, bp:m=>m, rc:()=>0, unit:' min/tick', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'],
  noun:['Dig','Mine','Strip Mine'], mount:'colony - station', why:'output per kilogram - 80x the automine'},
  automine: {d1:'Size', lo:5, hi:5000, def:5, out:a=>a*0.005, mass:a=>a*2000, crew:()=>0,
@@ -377,7 +379,7 @@ const IND = {
  refinery: {d1:'Size', lo:1000, hi:10000,def:5000, out:a=>a*0.1, mass:(a,b)=>a*(1+3*b), crew:(a,b)=>a*0.1*(1-b),
  cr:m=>120, bp:m=>m, rc:()=>0, unit:' refine pts', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'],
  noun:['Cracking Plant','Refinery','Refinery Complex'], mount:'colony - station', why:'1 crew per refinery point, less what you automate'},
- factory: {d1:'Size', lo:1000, hi:25000,def:5000, out:a=>a*0.1, mass:(a,b)=>a*1000*(1+3*b), crew:(a,b)=>a*5*(1-b),
+ factory: {d1:'Size', lo:1000, hi:25000,def:5000, out:a=>a*0.1, mass:(a,b)=>a*1000*(1+3*b), crew:(a,b)=>a*0.5*(1-b),  /* RECALIBRATED this campaign: crew coeff x5 -> x0.5, so a default factory is 2,500 crew not 25,000 (see the crew-calibration decision) */
  cr:()=>120, bp:a=>a*20, rc:()=>0, unit:' pts x 3 types', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'], bpFromDial:true,
  noun:['Workshop','Factory','Manufactory'], mount:'colony - station', why:'three point types, all derived from Size'},
  yard: {d1:'Berth tonnage', lo:100, hi:200000, def:10000, d2:'Assembly rate', l2:10, h2:5000, def2:200,
@@ -544,11 +546,11 @@ function render(){
  note = ' <b>One building, domain-typed.</b> Right now it is an <b>'+YD2.fac+'</b> building <b>'+YD2.builds+'</b>. Two priced dials: <code>'+YD2.d1+'</code> gates the largest unit that FITS (a corvette slip cannot lay a dreadnought), and <code>'+YD2.d2+'</code> is throughput - the build-points/day the industry line runs at. Mass tracks the berth, crew tracks the rate.';
  verdict = ' <b>The DOMAIN is the forced choice, and it names the facility - because a yard is wrong for troops.</b> Ships and subs come off a slip; infantry come out of a <b>Training Depot</b>, tanks off a <b>Vehicle Works</b> line. Same two dials, five names, because the physical plant differs by medium. Each domain builds only the units whose chassis-environment it matches (the Chassis door).';
  } else if(job==='factory'){
- note = ' <b>Honest on its real dials.</b> <code>Size</code> drives three point types at <code>x 0.1</code> each; <code>Automation</code> trades crew for mass - and the factory\'s crew bill, <code>Size x 5</code>, is the steepest in the door, so automating matters most here. <b>The one dead dial that remains:</b> <code>Fighter Construction Points</code> (0 -> 1,000) is absent from the <code>DataDict</code> that becomes the industry rate table, and there is no <code>fighter-construction</code> industry type for it to feed.';
+ note = ' <b>Honest on its real dials.</b> <code>Size</code> drives three point types at <code>x 0.1</code> each; <code>Automation</code> trades crew for mass - and the factory\'s crew bill was <code>Size x 5</code> (25,000), the steepest in the door, now <b>RECALIBRATED to <code>Size x 0.5</code> (2,500)</b>. <b>The one dead dial that remains:</b> <code>Fighter Construction Points</code> (0 -> 1,000) is absent from the <code>DataDict</code> that becomes the industry rate table, and there is no <code>fighter-construction</code> industry type for it to feed.';
  verdict = ' <b>The cleanest decision in the door:</b> fighters are either a production type or they are not. Add the type and derive the points from <code>Size</code> like the other three - or delete the dial. The shipped default is <code>0</code>, so nothing is currently mis-balanced; it is a UI honesty problem.';
  } else if(job==='mine' || job==='automine'){
  note = ' <b>On the AREA dial, output and mass move together - output-per-tonne stays flat.</b> The second dial, <code>Automation</code>, is a different trade: it spends mass to cut miners. ' + (job==='mine'
-? 'A full-size mine gives <b>80x the output per kilogram</b> of an automine - that is its justification. Its 5,000-crew figure at the shipped area is steep and worth a calibration look.'
+? 'A full-size mine gives <b>80x the output per kilogram</b> of an automine - that is its justification. Its crew was a steep 5,000 at the shipped area; <b>RECALIBRATED this campaign to 500</b> (<code>Area x 0.0005</code>, a 10x cut).'
 : 'An automine is 80x worse per kilogram - and needs <b>zero crew</b> and mounts on <b>ShipCargo</b>, so you can drop it on a rock you have not colonised. <b>That is its justification, and it is a real one.</b>');
  verdict = ' <b>Both mines win an axis outright, so neither is clutter</b> - the Power door\'s justification rule satisfied here without anyone having designed for it. Switch between them and watch <b>output per tonne</b> and <b>output per crew</b> trade places.';
  } else {

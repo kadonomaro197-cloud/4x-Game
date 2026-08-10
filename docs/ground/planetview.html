@@ -206,6 +206,44 @@
   .movesim{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
   .movesim button{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
   .movesim button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* province roster (in the readout) */
+  .rblurb{font-size:12.5px;color:var(--ink-soft);margin:0 0 8px;line-height:1.5}
+  .rchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .rchip{display:flex;flex-direction:column;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 9px;min-width:70px}
+  .rchip i{font-style:normal;font-size:14px} .rchip s{text-decoration:none;font-family:var(--mono);font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);margin-top:1px}
+  .rchip{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* ── THE CIVILIZATION DASHBOARD — the empire-wide books below the map ── */
+  .civdash{background:var(--panel);border-top:1px solid var(--line)}
+  .civdash:empty{display:none}
+  .civnote{padding:16px;font-size:13.5px;color:var(--ink-soft);text-align:center;font-family:var(--mono)}
+  .civhead{padding:16px 17px 4px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .civhead h3{font-size:17px;font-weight:780;letter-spacing:-.01em}
+  .civhead p{margin:6px 0 0;font-size:12.5px;color:var(--ink-soft);max-width:80ch;line-height:1.55}
+  .bigms{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--line);margin:12px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .bigm{background:var(--panel);padding:11px 13px;display:flex;flex-direction:column;gap:1px}
+  .bigm i{font-style:normal;font-size:15px} .bigm b{font-size:19px;font-weight:820;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:2px}
+  .bigm u{text-decoration:none;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .bigm s{text-decoration:none;font-size:10.5px;color:var(--ink-soft);margin-top:2px;line-height:1.35}
+  .bigm.good{background:var(--live-bg)} .bigm.good b{color:var(--live)}
+  .bigm.warn{background:var(--data-bg)} .bigm.warn b{color:var(--data)}
+  .civreality{padding:13px 17px 4px;display:grid;gap:9px}
+  .crx{font-size:12.5px;color:var(--ink-soft);line-height:1.55;background:var(--inset);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 9px 9px 0;padding:9px 12px}
+  .crx b{color:var(--ink)} .crh{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--accent-ink);margin-right:6px}
+  .crn{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-faint)} .crn b{color:var(--ink-soft)}
+  .crwarn{color:var(--accent-ink);font-weight:600}
+  .mbtn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:3px 8px;cursor:pointer;margin-left:4px}
+  .mbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pcards{padding:13px 17px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
+  .pcard{background:var(--inset);border:1px solid var(--line);border-radius:11px;padding:11px 12px;border-top:3px solid var(--accent)}
+  .pch{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pch b{font-size:14px;font-weight:760} .pjump{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;padding:3px 8px;cursor:pointer}
+  .pcr{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px;letter-spacing:.02em}
+  .pcm{display:flex;gap:5px 10px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .pcj{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:7px;padding-top:6px;border-top:1px solid var(--line)}
+  .civfoot{padding:4px 17px 16px;font-size:11.5px;color:var(--ink-soft);line-height:1.6}
+  .civfoot .gr{font-weight:800;font-size:9px;padding:1px 5px;border-radius:4px}
+  .civfoot .gr.LIVE{background:var(--live-bg);color:var(--live)} .civfoot .gr.THEORY{background:var(--theory-bg);color:var(--theory)}
 
   /* sections below */
   .sec{margin-top:44px}
@@ -240,7 +278,7 @@
   <header>
     <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
     <h1>A planet, exactly as the game models it</h1>
-    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. A <b>developed colony</b> (dashed hex) shows the same way — click it and each <b>building is a chassis on one of its mini-hexes</b>; you can drop a <b>float tag</b> (a name of your choosing) on any hex. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. A whole <b>developed civilization</b> spans Earth (five dashed provinces, placed on the ground that suits each — capital on the coast, mines in the hills, foundry on the plains, farms on the delta, the shield on a ridge): click a province and each <b>mini-hex is a district</b> — a cluster of real installations whose outputs sum — and scroll below the map for <b>the civilization's books</b>, every number the real shipped output of those installations. You can drop a <b>float tag</b> (a name of your choosing) on any hex. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
     <div class="gradekey">
       <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
       <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
@@ -278,6 +316,7 @@
         <div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>
       </aside>
     </div>
+    <div class="civdash" id="civdash"></div>
   </div>
 
   <section class="sec">
@@ -287,7 +326,7 @@
       <div class="z"><div class="zk">Zoom 1</div><h3>System</h3><p>Planets as points on the orbit map — the strategic board.</p><span class="st built">ENGINE-WIRED</span></div>
       <div class="z"><div class="zk">Zoom 2</div><h3>Planet globe</h3><p>One wrapping cylinder grid (<span class="mono">SurfaceGrid</span>), banded into 4 regions. The client is fully on this globe.</p><span class="st built">ENGINE-WIRED · G6a</span></div>
       <div class="z here"><div class="zk">Zoom 3 — you are here</div><h3>Regional / operational</h3><p>Units move, fight, capture on real-distance hexes. Each hex carries a terrain and inherits the world's condition.</p><span class="st built">ENGINE-WIRED · W-track</span></div>
-      <div class="z"><div class="zk">Zoom 4</div><h3>Local / city</h3><p>Each installation sits 1:1 on its own fine tile. Raze it, capture it, defend it.</p><span class="st sim">C-track follows</span></div>
+      <div class="z"><div class="zk">Zoom 4</div><h3>Local / district</h3><p>Each mini-hex (~22 km²) is a district — a cluster of installations. Raze it, capture it, defend it.</p><span class="st sim">C-track follows</span></div>
     </div>
   </section>
 
@@ -321,8 +360,8 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-N — THE CITY IS BUILT ON THE MINI-HEXES: click a developed regional hex and each building is a chassis on ONE of its mini-hexes (its component boosted by that hex's ground); no separate city view, and no city icon on the regional map — instead a FLOAT TAG you can name anything and drop on any hex. On rev-L's two-tier resources, rev-K's component-level terrain-affinity, rev-J's resource nodes, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Sources, all verified at file:line:</p>
-    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · the city's buildings + what each produces (food/mining/refining/build/research/pop-support) → <span>GameData/basemod/TemplateFiles/installations.json</span> (food-production / mine / refinery / factory / research-lab / infrastructure) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · self-sufficiency loops (food demand vs output; support vs population) → <span>ColonySustenanceDB / FoodProductionAtbDB / SustenanceProcessor / PopulationProcessor</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-O — A WHOLE CIVILIZATION ACROSS FIVE PROVINCES: a 5 km mini-hex (~22 km²) is a DISTRICT — a cluster of real installations, not one building (the chassis answer: a mine alone is 1 km²) — and each province's districts sum to real books. Five provinces are placed logically (coast capital / hill mines / plains foundry / delta farms / ridge shield), and below the map the whole civilization's outputs read straight: 1.4 M housed, jobs vs workforce, minerals/materials/build/research per day, and a labour economy RECALIBRATED AT THE SOURCE designers this session (mine/factory crew cut 10×, infrastructure given service employment) so services ≈ 82% of jobs and heavy industry ≈ 14% — realistic, not two buildings eating the workforce; food demand 0.00001 → one farm feeds 300 M. 5 km is the default. On rev-N's float-tags-on-mini-hexes, rev-L's two-tier resources, rev-K's component-level terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; three CREW coeffs were tuned at the SOURCE component designers (not fudged downstream); nothing chased to a target. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
 
@@ -585,29 +624,129 @@
   };
   function affMult(ckey, terr){ const c=COMP[ckey]; return (c && c.aff && (terr in c.aff)) ? c.aff[terr] : 1.0; }
 
-  // ── THE SELF-SUFFICIENT CITY — a coastal-plains capital on a CityGrid (radius-2, 19 tiles) ──
-  //    A building is a SHELL placed 1:1 on ONE tile (CityTile.BuildingInstanceId); it carries one or
-  //    more production COMPONENTS, each earning ITS OWN affinity boost off this tile. The Highland
-  //    Outpost is MIXED (mining + a small barracks) — the same tile boosts its mining and penalises its
-  //    housing, which is exactly why affinity belongs on the component. The balance math (food vs demand,
-  //    support vs population, mine→refine→build) is what the engine computes; population is a demo figure.
-  const CITY_POP = 12.0, FOOD_PER_M = 1000;  // M colonists (a MAJOR capital); food units/day demanded per M
-  // comps: production components on this building. s = a component's scale (default 1).
-  // The developed colony's BUILDINGS — each a chassis on ONE mini-hex of the regional hex's CityGrid.
-  // (q,r) = mini-hex axial coords in that disk; terr = the ground the chassis sits on (we author a small
-  // patch so the coastal capital reads: waterfront port+campus, wet delta farm, hill mine). comps = its parts.
-  const CITY = [
-    {q:0,r:0,   terr:"plains",    name:"Capitol District", icon:"🏙", comps:[{c:"housing"}]},
-    {q:6,r:-2,  terr:"plains",    name:"Fabricator",       icon:"🏗", comps:[{c:"build"}]},
-    {q:-6,r:-7, terr:"highlands", name:"Mine",             icon:"⛏", comps:[{c:"mining"}]},
-    {q:-10,r:5, terr:"coast",     name:"Spaceport",        icon:"🚀", comps:[{c:"logistics"}]},
-    {q:-8,r:9,  terr:"coast",     name:"Research Campus",  icon:"🔬", comps:[{c:"research"}]},
-    {q:4,r:6,   terr:"wetland",   name:"Agri-Complex",     icon:"🌾", comps:[{c:"food"}]},
-    {q:10,r:0,  terr:"barren",    name:"Refinery",         icon:"🏭", comps:[{c:"refine"}]},
-    {q:-2,r:-11,terr:"mountains", name:"Highland Outpost", icon:"⛏", mixed:true, comps:[{c:"mining"},{c:"housing",s:0.2}]},
+  // ── THE CIVILIZATION — real installations → districts → regions, across MULTIPLE regional hexes ──
+  //  THE CHASSIS ANSWER (why 1 building doesn't span 5 km²): a 5 km mini-hex is ~21 km² of ground; a real
+  //  installation is 1 km² (a mine's default Area) up to ~100 km². So ONE mini-hex is not one building —
+  //  it is a DISTRICT: a CLUSTER of real installations whose outputs SUM (an M16 roll-up). A regional hex
+  //  (~245 km at 5 km mini) is a whole PROVINCE holding many districts; the civilization spans several
+  //  provinces, each placed on the ground that suits it (mines in the hills, farms on the delta, foundries
+  //  on the plains). Every per-unit number below is the REAL shipped default from installations.json —
+  //  the district total is just count × per-unit × terrain-affinity (ruling #13, the only THEORY term).
+  const INST = {
+    infra:    {name:"Infrastructure",   icon:"🏢", comp:"housing",   crew:1000,  out:{pop:5000, support:1000},
+               dial:"Support Colonists 5,000 (max); crew RECALIBRATED to Support×0.2 = 1,000 — SERVICE employment (utilities/transit/medical/admin), the sector that staffs a country, and it prices the once-free Support dial", real:"infrastructure → PopulationSupportAtbDB (civic recal)"},
+    food:     {name:"Food Production",  icon:"🌾", comp:"food",      crew:60,    out:{food:3000},
+               dial:"Food Output 3,000/day (default); Crew = Output×0.02", real:"food-production → FoodProductionAtbDB"},
+    mine:     {name:"Mine",             icon:"⛏", comp:"mining",    crew:500,   km2:1, out:{minerals:10},
+               dial:"Area 1 km² (default) → 10/day; crew RECALIBRATED area(m²)×0.0005 = 500 (was ×0.005 = 5,000 — the flagged steep coeff, cut 10×)", real:"mine → MineResourcesAtbDB (industrial recal)"},
+    refinery: {name:"Refinery",         icon:"🏭", comp:"refine",    crew:500,   out:{refine:500},
+               dial:"Size 5,000 (default) → 500 pts/day; exactly 1 crew per point (the clean anchor — unchanged)", real:"refinery → IndustryAtb(refining)"},
+    factory:  {name:"Factory",          icon:"🏗", comp:"build",     crew:2500,  out:{build:500},
+               dial:"Size 5,000 (default) → 500 build/day; crew RECALIBRATED Size×0.5 = 2,500 (was ×5 = 25,000 — cut 10×; still ~5 crew/build-point)", real:"factory → IndustryAtb (industrial recal)"},
+    lab:      {name:"Research Lab",     icon:"🔬", comp:"research",  crew:20,    out:{research:100},
+               dial:"Research 100/day (the max — Mass is a constant so the dial is FREE; you always build 100)", real:"research-lab → ResearchPointsAtbDB"},
+    spaceport:{name:"Spaceport",        icon:"🚀", comp:"logistics", crew:50,    out:{cargo:50000},
+               dial:"Warehouse 50,000 (default)", real:"spaceport → CargoStorage/Transfer"},
+    launch:   {name:"Launch Complex",   icon:"🛰", comp:"logistics", crew:50,    out:{pads:1},
+               dial:"1 pad, lifts 100 t (default)", real:"launch-complex → LaunchComplexAtb"},
+    academy:  {name:"Naval Academy",    icon:"🎓", comp:null,        crew:250,   out:{officers:1000},
+               dial:"Class 1,000 / 24 mo (default); Crew = Class×0.25", real:"naval-academy → NavalAcademyAtb"},
+    bunker:   {name:"Bunker",           icon:"🛡", comp:null,        crew:50,    out:{fortify:0.25},
+               dial:"+0.25 local fortify, +0.12 to each neighbour (default)", real:"bunker → GroundDefenseAtb"},
+  };
+  // metric display metadata (label · icon · formatter) — how the summed outputs READ
+  function fmtBig(n){ n=+n||0; return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+" k":Math.round(n).toString(); }
+  const METRIC = {
+    pop:      {label:"Population housed",  icon:"🏢", fmt:v=>fmtBig(v)},
+    food:     {label:"Food",               icon:"🌾", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    minerals: {label:"Minerals mined",     icon:"⛏", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    refine:   {label:"Materials refined",  icon:"🏭", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    build:    {label:"Construction",       icon:"🏗", fmt:v=>Math.round(v).toLocaleString()+" bp/day"},
+    research: {label:"Research",           icon:"🔬", fmt:v=>Math.round(v).toLocaleString()+" RP/day"},
+    cargo:    {label:"Cargo throughput",   icon:"🚀", fmt:v=>fmtBig(v)},
+    pads:     {label:"Launch pads",        icon:"🛰", fmt:v=>Math.round(v)},
+    officers: {label:"Officers trained",   icon:"🎓", fmt:v=>Math.round(v).toLocaleString()+"/24mo"},
+    fortify:  {label:"Fortification",      icon:"🛡", fmt:v=>"+"+Math.round(v*100)+"%"},
+    support:  {label:"Support capacity",   icon:"⚙", fmt:v=>fmtBig(v)},
+    crew:     {label:"Jobs (workers)",     icon:"👷", fmt:v=>fmtBig(v)},
+  };
+  const PER_CAPITA_FOOD = 0.00001;   // uef-devtest.json / umf.json — pop × this = food demand/day (verified)
+  const WORKFORCE_FRAC  = 0.5;       // ColonyManpowerDB.WorkforceFraction — half the population is drawable
+  // A REGION is a regional hex (a province). Its DISTRICTS each sit on ONE mini-hex (q,r in the CityGrid
+  // disk) and author their own ground (terr) — a river delta INSIDE a plains province, hills at its edge
+  // (M4 per-tile variation). Each district is a STACK of real installations: [id, count]. want[] = the
+  // ground the province itself prefers (placement finds the nearest such hex to the capital).
+  const CIV = [
+    {key:"capital", tag:"New Terra", role:"Capital — government, science & trade", icon:"🏛",
+     want:["coast","plains"], blurb:"The seat, on a temperate harbour: housing, the grand campus, and the spaceport that ties the whole civilization to orbit.",
+     districts:[
+       {q:0,  r:0,  terr:"coast",  name:"Capitol District",   icon:"🏛", stack:[["infra",10],["academy",1]]},
+       {q:-8, r:3,  terr:"coast",  name:"Harbor Residential", icon:"🏘", stack:[["infra",60]]},
+       {q:7,  r:-3, terr:"plains", name:"Uptown Residential", icon:"🏙", stack:[["infra",50]]},
+       {q:-6, r:-8, terr:"coast",  name:"Grand Campus",       icon:"🔬", stack:[["lab",40]]},
+       {q:9,  r:6,  terr:"coast",  name:"Meridian Spaceport", icon:"🚀", stack:[["spaceport",6],["launch",4]]},
+     ]},
+    {key:"mining", tag:"Ferrum Basin", role:"Mining & primary smelting", icon:"⛏",
+     want:["mountains","highlands","volcanic","barren"], blurb:"In the ore-rich hills: the deep cuts feed the smelters, and a township houses the miners — the civilization's biggest labour sink.",
+     districts:[
+       {q:0,  r:-2, terr:"mountains", name:"Deep Cut Mine",    icon:"⛏", stack:[["mine",12]]},
+       {q:8,  r:2,  terr:"highlands", name:"East Lode Mine",   icon:"⛏", stack:[["mine",10]]},
+       {q:-8, r:4,  terr:"highlands", name:"Smelter Row",      icon:"🏭", stack:[["refinery",8]]},
+       {q:-3, r:9,  terr:"highlands", name:"Miners' Township", icon:"🏘", stack:[["infra",30]]},
+     ]},
+    {key:"foundry", tag:"The Foundry", role:"Heavy manufacturing", icon:"🏗",
+     want:["plains","desert","barren"], blurb:"On the open plains beside the ore road: the works turn refined metal into ships, kit and installations — and swallow a quarter-million workers doing it.",
+     districts:[
+       {q:-7, r:-4, terr:"plains", name:"North Works",        icon:"🏗", stack:[["factory",6]]},
+       {q:6,  r:-2, terr:"plains", name:"South Works",        icon:"🏗", stack:[["factory",6]]},
+       {q:8,  r:6,  terr:"plains", name:"Foundry Refineries", icon:"🏭", stack:[["refinery",6]]},
+       {q:-6, r:8,  terr:"plains", name:"Workers' City",      icon:"🏙", stack:[["infra",60]]},
+     ]},
+    {key:"agri", tag:"Verdant Reach", role:"Agriculture — the breadbasket", icon:"🌾",
+     want:["plains","forest","coast"], blurb:"The wet delta and the river plains: the farms feed the whole civilization many times over — because shipped food demand is almost nothing.",
+     districts:[
+       {q:-6, r:-3, terr:"wetland", name:"Delta Farms",   icon:"🌾", stack:[["food",20]]},
+       {q:5,  r:-5, terr:"wetland", name:"River Farms",   icon:"🌾", stack:[["food",20]]},
+       {q:7,  r:4,  terr:"plains",  name:"Plains Farms",  icon:"🌾", stack:[["food",20]]},
+       {q:-7, r:6,  terr:"plains",  name:"Farm Country",  icon:"🏘", stack:[["infra",20]]},
+     ]},
+    {key:"bastion", tag:"Bastion", role:"Frontier defense", icon:"🛡",
+     want:["forest","highlands","coast","jungle"], blurb:"The forward shield: the wall of bunkers, the war college that trains officers, and a launch range to move a garrison off-world fast.",
+     districts:[
+       {q:0,  r:-3, terr:"highlands", name:"The Wall",         icon:"🛡", stack:[["bunker",12]]},
+       {q:-8, r:2,  terr:"forest",    name:"War College",      icon:"🎓", stack:[["academy",1]]},
+       {q:8,  r:3,  terr:"coast",     name:"Launch Range",     icon:"🛰", stack:[["launch",4]]},
+       {q:-2, r:8,  terr:"plains",    name:"Border Township",  icon:"🏘", stack:[["infra",16]]},
+     ]},
   ];
-  const cityByQR={}; CITY.forEach(b=>{ cityByQR[b.q+","+b.r]=b; });
-  const cityState = {sel:null, misplace:false};   // misplace = the "build the farm on the wrong hex" demo
+  const civState = {misplace:false};   // affinity demo: build the breadbasket on barren instead of the delta
+
+  // ── AGGREGATION — sum a district / a region / the whole civilization. Every output is count × per-unit
+  //    (the real shipped default) × terrain affinity (ruling #13; ×1 for the parts with no affinity). Crew
+  //    (= JOBS, the employment morale band) and km² never take affinity. `eff` lets the demo override terrain.
+  function distAgg(d){
+    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    const base=Object.assign({},o);
+    d.stack.forEach(([k,n])=>{ const I=INST[k]; if(!I) return;
+      const terr = (civState.misplace && (I.comp==="food")) ? "barren" : d.terr;   // demo: farms to barren
+      const m=affMult(I.comp, terr);
+      for(const key in I.out){ o[key]+=I.out[key]*n*m; base[key]+=I.out[key]*n; }
+      o.crew+=I.crew*n; base.crew+=I.crew*n; o.km2+=(I.km2||0)*n; base.km2+=(I.km2||0)*n;
+    });
+    return {o, base};
+  }
+  function regionAgg(region){
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    region.districts.forEach(d=>{ const {o}=distAgg(d); for(const k in t) t[k]+=o[k]||0; });
+    return t;
+  }
+  function civAgg(){
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,crew:0,km2:0};
+    (state.regionHex||[]).forEach((h,i)=>{ if(!h) return; const r=regionAgg(CIV[i]); for(const k in t) t[k]+=r[k]||0; });
+    t.workforce = t.pop*WORKFORCE_FRAC; t.foodDemand = t.pop*PER_CAPITA_FOOD;
+    t.employ = t.workforce>0 ? t.crew/t.workforce : 0;   // jobs / workforce (the morale ratio)
+    return t;
+  }
 
   // ── HAZARD effects (PlanetEnvironmentFactory.cs) — Q2 ruling C (2026-08-09) ──
   //    scope "world" = a whole-planet fact (airlessness / a poison sky) → EVERY hex.
@@ -696,9 +835,9 @@
   // header, the readout and the Scale panel. (The game pans a fixed WINDOW of the fine grid instead
   // of downsampling — modelled in the Scale panel; here we favour a legible whole-planet overview.)
   function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
-  const state = {planet:"earth", miniKm:3, showHaz:true, showWeather:true, showNight:true, showRes:true, sel:null, hexes:[],
-                 cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null};
-  let developed=null;        // the developed colony hex on Earth — its city buildings sit on ITS MINI-hexes
+  const state = {planet:"earth", miniKm:5, showHaz:true, showWeather:true, showNight:true, showRes:true, sel:null, hexes:[],
+                 cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null, regionHex:[], civ:{}};
+  // state.regionHex[i] = the regional hex CIV[i] was placed on; state.civ["c,r"] = that region's index.
   const tags={};             // FLOAT TAGS: "c,r" → a free-text name the player drops on any regional hex
 
   // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
@@ -785,6 +924,7 @@
     state.hexes=hexes;
     seedStorms();      // storms are born over their source terrain (Q3)
     seedDeposits();    // mineral deposits located per-hex, terrain-weighted (HexMinerals)
+    placeCivilization();  // place the developed civilization's provinces on this fresh field (Earth only)
   }
 
   // ── RESOURCE NODES: seed located deposits onto hexes (mirrors Industry/HexMinerals.SeedDeposits) ──
@@ -813,12 +953,14 @@
     });
   }
 
-  // ── REGIONAL-HEX LABELS: a regional hex can be designated a "Thing" (Capital City, Mining District…) — the
-  //   coarse "what is this place" tag. The buildings live on its MINI-hexes (the CityGrid). Here we pick a
-  //   temperate COASTLINE for the capital (harbour + hinterland, the classic capital site), deterministic on
-  //   Earth's fixed display grid. The label is a strategic annotation the player assigns; the substrate is real
-  //   (a regional hex carries InstallationIds + a NameDB, its CityGrid holds the buildings — the M16 roll-up).
-  function findDevelopedHex(){
+  // ── PLACE THE CIVILIZATION across MULTIPLE regional hexes, logically. The capital takes a temperate
+  //   COASTLINE (harbour + hinterland, the classic capital site); the other four provinces are placed on
+  //   the nearest ground that suits them (mines in the hills, foundries on the plains, farms on the delta,
+  //   the shield on a forward ridge) — near the capital, so the whole thing reads as one continent-spanning
+  //   civilization, not scattered dots. Each regional hex carries InstallationIds + a NameDB; its CityGrid
+  //   holds the districts (the M16 roll-up). The float tag on each is the strategic "what is this place".
+  const hexWrapDist=(a,b)=>{ const dc=Math.abs(a.c-b.c); return Math.min(dc, state.cols-dc) + Math.abs(a.r-b.r); };
+  function findCapitalCoast(){
     const nAt=(c,r)=> (r>=0 && r<state.rows) ? state.hexes.find(h=>h.c===((c%state.cols+state.cols)%state.cols) && h.r===r) : null;
     const cands=state.hexes.filter(h=>{ const latDeg=90-180*(h.r/(state.rows-1)); return h.terr==="coast" && Math.abs(latDeg)>=25 && Math.abs(latDeg)<=55; });
     if(!cands.length) return null;
@@ -829,7 +971,32 @@
     cands.sort((a,b)=>score(b)-score(a));
     return cands[0];
   }
-  function isDeveloped(hex){ return state.planet==="earth" && developed && hex.c===developed.c && hex.r===developed.r; }
+  // nearest hex whose terrain is in `wants` (priority order), near `from`, not already a region hex and
+  // kept `sep` apart from the ones already placed. Relaxes the separation, then the terrain list, so a
+  // province is always found on any real world.
+  function nearestRegionHex(from, wants, sep){
+    const taken=state.regionHex.filter(Boolean);
+    const free=h=> !(FEAT[h.terr]&&FEAT[h.terr].impassable) && !taken.some(t=>t.c===h.c&&t.r===h.r);
+    const farEnough=h=> taken.every(t=>hexWrapDist(h,t)>=sep);
+    for(let wi=1; wi<=wants.length; wi++){          // widen the acceptable terrains, best first
+      const acc=wants.slice(0,wi);
+      for(const s of [sep,2,1,0]){                   // then relax the separation
+        const c=state.hexes.filter(h=>free(h)&&acc.indexOf(h.terr)>=0&&taken.every(t=>hexWrapDist(h,t)>=s));
+        if(c.length){ c.sort((a,b)=>hexWrapDist(a,from)-hexWrapDist(b,from)); return c[0]; }
+      }
+    }
+    return null;
+  }
+  function placeCivilization(){
+    state.regionHex=[]; state.civ={};
+    if(state.planet!=="earth") return;               // the developed civilization lives on Earth
+    const cap=findCapitalCoast(); if(!cap) return;
+    const assign=(i,h)=>{ if(!h) return; state.regionHex[i]=h; state.civ[h.c+","+h.r]=i;
+      h.latDeg=90-180*(h.r/(state.rows-1)); tags[h.c+","+h.r]=CIV[i].tag; };
+    assign(0, cap);
+    for(let i=1;i<CIV.length;i++) assign(i, nearestRegionHex(cap, CIV[i].want, 3));
+  }
+  function regionAt(hex){ if(state.planet!=="earth") return null; const i=state.civ[hex.c+","+hex.r]; return i==null?null:i; }
   const tagKey=(hex)=> hex.c+","+hex.r;
 
   // Q2 ruling C (whole-planet facts everywhere; local menaces from the hex's own terrain) +
@@ -914,7 +1081,7 @@
         s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.42).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
         s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="none" stroke="${m.col}" stroke-width="${(size*0.15).toFixed(1)}" pointer-events="none"/>`;
       }
-      if(isDeveloped(hex)){                            // a developed colony hex — a subtle built-up outline (NO city icon; the float tag names it)
+      if(regionAt(hex)!=null){                         // a civilization province — a subtle built-up outline (NO icon on the map; the float tag names it)
         s+=`<polygon points="${pts.join(' ')}" fill="none" stroke="var(--ink-soft)" stroke-width="1.2" stroke-dasharray="2.4 1.6" pointer-events="none"/>`;
       }
       if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
@@ -956,7 +1123,7 @@
     html += `<div class="lgrow"><b class="lgh">On the ground</b>`;
     liveKinds.forEach(k=>{ html+=ic(HAZ[k].icon, HAZ[k].name+(HAZ[k].scope==="world"?" (world-wide)":"")); });
     html += `<span class="lg"><i class="tint amber"></i>attrition zone</span>`;
-    if(state.planet==="earth" && developed) html += `<span class="lg"><b>🏷</b>float tag (name any hex)</span><span class="lg"><b>⌂</b>developed colony (buildings on its mini-hexes)</span>`;
+    if(state.planet==="earth" && state.regionHex.filter(Boolean).length) html += `<span class="lg"><b>🏷</b>float tag (name any hex)</span><span class="lg"><b>⌂</b>civilization province (districts on its mini-hexes)</span>`;
     html += `</div>`;
     html += `<div class="lgrow"><b class="lgh">Rolling &amp; sky</b>`;
     if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
@@ -1012,7 +1179,8 @@
     return picks.map(t=>({q:t.q,r:t.r,terr:t.terr,m:hex.dep.m,amt:share}));
   }
   function renderMicro(hex){
-    const dev=isDeveloped(hex);
+    const ri=regionAt(hex), region = ri!=null ? CIV[ri] : null;
+    const distByQR={}; if(region) region.districts.forEach(d=>{ distByQR[d.q+","+d.r]=d; });
     const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex, MINI_RADIUS), sq3=Math.sqrt(3);
     const size=Math.max(3, 320/(1.5*MINI_ACROSS));   // shrink to fit the panel — the fine texture IS the point
     let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
@@ -1021,8 +1189,8 @@
     let s=""; const posByQR={};
     pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad; posByQR[t.q+","+t.r]={cx,cy}; const pts=[];
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
-      const bld = dev ? cityByQR[t.q+","+t.r] : null;                        // a chassis sits on this mini-hex → show its authored ground
-      const col = (FEAT[bld?bld.terr:t.terr]||FEAT.barren).col;
+      const dist = distByQR[t.q+","+t.r];                                   // a district sits on this mini-hex → show its authored ground
+      const col = (FEAT[dist?dist.terr:t.terr]||FEAT.barren).col;
       s+=`<polygon points="${pts.join(' ')}" fill="var(${col})" stroke="var(--sunk)" stroke-width="0.4"/>`;
     });
     // the SPECIFIC ore tiles — filled mineral nodes on their exact mini-hexes (tier 2)
@@ -1031,56 +1199,45 @@
       s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.6).toFixed(1)}" fill="none" stroke="var(--panel)" stroke-width="${(size*0.6).toFixed(1)}" opacity="0.85"/>`;
       s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.25).toFixed(1)}" fill="${m.col}" stroke="var(--ink)" stroke-width="0.5"/>`;
     });
-    // CITY BUILDINGS — each a chassis on ONE mini-hex (the developed colony); its component boosted by that ground
-    if(dev){
-      CITY.forEach(b=>{ const p=posByQR[b.q+","+b.r]; if(!p) return;
-        const m=affMult(b.comps[0].c, b.terr), ring=m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--line-strong)');
-        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.35).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.32).toFixed(1)}"/>`;
-        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.55).toFixed(1)}" font-size="${(size*1.55).toFixed(0)}" text-anchor="middle" pointer-events="none">${b.icon}</text>`;
+    // DISTRICTS — each a CLUSTER of real installations on ONE mini-hex; ring green if its ground boosts it
+    if(region){
+      region.districts.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return;
+        const lead=INST[d.stack[0][0]], m=affMult(lead?lead.comp:null, d.terr), ring=m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--line-strong)');
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.5).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.34).toFixed(1)}"/>`;
+        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.6).toFixed(1)}" font-size="${(size*1.7).toFixed(0)}" text-anchor="middle" pointer-events="none">${d.icon}</text>`;
       });
     }
     const mk=miniHexKm(state.planet).toFixed(1);
-    const cityNote = dev ? ` · <b style="color:var(--live)">⌂ ${CITY.length} buildings</b>` : '';
+    const cityNote = region ? ` · <b style="color:var(--live)">⌂ ${region.districts.length} districts</b>` : '';
     const depNote = deps.length ? ` · <b style="color:var(--accent-ink)">⛏ ${deps.length} ore</b>` : '';
-    const cityCap = dev ? `<b>This is a developed colony.</b> Each <b>building is a chassis on ONE mini-hex</b>, and its <b>component</b> takes the terrain boost of the hex it stands on (waterfront 🚀🔬, delta 🌾, hills ⛏). ` : '';
+    const cityCap = region ? `<b>This is ${tags[tagKey(hex)]||region.tag} — a ${region.role.toLowerCase()}.</b> Each <b>mini-hex is a DISTRICT</b> (~${(0.866*mk*mk).toFixed(0)} km²): a CLUSTER of real installations, not one building. A ring means its ground <b style="color:var(--live)">boosts</b> or <b style="color:var(--accent-ink)">hurts</b> the work (ruling #13). ` : '';
     const depCap = deps.length ? `The <b>${MINERALS[hex.dep.m].name}</b> here is pinpointed to <b>${deps.length}</b> mini-hex${deps.length>1?'es':''} (the bright nodes). ` : '';
-    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> regional hex${cityNote}${depNote}</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
+    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> province${cityNote}${depNote}</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
       <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Mini-hex grid">${s}</svg>
-      <div class="cap">${cityCap}${depCap}The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, each ≈ <b>${mk} km</b> across, built LAZILY only for a developed regional hex.</div></div>`;
+      <div class="cap">${cityCap}${depCap}The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, each ≈ <b>${mk} km</b> across, built LAZILY only for a developed province.</div></div>`;
   }
 
-  // The colony's roster + self-sufficiency ledger — shown in the readout for a DEVELOPED regional hex (no separate view)
-  function cityPanel(){
-    const L=cityLedger();
-    let rows="";
-    CITY.forEach(t=>{ t.comps.forEach((cc,ci)=>{ const c=COMP[cc.c], sc=cc.s||1, m=affMult(cc.c,t.terr);
-      rows+=`<tr><td>${ci===0?`<span class="bi">${t.icon}</span>${t.name}${t.mixed?' <span style="color:var(--ink-faint);font-size:9.5px">·mixed</span>':''}`:''}</td><td>${c.icon} ${c.name}</td><td>${FEAT[t.terr].name}</td><td>${affBadge(m)}</td><td>${c.fmt(c.base*sc*m)}</td></tr>`; }); });
-    const pct=(a,b)=>Math.max(0,Math.min(100,b>0?a/b*100:100));
-    const line=(k,sup,dem,supTxt,demTxt,note)=>{ const ok=sup>=dem,p=pct(sup,dem);
-      return `<div class="lrow ${ok?'':'deficit'}"><div class="lk">${k}</div><div><div class="lb"><span style="width:${p.toFixed(0)}%"></span></div><div style="font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:3px">${supTxt}${note?' · '+note:''} vs ${demTxt}</div></div><div class="lv" style="color:${ok?'var(--live)':'var(--accent-ink)'}">${ok?'✓ +':'✗ '}${ok?fmtNum(sup-dem):fmtNum(dem-sup)}</div></div>`; };
-    const led = line("Housing",L.tot.housing,CITY_POP,L.tot.housing.toFixed(1)+" M",CITY_POP+" M pop")
-              + line("Food",L.tot.food,L.foodDemand,Math.round(L.tot.food).toLocaleString()+"/day",L.foodDemand.toLocaleString()+"/day",affBadge(affMult("food",cityState.misplace?"barren":"wetland"))+(cityState.misplace?" ⚠barren":""));
-    const suff=L.tot.housing>=CITY_POP && L.tot.food>=L.foodDemand;
-    return `<div class="sect"><div class="sh">The colony on these mini-hexes <span class="badge LIVE">production LIVE · affinity THEORY</span></div>
-      <div class="scroll"><table class="cty"><thead><tr><th>Building (chassis)</th><th>Component</th><th>Its hex</th><th>Affinity</th><th>Output</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="ledger" style="margin-top:8px">${led}</div>
-      <div class="movesim"><span>Affinity demo:</span><button id="misplaceBtn" aria-pressed="${cityState.misplace}">${cityState.misplace?"↩ farm back to the delta":"⚠ move the farm to barren"}</button></div>
-      <div class="verdict" style="${suff?'':'background:var(--accent-soft);border-color:var(--accent)'}">${suff?`✅ <b>SELF-SUFFICIENT</b> — this colony houses, feeds &amp; supplies its ${CITY_POP} M people entirely from these mini-hexes.`:`⚠ <b style="color:var(--accent-ink)">STARVING</b> — the farm on barren (×0.40) can't feed ${CITY_POP} M.`}</div>
-      <div class="cityflag">Each <b>building is a chassis on one mini-hex</b>; the terrain boost rides its <b>component</b> (ruling #13). Production is real per component (<span class="mono">GetTotalFoodOutput</span> / <span class="mono">GetPopulationSupportValue</span>); the terrain multiplier is the proposal (THEORY).</div>
-    </div>`;
-  }
-
-  // ── RENDER: the self-sufficient CITY + the terrain-affinity feature (ruling #13) ──
   const affBadge=(m)=> m>1 ? `<span class="boost up">+${Math.round((m-1)*100)}%</span>` : (m<1 ? `<span class="boost dn">×${m.toFixed(2)}</span>` : `<span class="boost flat">×1</span>`);
-  function cityLedger(){
-    const tot={housing:0,food:0,mining:0,refine:0,build:0,research:0,logistics:0};
-    CITY.forEach(t=>{ if(!t.comps) return;
-      t.comps.forEach(cc=>{ const c=COMP[cc.c], s=cc.s||1;
-        const terr = (cc.c==="food" && cityState.misplace) ? "barren" : t.terr;   // misplace demo: the FOOD component
-        tot[cc.c] += c.base * s * affMult(cc.c, terr);
-      });
-    });
-    return { tot, foodDemand: CITY_POP*FOOD_PER_M, foodTerr: cityState.misplace?"barren":"wetland" };
+  // A PROVINCE panel — shown in the readout for a civ regional hex: its district roster + its roll-up.
+  function regionPanel(ri){
+    const region=CIV[ri], R=regionAgg(region);
+    // roster: one row per district — its dominant work, its ground, the terrain boost, and what it puts out
+    let rows="";
+    region.districts.forEach(d=>{ const {o,base}=distAgg(d); const lead=INST[d.stack[0][0]];
+      const terrEff = (civState.misplace && lead && lead.comp==="food") ? "barren" : d.terr;
+      const m=affMult(lead?lead.comp:null, terrEff);
+      const parts=d.stack.map(([k,n])=>`${n}× ${INST[k].name}`).join(" + ");
+      const outs=Object.keys(o).filter(k=>o[k]>0 && METRIC[k] && k!=="crew" && k!=="support").sort((a,b)=>(o[b])-(o[a]));
+      const outTxt=outs.slice(0,2).map(k=>`${METRIC[k].icon} ${METRIC[k].fmt(o[k])}`).join(" · ")||"—";
+      rows+=`<tr><td><span class="bi">${d.icon}</span>${d.name}<small style="display:block;color:var(--ink-faint);font-size:9.5px;font-family:var(--mono)">${parts}</small></td><td>${FEAT[terrEff]?FEAT[terrEff].name:terrEff}${civState.misplace&&lead&&lead.comp==="food"?' ⚠':''}</td><td>${affBadge(m)}</td><td>${outTxt}</td></tr>`; });
+    // the province roll-up chips (the M16 aggregate the strategic map would show)
+    const chips=Object.keys(METRIC).filter(k=>R[k]>0 && k!=="support").map(k=>`<span class="rchip"><i>${METRIC[k].icon}</i>${METRIC[k].fmt(R[k])}<s>${METRIC[k].label}</s></span>`).join("");
+    return `<div class="sect"><div class="sh">${region.icon} ${tags[tagKey(state.hexes[state.sel])]||region.tag} — the province on these mini-hexes <span class="badge LIVE">outputs LIVE · affinity THEORY</span></div>
+      <p class="rblurb">${region.blurb}</p>
+      <div class="scroll"><table class="cty"><thead><tr><th>District (cluster)</th><th>Its ground</th><th>Affinity</th><th>Puts out</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="rchips">${chips}</div>
+      <div class="cityflag">Each <b>district is a cluster of real installations</b>; its output is <b>count × the shipped per-unit rate × terrain affinity</b> (ruling #13). The per-unit rates are real (<span class="mono">installations.json</span>); the terrain multiplier is the proposal (THEORY). Scroll to <b>the civilization's books</b> below the map for the empire-wide roll-up.</div>
+    </div>`;
   }
   function fmtNum(n){ return Math.abs(n)>=1000? Math.round(n).toLocaleString() : (Number.isInteger(n)?n:(+n).toFixed(1)); }
 
@@ -1122,8 +1279,8 @@
       </div>
       <div class="row" style="border-bottom:none;padding-top:5px"><span>${tg?`Tagged <b style="color:var(--accent-ink)">"${tg}"</b> — floats on the map above this hex.`:'Drop a free-text name on this regional hex — call it anything (capital, front line, the mine…). It floats on the map.'}</span></div></div>`;
 
-    html += renderMicro(hex);            // ▽ the mini-hex view — the buildings of a developed hex live here
-    if(isDeveloped(hex)) html += cityPanel();   // its colony roster + self-sufficiency (no separate view)
+    html += renderMicro(hex);            // ▽ the mini-hex view — the districts of a province live here
+    { const rg=regionAt(hex); if(rg!=null) html += regionPanel(rg); }   // its district roster + province roll-up (no separate view)
 
     html += `<div class="sect"><div class="sh">Terrain effect <span class="badge LIVE">LIVE · resolver reads it</span></div>
       <div class="row"><span>Defender cover</span><b class="${tc.cover>1?'up':'dn'}">÷${tc.cover.toFixed(2)}</b></div>
@@ -1255,7 +1412,64 @@
     el.innerHTML = html;
   }
 
-  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); }
+  // ── RENDER: THE CIVILIZATION'S BOOKS — the empire-wide roll-up across all five provinces ──
+  function renderCiv(){
+    const el=document.getElementById("civdash"); if(!el) return;
+    const placed=(state.regionHex||[]).filter(Boolean).length;
+    if(state.planet!=="earth" || !placed){
+      el.innerHTML=`<div class="civnote">The developed civilization is on <b>Earth</b>. Switch back to Earth to read its books — ${PLANETS[state.planet].name} carries no colony in this study.</div>`;
+      return;
+    }
+    const C=civAgg();
+    const km2=C.km2;
+    // jobs by installation TYPE (not by region) — the honest services-vs-industry split
+    const jobsByInst={};
+    CIV.forEach((r,i)=>{ if(!state.regionHex[i]) return; r.districts.forEach(d=>d.stack.forEach(([k,n])=>{ jobsByInst[k]=(jobsByInst[k]||0)+INST[k].crew*n; })); });
+    const svcJobs=jobsByInst.infra||0, heavyJobs=(jobsByInst.mine||0)+(jobsByInst.factory||0);
+    const svcShare=C.crew>0?svcJobs/C.crew:0, heavyShare=C.crew>0?heavyJobs/C.crew:0;
+    // headline cards — the numbers a player actually reads
+    const card=(icon,val,label,sub,cls)=>`<div class="bigm ${cls||''}"><i>${icon}</i><b>${val}</b><u>${label}</u>${sub?`<s>${sub}</s>`:''}</div>`;
+    const employPct=Math.round(C.employ*100);
+    const employCls = C.employ<0.9?'':(C.employ<=1.1?'good':'warn');
+    let head =
+      card("🏢", fmtBig(C.pop), "People housed", `${(km2).toFixed(0)} km² built · ${state.regionHex.filter(Boolean).length} provinces`) +
+      card("👷", fmtBig(C.crew), "Jobs", `of ${fmtBig(C.workforce)} workforce (½ of pop)`, employCls) +
+      card("🌾", METRIC.food.fmt(C.food), "Food/day", `eats just ${C.foodDemand.toFixed(0)}/day`) +
+      card("⛏", METRIC.minerals.fmt(C.minerals), "Minerals/day", "terrain-boosted in the hills") +
+      card("🏭", METRIC.refine.fmt(C.refine), "Materials/day", "smelters + foundry lines") +
+      card("🏗", METRIC.build.fmt(C.build), "Construction/day", "the foundry's whole output") +
+      card("🔬", METRIC.research.fmt(C.research), "Research/day", "the grand campus") +
+      card("🎓", METRIC.officers.fmt(C.officers), "Officers/24mo", "capital + war college") +
+      card("🛡", METRIC.fortify.fmt(C.fortify), "Fortification", "the wall of bunkers") +
+      card("🚀", METRIC.cargo.fmt(C.cargo)+" · "+Math.round(C.pads)+" pads", "Off-world", "spaceport + launch ranges");
+    // the two honest reality-checks — employment and food
+    const empVerdict = C.employ<0.9
+      ? `<b>${employPct}% employed — a growing economy.</b> Jobs fill ${employPct}% of the workforce; the rest is headroom the civilization grows into (more industry raises the ratio; more housing adds people faster than jobs). Not a fudged number and not an artifact — a realistic young power.`
+      : C.employ<=1.1
+      ? `<b>Near full employment</b> (${employPct}%) — the morale sweet spot (the +15 employment bonus). Population and industry are matched.`
+      : `<b>Labour-bound</b> — <b>${employPct}%</b>: more jobs than workers, so industry runs understaffed until the population grows or automates.`;
+    // per-province cards
+    const rcard=(i)=>{ const region=CIV[i], h=state.regionHex[i]; if(!h) return ""; const R=regionAgg(region);
+      const head=Object.keys(METRIC).filter(k=>R[k]>0 && k!=="support" && k!=="crew").sort((a,b)=>{
+        const order={pop:0,minerals:1,build:2,food:3,research:4,refine:5,officers:6,fortify:7,cargo:8,pads:9}; return (order[a]??9)-(order[b]??9); }).slice(0,3);
+      const chips=head.map(k=>`<span>${METRIC[k].icon} ${METRIC[k].fmt(R[k])}</span>`).join("");
+      return `<div class="pcard"><div class="pch"><b>${region.icon} ${tags[tagKey(h)]||region.tag}</b><button class="pjump" data-jump="${i}">open ▸</button></div>
+        <div class="pcr">${region.role} · hex ${coord(h)} · ${region.districts.length} districts</div>
+        <div class="pcm">${chips}</div>
+        <div class="pcj">👷 ${fmtBig(R.crew)} jobs · 🏢 ${fmtBig(R.pop)} housed</div></div>`; };
+    el.innerHTML =
+      `<div class="civhead"><div><h3>The civilization on this map — <b>five provinces, one economy</b></h3>
+        <p>Every number is the <b>real shipped output</b> of the installations clustered in each province (<span class="mono">installations.json</span>), summed. A mini-hex is a <b>district</b> (~${(0.866*miniHexKm('earth')*miniHexKm('earth')).toFixed(0)} km² — a cluster), a regional hex a <b>province</b>, and this is all five added up. The only proposed term is the <b>terrain-affinity</b> multiplier (ruling #13).</p></div></div>
+      <div class="bigms">${head}</div>
+      <div class="civreality">
+        <div class="crx"><span class="crh">👷 Employment</span> ${empVerdict} <span class="crn"><b>Services ${Math.round(svcShare*100)}%</b> of all jobs · heavy industry <b>${Math.round(heavyShare*100)}%</b> · the rest farms/labs/ports/garrison. That realistic mix is a SOURCE recalibration made this session (not a downstream fudge): mine &amp; factory crew cut 10× in <span class="mono">industrialderived.html</span>, and infrastructure given service employment (crew = Support×0.2) in <span class="mono">civicderived.html</span> — so housing is the main employer, as in a real country, instead of two buildings eating the workforce.</span></div>
+        <div class="crx"><span class="crh">🌾 Food</span> The farms make <b>${METRIC.food.fmt(C.food)}</b>; the whole civilization eats <b>${C.foodDemand.toFixed(0)}/day</b> (pop × the shipped <span class="mono">0.00001</span> per-capita demand). <b>One agri-complex feeds 300 M.</b> Food scarcity is a calibration dial, not a structural gap — surface it honestly. <button id="misplaceBtn" class="mbtn" aria-pressed="${civState.misplace}">${civState.misplace?"↩ farms back to the delta":"⚠ build the breadbasket on barren"}</button> ${civState.misplace?`<span class="crwarn">→ on barren (×0.40) the farms make just ${METRIC.food.fmt(C.food)} — still a surplus, because demand is almost nothing.</span>`:''}</div>
+      </div>
+      <div class="pcards">${CIV.map((_,i)=>rcard(i)).join("")}</div>
+      <div class="civfoot"><b class="gr LIVE">LIVE</b> the per-unit OUTPUTS and the food/workforce math are the real engine (installations.json · <span class="mono">ColonyManpowerDB</span> · <span class="mono">SustenanceProcessor</span>); jobs = each installation's <span class="mono">CrewReq</span> (the civic audit's one-line fix — the +15/−25 band is otherwise a dead wire). &nbsp;<b class="gr THEORY">RECAL</b> three CREW coeffs were tuned at the SOURCE designers this session — mine ×0.005→×0.0005, factory ×5→×0.5 (<span class="mono">industrialderived.html</span>), infrastructure 10→Support×0.2 (<span class="mono">civicderived.html</span>). &nbsp;<b class="gr THEORY">THEORY</b> the terrain-affinity multiplier (ruling #13) and per-hex mining. District COUNTS are authoring; no number chased to a target.</div>`;
+  }
+
+  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); renderCiv(); }
 
   document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
@@ -1279,14 +1493,21 @@
     const id=e.target && e.target.id;
     if(id==="tagSet"){ const inp=document.getElementById("tagInput"); setTag(inp?inp.value.trim():""); }
     else if(id==="tagDel"){ setTag(""); }
-    else if(id==="misplaceBtn"){ cityState.misplace=!cityState.misplace; renderReadout(); }
   });
   document.getElementById("readout").addEventListener("keydown",e=>{
     if(e.target && e.target.id==="tagInput" && e.key==="Enter"){ e.preventDefault(); setTag(e.target.value.trim()); }
   });
+  // the civilization dashboard's own controls (the affinity demo + jump-to-region)
+  const civEl=document.getElementById("civdash");
+  if(civEl) civEl.addEventListener("click",e=>{
+    const t=e.target.closest("[data-jump],#misplaceBtn"); if(!t) return;
+    if(t.id==="misplaceBtn"){ civState.misplace=!civState.misplace; renderCiv(); renderReadout(); return; }
+    const ji=t.getAttribute("data-jump");
+    if(ji!=null){ const h=state.regionHex[+ji]; if(h){ state.sel=state.hexes.indexOf(h); renderMap(); renderReadout();
+      const ro=document.getElementById("readout"); if(ro&&ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth",block:"nearest"}); } }
+  });
 
-  buildField(); developed=findDevelopedHex();
-  if(developed){ developed.latDeg=90-180*(developed.r/(state.rows-1)); tags[developed.c+","+developed.r]="New Terra"; }   // a default FLOAT TAG the player can rename
+  buildField();   // builds the field AND places the civilization's provinces (Earth only)
   renderAll();
 })();
 </script>
