@@ -1,7 +1,7 @@
 # Engine Wiring Backlog — making the design-tool intentions real
 
-**As of 2026-08-06. THIS IS A BACKLOG OF INTENTIONS — nothing here is implemented.** It is the engine
-(C#) side of the [`SIM-DRIVEN-DESIGNER-AUDIT-2026-08-05.md`](SIM-DRIVEN-DESIGNER-AUDIT-2026-08-05.md)
+**As of 2026-08-06 (TIER 2.6 added 2026-08-10). THIS IS A BACKLOG OF INTENTIONS — nothing here is implemented.**
+It is the engine (C#) side of the [`SIM-DRIVEN-DESIGNER-AUDIT-2026-08-05.md`](SIM-DRIVEN-DESIGNER-AUDIT-2026-08-05.md)
 fix list.
 
 ---
@@ -147,6 +147,67 @@ the Capitol-world sim found.
   to lose, but nothing to *keep*.
 - **Gauge.** Per cost: a built entity reports a non-zero run-cost, an empty one reports zero, and the colony Σ
   throttles/bills correctly (mirror `EconomyReadoutTests` + `MoraleTests` + `GroundUpkeepTests`).
+
+---
+
+## TIER 2.6 — The workforce → production STAFFING model  ⬜ NOT BUILT  *(NEW — developer ruling, 2026-08-10)*
+
+**The developer's ruling, in his own words:** *"a population [should] be fractioned off into work force, and that
+workforce is where crew and leaders take off off — but that workforce is useful because it ties into production
+facility build rate … the way the workforce and population connect with production shouldn't be only for the design
+but needs to be flagged to be in game so it plugs into the designers."* This is that flag: the model is proven in
+`docs/ground/planetview.html` (rev-R), and this row is its engine punch-list so it becomes a real in-game wire that
+every door designer plugs into.
+
+- **What the model is, in plain English.** A colony's people split into a **workforce** (a fraction of the
+  population — `ColonyManpowerDB.WorkforceFraction`, 0.5 today). Ships and officers **draw down** that workforce when
+  you build/crew them (crew + leaders come off the top). Whatever workforce is **left** is what actually staffs the
+  colony's factories, mines and yards — and **that staffing sets how fast they build.** A half-manned factory builds
+  at half rate. It is the missing middle between "people" and "production": today population only *gates* a build
+  (yes/no), it never *paces* one.
+- **The engine gap — two readers, one that only gates.**
+  - **Rate throttle TODAY = infrastructure only.** `IndustryTools.ConstructStuff` scales every production line's rate
+    by exactly one factor — `rate.Value * infraEfficiency` (`IndustryTools.cs:117-121`). Nothing about how many
+    workers are actually available touches the rate.
+  - **Population is a BINARY GATE, not a throttle.** The one place manpower meets a build is the crew gate
+    (`IndustryTools.cs:152-165` → `ManpowerTools.ResolveBuild`): it answers *CanBuild* yes/no and **holds** the job
+    if short — it never scales the rate down when the workforce is thin. So a colony at 50 % population and one at
+    90 % population build a Venator at the **same** speed right up until the gate trips (the planetview dig that
+    produced this ruling).
+  - **`ColonyManpowerDB` already carries the split** — `WorkforceFraction`, `AvailableBulk = Workforce −
+    CommittedBulk` — but no production reader consults `AvailableBulk` against the colony's staffing *demand*.
+- **What to build.** Add the workforce factor as a **second multiplier on the production rate**, exactly parallel to
+  infra efficiency:
+  > **production rate = base rate × workforce-staffing × infra-efficiency**
+  > where **workforce-staffing = min(1, available-workforce ÷ Σ (every producing facility's `CrewReq`))**,
+  > and **available-workforce = population × `WorkforceFraction` − committed (crew + officers drawn off)**.
+
+  Concretely: sum every industry/mine/refinery/yard building's `CrewReq` into a colony **staffing demand**; divide
+  the colony's `AvailableBulk` by it, cap at 1.0; multiply the rate by it at `IndustryTools.cs:121`. When the
+  workforce covers demand, staffing = 1.0 and behaviour is byte-identical to today (so it flag-gates cleanly).
+- **⚠ This is why "it plugs into the designers" matters — and it's the good kind of leverage.** `CrewReq` is set on
+  **every** building in the door designers (`industrialderived.html`, `civicderived.html`) — a factory's crew, a
+  mine's crew, a refinery's crew. The moment this reader is live, **each of those `CrewReq` numbers becomes a live
+  staffing DEMAND**, not just a morale/employment number. Turning the mine's crew coefficient up in the industrial
+  door now costs you *build rate* if the colony can't man it. That's the wire the developer is asking for: the
+  designer dial and the production rate become the same conversation.
+- **⚠ Interaction with the run-cost jobs item (#2).** The **same producer** — every facility's `CrewReq` — feeds
+  *two* readers: the employment→morale term (#2) and this staffing→rate throttle. Build them to read one shared
+  colony jobs total (`GetTotalJobs`), don't invent a second demand sum. One producer, two consumers.
+- **Flag-gate + baseline (biggest-behaviour-change discipline, same as #2).** Turning this on slows every
+  under-manned colony's production. Gate it behind a flag and baseline against `ProductionBuildTests` /
+  `EconomyReadoutTests` so a fully-manned colony reads identical rates and only the under-manned case changes.
+- **The gauge (write it).** A colony whose workforce fully covers its facility `CrewReq` builds at today's rate
+  (byte-identical); the **same colony at half the population builds at ~half rate**; a colony that commits a big
+  fleet's crew (drawing `AvailableBulk` down) sees its build rate drop by the committed share. (This is exactly the
+  50 %-vs-90 % table the planetview Venator panel now shows against the *proposed* model.)
+- **Cradle to grave.** population → `WorkforceFraction` splits off a workforce → crew/officers draw it down → the
+  remainder staffs facilities (their `CrewReq`, set in the designer) → **staffing throttles the build rate** → a
+  destroyed colony / a drafted fleet thins the workforce → production slows. Every rung is a place the player already
+  acts.
+- **Unblocks.** Population becoming a *decision that paces the economy* rather than a yes/no wall — and the door
+  designers' `CrewReq` dials becoming a live rate lever. Modelled end-to-end in `planetview.html` rev-R
+  (`renderVenator` → `proposed(popPct, committedM)`).
 
 ---
 
