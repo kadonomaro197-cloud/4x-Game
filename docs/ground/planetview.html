@@ -338,6 +338,7 @@
           <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather</button>
           <button class="tbtn" id="nightToggle" aria-pressed="true">🌙 Day/night</button>
           <button class="tbtn" id="resToggle" aria-pressed="true">⛏ Resources</button>
+          <button class="tbtn" id="unitToggle" aria-pressed="true">🪖 Units &amp; trade</button>
           <button class="tbtn" id="wxRoll">🌀 Roll</button>
           <button class="tbtn" id="wxAuto" aria-pressed="false">▶ Auto-roll</button>
         </div>
@@ -398,7 +399,7 @@
   </section>
 
   <footer>
-    <p><b>Ground truth · design study, 2026-08-10 (rev-R — THE WORKFORCE TIES INTO BUILD RATE (developer's model): population → workforce (½ of pop) → ship crews &amp; leaders come off the top → the rest STAFFS the production facilities → a facility's rate = base × staffing (available workforce ÷ the facilities' crew demand). This is the proposed fix to the shipped engine's static-rate + binary-crew-gate, and it makes the Venator answer DIFFER by population: 50% pop → ~5.8 months (58% staffed) vs 90% pop → ~3.3 months (fully staffed), and sailing a big fleet drains the same pool and slows industry too — one finite workforce that crews, leads AND builds. Shown as a scenario table in the "⚓ Could New Terra build a Venator?" panel. On rev-Q — CAN THIS WORLD BUILD A VENATOR? a worked build-time analysis against the REAL engine construction model (a shipyard added to New Terra + a "⚓ Could New Terra build a Venator?" panel): the headline — 50% and 90% population give the IDENTICAL build time, because population is a BINARY 884-crew gate (met thousands-of-times over at both), never a throttle; the real gates are having a SHIPYARD (a factory can't assemble a ship) and the refined materials. Cost = mass×0.1 = ~2.0M engine points (the design-tool's 28,860 is a mock); ~3.3 months on a maxed shipyard, ~27 years on a stock one. Earth (homeworld) already has all 15 minerals. Grounded by a 4-agent source dig at file:line. On rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-T — UNITS ON THE MAP + TRADE THAT STAYS PUT (developer: "now we can start looking into how units will look on the map so that they can be given orders and can trade between places"): the first cut of the units + orders + intra-planet logistics chapter. Toggle 🪖 Units &amp; trade, then open a developed province (jump to Ferrum Basin or the capital): a ground unit is a TOKEN on the mini-hexes (🚛 hauler + 🪖 garrison, a health bar, whole-or-dead like a ship); click ONE to read its stat card (every number already lives on GroundUnit — the missing bit is select-one/read-one UI, "Failure A"); with a unit picked, click a mini-hex to give a MOVE order (the A* path draws to a 🚩 — the ONE queued verb both seats issue, not the client's bypassing OrderMoveToGlobalHex). Trade shows at two scales: an intra-province ⛏→🏭 ore haul on the mini-grid, and a regional ⛏→⚓ ore-road arrow on the main map (Ferrum Basin → the Naval Yards shipyard). Because a resource STAYS in its mini-hex (the locality ruling), a shipyard can starve next to ore it can't reach, so hauling is a real job — the hauler is a COMPONENT (CargoTransferAtb→CargoStorageDB LIVE); the hex-to-hex haul + per-hex stockpile are NEW. Every new mark badged DESIGN with its LIVE anchor named. Full chapter: docs/ground/UNITS-ON-THE-MAP-DESIGN.md. On rev-R — THE WORKFORCE TIES INTO BUILD RATE (developer's model): population → workforce (½ of pop) → ship crews &amp; leaders come off the top → the rest STAFFS the production facilities → a facility's rate = base × staffing (available workforce ÷ the facilities' crew demand). This is the proposed fix to the shipped engine's static-rate + binary-crew-gate, and it makes the Venator answer DIFFER by population: 50% pop → ~5.8 months (58% staffed) vs 90% pop → ~3.3 months (fully staffed), and sailing a big fleet drains the same pool and slows industry too — one finite workforce that crews, leads AND builds. Shown as a scenario table in the "⚓ Could New Terra build a Venator?" panel. On rev-Q — CAN THIS WORLD BUILD A VENATOR? a worked build-time analysis against the REAL engine construction model (a shipyard added to New Terra + a "⚓ Could New Terra build a Venator?" panel): the headline — 50% and 90% population give the IDENTICAL build time, because population is a BINARY 884-crew gate (met thousands-of-times over at both), never a throttle; the real gates are having a SHIPYARD (a factory can't assemble a ship) and the refined materials. Cost = mass×0.1 = ~2.0M engine points (the design-tool's 28,860 is a mock); ~3.3 months on a maxed shipyard, ~27 years on a stock one. Earth (homeworld) already has all 15 minerals. Grounded by a 4-agent source dig at file:line. On rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
     <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
   </footer>
 </div>
@@ -787,6 +788,44 @@
   ];
   const civState = {misplace:false};   // affinity demo: build the breadbasket on barren instead of the delta
 
+  // ═══ UNITS ON THE MAP (rev-T, DESIGN) — the first prototype cut of the units + orders + trade chapter ═══
+  //  A ground unit today is a plain data object in GroundForcesDB.Units on the PLANET BODY, keyed by a stable
+  //  UnitId, drawn from GlobalQ/GlobalR, WHOLE-OR-DEAD like a ship (GroundForcesProcessor.cs:334). Every stat
+  //  below already lives on GroundUnit (Attack/Defense/Health/Range_m/loadout) — the client just never surfaces
+  //  ONE unit (it selects a region+faction+type GROUP). So select-one / read-one here is a UI gap (Failure A),
+  //  not a missing number. Placed on mini-hexes to show the fine (CityGrid) tier the resource ruling lives on.
+  const UNITS = [
+    // Ferrum Basin (the mining province) — a hauler on the mine + a garrison holding the company town
+    {id:"u1", prov:"mining", q:0, r:-2, name:"Ore Convoy", kind:"hauler", icon:"🚛", faction:"you",
+     hp:40, maxhp:40, atk:0, def:2, rngHex:0, load:"1 × Cargo hold",
+     cargo:{good:"iron ore", have:0, cap:500}, haul:{from:[0,-2], to:[-8,4], good:"iron ore"},
+     note:"A pickup truck: its one job is to carry a load from hex to hex. The hold is CargoTransferAtb → CargoStorageDB (LIVE); the hex-to-hex HAUL order is NEW."},
+    {id:"u2", prov:"mining", q:-3, r:9, name:"Basin Guard", kind:"garrison", icon:"🪖", faction:"you",
+     hp:120, maxhp:120, atk:22, def:30, rngHex:2, load:"9 × Clone Trooper (rifles)",
+     note:"An infantry garrison holding the company town. One health pool, alive-or-gone."},
+    // The capital — a mechanized garrison on the Arcology Core
+    {id:"u3", prov:"capital", q:0, r:0, name:"1st Terran Guard", kind:"garrison", icon:"🛡", faction:"you",
+     hp:140, maxhp:140, atk:26, def:34, rngHex:2, load:"Mechanized infantry",
+     note:"The capital garrison, dug into the arcology core."},
+  ];
+  const unitState = {sel:null, moveTo:null};   // sel = UnitId; moveTo = "q,r" a demo MOVE destination on the mini-grid
+  const unitById=(id)=> UNITS.find(u=>u.id===id)||null;
+  const unitsInProv=(key)=> UNITS.filter(u=>u.prov===key);
+
+  // A straight hex line across the mini-grid (cube lerp + round) — the shape a MOVE order's path takes. The engine
+  // pathfinder (HexPathfinder) routes around impassable ground; this demo draws the direct line for legibility.
+  function hexLine(aq,ar,bq,br){
+    const ax=aq, az=ar, ay=-ax-az, bx=bq, bz=br, by=-bx-bz;
+    const N=Math.max(Math.abs(ax-bx),Math.abs(ay-by),Math.abs(az-bz))||1, out=[];
+    for(let i=0;i<=N;i++){ const t=i/N; let x=ax+(bx-ax)*t, y=ay+(by-ay)*t, z=az+(bz-az)*t;
+      let rx=Math.round(x), ry=Math.round(y), rz=Math.round(z);
+      const dx=Math.abs(rx-x), dy=Math.abs(ry-y), dz=Math.abs(rz-z);
+      if(dx>dy&&dx>dz) rx=-ry-rz; else if(dy>dz) ry=-rx-rz; else rz=-rx-ry;
+      out.push({q:rx, r:rz});
+    }
+    return out;
+  }
+
   // ── AGGREGATION — sum a district / a region / the whole civilization. Every output is count × per-unit
   //    (the real shipped default) × terrain affinity (ruling #13; ×1 for the parts with no affinity). Crew
   //    (= JOBS, the employment morale band) and km² never take affinity. `eff` lets the demo override terrain.
@@ -920,7 +959,7 @@
   // header, the readout and the Scale panel. (The game pans a fixed WINDOW of the fine grid instead
   // of downsampling — modelled in the Scale panel; here we favour a legible whole-planet overview.)
   function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
-  const state = {planet:"earth", miniKm:5, showHaz:true, showWeather:true, showNight:true, showRes:true, sel:null, hexes:[],
+  const state = {planet:"earth", miniKm:5, showHaz:true, showWeather:true, showNight:true, showRes:true, showUnits:true, sel:null, hexes:[],
                  cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null, regionHex:[], civ:{}};
   // state.regionHex[i] = the regional hex CIV[i] was placed on; state.civ["c,r"] = that region's index.
   const tags={};             // FLOAT TAGS: "c,r" → a free-text name the player drops on any regional hex
@@ -1182,6 +1221,23 @@
       s+=`<rect x="${(cx-tw/2).toFixed(1)}" y="${chipY.toFixed(1)}" width="${tw.toFixed(1)}" height="12.5" rx="3" fill="var(--panel)" stroke="var(--accent)" stroke-width="0.9" pointer-events="none"/>`;
       s+=`<text x="${cx.toFixed(1)}" y="${(chipY+9).toFixed(1)}" font-size="8.5" text-anchor="middle" fill="var(--accent-ink)" font-weight="700" style="font-family:var(--mono)" pointer-events="none">🏷 ${name}</text>`;
     });
+    // REGIONAL TRADE ROUTE (rev-T, DESIGN) — the ore road from the mining province to the capital's shipyard.
+    //   Two provinces show on the regional map at once, so the cross-province haul is drawn here (the intra-
+    //   province local haul is on the mini-grid). LIVE: the load/unload verb (CargoTransferOrder). NEW: the route.
+    if(state.planet==="earth" && state.showUnits){
+      const ci=CIV.findIndex(c=>c.key==="capital"), mi=CIV.findIndex(c=>c.key==="mining");
+      const ch=state.regionHex[ci], mh=state.regionHex[mi];
+      if(ch&&mh){
+        const cxOf=(hx)=>4+size+hx.c*(size*2*0.75), cyOf=(hx)=>4+size+hx.r*(Math.sqrt(3)*size)+(hx.c%2?Math.sqrt(3)*size/2:0);
+        const x1=cxOf(mh), y1=cyOf(mh), x2=cxOf(ch), y2=cyOf(ch);
+        const ang=Math.atan2(y2-y1,x2-x1), hl=size*0.9, bx=x2-Math.cos(ang)*size*1.1, by=y2-Math.sin(ang)*size*1.1, ph=Math.PI/7;
+        s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.9" pointer-events="none"/>`;
+        s+=`<polygon points="${bx.toFixed(1)},${by.toFixed(1)} ${(bx-hl*Math.cos(ang-ph)).toFixed(1)},${(by-hl*Math.sin(ang-ph)).toFixed(1)} ${(bx-hl*Math.cos(ang+ph)).toFixed(1)},${(by-hl*Math.sin(ang+ph)).toFixed(1)}" fill="var(--accent)" pointer-events="none"/>`;
+        const mx=(x1+x2)/2, my=(y1+y2)/2;
+        s+=`<rect x="${(mx-26).toFixed(1)}" y="${(my-7).toFixed(1)}" width="52" height="12" rx="3" fill="var(--panel)" stroke="var(--accent)" stroke-width="0.7" pointer-events="none"/>`;
+        s+=`<text x="${mx.toFixed(1)}" y="${(my+2).toFixed(1)}" font-size="7.5" text-anchor="middle" fill="var(--accent-ink)" font-weight="700" style="font-family:var(--mono)" pointer-events="none">🚛 ore→⚓</text>`;
+      }
+    }
     svg.innerHTML=s;
     svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
       if(di!=null){ state.sel=+di; renderMap(); renderReadout();
@@ -1209,6 +1265,7 @@
     liveKinds.forEach(k=>{ html+=ic(HAZ[k].icon, HAZ[k].name+(HAZ[k].scope==="world"?" (world-wide)":"")); });
     html += `<span class="lg"><i class="tint amber"></i>attrition zone</span>`;
     if(state.planet==="earth" && state.regionHex.filter(Boolean).length) html += `<span class="lg"><b>🏷</b>float tag (name any hex)</span><span class="lg"><b>⌂</b>civilization province (districts on its mini-hexes)</span>`;
+    if(state.planet==="earth" && state.showUnits) html += `<span class="lg"><b>🪖</b>unit (click to select &amp; move)</span><span class="lg"><b>🚛</b>trade / haul route</span>`;
     html += `</div>`;
     html += `<div class="lgrow"><b class="lgh">Rolling &amp; sky</b>`;
     if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
@@ -1265,6 +1322,8 @@
   }
   function renderMicro(hex){
     const ri=regionAt(hex), region = ri!=null ? CIV[ri] : null;
+    const selU = unitState.sel ? unitById(unitState.sel) : null;              // the selected unit (if any)
+    const selHere = !!(state.showUnits && selU && region && selU.prov===region.key);  // …and it belongs to THIS province
     const distByQR={}; if(region) region.districts.forEach(d=>{ distByQR[d.q+","+d.r]=d; });
     const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex, MINI_RADIUS), sq3=Math.sqrt(3);
     const size=Math.max(3, 320/(1.5*MINI_ACROSS));   // shrink to fit the panel — the fine texture IS the point
@@ -1276,20 +1335,56 @@
       for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
       const dist = distByQR[t.q+","+t.r];                                   // a district sits on this mini-hex → show its authored ground
       const col = (FEAT[dist?dist.terr:t.terr]||FEAT.barren).col;
-      s+=`<polygon points="${pts.join(' ')}" fill="var(${col})" stroke="var(--sunk)" stroke-width="0.4"/>`;
+      const mt = selHere ? ` data-mtarget="${t.q},${t.r}" style="cursor:pointer"` : "";  // when a unit here is picked, any hex is a MOVE destination
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${col})" stroke="var(--sunk)" stroke-width="0.4"${mt}/>`;
     });
     // the SPECIFIC ore tiles — filled mineral nodes on their exact mini-hexes (tier 2)
     const deps=miniDeposits(hex);
     deps.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return; const m=MINERALS[d.m];
-      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.6).toFixed(1)}" fill="none" stroke="var(--panel)" stroke-width="${(size*0.6).toFixed(1)}" opacity="0.85"/>`;
-      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.25).toFixed(1)}" fill="${m.col}" stroke="var(--ink)" stroke-width="0.5"/>`;
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.6).toFixed(1)}" fill="none" stroke="var(--panel)" stroke-width="${(size*0.6).toFixed(1)}" opacity="0.85" pointer-events="none"/>`;
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.25).toFixed(1)}" fill="${m.col}" stroke="var(--ink)" stroke-width="0.5" pointer-events="none"/>`;
     });
     // DISTRICTS — each a CLUSTER of real installations on ONE mini-hex; ring green if its ground boosts it
     if(region){
       region.districts.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return;
         const lead=INST[d.stack[0][0]], m=affMult(lead?lead.comp:null, d.terr), ring=m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--line-strong)');
-        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.5).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.34).toFixed(1)}"/>`;
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.5).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.34).toFixed(1)}" pointer-events="none"/>`;
         s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.6).toFixed(1)}" font-size="${(size*1.7).toFixed(0)}" text-anchor="middle" pointer-events="none">${d.icon}</text>`;
+      });
+    }
+    // ─ UNITS ON THE MAP (rev-T, DESIGN) — tokens on their mini-hex, a MOVE path, a hex-to-hex HAUL route ─
+    if(state.showUnits && region){
+      // a short arrow segment (line + a triangle head) between two pixel points
+      const arrowSeg=(x1,y1,x2,y2,color,w,dash)=>{ const ang=Math.atan2(y2-y1,x2-x1), hl=size*1.5;
+        const bx=x2-Math.cos(ang)*hl, by=y2-Math.sin(ang)*hl, ph=Math.PI/7;
+        const p1=`${(x2-hl*Math.cos(ang-ph)).toFixed(1)},${(y2-hl*Math.sin(ang-ph)).toFixed(1)}`;
+        const p2=`${(x2-hl*Math.cos(ang+ph)).toFixed(1)},${(y2-hl*Math.sin(ang+ph)).toFixed(1)}`;
+        return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${color}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''} pointer-events="none"/>`
+             + `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${p1} ${p2}" fill="${color}" pointer-events="none"/>`; };
+      const units=unitsInProv(region.key);
+      // (a) standing HAUL route — a hauler's mine→smelter ore road across the mini-hexes (the locality ruling's demand)
+      units.filter(u=>u.haul).forEach(u=>{ const a=posByQR[u.haul.from.join(",")], b=posByQR[u.haul.to.join(",")];
+        if(a&&b){ const hot=(selU&&selU.id===u.id); s+=arrowSeg(a.cx,a.cy,b.cx,b.cy, hot?"var(--accent)":"var(--ink-soft)", hot?2.2:1.4, "3 2.2");
+          const mx=(a.cx+b.cx)/2, my=(a.cy+b.cy)/2;
+          s+=`<rect x="${(mx-16).toFixed(1)}" y="${(my-6).toFixed(1)}" width="32" height="11" rx="3" fill="var(--panel)" stroke="var(--ink-soft)" stroke-width="0.5" pointer-events="none"/>`;
+          s+=`<text x="${mx.toFixed(1)}" y="${(my+2.5).toFixed(1)}" font-size="7" text-anchor="middle" fill="var(--ink-soft)" style="font-family:var(--mono)" pointer-events="none">⛏→🏭 ore</text>`; } });
+      // (b) a MOVE order's path — the selected unit → the clicked destination hex, a hex line (LIVE pathfinder + walk)
+      if(selHere && unitState.moveTo){ const u=selU, dst=unitState.moveTo.split(",").map(Number);
+        const line=hexLine(u.q,u.r,dst[0],dst[1]).map(h=>posByQR[h.q+","+h.r]).filter(Boolean);
+        if(line.length>1){ const poly=line.map(p=>`${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+          s+=`<polyline points="${poly}" fill="none" stroke="var(--live)" stroke-width="2" stroke-dasharray="2.5 2.5" pointer-events="none"/>`;
+          const e=line[line.length-1];
+          s+=`<circle cx="${e.cx.toFixed(1)}" cy="${e.cy.toFixed(1)}" r="${(size*1.7).toFixed(1)}" fill="none" stroke="var(--live)" stroke-width="1.6" pointer-events="none"/>`;
+          s+=`<text x="${e.cx.toFixed(1)}" y="${(e.cy+size*0.6).toFixed(1)}" font-size="${(size*1.4).toFixed(0)}" text-anchor="middle" pointer-events="none">🚩</text>`; } }
+      // (c) the unit TOKENS — clickable; a health ring + the type icon; halo when selected
+      units.forEach(u=>{ const p=posByQR[u.q+","+u.r]; if(!p) return; const sel=(selU&&selU.id===u.id);
+        const fc = u.faction==="you" ? "var(--live)" : "var(--accent)";
+        if(sel) s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*2.2).toFixed(1)}" fill="none" stroke="${fc}" stroke-width="1" stroke-dasharray="2 2" pointer-events="none"/>`;
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.55).toFixed(1)}" fill="var(--inset)" stroke="${fc}" stroke-width="${(size*0.4).toFixed(1)}" data-unit="${u.id}" style="cursor:pointer"/>`;
+        const hpf=u.hp/u.maxhp, bw=size*2.4;
+        s+=`<rect x="${(p.cx-bw/2).toFixed(1)}" y="${(p.cy-size*2.1).toFixed(1)}" width="${bw.toFixed(1)}" height="2.4" rx="1" fill="var(--sunk)" pointer-events="none"/>`;
+        s+=`<rect x="${(p.cx-bw/2).toFixed(1)}" y="${(p.cy-size*2.1).toFixed(1)}" width="${(bw*hpf).toFixed(1)}" height="2.4" rx="1" fill="${hpf>0.5?'var(--live)':'var(--accent)'}" pointer-events="none"/>`;
+        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.6).toFixed(1)}" font-size="${(size*1.6).toFixed(0)}" text-anchor="middle" data-unit="${u.id}" style="cursor:pointer">${u.icon}</text>`;
       });
     }
     const mk=miniHexKm(state.planet).toFixed(1);
@@ -1303,6 +1398,53 @@
   }
 
   const affBadge=(m)=> m>1 ? `<span class="boost up">+${Math.round((m-1)*100)}%</span>` : (m<1 ? `<span class="boost dn">×${m.toFixed(2)}</span>` : `<span class="boost flat">×1</span>`);
+
+  // UNITS panel (rev-T, DESIGN) — the roster on this province's mini-hexes + the picked unit's stat card + trade.
+  //  Grades: the map DRAWS units + kills them like ships (LIVE); select-one / read-one is UI wiring (Failure A);
+  //  the MOVE + HAUL orders route through the ONE queue both seats use (the primitive the AI already issues).
+  function unitPanel(ri){
+    if(!state.showUnits) return "";
+    const region=CIV[ri], units=unitsInProv(region.key);
+    if(!units.length) return "";
+    const selU = unitState.sel ? unitById(unitState.sel) : null;
+    const selHere = !!(selU && selU.prov===region.key);
+    const kmPer = miniHexKm(state.planet);
+    let html = `<div class="sect"><div class="sh">🪖 Units on these mini-hexes <span class="badge THEORY">DESIGN · draws + dies LIVE</span></div>`;
+    html += `<div class="scroll"><table class="cty"><thead><tr><th>Unit</th><th>Kind</th><th>Health</th><th></th></tr></thead><tbody>`;
+    units.forEach(u=>{ const on=selHere&&selU.id===u.id;
+      html += `<tr${on?' style="background:var(--live-bg)"':''}><td data-unit="${u.id}" style="cursor:pointer"><span class="bi">${u.icon}</span>${u.name}</td><td>${u.kind}</td><td>${u.hp}/${u.maxhp}</td><td><button class="tbtn" data-unit="${u.id}">${on?'✓ picked':'select'}</button></td></tr>`; });
+    html += `</tbody></table></div>`;
+    if(selHere){
+      const u=selU;
+      html += `<div class="tac" style="border-left-color:var(--live)">
+        <div class="row"><span>${u.icon} <b>${u.name}</b></span><b>${u.kind}</b></div>
+        <div class="row"><span>Health</span><b class="${u.hp/u.maxhp>0.5?'up':'dn'}">${u.hp} / ${u.maxhp}</b></div>
+        <div class="row"><span>Attack · Defense</span><b>${u.atk} · ${u.def}</b></div>
+        <div class="row"><span>Strike range</span><b>${u.rngHex>0?`${u.rngHex} hex ≈ ${Math.round(u.rngHex*kmPer)} km`:'—'}</b></div>
+        <div class="row"><span>Loadout</span><b>${u.load}</b></div>
+        ${u.cargo?`<div class="row"><span>Cargo hold <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></span><b>${u.cargo.good}: ${u.cargo.have} / ${u.cargo.cap} t</b></div>`:''}
+        <div class="row" style="border-bottom:none"><span>Move order</span><b class="${unitState.moveTo?'up':''}">${unitState.moveTo?`→ mini-hex (${unitState.moveTo})`:'click a hex ▽ to order'}</b></div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="tbtn" id="unitClear">✕ Deselect</button>
+          ${unitState.moveTo?`<button class="tbtn" id="moveClear">↩ Cancel move</button>`:''}
+        </div>
+        <div class="cityflag" style="margin-top:8px"><b>Every number here already lives on <span class="mono">GroundUnit</span></b> (Attack/Defense/Health/Range_m/loadout) — this is the missing <b>select-one / read-one</b> UI (<b>Failure A</b>), not a missing datum. A MOVE routes through the <b>one queued order</b> both seats issue (<span class="mono">GroundOrder.MoveHex</span>) — the client's direct <span class="mono">OrderMoveToGlobalHex</span> call (<span class="mono">PlanetViewWindow.cs:581</span>) is the second door the <em>One-Verb-Both-Seats</em> law schedules for deletion. The A* pathfinder + processor-walk under it are <b>LIVE</b>.</div>
+      </div>`;
+    } else {
+      html += `<div class="cityflag">Click a unit to <b>select ONE</b> and read its sheet — then click a mini-hex to give it a <b>MOVE</b>. Today the client selects only a <b>region + faction + type GROUP</b>, never one unit.</div>`;
+    }
+    // TRADE — the two scales of moving goods, both forced by the resource-locality ruling
+    const hauler=units.find(u=>u.haul);
+    html += `<div class="sect" style="margin-top:10px"><div class="sh">🚛 Trade &amp; logistics <span class="badge THEORY">DESIGN · load/unload verb LIVE</span></div>
+      ${hauler?`<div class="row"><span>Local haul (this province)</span><b>${hauler.name}: ⛏ mine → 🏭 smelter</b></div>`:''}
+      <div class="row"><span>Regional route (on the map ▲)</span><b>Ferrum Basin ⛏ → Naval Yards ⚓ (ore → shipyard)</b></div>
+      <div class="row" style="border-bottom:none"><span>Inter-colony freight (for money)</span><b>LogiBaseDB route <span class="badge DATA" style="font-size:8px;padding:1px 4px">DATA · inert</span></b></div>
+      <div class="cityflag" style="margin-top:6px"><b>Because a resource STAYS in its mini-hex</b> (your ruling), a shipyard can starve next to ore it can't reach — so <b>hauling becomes a real job.</b> The load/unload verb (<span class="mono">CargoTransferOrder</span>) is <b>LIVE</b>; what's <b>NEW</b> is a per-hex stockpile to load from and a <b>hex-to-hex HAUL</b> order (it's <span class="mono">CargoTransferOrder</span> twice, bracketed by a MOVE). The inter-colony freight loop (<span class="mono">LogiBaseDB</span>) already exists but sits <b>inert</b> — nothing seeds its <span class="mono">DesiredLevels</span> (<span class="mono">LogisticsProcessor.cs:114</span>). Build order in <span class="mono">docs/ground/UNITS-ON-THE-MAP-DESIGN.md</span>.</div>
+    </div>`;
+    html += `</div>`;
+    return html;
+  }
+
   // A PROVINCE panel — shown in the readout for a civ regional hex: its district roster + its roll-up.
   function regionPanel(ri){
     const region=CIV[ri], R=regionAgg(region);
@@ -1365,7 +1507,7 @@
       <div class="row" style="border-bottom:none;padding-top:5px"><span>${tg?`Tagged <b style="color:var(--accent-ink)">"${tg}"</b> — floats on the map above this hex.`:'Drop a free-text name on this regional hex — call it anything (capital, front line, the mine…). It floats on the map.'}</span></div></div>`;
 
     html += renderMicro(hex);            // ▽ the mini-hex view — the districts of a province live here
-    { const rg=regionAt(hex); if(rg!=null) html += regionPanel(rg); }   // its district roster + province roll-up (no separate view)
+    { const rg=regionAt(hex); if(rg!=null){ html += regionPanel(rg); html += unitPanel(rg); } }   // district roll-up + the units/trade panel
 
     html += `<div class="sect"><div class="sh">Terrain effect <span class="badge LIVE">LIVE · resolver reads it</span></div>
       <div class="row"><span>Defender cover</span><b class="${tc.cover>1?'up':'dn'}">÷${tc.cover.toFixed(2)}</b></div>
@@ -1627,6 +1769,7 @@
   document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
   document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
   document.getElementById("resToggle").addEventListener("click",e=>{ state.showRes=!state.showRes; e.target.setAttribute("aria-pressed",state.showRes); e.target.textContent = state.showRes?"⛏ Resources":"⛏ Resources off"; renderMap(); });
+  document.getElementById("unitToggle").addEventListener("click",e=>{ state.showUnits=!state.showUnits; e.target.setAttribute("aria-pressed",state.showUnits); e.target.textContent = state.showUnits?"🪖 Units & trade":"🪖 Units off"; if(!state.showUnits){ unitState.sel=null; unitState.moveTo=null; } renderMap(); renderReadout(); });
   const tagEditing=()=>{ const a=document.activeElement; return a && a.id==="tagInput"; };   // don't churn the readout while naming a hex
   document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderCiv(); if(!tagEditing()) renderReadout(); });
   document.getElementById("wxAuto").addEventListener("click",e=>{
@@ -1643,8 +1786,17 @@
     if(v) tags[k]=v; else delete tags[k]; renderMap(); renderReadout(); };
   document.getElementById("readout").addEventListener("click",e=>{
     const id=e.target && e.target.id;
-    if(id==="tagSet"){ const inp=document.getElementById("tagInput"); setTag(inp?inp.value.trim():""); }
-    else if(id==="tagDel"){ setTag(""); }
+    if(id==="tagSet"){ const inp=document.getElementById("tagInput"); setTag(inp?inp.value.trim():""); return; }
+    if(id==="tagDel"){ setTag(""); return; }
+    if(id==="unitClear"){ unitState.sel=null; unitState.moveTo=null; renderReadout(); return; }
+    if(id==="moveClear"){ unitState.moveTo=null; renderReadout(); return; }
+    // pick ONE unit (roster row, button, or its map token) — toggles selection, clears any pending move
+    const ue = e.target.closest ? e.target.closest("[data-unit]") : null;
+    const uid = ue ? ue.getAttribute("data-unit") : (e.target.getAttribute && e.target.getAttribute("data-unit"));
+    if(uid){ unitState.sel = (unitState.sel===uid ? null : uid); unitState.moveTo=null; renderReadout(); return; }
+    // click a mini-hex while a unit is picked → give it a MOVE order (draw the path)
+    const mt = e.target.getAttribute && e.target.getAttribute("data-mtarget");
+    if(mt && unitState.sel){ unitState.moveTo = mt; renderReadout(); return; }
   });
   document.getElementById("readout").addEventListener("keydown",e=>{
     if(e.target && e.target.id==="tagInput" && e.key==="Enter"){ e.preventDefault(); setTag(e.target.value.trim()); }
