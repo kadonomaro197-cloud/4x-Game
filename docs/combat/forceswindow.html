@@ -1,0 +1,700 @@
+<title>Force Management — the order of battle, every unit you own</title>
+<style>
+  /* ============ TOKENS — light "command readout" is the bare :root ============ */
+  :root{
+    --ground:#e7ecf1; --panel:#ffffff; --panel-2:#f1f5f8; --inset:#eaf0f4; --sunk:#dfe7ed; --titlebar:#e3ebf1;
+    --ink:#12202b; --ink-soft:#48606f; --ink-faint:#7c94a3;
+    --line:#cdd9e1; --line-strong:#b0c1cc;
+    --accent:#d5741f; --accent-soft:#f6e6d3; --accent-ink:#9a4e0c;
+    --live:#1c9160; --live-bg:#dcefe6;
+    --data:#b07d16; --data-bg:#f5ecd4;
+    --build:#3f6bb0; --build-bg:#e0e8f4;
+    --mil:#b23b3b; --mil-bg:#f5dede;          /* military — a muted steel-crimson */
+    --civ:#2f7d8a; --civ-bg:#d8ecef;          /* civilian — a calm teal */
+    --space:#5a63b0; --ground-t:#5f8a52;      /* domain tints */
+    --sel:#fbf1e3;
+    --shadow:0 1px 2px rgba(18,32,43,.07), 0 10px 30px rgba(18,32,43,.08);
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12; --titlebar:#0c161f;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --build:#6ba0e0; --build-bg:#132339;
+    --mil:#e07070; --mil-bg:#2c1414;
+    --civ:#4fb3c2; --civ-bg:#0c262b;
+    --space:#9098e0; --ground-t:#8fb87f;
+    --sel:#241a0d;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.36);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12; --titlebar:#0c161f;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --build:#6ba0e0; --build-bg:#132339;
+    --mil:#e07070; --mil-bg:#2c1414;
+    --civ:#4fb3c2; --civ-bg:#0c262b;
+    --space:#9098e0; --ground-t:#8fb87f;
+    --sel:#241a0d;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.36);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(14px,3vw,30px) 72px}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  .mono{font-family:var(--mono)}
+  .cite{font-family:var(--mono);font-size:.72em;color:var(--ink-faint);word-break:break-word}
+
+  header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:700;display:flex;gap:9px;align-items:center}
+  header .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  h1{font-size:clamp(24px,4vw,38px);font-weight:820;letter-spacing:-.02em;line-height:1.05;margin:12px 0 0}
+  .sub{margin:12px 0 0;color:var(--ink-soft);max-width:80ch;font-size:15px}
+  .sub b{color:var(--ink);font-weight:680}
+
+  .gradekey{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .gradekey span{display:inline-flex;gap:6px;align-items:baseline}
+  .gr{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px}
+  .gr.LIVE{background:var(--live-bg);color:var(--live)} .gr.DATA{background:var(--data-bg);color:var(--data)} .gr.BUILD{background:var(--build-bg);color:var(--build)}
+
+  /* ============ the in-game WINDOW chrome ============ */
+  .window{margin-top:22px;background:var(--panel);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+  .titlebar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--titlebar);border-bottom:1px solid var(--line)}
+  .titlebar .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+  .titlebar .tt{font-weight:750;font-size:14.5px;letter-spacing:.01em}
+  .titlebar .cls{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .titlebar .fac{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);display:flex;gap:6px;align-items:center}
+  .titlebar .fac b{color:var(--ink)}
+  .titlebar .win{margin-left:8px;color:var(--ink-faint);font-family:var(--mono);font-size:12px}
+
+  /* top tab bar */
+  .tabs{display:flex;gap:2px;padding:0 10px;background:var(--panel-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{font-family:var(--sans);font-size:13px;font-weight:640;color:var(--ink-soft);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 14px 9px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+  .tab .tg{font-family:var(--mono);font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px}
+  .tab .tg.LIVE{background:var(--live-bg);color:var(--live)} .tab .tg.BUILD{background:var(--build-bg);color:var(--build)}
+
+  /* force-summary strip (summary before detail) */
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+  .scell{background:var(--panel);padding:9px 13px}
+  .scell .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .scell .v{font-weight:800;font-size:19px;margin-top:1px;font-variant-numeric:tabular-nums}
+  .scell .v small{font-weight:500;color:var(--ink-soft);font-size:11px}
+  .scell.mil .v{color:var(--mil)} .scell.civ .v{color:var(--civ)}
+
+  /* filter bar */
+  .filterbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:11px 14px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .fgroup{display:flex;gap:5px;align-items:center}
+  .fgroup .fl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-right:3px}
+  .chip{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer}
+  .chip:hover{border-color:var(--line-strong);color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.mil[aria-pressed="true"]{background:var(--mil);border-color:var(--mil)}
+  .chip.civ[aria-pressed="true"]{background:var(--civ);border-color:var(--civ)}
+  select.fsel{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;cursor:pointer}
+  input.fq{font-family:var(--sans);font-size:12.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 10px;min-width:130px}
+  input.fq::placeholder{color:var(--ink-faint)}
+  .fcount{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
+  .fcount b{color:var(--ink)}
+
+  /* the two-pane body: roster + detail */
+  .body{display:grid;grid-template-columns:1fr 384px;gap:0;background:var(--line)}
+  @media(max-width:940px){.body{grid-template-columns:1fr}}
+  .rosterwrap{background:var(--panel);min-width:0;overflow-x:auto}
+  table.roster{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px}
+  table.roster thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;text-align:left;padding:8px 9px;border-bottom:1.5px solid var(--line-strong);cursor:pointer;white-space:nowrap;user-select:none}
+  table.roster thead th .cg{font-size:7.5px;font-weight:800;padding:1px 3px;border-radius:3px;margin-left:4px;vertical-align:1px}
+  .cg.LIVE{background:var(--live-bg);color:var(--live)} .cg.DATA{background:var(--data-bg);color:var(--data)} .cg.BUILD{background:var(--build-bg);color:var(--build)}
+  table.roster thead th.num,table.roster tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+  table.roster thead th .ar{color:var(--accent);font-size:9px}
+  table.roster tbody td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.roster tbody tr{cursor:pointer}
+  table.roster tbody tr:hover td{background:var(--inset)}
+  table.roster tbody tr.sel td{background:var(--sel)}
+  table.roster tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+  table.roster tbody tr.child td{background:var(--sunk)}
+  table.roster tbody tr.child:hover td{background:var(--inset)}
+  .nm{display:flex;align-items:center;gap:7px}
+  .nm .chev{width:14px;text-align:center;color:var(--ink-faint);font-size:10px;cursor:pointer;flex:none}
+  .nm .ic{font-size:14px;flex:none;width:18px;text-align:center}
+  .nm .txt{min-width:0}
+  .nm .txt b{font-weight:680;font-size:12.5px}
+  .nm .txt s{text-decoration:none;display:block;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint)}
+  .nm.ind{padding-left:20px}
+  .dm{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.03em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+  .dm.space{background:color-mix(in srgb,var(--space) 16%,transparent);color:var(--space)}
+  .dm.ground{background:color-mix(in srgb,var(--ground-t) 18%,transparent);color:var(--ground-t)}
+  .dm.holding{background:var(--data-bg);color:var(--data)}
+  .pill{font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.03em;padding:2px 6px;border-radius:5px}
+  .pill.Mil{background:var(--mil-bg);color:var(--mil)} .pill.Civ{background:var(--civ-bg);color:var(--civ)}
+  .cls{font-weight:640;font-size:12px}
+  .hbar{display:flex;align-items:center;gap:6px;min-width:78px}
+  .hbar .track{flex:1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+  .hbar .track span{display:block;height:100%;border-radius:3px;background:var(--live)}
+  .hbar .track span.warn{background:var(--data)} .hbar .track span.crit{background:var(--mil)}
+  .hbar .pct{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);width:30px;text-align:right}
+  .ord{font-size:11.5px;color:var(--ink-soft)} .ord.idle{color:var(--ink-faint)}
+  .cmdr{font-size:11px;color:var(--ink-soft)} .cmdr.none{color:var(--ink-faint);font-style:italic}
+
+  /* detail / order panel */
+  .detail{background:var(--panel-2);padding:15px 16px;min-width:0}
+  .detail .dempty{color:var(--ink-faint);font-size:13.5px;font-family:var(--mono);text-align:center;padding:44px 8px;line-height:1.7}
+  .dhead{display:flex;gap:10px;align-items:flex-start}
+  .dhead .dic{font-size:26px;line-height:1}
+  .dhead .dh1{font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .dhead .dh2{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  /* the classification derivation card — the load-bearing "why" */
+  .derive{margin-top:12px;background:var(--build-bg);border:1px solid var(--build);border-radius:9px;padding:9px 11px}
+  .derive .dl{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--build);font-weight:800;display:flex;justify-content:space-between;gap:8px}
+  .derive .dv{font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.45}
+  .derive .dv code{font-family:var(--mono);font-size:11px;background:var(--panel);padding:1px 4px;border-radius:4px;color:var(--build)}
+  .derive .dn{font-size:11px;color:var(--ink-soft);margin-top:5px}
+  .dsect{margin-top:14px}
+  .dsect .sh{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .drow{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .drow b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .comp{display:grid;grid-template-columns:1fr auto auto;gap:2px 10px;font-family:var(--mono);font-size:11.5px;padding:3px 0;border-bottom:1px dotted var(--line-strong)}
+  .comp .cn{color:var(--ink)} .comp .cc{color:var(--ink-soft);text-align:right}
+  .mani{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);line-height:1.7}
+  .mani b{color:var(--ink)}
+  .orders{margin-top:14px}
+  .orders .oh{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+  .obtns{display:flex;gap:6px;flex-wrap:wrap}
+  .ob{font-family:var(--sans);font-size:12px;font-weight:640;color:var(--ink);background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:6px 11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+  .ob:hover{border-color:var(--accent);color:var(--accent-ink)}
+  .ob .og{font-family:var(--mono);font-size:7.5px;font-weight:800;padding:1px 3px;border-radius:3px}
+  .ob .og.LIVE{background:var(--live-bg);color:var(--live)} .ob .og.BUILD{background:var(--build-bg);color:var(--build)}
+  .ob.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .otoast{margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--live);background:var(--live-bg);border-radius:7px;padding:7px 10px;display:none}
+  .otoast.show{display:block}
+  .memberhint{margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);line-height:1.5}
+  /* window footer: classification legend + grave-rung */
+  .winfoot{padding:11px 14px;background:var(--panel-2);border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);line-height:1.6;display:grid;gap:6px}
+  .winfoot b{color:var(--ink)} .winfoot .lg{color:var(--build);font-weight:700}
+  .winfoot .grave{color:var(--accent-ink);font-weight:600}
+
+  /* ============ design sections below ============ */
+  .sec{margin-top:44px}
+  .sec h2{font-size:clamp(18px,2.4vw,23px);font-weight:770;letter-spacing:-.01em;display:flex;gap:11px;align-items:baseline}
+  .sec h2 .n{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink);font-weight:700}
+  .sec p.lead{color:var(--ink-soft);max-width:82ch;margin:8px 0 18px;font-size:14.5px}
+  .verdict{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--mil);border-radius:11px;padding:15px 17px;box-shadow:var(--shadow)}
+  .verdict h3{font-size:15.5px;font-weight:740;margin-bottom:6px}
+  .verdict p{font-size:13.5px;color:var(--ink-soft);margin:0 0 9px;line-height:1.55} .verdict p:last-child{margin-bottom:0}
+  .verdict b{color:var(--ink)} .verdict code{font-family:var(--mono);font-size:12px;background:var(--inset);padding:1px 5px;border-radius:4px;color:var(--accent-ink)}
+  .verdict .dead{color:var(--mil);font-weight:700}
+  .emc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:820px){.emc{grid-template-columns:1fr}}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 15px;box-shadow:var(--shadow)}
+  .col.exists{border-top:3px solid var(--live)} .col.change{border-top:3px solid var(--data)} .col.missing{border-top:3px solid var(--build)}
+  .col h3{font-size:14px;font-weight:740;display:flex;gap:8px;align-items:center;margin-bottom:9px}
+  .col h3 .gr{font-size:9px}
+  .col ul{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+  .col li{font-size:12.5px;color:var(--ink-soft);line-height:1.45;padding-left:15px;position:relative}
+  .col li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:800}
+  .col li b{color:var(--ink);font-weight:660} .col li .cite{display:block;margin-top:1px}
+
+  table.build{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+  table.build th,table.build td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.build th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700}
+  table.build td.s{font-family:var(--mono);font-weight:700;color:var(--accent-ink);white-space:nowrap}
+  table.build td b{color:var(--ink)}
+  table.build .gr{font-size:8.5px}
+  .scroll{overflow-x:auto}
+
+  .note{margin-top:20px;background:var(--inset);border:1px solid var(--line);border-left:4px solid var(--data);border-radius:11px;padding:14px 16px;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .note b{color:var(--ink)}
+  footer{margin-top:44px;border-top:1px solid var(--line);padding-top:20px;color:var(--ink-faint);font-size:12.5px;line-height:1.6}
+  footer .mono{font-size:11px}
+  a{color:var(--accent-ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Client · command &amp; control · order of battle</div>
+    <h1>Force Management — every unit you own, in one order of battle</h1>
+    <p class="sub">This is the <b>Force Management</b> window (the class is still <span class="mono">FleetWindow</span> — renaming it would break every save) grown into what you asked for: <b>one place that lists, details, and controls every unit you own</b> — <b>military and civilian</b>, on the <b>space side</b> (ships and fleets) and the <b>planet side</b> (battalions and their individual units) — plus your <b>holdings</b> (colonies, stations). About <b>70% of this is already built</b>: the window exists with a Fleets tree and a cross-body Battalions table sharing one order path. The missing 30% is the <b>single unified roster</b>, a <b>working military-vs-civilian tag</b>, and <b>per-individual ground-unit rows</b>. The one thing to understand first: <b>the engine cannot tell a warship from a freighter today</b> — the intended flag is dead code — so this window <b>derives</b> the answer from what's bolted on the hull, and that derivation must live engine-side so the AI reads the identical value. Every column, cell, and order below is graded by whether the code <b>does it today</b>, only <b>holds the data</b>, or is <b>work to build</b>.</p>
+    <div class="gradekey">
+      <span><span class="gr LIVE">LIVE</span> Force Management does this today</span>
+      <span><span class="gr DATA">DATA</span> the value/helper exists in the engine — just not in this roster</span>
+      <span><span class="gr BUILD">BUILD</span> genuinely new: a helper, a render, or a gauge to build</span>
+    </div>
+  </header>
+
+  <!-- ============ THE WINDOW ============ -->
+  <div class="window">
+    <div class="titlebar">
+      <span class="dot"></span>
+      <span class="tt">Force Management</span>
+      <span class="cls">class FleetWindow · FleetWindow.cs:186</span>
+      <span class="fac">Faction <b>New Terra Republic</b> · <span id="facFilter">PlayerFaction</span></span>
+      <span class="win">▢ ✕</span>
+    </div>
+
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="summary" id="summary"></div>
+    <div class="filterbar" id="filterbar"></div>
+
+    <div class="body">
+      <div class="rosterwrap">
+        <table class="roster" id="roster"><thead id="rhead"></thead><tbody id="rbody"></tbody></table>
+      </div>
+      <aside class="detail" id="detail">
+        <div class="dempty">◎ select any unit on the left<br>to read its details and give it orders<br><br>every unit is one row — ships, battalions,<br>freighters, colonies — filter by domain and role</div>
+      </aside>
+    </div>
+
+    <div class="winfoot">
+      <div><b>How Class &amp; Mil/Civ are derived</b> (no stored field — <span class="lg">the engine must compute this, so the AI reads the same value</span>): a ship is a <b>Warship</b> if its combat firepower &gt; 0; otherwise it's the civilian role its components imply — <b>Freighter</b> (logistics module), <b>Survey</b> (survey sensor), <b>Tender</b> (cargo-transfer, unarmed), <b>Transport</b> (troop bay). A ground unit is <b>combat</b> unless its attack ≤ 0 (then <b>Support</b>).</div>
+      <div class="grave">⚠ Grave rung — capture &amp; loss: a colony/station registry isn't cleared when a world is taken, so the window must verify each asset's live owner before showing it, or you'll see lost worlds as still-yours (SYSTEM-CONNECTION-MAP.md:155).</div>
+    </div>
+  </div>
+
+  <!-- ============ THE MILITARY / CIVILIAN VERDICT ============ -->
+  <section class="sec">
+    <h2><span class="n">⚑</span> The one thing the engine can't tell you: military vs civilian</h2>
+    <p class="lead">You asked for "units both military and non-military." Here's the honest ground truth, and why the fix is an <b>engine</b> job before it's a <b>window</b> job.</p>
+    <div class="verdict">
+      <h3>The intended flag is dead code.</h3>
+      <p><span class="dead">There is a <code>ShipInfoDB.IsMilitary</code> field</span> (ShipInfoDB.cs:38) — and siblings <code>Tanker</code>, <code>Collier</code>, <code>SupplyShip</code>, <code>Conscript</code>. They're declared and copied when a ship is cloned, but <b>never set and never read anywhere in the whole solution.</b> Ship designs carry no role or category. Fleets carry no classification. On the ground, unit types are Infantry / Armour / Artillery only — all combat — and the design is <b>deliberately locked</b> against adding "civilian" unit types (a unit's role must emerge from what it carries, not a label).</p>
+      <p><b>So the window must derive the classification from components — never read a stored field.</b> A ship with a weapon is a warship; strip its weapons and it stops being one. A ship with a logistics module is a freighter; a survey sensor makes it a survey ship; a troop bay makes it a transport. A ground unit with attack ≤ 0 is support.</p>
+      <p><b>And the derivation belongs in the engine, not the window</b> — the studio law is <em>one verb, both seats</em>: if the AI can't read the same "is this a warship?" answer the player sees, you've built two truths. The recommendation from the survey: one small, tested engine helper — <code>ShipRoleTools.ClassifyRole(ship)</code> — that both the Force Management window and the faction AI call. The ground side already has one (<code>GroundRoleComposer.ClassifyRole</code>, GroundRoleComposer.cs:45) — it's just never shown to the player.</p>
+    </div>
+  </section>
+
+  <!-- ============ EXISTS / CHANGE / MISSING ============ -->
+  <section class="sec">
+    <h2><span class="n">▤</span> 70% is already built — here's the split</h2>
+    <p class="lead">The survey read the real client and engine (each line cited). The window's job is mostly to <b>connect what exists</b>, generalize a few things, and build a short list of genuinely-new pieces.</p>
+    <div class="emc">
+      <div class="col exists">
+        <h3><span class="gr LIVE">LIVE</span> Exists — reuse</h3>
+        <ul>
+          <li>The <b>host window</b> with a two-tab bar: Fleets + Battalions.<span class="cite">FleetWindow.cs:186, :188/:1149</span></li>
+          <li>The space roster source — the faction's <b>fleet tree</b> (fleets + loose ships).<span class="cite">FleetWindow.cs:128, :1930</span></li>
+          <li>The <b>cross-body Battalions table</b> — 8 columns, filters, full order surface.<span class="cite">FleetWindow.cs:1149-1269</span></li>
+          <li>One <b>generic order path</b> every unit shares.<span class="cite">OrderableDB.cs:9 → StandAloneOrderHandler.cs:18</span></li>
+          <li>The universal <b>ownership key</b> on every entity.<span class="cite">Entity.cs:35 (FactionOwnerID)</span></li>
+          <li>A built <b>cross-body helper</b> — its doc names this window.<span class="cite">GroundForcesDB.cs:1147 (AllFormationsFor)</span></li>
+          <li>Reusable <b>detail panels</b>: per-ship combat sheet, installed-components table, formation panel.<span class="cite">FleetWindow.cs:971 · ComponentInstancesDBDisplay.cs:13 · PlanetViewWindow.cs:1297</span></li>
+        </ul>
+      </div>
+      <div class="col change">
+        <h3><span class="gr DATA">DATA</span> Needs-change — generalize</h3>
+        <ul>
+          <li>Scope from <code>uiState.Faction</code> to <b>PlayerFaction</b> (so SM mode doesn't blank your OOB).<span class="cite">FleetWindow.cs:127</span></li>
+          <li><b>Unify the two selection states</b> (selected fleet vs selected battalion) into one "selected unit".<span class="cite">FleetWindow.cs:46 vs :1138</span></li>
+          <li>Extract the per-ship combat row into a <b>reusable roster row</b>.<span class="cite">FleetWindow.cs:971-1098</span></li>
+          <li>Switch the Battalions gather to the <b>built helper</b> AllFormationsFor.<span class="cite">FleetWindow.cs:1157 → GroundForcesDB.cs:1147</span></li>
+          <li>Promote the logistics detail body to take a <b>passed-in ship</b>, not the last click.<span class="cite">LogisticsWindow.cs:74-173</span></li>
+          <li>Surface <code>GroundRoleComposer.ClassifyRole</code> as a <b>roster readout</b> (today only the AI reads it).<span class="cite">GroundRoleComposer.cs:45</span></li>
+        </ul>
+      </div>
+      <div class="col missing">
+        <h3><span class="gr BUILD">BUILD</span> Missing — new</h3>
+        <ul>
+          <li>The <b>single unified roster</b>: ships + formations (+ holdings) in one filterable, sortable table with one selection.</li>
+          <li>The <b>military-vs-civilian classifier</b> — a tested engine helper both window and AI read.</li>
+          <li><b>Per-individual ground-unit rows</b> — the data's all on the unit; only the render is missing.</li>
+          <li>A galaxy-wide <b>"all my units everywhere" enumerator</b> (ownership is fragmented across three homes).</li>
+          <li>Aggregate <b>ship Health &amp; Fuel</b> accessors — none exist today (only per-component / per-thruster).</li>
+          <li><b>Stations &amp; colonies</b> as roster rows, with a live-owner cross-check.</li>
+          <li>A UI to <b>assign a commander</b> to a fleet flagship or a formation.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BUILD ORDER ============ -->
+  <section class="sec">
+    <h2><span class="n">↓</span> Build order — cheapest reuse first, genuinely-new last</h2>
+    <p class="lead">Each slice is one CI-gated step. The early ones are pure wiring of things that already exist; the classifier (S2) is the load-bearing engine piece because everything downstream — and the AI — reads it.</p>
+    <div class="scroll"><table class="build">
+      <thead><tr><th>Slice</th><th>What</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td class="s">S1</td><td><b>Point the Battalions tab at the built helper</b> AllFormationsFor, and scope to PlayerFaction. Pure reuse.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S2</td><td><b>The engine classifier</b> <code>ShipRoleTools.ClassifyRole</code> (+ a test) reusing the emergent predicates that already exist; expose the ground one. The Mil/Civ + Class column, read by window <em>and</em> AI.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S3</td><td><b>Make the two existing table rows reusable</b> — extract the ship combat row; confirm the battalion row is callable.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S4</td><td><b>One "selected unit" abstraction</b> unifying the fleet + battalion selection. The load-bearing refactor everything below rides on.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S5</td><td><b>The new "All Forces" flat roster tab</b> — one table over S2/S3/S4, with Domain / Mil-Civ / Class / Location filters and a detail panel that swaps by unit kind.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S6</td><td><b>Per-individual ground-unit rows</b> + the engine sibling AllUnitsFor (includes unformed units). Closes "list <em>every</em> unit".</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S7</td><td><b>Civilian-ship detail panel</b> — promote the logistics manifest/routes/dV into the roster.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S8</td><td><b>Aggregate Health + Fuel gauges</b> — build the missing engine accessors so those columns become real numbers.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S9</td><td><b>Stations + colonies as rows</b> (with a live-owner cross-check) + assign-commander UI. Scope-gated, last.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><b>Open decisions for you</b> (I picked sensible defaults for this prototype, say the word to change them): <b>(1) Scope</b> — I included holdings (colonies/stations) so it's a true order of battle, not just mobile forces. <b>(2) Ground granularity</b> — formations are rows, individual units expand underneath. <b>(3) Classification home</b> — a derived engine helper, not the dead flag. <b>(4) Capture-stale registries</b> — a cheap window-side owner check now, the deeper engine fix later.</div>
+  </section>
+
+  <footer>
+    <div><b>Force Management — unified order of battle.</b> A design prototype for the Pulsar4X fork. Grounded on a 6-agent survey of the real client + engine, each claim cited at file:line. <b>Nothing here is wired into the engine yet</b> — this is the design and the build order.</div>
+    <div class="mono" style="margin-top:8px">Seed window: FleetWindow.cs (title "Force Management") · order path: OrderableDB → StandAloneOrderHandler · classify: proposed ShipRoleTools.ClassifyRole + live GroundRoleComposer.ClassifyRole · dead flag: ShipInfoDB.IsMilitary:38 · design doc: docs/combat/FORCES-WINDOW-DESIGN.md</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ── the classifier — mirrors the proposed engine ShipRoleTools.ClassifyRole (reads components, not a flag) ──
+  function classifyShip(c){
+    if(c.fire>0)        return {cls:'Warship',   milciv:'Mil', why:`Firepower <code>${c.fire} GJ/s &gt; 0</code> → Warship`, note:'A weapon on the hull is the only thing that makes a ship military.'};
+    if(c.geoSurvey)     return {cls:'Survey',    milciv:'Civ', why:`<code>GeoSurveyAbility</code>, unarmed → Survey`, note:'Reads the same ability gate the Issue-Orders tab uses.'};
+    if(c.jpSurvey)      return {cls:'Survey',    milciv:'Civ', why:`<code>JPSurveyAbility</code>, unarmed → Survey`, note:''};
+    if(c.logiShipper)   return {cls:'Freighter', milciv:'Civ', why:`<code>LogiShipperDB</code>, unarmed → Freighter`, note:'The logistics module carries its own trade state + routes.'};
+    if(c.troopBay)      return {cls:'Transport', milciv:'Civ', why:`<code>GroundBay</code> + cargo, unarmed → Transport`, note:'Civilian hull, military cargo — an open edge case (see the note).'};
+    if(c.cargoTransfer) return {cls:'Tender',    milciv:'Civ', why:`unarmed + <code>CargoTransferAtb</code> → Tender`, note:'A support hull — refuels/rearms the fleet.'};
+    if(c.cargo>0)       return {cls:'Hauler',    milciv:'Civ', why:`<code>CargoStorageDB</code>, unarmed → Hauler`, note:''};
+    return {cls:'Utility', milciv:'Civ', why:'no weapon or role components → Utility', note:''};
+  }
+  function classifyGround(atk,type){
+    if(atk<=0) return {cls:'Support', milciv:'Civ', why:`GroundUnit, <code>Attack ${atk} ≤ 0</code> → Support (non-combat)`, note:'The only civilian-ground signal the engine has — and it is derived, not a type.'};
+    return {cls:type, milciv:'Mil', why:`GroundUnit, <code>Attack ${atk} &gt; 0</code> → ${type}`, note:'All ground-unit TYPES are combat; the design forbids civilian unit types.'};
+  }
+
+  // ── the New Terra Republic — a fixture spread across every filter ──
+  // ships carry a `comp` bag so the classifier runs live, exactly as the engine helper would.
+  const SHIPS = [
+    {id:'meridian', name:'TNS Meridian', ic:'🛡️', fleet:'Home Fleet', flag:true,
+      comp:{fire:5.2}, hp:100, fuel:88, loc:'Sol · Earth orbit', cmdr:'Cmdr. V. Okoye · Commodore',
+      order:'Hold station · Earth orbit', tough:1.9, evade:0.18, beam:42000,
+      components:[['2× Med. Beam Turret','beam','wpn'],['Ablative Armour','shield','def'],['Fusion Reactor','','pwr'],['Ion Drive ×2','','prop']]},
+    {id:'kestrel', name:'TNS Kestrel', ic:'🚀', fleet:'Home Fleet', flag:false,
+      comp:{fire:3.1}, hp:92, fuel:74, loc:'Sol · Earth orbit', cmdr:'Cmdr. J. Adeyemi',
+      order:'Patrol · Earth orbit', tough:1.2, evade:0.24, beam:0,
+      components:[['Box Launcher ×8','','wpn'],['Magazine (48)','','ord'],['Composite Armour','shield','def'],['Ion Drive','','prop']]},
+    {id:'warden', name:'TNS Warden', ic:'🛰️', fleet:null, flag:false,
+      comp:{fire:1.4}, hp:78, fuel:55, loc:'Sol · Luna orbit', cmdr:null,
+      order:'—', tough:0.6, evade:0.31, beam:28000,
+      components:[['Light Railgun','','wpn'],['Light Armour','shield','def'],['Ion Drive','','prop']]},
+    {id:'compass', name:'TNS Compass', ic:'🔭', fleet:'Survey Division', flag:true,
+      comp:{fire:0, geoSurvey:true}, hp:100, fuel:41, loc:'Sol · en route Mars', cmdr:'Lt. R. Salk',
+      order:'Geo survey · Mars', survey:{target:'Mars',pct:34},
+      components:[['Geo Survey Sensor','','sen'],['Deep-space Antenna','','sen'],['Ion Drive','','prop']]},
+    {id:'draysheet', name:'CSV Draysheet', ic:'📦', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, logiShipper:true, cargo:25000}, hp:100, fuel:63, loc:'Sol · en route Luna', cmdr:null,
+      order:'Haul duranium · Earth → Luna', manifest:{from:'New Terra (Earth)',to:'Luna Depot',item:'Duranium',count:'4,200 t',state:'En route · 61%',space:'25,000 m³'},
+      components:[['Cargo Hold ×5','','crg'],['Logistics Module','','log'],['Commercial Drive','','prop']]},
+    {id:'ballast', name:'CSV Ballast', ic:'⛽', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, cargoTransfer:true, cargo:8000}, hp:100, fuel:70, loc:'Sol · Earth orbit', cmdr:null,
+      order:'Refuel · Home Fleet', manifest:{from:'New Terra (Earth)',to:'Home Fleet',item:'Fuel + ordnance',count:'—',state:'Transferring',space:'8,000 m³'},
+      components:[['Fuel Bunker ×3','','crg'],['Cargo-Transfer Gear','','log'],['Commercial Drive','','prop']]},
+    {id:'tunlade', name:'CSV Tunlade', ic:'🚚', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, troopBay:true, cargo:12000}, hp:100, fuel:59, loc:'Sol · Earth orbit', cmdr:null,
+      order:'Idle · Earth orbit', carries:'2 battalions embarked', manifest:{from:'—',to:'—',item:'Troop bay',count:'2 battalions',state:'Loaded · idle',space:'12,000 m³'},
+      components:[['Troop Bay ×2','','bay'],['Cargo Hold','','crg'],['Commercial Drive','','prop']]},
+  ];
+
+  // ground formations, each with member units (the per-unit rows are the missing render)
+  const FORMATIONS = [
+    {id:'guard1', name:'1st Terra Guard', ic:'🪖', type:'Infantry', loc:'Earth · Meridian region',
+      strength:4200, hp:4800, hpmax:5000, stance:'Defend', roe:'Return-fire', cmdr:'Col. A. Reyes',
+      order:'Hold · Meridian',
+      units:[
+        {name:'Rifle Company A', type:'Infantry', atk:900, hp:1200, hpmax:1250},
+        {name:'Rifle Company B', type:'Infantry', atk:900, hp:1180, hpmax:1250},
+        {name:'AT Platoon',      type:'Infantry', atk:700, hp:640,  hpmax:700},
+        {name:'HQ Section',      type:'Infantry', atk:0,   hp:780,  hpmax:800},
+      ]},
+    {id:'arm2', name:'2nd Armored Bn', ic:'🛞', type:'Armor', loc:'Earth · Ferrum region',
+      strength:6100, hp:3400, hpmax:3600, stance:'Advance', roe:'Free-fire', cmdr:'Maj. T. Vale',
+      order:'Advance · Ferrum ridge',
+      units:[
+        {name:'Tank Company 1', type:'Armor', atk:3100, hp:1800, hpmax:1900},
+        {name:'Tank Company 2', type:'Armor', atk:3000, hp:1600, hpmax:1700},
+      ]},
+    {id:'arty7', name:'7th Field Artillery', ic:'💥', type:'Artillery', loc:'Earth · Meridian region',
+      strength:5200, hp:1900, hpmax:2000, stance:'Support', roe:'Hold', cmdr:null,
+      order:'Support · Meridian line',
+      units:[
+        {name:'Gun Battery', type:'Artillery', atk:5200, hp:1900, hpmax:2000},
+      ]},
+    {id:'eng4', name:'4th Engineer Corps', ic:'🔧', type:'Support', loc:'Earth · Delta region',
+      strength:0, hp:900, hpmax:900, stance:'Fortify', roe:'Hold', cmdr:null,
+      order:'Fortify · Delta',
+      units:[
+        {name:'Sapper Company', type:'Support', atk:0, hp:900, hpmax:900},
+      ]},
+  ];
+
+  const HOLDINGS = [
+    {id:'newterra', name:'New Terra', ic:'🏙️', kind:'Colony', loc:'Sol · Earth', pop:'27.4 M',
+      installs:'Shipyard · Commerce Hub · Industry · Research', order:'Producing · shipyard queue'},
+    {id:'anchor', name:'High Anchor', ic:'🛰️', kind:'Station', loc:'Sol · Earth orbit', pop:'—',
+      installs:'Naval Yard · Commerce · Sensor Array', order:'Building · TNS hull #3'},
+  ];
+
+  // ── flatten into unified roster rows ──
+  function shipRow(s){
+    const k=classifyShip(s.comp);
+    return {kind:'Ship', domain:'space', id:s.id, name:s.name, ic:s.ic, group:s.fleet||'Unattached',
+      cls:k.cls, milciv:k.milciv, why:k.why, clsnote:k.note, loc:s.loc,
+      strength: s.comp.fire>0 ? s.comp.fire : 0, strengthTxt: s.comp.fire>0? s.comp.fire+' GJ/s' : '—',
+      hp:s.hp, order:s.order, cmdr:s.cmdr, raw:s, isShip:true};
+  }
+  function formRow(f){
+    const k=classifyGround(f.type==='Support'?0:f.strength>0?f.strength:1, f.type);
+    return {kind:'Formation', domain:'ground', id:f.id, name:f.name, ic:f.ic, group:'—',
+      cls:k.cls, milciv:k.milciv, why:k.why, clsnote:k.note, loc:f.loc,
+      strength:f.strength, strengthTxt:f.strength>0? f.strength.toLocaleString() : '—',
+      hp:Math.round(f.hp/f.hpmax*100), order:f.order, cmdr:f.cmdr, raw:f, isForm:true, expandable:true};
+  }
+  function holdRow(h){
+    return {kind:h.kind, domain:'holding', id:h.id, name:h.name, ic:h.ic, group:'—',
+      cls:h.kind, milciv:'Civ', why:'an owned holding, not a unit → civilian infrastructure', clsnote:'',
+      loc:h.loc, strength:0, strengthTxt:'—', hp:100, order:h.order, cmdr:null, raw:h, isHold:true};
+  }
+  const ROWS = [...SHIPS.map(shipRow), ...FORMATIONS.map(formRow), ...HOLDINGS.map(holdRow)];
+
+  // ── state ──
+  const TABS = [
+    {id:'all',    label:'All Forces', grade:'BUILD', preset:{}},
+    {id:'fleets', label:'Fleets',     grade:'LIVE',  preset:{domain:'space'}},
+    {id:'batt',   label:'Battalions', grade:'LIVE',  preset:{domain:'ground'}},
+    {id:'logi',   label:'Logistics',  grade:'BUILD', preset:{role:'civ', domain:'space'}},
+    {id:'hold',   label:'Holdings',   grade:'BUILD', preset:{kinds:['Colony','Station']}},
+  ];
+  const state = {tab:'all', domain:'all', role:'all', cls:'all', q:'', sortKey:'default', sortDir:1, sel:null, expanded:new Set(['guard1'])};
+
+  function applyTab(id){
+    const t=TABS.find(x=>x.id===id); state.tab=id;
+    state.domain=t.preset.domain||'all'; state.role=t.preset.role||'all'; state.cls='all'; state.q='';
+    state.kinds=t.preset.kinds||null;
+    render();
+  }
+
+  function passes(r){
+    if(state.kinds && !state.kinds.includes(r.kind)) return false;
+    if(state.domain!=='all' && r.domain!==state.domain) return false;
+    if(state.role!=='all' && r.milciv!==(state.role==='mil'?'Mil':'Civ')) return false;
+    if(state.cls!=='all' && r.cls!==state.cls) return false;
+    if(state.q && !(r.name.toLowerCase().includes(state.q) || r.cls.toLowerCase().includes(state.q) || (r.group||'').toLowerCase().includes(state.q))) return false;
+    return true;
+  }
+
+  const SORTS = {
+    default:(a,b)=>0,
+    name:(a,b)=>a.name.localeCompare(b.name),
+    domain:(a,b)=>a.domain.localeCompare(b.domain)||a.name.localeCompare(b.name),
+    kind:(a,b)=>a.kind.localeCompare(b.kind)||a.name.localeCompare(b.name),
+    cls:(a,b)=>a.cls.localeCompare(b.cls),
+    milciv:(a,b)=>a.milciv.localeCompare(b.milciv)||a.name.localeCompare(b.name),
+    loc:(a,b)=>a.loc.localeCompare(b.loc),
+    strength:(a,b)=>a.strength-b.strength,
+    hp:(a,b)=>a.hp-b.hp,
+  };
+
+  // ── render ──
+  const el=id=>document.getElementById(id);
+
+  function renderTabs(){
+    el('tabs').innerHTML = TABS.map(t=>
+      `<button class="tab" role="tab" aria-selected="${state.tab===t.id}" data-tab="${t.id}">${t.label}<span class="tg ${t.grade}">${t.grade==='LIVE'?'HAS':'NEW'}</span></button>`).join('');
+  }
+
+  function renderSummary(){
+    const owned=ROWS; // all rows are owned
+    const mil=owned.filter(r=>r.milciv==='Mil').length, civ=owned.filter(r=>r.milciv==='Civ').length;
+    const space=owned.filter(r=>r.domain==='space').length, ground=owned.filter(r=>r.domain==='ground').length;
+    const hold=owned.filter(r=>r.domain==='holding').length;
+    const cells=[
+      ['Elements', owned.length-hold, ''],
+      ['Military', mil, 'mil'],
+      ['Civilian', civ, 'civ'],
+      ['Space', space, ''],
+      ['Ground', ground, ''],
+      ['Holdings', hold, ''],
+    ];
+    el('summary').innerHTML = cells.map(([k,v,c])=>
+      `<div class="scell ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  }
+
+  function renderFilters(){
+    const clsList=[...new Set(ROWS.map(r=>r.cls))].sort();
+    const seg=(label,key,opts)=>`<div class="fgroup"><span class="fl">${label}</span>`+
+      opts.map(([v,lab,extra])=>`<button class="chip ${extra||''}" data-fkey="${key}" data-fval="${v}" aria-pressed="${state[key]===v}">${lab}</button>`).join('')+`</div>`;
+    el('filterbar').innerHTML =
+      seg('Domain','domain',[['all','All'],['space','Space'],['ground','Ground'],['holding','Holdings']])+
+      seg('Role','role',[['all','All'],['mil','Military','mil'],['civ','Civilian','civ']])+
+      `<div class="fgroup"><span class="fl">Class</span><select class="fsel" id="clsSel"><option value="all">All classes</option>`+
+        clsList.map(c=>`<option value="${c}" ${state.cls===c?'selected':''}>${c}</option>`).join('')+`</select></div>`+
+      `<div class="fgroup"><input class="fq" id="qbox" placeholder="Search units…" value="${state.q}"></div>`+
+      `<div class="fcount" id="fcount"></div>`;
+  }
+
+  const COLS=[
+    ['name','Unit', 'LIVE', false],
+    ['domain','Domain','LIVE', false],
+    ['kind','Kind','LIVE', false],
+    ['cls','Class','BUILD', false],
+    ['milciv','Mil / Civ','BUILD', false],
+    ['loc','Location','LIVE', false],
+    ['strength','Strength','LIVE', true],
+    ['hp','Health','MIX', true],
+    ['order','Order','LIVE', false],
+    ['cmdr','Cmdr','DATA', false],
+  ];
+  function renderHead(){
+    el('rhead').innerHTML='<tr>'+COLS.map(([k,lab,grade,num])=>{
+      const g = grade==='MIX' ? 'BUILD' : grade;
+      const arrow = state.sortKey===k ? `<span class="ar">${state.sortDir>0?'▲':'▼'}</span>` : '';
+      const gl = grade==='MIX' ? 'BUILD*' : grade;
+      return `<th class="${num?'num':''}" data-sort="${k}">${lab}<span class="cg ${g}">${gl}</span>${arrow}</th>`;
+    }).join('')+'</tr>';
+  }
+
+  function hbar(pct){
+    const cl = pct>=60?'':pct>=30?'warn':'crit';
+    return `<div class="hbar"><div class="track"><span class="${cl}" style="width:${pct}%"></span></div><span class="pct">${pct}%</span></div>`;
+  }
+  function rowCells(r, child){
+    if(child){
+      const pct=Math.round(r.hp/r.hpmax*100);
+      const k=classifyGround(r.atk,r.type);
+      return `<td><div class="nm ind"><span class="ic">${r.type==='Armor'?'🛞':r.type==='Artillery'?'💥':r.type==='Support'?'🔧':'👣'}</span><div class="txt"><b>${r.name}</b><s>ground unit · ${r.type}</s></div></div></td>`+
+        `<td><span class="dm ground">Ground</span></td>`+
+        `<td>Unit</td>`+
+        `<td><span class="cls">${k.cls}</span></td>`+
+        `<td><span class="pill ${k.milciv}">${k.milciv==='Mil'?'MIL':'CIV'}</span></td>`+
+        `<td class="mono" style="font-size:11px;color:var(--ink-faint)">— in formation —</td>`+
+        `<td class="num">${r.atk>0?r.atk.toLocaleString():'—'}</td>`+
+        `<td class="num">${hbar(pct)}</td>`+
+        `<td class="ord idle">follows formation</td>`+
+        `<td class="cmdr none">—</td>`;
+    }
+    const chev = r.expandable ? `<span class="chev" data-exp="${r.id}">${state.expanded.has(r.id)?'▼':'▶'}</span>` : `<span class="chev"></span>`;
+    const grp = r.group && r.group!=='—' ? `<s>${r.isShip?'fleet: ':''}${r.group}</s>` : (r.isForm?`<s>battalion · ${r.raw.units.length} units</s>`:(r.isHold?`<s>holding</s>`:''));
+    return `<td><div class="nm">${chev}<span class="ic">${r.ic}</span><div class="txt"><b>${r.name}${r.raw&&r.raw.flag?' <span style="color:var(--accent-ink);font-family:var(--mono);font-size:9px">◆FLAG</span>':''}</b>${grp}</div></div></td>`+
+      `<td><span class="dm ${r.domain}">${r.domain==='space'?'Space':r.domain==='ground'?'Ground':'Holding'}</span></td>`+
+      `<td>${r.kind}</td>`+
+      `<td><span class="cls">${r.cls}</span></td>`+
+      `<td><span class="pill ${r.milciv}">${r.milciv==='Mil'?'MIL':'CIV'}</span></td>`+
+      `<td>${r.loc}</td>`+
+      `<td class="num">${r.strengthTxt}</td>`+
+      `<td class="num">${r.domain==='holding'?'—':hbar(r.hp)}</td>`+
+      `<td class="ord ${r.order==='—'?'idle':''}">${r.order}</td>`+
+      `<td class="cmdr ${r.cmdr?'':'none'}">${r.cmdr?r.cmdr.split('·')[0].trim():'—'}</td>`;
+  }
+
+  function render(){
+    renderTabs(); renderSummary(); renderFilters(); renderHead();
+    let rows=ROWS.filter(passes);
+    if(state.sortKey!=='default'){ rows=rows.slice().sort((a,b)=>SORTS[state.sortKey](a,b)*state.sortDir); }
+    const body=el('rbody'); body.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.className = state.sel===r.id ? 'sel':'';
+      tr.dataset.row=r.id;
+      tr.innerHTML=rowCells(r,false);
+      body.appendChild(tr);
+      if(r.isForm && state.expanded.has(r.id)){
+        r.raw.units.forEach((u,i)=>{
+          // role filter also hides support children when Military selected
+          const k=classifyGround(u.atk,u.type);
+          if(state.role!=='all' && k.milciv!==(state.role==='mil'?'Mil':'Civ')) return;
+          const ctr=document.createElement('tr'); ctr.className='child'; ctr.dataset.child=r.id+':'+i;
+          ctr.innerHTML=rowCells(u,true); body.appendChild(ctr);
+        });
+      }
+    });
+    el('fcount').innerHTML = `showing <b>${rows.length}</b> of <b>${ROWS.length}</b> owned`;
+    renderDetail();
+  }
+
+  // ── detail panel ──
+  function gbadge(g){return `<span class="gr ${g}">${g}</span>`;}
+  function renderDetail(){
+    const d=el('detail');
+    const r=ROWS.find(x=>x.id===state.sel);
+    if(!r){ d.innerHTML='<div class="dempty">◎ select any unit on the left<br>to read its details and give it orders<br><br>every unit is one row — ships, battalions,<br>freighters, colonies — filter by domain and role</div>'; return; }
+    let html = `<div class="dhead"><div class="dic">${r.ic}</div><div><div class="dh1">${r.name}</div>`+
+      `<div class="dh2"><span class="dm ${r.domain}">${r.domain==='space'?'Space':r.domain==='ground'?'Ground':'Holding'}</span> <span class="cls">${r.cls}</span> <span class="pill ${r.milciv}">${r.milciv==='Mil'?'MILITARY':'CIVILIAN'}</span></div></div></div>`;
+
+    // the derivation card (the teaching moment)
+    html += `<div class="derive"><div class="dl"><span>Why this class?</span>${gbadge('BUILD')}</div><div class="dv">${r.why}</div>${r.clsnote?`<div class="dn">${r.clsnote}</div>`:''}</div>`;
+
+    if(r.isShip){
+      const s=r.raw;
+      if(r.cls==='Warship'){
+        html+=`<div class="dsect"><div class="sh">Combat sheet ${gbadge('LIVE')}</div>`+
+          `<div class="drow"><span>Firepower</span><b>${s.comp.fire} GJ/s</b></div>`+
+          `<div class="drow"><span>Toughness</span><b>${s.tough} GJ</b></div>`+
+          `<div class="drow"><span>Evasion</span><b>${s.evade}</b></div>`+
+          `<div class="drow"><span>Beam reach</span><b>${s.beam? (s.beam/1000).toLocaleString()+' km':'—'}</b></div></div>`;
+      } else {
+        const m=s.manifest;
+        html+=`<div class="dsect"><div class="sh">Civilian manifest ${gbadge('DATA')}</div><div class="mani">`+
+          (s.survey? `Surveying <b>${s.survey.target}</b> — <b>${s.survey.pct}%</b> complete` :
+           `<b>${m.item}</b> · ${m.count}<br>${m.from} → <b>${m.to}</b><br>State: <b>${m.state}</b>${m.space?` · hold ${m.space}`:''}`)+
+          (s.carries?`<br><span style="color:var(--accent-ink)">↳ ${s.carries}</span>`:'')+`</div></div>`;
+      }
+      html+=`<div class="dsect"><div class="sh">Installed components ${gbadge('LIVE')}</div>`+
+        s.components.map(([n,,t])=>`<div class="comp"><span class="cn">${n}</span><span class="cc">${t}</span></div>`).join('')+`</div>`;
+      html+=`<div class="dsect"><div class="sh">Status</div>`+
+        `<div class="drow"><span>Health ${gbadge('BUILD')}</span><b>${s.hp}%</b></div>`+
+        `<div class="drow"><span>Fuel ${gbadge('BUILD')}</span><b>${s.fuel}%</b></div>`+
+        `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${r.loc}</b></div>`+
+        `<div class="drow"><span>Commander ${gbadge('DATA')}</span><b>${s.cmdr||'— unassigned —'}</b></div>`+
+        `<div class="drow"><span>Order ${gbadge('LIVE')}</span><b>${s.order}</b></div></div>`;
+      const civ = r.cls!=='Warship';
+      html+=orderSurface(civ
+        ? [['🚚 Move to','LIVE','primary'],['⛽ Refuel at','LIVE'],['🗺️ Set route','DATA'],['🧭 Survey','LIVE']]
+        : [['🚚 Move to','LIVE','primary'],['⚔️ Doctrine','LIVE'],['📡 EMCON','LIVE'],['⛽ Refuel at','LIVE'],['🎖️ Assign cmdr','BUILD']]);
+    }
+    else if(r.isForm){
+      const f=r.raw;
+      html+=`<div class="dsect"><div class="sh">Formation ${gbadge('LIVE')}</div>`+
+        `<div class="drow"><span>Strength (Σ attack)</span><b>${f.strength.toLocaleString()}</b></div>`+
+        `<div class="drow"><span>Health</span><b>${f.hp.toLocaleString()} / ${f.hpmax.toLocaleString()}</b></div>`+
+        `<div class="drow"><span>Stance</span><b>${f.stance}</b></div>`+
+        `<div class="drow"><span>Rules of engagement</span><b>${f.roe}</b></div>`+
+        `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${f.loc}</b></div>`+
+        `<div class="drow"><span>Commander ${gbadge('DATA')}</span><b>${f.cmdr||'— unassigned —'}</b></div></div>`;
+      html+=`<div class="dsect"><div class="sh">Member units ${gbadge('BUILD')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— data exists, per-unit row is the new render</span></div>`+
+        f.units.map(u=>{const k=classifyGround(u.atk,u.type);return `<div class="comp"><span class="cn">${u.name}</span><span class="cc">${k.cls}</span><span class="cc">${Math.round(u.hp/u.hpmax*100)}%</span></div>`;}).join('')+
+        `<div class="memberhint">Expand this battalion in the roster to control each unit as its own row.</div></div>`;
+      html+=orderSurface([['🚩 March to','LIVE','primary'],['🎯 Stance','LIVE'],['⚖️ ROE','LIVE'],['🧨 Raze','LIVE'],['🏴 Capture','LIVE'],['🚀 Embark','LIVE'],['🎖️ Assign cmdr','BUILD']]);
+    }
+    else if(r.isHold){
+      const h=r.raw;
+      html+=`<div class="dsect"><div class="sh">Holding ${gbadge('DATA')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— live-owner cross-check first</span></div>`+
+        `<div class="drow"><span>Type</span><b>${h.kind}</b></div>`+
+        `<div class="drow"><span>Location</span><b>${h.loc}</b></div>`+
+        (h.pop!=='—'?`<div class="drow"><span>Population</span><b>${h.pop}</b></div>`:'')+
+        `<div class="drow"><span>Installations</span><b style="text-align:right;max-width:210px">${h.installs}</b></div>`+
+        `<div class="drow"><span>Order</span><b>${h.order}</b></div></div>`;
+      html+=orderSurface([['🏭 Production','LIVE','primary'],['🛠️ Construction','LIVE'],['⛏️ Mining','LIVE'],['🌐 Open colony view','LIVE']]);
+    }
+    d.innerHTML=html;
+  }
+  function orderSurface(btns){
+    return `<div class="orders"><div class="oh">Orders &amp; control — routed through the one shared order path (OrderableDB → HandleOrder)</div>`+
+      `<div class="obtns">`+btns.map(([lab,g,cls])=>`<button class="ob ${cls||''}" data-order="${lab}">${lab}<span class="og ${g}">${g}</span></button>`).join('')+`</div>`+
+      `<div class="otoast" id="otoast"></div></div>`;
+  }
+
+  // ── events (delegated) ──
+  el('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]'); if(b) applyTab(b.dataset.tab);});
+  el('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-fkey]'); if(!b)return; state[b.dataset.fkey]=b.dataset.fval; render();});
+  el('filterbar').addEventListener('change',e=>{if(e.target.id==='clsSel'){state.cls=e.target.value; render();}});
+  el('filterbar').addEventListener('input',e=>{if(e.target.id==='qbox'){state.q=e.target.value.toLowerCase(); render();}});
+  el('rhead').addEventListener('click',e=>{const th=e.target.closest('[data-sort]'); if(!th)return; const k=th.dataset.sort;
+    if(state.sortKey===k) state.sortDir*=-1; else {state.sortKey=k; state.sortDir=1;} render();});
+  el('rbody').addEventListener('click',e=>{
+    const exp=e.target.closest('[data-exp]');
+    if(exp){ const id=exp.dataset.exp; if(state.expanded.has(id))state.expanded.delete(id); else state.expanded.add(id); render(); e.stopPropagation(); return; }
+    const tr=e.target.closest('[data-row]'); if(tr){ state.sel = state.sel===tr.dataset.row?null:tr.dataset.row; render(); }
+  });
+  el('detail').addEventListener('click',e=>{const b=e.target.closest('[data-order]'); if(!b)return;
+    const t=el('otoast'); if(!t)return; t.textContent=`✓ "${b.dataset.order.replace(/^[^ ]+ /,'')}" — order queued (prototype: no engine call).`; t.classList.add('show');});
+
+  render();
+})();
+</script>
