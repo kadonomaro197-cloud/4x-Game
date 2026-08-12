@@ -169,6 +169,18 @@
   .orders .oh b{color:var(--ink)} .ocount{text-transform:none;letter-spacing:0} .ocount i{font-style:normal;font-weight:700} .ocount .dL{color:var(--live)} .ocount .dD{color:var(--data)} .ocount .dB{color:var(--build)}
   .oview{display:inline-flex;gap:3px} .oview button{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;text-transform:none}
   .oview button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .oscan{margin:2px 0 11px;font-size:11.5px;color:var(--ink-soft);background:var(--build-bg);border:1px solid var(--build);border-radius:8px;padding:8px 10px;line-height:1.5}
+  .oscan b{color:var(--ink)} .oscan.oscang{background:var(--inset);border-color:var(--line-strong);border-style:dashed}
+  .achip{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--build);background:var(--panel);border:1px solid var(--build);border-radius:6px;padding:1px 6px;white-space:nowrap}
+  .achip i{font-style:normal;font-size:11px} .anone{font-style:italic;color:var(--ink-faint)}
+  .ounavail{margin-top:11px}
+  .unbtn{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-soft);background:var(--inset);border:1px dashed var(--line-strong);border-radius:7px;padding:5px 10px;cursor:pointer}
+  .unbtn[aria-pressed="true"]{color:var(--accent-ink);border-color:var(--accent)}
+  .obdim{margin-top:8px;opacity:.92}
+  .ob.dim{background:var(--inset);color:var(--ink-faint);border-color:var(--line);cursor:help;opacity:.85}
+  .ob.dim:hover{border-color:var(--line-strong);color:var(--ink-soft)}
+  .ob .oneed{font-family:var(--mono);font-size:8px;font-weight:700;color:var(--ink-faint);background:var(--sunk);padding:1px 4px;border-radius:3px}
+  .otoast .treq{color:var(--build);font-weight:700}
   .opalette{display:flex;flex-direction:column;gap:11px}
   .ocat .ocath{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:5px;display:flex;align-items:baseline;gap:5px}
   .ocat .ocath s{text-decoration:none;color:var(--ink-faint);opacity:.7;font-size:9px}
@@ -514,6 +526,44 @@
     {n:"Richer Standing-Order Conditions",c:"Standing-Conditional",k:["fleet"],g:"BUILD",d:"New triggers - hull-damage %, cargo-full, enemy-detected, at-location, ammo-low, arrived; the CompoundCondition AND/OR framework supports them, none authored.",f:"Conditions/CompoundCondition.cs:21"},
   ];
 
+  // ── THE COMPONENT SCAN — an order needs a part; the window scans what's installed and only offers what's applicable ──
+  // This mirrors the engine's real gate: HasGeoSurveyAbility = entity.HasDataBlob<GeoSurveyAbilityDB>() (EntityExtensions.cs:199),
+  // recursing across a fleet's ships. NEEDS maps an order → the ability tag its component grants. No entry = no part needed.
+  const NEEDS = {
+    'Assign Weapons to Fire Control':'weapon','Set Fire-Control Target':'weapon','Open Fire / Cease Fire':'weapon','Assign Ordnance to Weapon':'weapon','Reload / Rearm Ordnance at Magazine':'weapon',
+    'Jump Through Gate':'jumpdrive',
+    'Geological Survey':'geosurvey',
+    'Jump-Point (Grav) Survey':'jpsurvey','Survey Anomaly':'jpsurvey',
+    'Embark / Load Troops':'troopbay','Land Troops (Invasion Drop)':'troopbay',
+    'Transfer Cargo':'cargo','Move Component To/From Cargo':'cargo',
+    'Refuel Fleet at Base':'cargo','Refuel (Fleet Self-Action)':'cargotransfer','Resupply (Fleet Self-Action)':'cargotransfer',
+    'Enable/Disable Trade Ship':'logistics','Set Trade Ship Cargo Allocation':'logistics','Ship Logistics State (Start/Abort Job)':'logistics','Set Trade Route / Auto-haul A to B':'logistics',
+    'Colonize Body':'colonymod',
+    'Dock / Undock Vessel (Carrier Berthing)':'dockbay',
+    'Launch Ship from Pad':'shipyard',
+  };
+  const ABIL = {
+    weapon:{i:'⚔',l:'weapon'}, jumpdrive:{i:'⤢',l:'jump drive'}, geosurvey:{i:'🔬',l:'geo-survey sensor'},
+    jpsurvey:{i:'📡',l:'grav-survey sensor'}, troopbay:{i:'🪖',l:'troop bay'}, cargo:{i:'📦',l:'cargo hold'},
+    cargotransfer:{i:'⛽',l:'transfer gear'}, logistics:{i:'🔄',l:'logistics module'}, colonymod:{i:'🏗',l:'colony module'},
+    dockbay:{i:'🛬',l:'dock bay'}, shipyard:{i:'🏭',l:'shipyard'},
+  };
+  // scan a unit's installed parts → the set of ability tags it grants (fleet/formation would union across members)
+  function abilitiesOf(u){
+    const s=new Set(); if(!u) return s;
+    const c=u.comp;
+    if(c){
+      if(c.fire>0)s.add('weapon'); if(c.jump)s.add('jumpdrive');
+      if(c.geoSurvey)s.add('geosurvey'); if(c.jpSurvey)s.add('jpsurvey');
+      if(c.troopBay){s.add('troopbay');s.add('cargo');}
+      if(c.cargoTransfer){s.add('cargotransfer');s.add('cargo');}
+      if(c.logiShipper){s.add('logistics');s.add('cargo');}
+      if(c.cargo>0)s.add('cargo');
+    }
+    if(u.installs){ if(/shipyard|naval yard/i.test(u.installs))s.add('shipyard'); s.add('cargo'); s.add('dockbay'); }
+    return s;
+  }
+
   // ── the classifier — mirrors the proposed engine ShipRoleTools.ClassifyRole (reads components, not a flag) ──
   function classifyShip(c){
     if(c.fire>0)        return {cls:'Warship',   milciv:'Mil', why:`Firepower <code>${c.fire} GJ/s &gt; 0</code> → Warship`, note:'A weapon on the hull is the only thing that makes a ship military.'};
@@ -534,11 +584,11 @@
   // ships carry a `comp` bag so the classifier runs live, exactly as the engine helper would.
   const SHIPS = [
     {id:'meridian', name:'TNS Meridian', ic:'🛡️', fleet:'Home Fleet', flag:true,
-      comp:{fire:5.2}, hp:100, fuel:88, loc:'Sol · Earth orbit', cmdr:'Cmdr. V. Okoye · Commodore',
+      comp:{fire:5.2, jump:true}, hp:100, fuel:88, loc:'Sol · Earth orbit', cmdr:'Cmdr. V. Okoye · Commodore',
       order:'Hold station · Earth orbit', tough:1.9, evade:0.18, beam:42000,
       components:[['2× Med. Beam Turret','beam','wpn'],['Ablative Armour','shield','def'],['Fusion Reactor','','pwr'],['Ion Drive ×2','','prop']]},
     {id:'kestrel', name:'TNS Kestrel', ic:'🚀', fleet:'Home Fleet', flag:false,
-      comp:{fire:3.1}, hp:92, fuel:74, loc:'Sol · Earth orbit', cmdr:'Cmdr. J. Adeyemi',
+      comp:{fire:3.1, jump:true}, hp:92, fuel:74, loc:'Sol · Earth orbit', cmdr:'Cmdr. J. Adeyemi',
       order:'Patrol · Earth orbit', tough:1.2, evade:0.24, beam:0,
       components:[['Box Launcher ×8','','wpn'],['Magazine (48)','','ord'],['Composite Armour','shield','def'],['Ion Drive','','prop']]},
     {id:'warden', name:'TNS Warden', ic:'🛰️', fleet:null, flag:false,
@@ -632,7 +682,7 @@
     {id:'logi',   label:'Logistics',  grade:'BUILD', preset:{role:'civ', domain:'space'}},
     {id:'hold',   label:'Holdings',   grade:'BUILD', preset:{kinds:['Colony','Station']}},
   ];
-  const state = {tab:'all', domain:'all', role:'all', cls:'all', q:'', sortKey:'default', sortDir:1, sel:null, orderView:'all', expanded:new Set(['guard1'])};
+  const state = {tab:'all', domain:'all', role:'all', cls:'all', q:'', sortKey:'default', sortDir:1, sel:null, orderView:'all', showUnavail:false, expanded:new Set(['guard1'])};
 
   function applyTab(id){
     const t=TABS.find(x=>x.id===id); state.tab=id;
@@ -798,7 +848,7 @@
           `<div class="drow"><span>Health</span><b>${u.hp.toLocaleString()} / ${u.hpmax.toLocaleString()} (${pct}%)</b></div>`+
           `<div class="drow"><span>Parent formation ${gbadge('LIVE')}</span><b>${f.name}</b></div>`+
           `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${f.loc}</b></div></div>`;
-        h+=orderSurface('ground-unit');
+        h+=orderSurface('ground-unit', u);
         d.innerHTML=h; return;
       }
     }
@@ -833,7 +883,7 @@
         `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${r.loc}</b></div>`+
         `<div class="drow"><span>Commander ${gbadge('DATA')}</span><b>${s.cmdr||'— unassigned —'}</b></div>`+
         `<div class="drow"><span>Order ${gbadge('LIVE')}</span><b>${s.order}</b></div></div>`;
-      html+=orderSurface(r.cls==='Warship'?'warship':'civilian-ship');
+      html+=orderSurface(r.cls==='Warship'?'warship':'civilian-ship', s);
     }
     else if(r.isForm){
       const f=r.raw;
@@ -847,7 +897,7 @@
       html+=`<div class="dsect"><div class="sh">Member units ${gbadge('BUILD')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— data exists, per-unit row is the new render</span></div>`+
         f.units.map(u=>{const k=classifyGround(u.atk,u.type);return `<div class="comp"><span class="cn">${u.name}</span><span class="cc">${k.cls}</span><span class="cc">${Math.round(u.hp/u.hpmax*100)}%</span></div>`;}).join('')+
         `<div class="memberhint">Expand this battalion in the roster to control each unit as its own row.</div></div>`;
-      html+=orderSurface('ground-formation');
+      html+=orderSurface('ground-formation', f);
     }
     else if(r.isHold){
       const h=r.raw;
@@ -857,30 +907,51 @@
         (h.pop!=='—'?`<div class="drow"><span>Population</span><b>${h.pop}</b></div>`:'')+
         `<div class="drow"><span>Installations</span><b style="text-align:right;max-width:210px">${h.installs}</b></div>`+
         `<div class="drow"><span>Order</span><b>${h.order}</b></div></div>`;
-      html+=orderSurface(r.kind==='Colony'?'colony':'station');
+      html+=orderSurface(r.kind==='Colony'?'colony':'station', h);
     }
     d.innerHTML=html;
   }
   // deep categorized order palette, filtered by unit kind (+ the 'any' wildcard), grouped by category, each graded
   const ORDER_BY_NAME = {}; ORDERS.forEach(o=>ORDER_BY_NAME[o.n]=o);
   function ordersForKind(kind){ return ORDERS.filter(o=>o.k.indexOf(kind)>=0 || o.k.indexOf('any')>=0); }
-  function orderSurface(kind){
+  function orderSurface(kind, unit){
+    const abil = abilitiesOf(unit);                       // ← scan this unit's installed components
     let list = ordersForKind(kind);
     const nLive=list.filter(o=>o.g==='LIVE').length, nData=list.filter(o=>o.g==='DATA').length, nBuild=list.filter(o=>o.g==='BUILD').length;
     if(state.orderView==='live') list=list.filter(o=>o.g==='LIVE');
-    // group by category, in canonical order
+    // partition: an order is offered only if it needs no part, or the scanned abilities include the part
+    const avail  = list.filter(o=>!NEEDS[o.n] || abil.has(NEEDS[o.n]));
+    const unavail= list.filter(o=>NEEDS[o.n] && !abil.has(NEEDS[o.n]));
+    // the scanned-abilities readout — the answer to "how does it know which orders apply"
+    let scan='';
+    if(unit && unit.comp || (unit && unit.installs)){
+      const chips=[...abil].map(t=>`<span class="achip"><i>${ABIL[t].i}</i>${ABIL[t].l}</span>`).join(' ');
+      scan=`<div class="oscan"><b>🔎 Scanned this unit's components</b> → grants ${chips||'<span class="anone">no order-granting parts</span>'}. Orders are offered only if the part is aboard${unavail.length?` — <b>${unavail.length}</b> hidden (missing the part)`:''}.</div>`;
+    } else if(kind==='ground-formation' || kind==='ground-unit'){
+      scan=`<div class="oscan oscang">🔎 Same scan one level down: a ground unit's orders gate on its <b>mounted components</b> (e.g. a bombardment order needs an artillery piece) — the ability rides the component, ground ruling #2.</div>`;
+    }
+    // group AVAILABLE orders by category
     let groups='';
     ORDER_CATS.forEach(cat=>{
-      const inCat=list.filter(o=>o.c===cat); if(!inCat.length) return;
+      const inCat=avail.filter(o=>o.c===cat); if(!inCat.length) return;
       groups+=`<div class="ocat"><div class="ocath">${CAT_ICON[cat]||'•'} ${cat} <s>${inCat.length}</s></div><div class="obtns">`+
         inCat.map(o=>`<button class="ob g-${o.g}" data-order="${o.n.replace(/"/g,'&quot;')}">${o.n}<span class="og ${o.g}">${o.g}</span></button>`).join('')+`</div></div>`;
     });
+    // UNAVAILABLE (missing the component) — revealed on demand, greyed, each showing the part it needs
+    let un='';
+    if(unavail.length){
+      un=`<div class="ounavail"><button class="unbtn" data-unavail="1" aria-pressed="${state.showUnavail}">⊘ ${unavail.length} order${unavail.length>1?'s':''} need a component this unit lacks ${state.showUnavail?'— hide':'— show'}</button>`;
+      if(state.showUnavail){ un+=`<div class="obtns obdim">`+unavail.map(o=>{const a=ABIL[NEEDS[o.n]];return `<button class="ob dim g-${o.g}" data-order="${o.n.replace(/"/g,'&quot;')}" title="needs ${a.l}">${o.n}<span class="oneed">needs ${a.i} ${a.l}</span></button>`;}).join('')+`</div>`; }
+      un+=`</div>`;
+    }
     return `<div class="orders"><div class="oh">`+
-      `<span>Orders &amp; control — <b>${nLive+nData+nBuild}</b> for this unit <span class="ocount"><i class="dL">${nLive} live</i> · <i class="dD">${nData} data</i> · <i class="dB">${nBuild} build</i></span></span>`+
+      `<span>Orders &amp; control — <b>${nLive+nData+nBuild}</b> for this kind <span class="ocount"><i class="dL">${nLive} live</i> · <i class="dD">${nData} data</i> · <i class="dB">${nBuild} build</i></span> · <b>${avail.length}</b> offered</span>`+
       `<span class="oview"><button data-oview="all" aria-pressed="${state.orderView==='all'}">All</button><button data-oview="live" aria-pressed="${state.orderView==='live'}">Live only</button></span>`+
       `</div>`+
+      scan+
       `<div class="opalette">${groups}</div>`+
-      `<div class="onote">Routed through the one shared order path (space: <span class="mono">OrderableDB → HandleOrder</span>; ground: <span class="mono">GroundFormation.Orders</span>). In-game the list is further gated by <b>installed components</b> (a survey order needs a survey sensor). The mid-battle levers (doctrine / EMCON / ROE / stance) stay issuable while engagement-locked. ⚠ four fleet self-actions (refuel / resupply / survey-anomaly / logistics) are engine <b>stubs</b> today — graded DATA.</div>`+
+      un+
+      `<div class="onote">Routed through the one shared order path (space: <span class="mono">OrderableDB → HandleOrder</span>; ground: <span class="mono">GroundFormation.Orders</span>). The offer list is gated by <b>what's installed</b> — the same scan the engine already does (<span class="mono">HasGeoSurveyAbility = HasDataBlob&lt;GeoSurveyAbilityDB&gt;</span>, recursing across a fleet's ships). Mid-battle levers (doctrine / EMCON / ROE / stance) stay issuable while engagement-locked. ⚠ four fleet self-actions (refuel / resupply / survey-anomaly / logistics) are engine <b>stubs</b> today — graded DATA.</div>`+
       `<div class="otoast" id="otoast"></div></div>`;
   }
 
@@ -898,12 +969,16 @@
   });
   el('detail').addEventListener('click',e=>{
     const ov=e.target.closest('[data-oview]'); if(ov){ state.orderView=ov.dataset.oview; renderDetail(); return; }
+    const uv=e.target.closest('[data-unavail]'); if(uv){ state.showUnavail=!state.showUnavail; renderDetail(); return; }
     const b=e.target.closest('[data-order]'); if(!b)return;
     const t=el('otoast'); if(!t)return; const o=ORDER_BY_NAME[b.dataset.order]||{g:'',d:'',f:''};
     const icon = o.g==='LIVE'?'✓':o.g==='DATA'?'◐':'✎';
     const verb = o.g==='LIVE'?'issuable today — queued through the real order path':o.g==='DATA'?'capability exists in the engine; no button/order wired yet':'proposed — no order exists today';
+    const need=NEEDS[b.dataset.order];
     t.className='otoast show g-'+o.g;
-    t.innerHTML=`${icon} <b>${b.dataset.order}</b> · <span class="tg-${o.g}">${o.g}</span> — ${verb}.<br><span class="tdoes">${o.d||''}</span>${o.f?` <span class="tcite">${o.f}</span>`:''}`;
+    t.innerHTML=`${icon} <b>${b.dataset.order}</b> · <span class="tg-${o.g}">${o.g}</span> — ${verb}.`+
+      (need?` <span class="treq">requires ${ABIL[need].i} ${ABIL[need].l}</span>`:'')+
+      `<br><span class="tdoes">${o.d||''}</span>${o.f?` <span class="tcite">${o.f}</span>`:''}`;
   });
 
   render();
