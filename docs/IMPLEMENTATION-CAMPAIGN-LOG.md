@@ -20,12 +20,14 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > `build-client` and all six other shards are green; every new A1–A5 test passes. My slices add **zero** new
 > failures (see PRE-EXISTING BASE RED below for the two-line pass/fail protocol). Parked for the developer: A1
 > calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE) + the two base-red economy tests (surfaced, not mine).
-> **B-S1 is pushed (⏳CI):** the Battalions tab now gathers via the built `GroundFormationTools.AllFormationsFor`,
-> scoped to PlayerFaction. NEXT: confirm the B-S1 CI run is CLEAN by the PRE-EXISTING BASE RED protocol (build-client
-> green + only the two known `rest` failures), then continue Phase B with **B-S3** (make the ship-combat-row +
-> battalion-row reusable — FORCES-WINDOW S3) toward the S4 selection refactor and the S5 All-Forces roster. Phase B
-> evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so
-> each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
+> **B-S1 + B-S3 are pushed.** B-S1 (Battalions tab → built `AllFormationsFor`, scope PlayerFaction) is CI-verified —
+> its `build-client` is GREEN and the branch shows only the two known base-red `rest` failures. B-S3 (extract
+> `DrawShipCombatRow` + `DrawBattalionRowColumns` so the S5 roster can reuse both rows — byte-identical) is committed
+> ⏳CI. NEXT: confirm the B-S3 CI run is CLEAN by the PRE-EXISTING BASE RED protocol (build-client green + only the two
+> known `rest` failures), then build **B-S4** — the load-bearing "one selected unit" abstraction unifying fleet +
+> battalion selection (FORCES-WINDOW S4, BUILD-grade), which S5's All-Forces roster tab sits on. Phase B evolves
+> `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so each
+> behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
 
 ---
 
@@ -53,7 +55,7 @@ ladder row and, once landed, the commit sha.
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
 | B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ⏳CI | (pending) |
-| B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ⬜ | |
+| B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ⏳CI | (pending) |
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ⬜ | |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⬜ | |
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⬜ | |
@@ -203,6 +205,27 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-S3 — the ship-combat row + battalion row are now reusable methods — ⏳CI
+**What it does (plain English):** the Force Management window draws two tables — the Combat tab's per-ship line, and
+the Battalions tab's per-formation line. Until now each was written *inline*, tangled into its own loop, so the coming
+"All Forces" tab (one flat list of everything you own) couldn't reuse them without copy-pasting. This slice lifts each
+row out into its own small method — `DrawShipCombatRow(ship)` and `DrawBattalionRowColumns(body, forces, formation)` —
+so the new roster can call the exact same row-drawing code and every table shows a ship (or a battalion) the same way.
+
+**Why it matters:** it's plumbing for S4/S5 — one place that knows how to draw a ship row, one for a battalion row.
+Nothing the player sees changes: the methods draw the exact same columns, from the exact same engine reads, in the
+exact same order (a **byte-identical** refactor). The battalion row's *name + selection* deliberately stayed in the
+caller, because unifying selection across ships and battalions is the next slice's job (S4).
+
+**Files:** `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — extracted `DrawShipCombatRow(Entity, int)` from
+`DisplayFleetCombatSheet`'s loop and `DrawBattalionRowColumns(Entity, GroundForcesDB, GroundFormation, int)` from
+`DisplayBattalions`'s loop; both call sites now invoke the methods. Docs: `docs/CLIENT-TEST-CHECKLIST.md` (B-S3
+byte-identical render check).
+
+**Gauge:** compile-checked by the `build-client` CI job (the refactor's only real risk is a type/scope slip, which the
+compile catches). No engine value changed and the draws are byte-identical, so no engine test moved; the "tables look
+the same" confirmation is a local-build glance (CLIENT-TEST-CHECKLIST B-S3).
 
 ### B-S1 — Battalions tab reads the built cross-body helper — ⏳CI
 **What it does (plain English):** the "Battalions" tab of the Force Management window lists every ground formation you

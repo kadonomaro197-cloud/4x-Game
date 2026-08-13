@@ -294,3 +294,7 @@ run it — these need the local Windows build.
       world / region / strength / health / reach, the system+world filters still work, and selecting one still gives the
       march / queue / stance / ROE order surface. **Scope check:** the tab shows YOUR (PlayerFaction) battalions even
       while in SM mode viewing another faction (previously it showed the viewed faction's — empty for the GameMaster).
+- [ ] **B-S3 — the two tables still look identical (byte-identical refactor).** The Combat tab's per-ship table and the
+      Battalions tab's per-formation table now draw each row via extracted methods (`DrawShipCombatRow` /
+      `DrawBattalionRowColumns`) instead of inline code. Confirm both tables render exactly as before — same columns,
+      same values, same order (this is prep for the S5 All-Forces roster; no player-visible change is intended).

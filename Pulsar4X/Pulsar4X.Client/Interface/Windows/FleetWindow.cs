@@ -1071,31 +1071,41 @@ namespace Pulsar4X.Client
                 foreach (var ship in ships)
                 {
                     if (!ship.IsValid) continue;
-                    ImGui.TableNextColumn(); ImGui.Text(ship.GetName(factionID));
-                    if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
-                    {
-                        ImGui.TableNextColumn(); ImGui.Text(cv.Firepower > 0 ? "Combatant" : "Utility");
-                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Firepower:N0}");
-                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Toughness:N0}");
-                        ImGui.TableNextColumn(); ImGui.Text($"{cv.Evasion:0.00}");
-                    }
-                    else
-                    {
-                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
-                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
-                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
-                        ImGui.TableNextColumn(); ImGui.TextDisabled("—");
-                    }
-                    // Beam reach (how far it can SHOOT), "Can See" (sensor reach — stable vs your own EMCON), and
-                    // "Seen At" (detectability — how far this ship can BE detected, which moves with what it's
-                    // doing). From the per-fleet cache (was a per-frame engine walk); "—" when none.
-                    var (beam, reach, detect) = ShipRanges(ship.Id);
-                    ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
-                    ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
-                    ImGui.TableNextColumn(); ImGui.Text(detect > 0 ? Stringify.Distance(detect) : "—");
+                    DrawShipCombatRow(ship, factionID);
                 }
                 ImGui.EndTable();
             }
+        }
+
+        // One ship's combat-sheet row — the 8 columns (name / role / firepower / toughness / evasion / beam reach /
+        // can-see / seen-at). Extracted (B-S3, FORCES-WINDOW-DESIGN §S3) so the S5 All-Forces roster can draw a ship
+        // line with the SAME shape the Combat tab uses. Reads the ship's cached ShipCombatValueDB + the per-fleet
+        // ShipRanges cache (a ship outside the current fleet's cache falls back to "—" ranges, which S5 will fill by
+        // seeding the cache for the roster's ships). Byte-identical to the old inline loop body.
+        private void DrawShipCombatRow(Entity ship, int viewerFactionId)
+        {
+            ImGui.TableNextColumn(); ImGui.Text(ship.GetName(viewerFactionId));
+            if (ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
+            {
+                ImGui.TableNextColumn(); ImGui.Text(cv.Firepower > 0 ? "Combatant" : "Utility");
+                ImGui.TableNextColumn(); ImGui.Text($"{cv.Firepower:N0}");
+                ImGui.TableNextColumn(); ImGui.Text($"{cv.Toughness:N0}");
+                ImGui.TableNextColumn(); ImGui.Text($"{cv.Evasion:0.00}");
+            }
+            else
+            {
+                ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+                ImGui.TableNextColumn(); ImGui.TextDisabled("—");
+            }
+            // Beam reach (how far it can SHOOT), "Can See" (sensor reach — stable vs your own EMCON), and "Seen At"
+            // (detectability — how far this ship can BE detected, which moves with what it's doing). From the per-fleet
+            // cache (was a per-frame engine walk); "—" when none.
+            var (beam, reach, detect) = ShipRanges(ship.Id);
+            ImGui.TableNextColumn(); ImGui.Text(beam > 0 ? Stringify.Distance(beam) : "—");
+            ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? Stringify.Distance(reach) : "—");
+            ImGui.TableNextColumn(); ImGui.Text(detect > 0 ? Stringify.Distance(detect) : "—");
         }
 
         // Rebuilds the doctrine dropdown from the moddable catalog only when its size changes (cheap to call
@@ -1237,10 +1247,6 @@ namespace Pulsar4X.Client
                 {
                     var f = r.formation;
                     int members = GroundFormationTools.MemberCount(r.forces, f);
-                    int rally = GroundForces.LeaderRegion(r.forces, f);
-                    double strength = GroundFormationTools.FormationStrength(r.forces, f);
-                    var (curHp, maxHp) = GroundFormationTools.FormationHealth(r.forces, f);
-                    int reach = GroundFormationTools.FormationReachHexes(r.forces, f);
                     bool isSel = r.body.Id == _selBattalionBodyId && f.FormationId == _selBattalionFormationId;
 
                     ImGui.TableNextColumn();
@@ -1252,13 +1258,7 @@ namespace Pulsar4X.Client
                         isSel = true;
                     }
 
-                    ImGui.TableNextColumn(); ImGui.Text(r.body.GetName(myFaction));
-                    ImGui.TableNextColumn(); ImGui.Text(rally >= 0 ? "R" + (rally + 1) : "—");
-                    ImGui.TableNextColumn(); ImGui.Text($"{strength:N0}");
-                    ImGui.TableNextColumn(); ImGui.Text($"{curHp:N0} / {maxHp:N0}");
-                    ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? reach + " hex" : "—");
-                    ImGui.TableNextColumn(); ImGui.Text(string.IsNullOrEmpty(f.StanceId) ? "Balanced" : f.StanceId);
-                    ImGui.TableNextColumn(); ImGui.Text(f.Engagement.ToString());
+                    DrawBattalionRowColumns(r.body, r.forces, f, myFaction);
 
                     if(isSel) { selected = r; haveSelected = true; }
                 }
@@ -1270,6 +1270,25 @@ namespace Pulsar4X.Client
                 DrawBattalionOrders(selected.body, selected.forces, selected.formation);
             else
                 ImGui.TextDisabled("Select a battalion above to command it (march / queue / stance / ROE), or jump to its world.");
+        }
+
+        // The battalion row's data columns (World / Region / Strength / Health / Reach / Stance / ROE) — the 7 columns
+        // that follow the name Selectable. Extracted (B-S3, FORCES-WINDOW-DESIGN §S3) so the S5 All-Forces roster can
+        // draw a battalion line with the SAME shape the Battalions tab uses; the name + selection stay with the caller
+        // (selection unifies in S4). Byte-identical: same GroundFormationTools reads, same draw order.
+        private void DrawBattalionRowColumns(Entity body, GroundForcesDB forces, GroundFormation f, int viewerFactionId)
+        {
+            int rally = GroundForces.LeaderRegion(forces, f);
+            double strength = GroundFormationTools.FormationStrength(forces, f);
+            var (curHp, maxHp) = GroundFormationTools.FormationHealth(forces, f);
+            int reach = GroundFormationTools.FormationReachHexes(forces, f);
+            ImGui.TableNextColumn(); ImGui.Text(body.GetName(viewerFactionId));
+            ImGui.TableNextColumn(); ImGui.Text(rally >= 0 ? "R" + (rally + 1) : "—");
+            ImGui.TableNextColumn(); ImGui.Text($"{strength:N0}");
+            ImGui.TableNextColumn(); ImGui.Text($"{curHp:N0} / {maxHp:N0}");
+            ImGui.TableNextColumn(); ImGui.Text(reach > 0 ? reach + " hex" : "—");
+            ImGui.TableNextColumn(); ImGui.Text(string.IsNullOrEmpty(f.StanceId) ? "Balanced" : f.StanceId);
+            ImGui.TableNextColumn(); ImGui.Text(f.Engagement.ToString());
         }
 
         // The order surface for the selected battalion — the same verbs PlanetViewWindow.DrawFormationPanel gives a
