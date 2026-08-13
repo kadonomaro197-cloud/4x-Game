@@ -175,12 +175,14 @@ the −25 catastrophe, and NOT the **earned** +15 full-employment bonus (a thriv
 the locked design). `JobsPerCapita` is a **mutable static** (`ColonyMoraleDB.JobsPerCapita`) so a scenario node / the
 DevTools Society lever can retune it. **Files:** `ColonyMoraleDB.cs` (the coefficient) · `PopulationProcessor.cs` (both
 morale sites) · `StationPopulationProcessor.cs` (the station site) · `EmploymentMoraleTests.cs` (the calibration band +
-homeworld readout gauge). **The flag stays OFF** (`PopulationProcessor.EnableEmploymentMorale = false`): the calibration
-is done and gauged, but turning the term ON live changes morale on every colony and cascades into migration → tax →
-legitimacy — effects only the developer's local playtest can judge (CI can't run the client). **Flip
-`EnableEmploymentMorale = true` (one line) to go live**, read the `[a1-employment] HOMEWORLD …` line in the CI log /
-`game_logs/` to confirm the exact landing, and tune `JobsPerCapita` if you want the homeworld nearer neutral (raise it →
-more of a deficit; lower it → nearer full employment; too low snaps to the +15 bonus).
+homeworld readout gauge). **✅ TURNED ON for the real game (developer-authorized 2026-08-13):** the engine flag
+`PopulationProcessor.EnableEmploymentMorale` still **defaults OFF** (so the ENGINE test suite stays byte-identical — it
+builds colonies via a factory, never the menu), but **`NewGameMenu` now flips it ON** for a menu-started game (both
+`CreateGameCore` + Quickstart), the SAME default-off/menu-on pattern as `EnableGroundTacticalAI` /
+`LegitimacyProcessor.ReadCurrentMorale`. So a real New Game runs the employment term live. **The live feel is the
+developer's PC play-test** (CI can't run the client): read the `[a1-employment] HOMEWORLD …` gauge in `game_logs/` and
+watch the homeworld's morale/population; tune `JobsPerCapita` (raise → more of a deficit; lower → nearer full employment;
+too low snaps to the +15 bonus). One line in `NewGameMenu` reverts it if the live feel isn't right.
 
 ---
 

@@ -554,6 +554,14 @@ public class NewGameMenu : PulsarGuiWindow
         // debounce (one bad sample can't trigger a revolt) — the A3 objective-flip fix, live. One line each to revert.
         Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
         Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
+        // A1-CALIBRATION on-switch (2026-08-13, developer-authorized): turn ON the employment→morale term for a real
+        // menu game. It defaults OFF so the ENGINE suite stays byte-identical (jobs÷demand reads the −1.0 "no job data"
+        // sentinel exactly as before); a game the player actually starts runs it LIVE — a colony's installed-building
+        // jobs vs a per-capita job demand (pop × ColonyMoraleDB.JobsPerCapita, the SustenanceProcessor-shape denominator
+        // that scales with population) move morale: a fully-built world reads near-neutral, an under-built one reads a
+        // deficit → migration pressure to build industry. One line to revert. Morale → migration → tax → legitimacy, so
+        // the homeworld morale/pop feel is the PC live-test (CI can't run the client).
+        Pulsar4X.Colonies.PopulationProcessor.EnableEmploymentMorale = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -974,6 +982,9 @@ public class NewGameMenu : PulsarGuiWindow
             // menu game, same as CreateGameCore. Default OFF (engine byte-identical); one line each to revert.
             Pulsar4X.Colonies.LegitimacyProcessor.ReadCurrentMorale = true;
             Pulsar4X.Colonies.LegitimacyProcessor.EnableRebellionDebounce = true;
+            // A1-CALIBRATION on-switch (same as CreateGameCore): the employment→morale term LIVE — jobs vs a per-capita
+            // job demand move morale. Default OFF (engine byte-identical); one line to revert.
+            Pulsar4X.Colonies.PopulationProcessor.EnableEmploymentMorale = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

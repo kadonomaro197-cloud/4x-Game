@@ -303,3 +303,18 @@ run it — these need the local Windows build.
       selects it (highlight + the order surface appears below), clicking another switches selection, and the initial
       "nothing selected" state is unchanged. No player-visible change is intended — this is the shared selection model
       the S5 All-Forces roster will sit on.
+
+---
+
+## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)
+
+Source: `docs/IMPLEMENTATION-CAMPAIGN-LOG.md` (A1-CALIBRATION). `NewGameMenu` now flips
+`PopulationProcessor.EnableEmploymentMorale = true` for menu games (engine default stays OFF → CI byte-identical).
+CI can't run the client, so the live morale feel is a local run.
+
+- [ ] **Employment→morale reads sane on a live New Game.** Start a New Game, open Colony Management ▸ Society (or
+      DevTools "Dump Society") and read the homeworld's morale + the employment factor. Expected: the fully-built Earth
+      reads **near-neutral** (a mild employment deficit, not −25, not a free +15 bonus), and the homeworld does not
+      visibly bleed population. Read the `[a1-employment] HOMEWORLD …` line in `game_logs/` for the exact jobs/ratio.
+      If the homeworld is too depressed or grows too fast, tune `ColonyMoraleDB.JobsPerCapita` (raise → more deficit,
+      lower → nearer full employment). If it feels wrong entirely, one line in `NewGameMenu` reverts the on-switch.
