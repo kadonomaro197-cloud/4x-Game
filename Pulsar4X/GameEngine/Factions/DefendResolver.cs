@@ -127,16 +127,11 @@ namespace Pulsar4X.Factions
 
         /// <summary>
         /// A ship design is a WARSHIP if any component design it mounts carries a direct-fire or ordnance weapon
-        /// attribute. <c>ShipCombatValueDB.Firepower</c> is only computed at BUILD, so at PLAN time we read the
-        /// design's own components (the same signal the combat-value calculator sums).
+        /// attribute. The ONE definition now lives in <see cref="Pulsar4X.Ships.ShipRoleTools.IsWarship(ShipDesign)"/>
+        /// (shared with the Forces window — One Verb, Both Seats); this delegates so the two can't drift.
+        /// Byte-identical to the old inline predicate.
         /// </summary>
-        private static bool IsWarship(ShipDesign ship)
-            => ship.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<RailgunWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<FlakWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out _);
+        private static bool IsWarship(ShipDesign ship) => ShipRoleTools.IsWarship(ship);
 
         /// <summary>The id of a free (empty-queue) production line on this colony that runs the given industry type,
         /// or null if none. (Mirrors <see cref="GrowEconomyResolver"/>'s helper — kept local for slice independence.)</summary>

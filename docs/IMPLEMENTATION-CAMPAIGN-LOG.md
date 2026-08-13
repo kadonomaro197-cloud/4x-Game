@@ -15,11 +15,12 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **Phase A recon complete → build the first slice.** Recon workflow `wf_98ffad13-d66` mapped the 5 Phase-A
-> welds against real source. Start with the lowest-risk keystone: **A3 — `ShipRoleTools.ClassifyRole`** (purely
-> additive engine helper + test; validates the CI loop) — unless recon flags a cheaper win. Then A2 (ground
-> penetration), A1 (employment, flag-gated), A4 (order stubs), A5 (component scan). Work file-disjoint slices
-> while CI runs (~30 min/run).
+> **A3 pushed → gate its CI, and build A2 (ground penetration) meanwhile — file-disjoint.** A3 (`ShipRoleTools`)
+> is committed + pushed (⏳CI). While its ~33-min CI runs, build **A2** (carry `Penetration`/`PerShotEnergy`
+> through the ground assembler — TIER 1) using the recon ledger below; it touches `GroundWeaponAtb.cs`,
+> `GroundUnitAssembly.cs`, `installations.json` — disjoint from A3's files. Then A1 (employment, flag-gated —
+> park the calibration question), A4 (order stubs), A5 (component scan). Confirm both CI jobs (test +
+> build-client) green before marking any slice ✅.
 
 ---
 
@@ -38,7 +39,7 @@ ladder row and, once landed, the commit sha.
 |-------|------|----------------------|--------|--------|
 | A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⬜ | |
 | A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⬜ | |
-| A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⬜ | |
+| A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
 | A4 | Finish 4 order stubs: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⬜ | |
 | A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⬜ | |
 
@@ -102,7 +103,33 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-*None yet — campaign just started.*
+### A3 — `ShipRoleTools.ClassifyRole` (the ship role classifier) — ⏳CI
+**What it does (plain English):** the engine now has ONE place that decides what KIND a ship is — warship,
+freighter, survey ship, transport, tender, hauler, or bare utility — by reading the parts bolted to the hull
+(a weapon → warship, a survey sensor → survey ship, and so on), exactly the way the ground side already reads a
+unit's job from its stats. There is deliberately no stored "is this military?" flag (the engine has a dead one
+that's never set); the class is DERIVED and live.
+
+**Why it matters:** the Forces window will show this as each ship's "Class" column, and the faction AI already
+needs to tell a warship from a freighter. Before this, the AI carried TWO separate copies of that test
+(`ConquerResolver.IsWarship` + `DefendResolver.IsWarship`) that could drift apart. Now both **delegate** to the
+one shared helper — the studio law "one verb, both seats": the window and the AI classify a ship the same way,
+guaranteed.
+
+**Files:** `GameEngine/Ships/ShipRoleTools.cs` (new — the `ShipRole` enum + `ClassifyRole(design)` /
+`ClassifyRole(entity)` / `IsWarship` / `IsMilitary`); `ConquerResolver.cs` + `DefendResolver.cs` (their
+`IsWarship` now one-line delegators — byte-identical by construction); `Pulsar4X.Tests/ShipRoleToolsTests.cs`
+(new gauge). **Byte-identical:** the AI predicate is unchanged (delegation to identical code); the classifier is
+otherwise a pure new read nothing consumes yet.
+
+**Gauge:** `ShipRoleToolsTests` — every AI-warship design classifies Warship+Military and every other design
+civilian (the byte-identity tripwire for the two delegators); a built ship classifies the same role as its
+design; Mil/Civ maps only Warship to Military; null-safe.
+
+**Note on the HTML badge:** the forceswindow.html "Class" column is graded BUILD because it's about the WINDOW
+showing the column. The engine classifier (FORCES-WINDOW S2) is now built, but the column badge stays BUILD until
+Phase B (S5) actually surfaces it in the window. The ground classifier (`GroundRoleComposer.ClassifyRole`)
+already existed; "surfacing" it is window work, also Phase B.
 
 ---
 

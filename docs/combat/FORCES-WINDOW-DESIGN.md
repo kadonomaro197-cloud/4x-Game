@@ -152,7 +152,7 @@ The classifier itself has a cradle: a small pure engine helper both the window a
 | Slice | What | Grade |
 |---|---|---|
 | **S1** | Point the Battalions tab at the built `AllFormationsFor`; scope to `PlayerFaction`. Pure reuse. | DATA |
-| **S2** | The engine classifier `ShipRoleTools.ClassifyRole` (+ test), reusing the emergent predicates that already exist; surface the ground one. **Read by window *and* AI.** | BUILD |
+| **S2** | ✅ **ENGINE HELPER BUILT (2026-08-13, OPERATION BLUEPRINT-TO-STEEL A3).** `ShipRoleTools.ClassifyRole` (`GameEngine/Ships/ShipRoleTools.cs`) + `ShipRoleToolsTests` — the `ShipRole` enum (Warship/Survey/Freighter/Transport/Tender/Hauler/Utility) derived from mounted components, with `ClassifyRole(design)` (AI) + `ClassifyRole(entity)` (window) + `IsWarship` + `IsMilitary`. **`ConquerResolver.IsWarship` + `DefendResolver.IsWarship` now DELEGATE to it** (one verb, both seats — byte-identical). The ground one (`GroundRoleComposer.ClassifyRole`) already existed. *Still window-side: surfacing the Class column (S5) — the forceswindow.html Class badge stays BUILD until then.* | ✅ engine · window pending |
 | **S3** | Make the two existing table rows reusable (extract the ship combat row; confirm the battalion row is callable). | DATA |
 | **S4** | One "selected unit" abstraction unifying the fleet + battalion selection. The load-bearing refactor. | BUILD |
 | **S5** | The new **All Forces** flat roster tab — one table over S2/S3/S4, with the Domain/Mil-Civ/Class/Location filters and a kind-swapping detail panel. | BUILD |

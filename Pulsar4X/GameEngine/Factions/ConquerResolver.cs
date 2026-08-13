@@ -461,16 +461,11 @@ namespace Pulsar4X.Factions
             return PlannerAction.None;
         }
 
-        /// <summary>A ship design is a WARSHIP if any component design it mounts carries a weapon attribute. (Mirrors
-        /// <see cref="DefendResolver"/>'s helper — a later MilitaryComposition slice can extract the shared build.)
-        /// Internal for the Phase A-2b gauge.</summary>
-        internal static bool IsWarship(ShipDesign ship)
-            => ship.TryGetComponentsByAttribute<GenericBeamWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<RailgunWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<FlakWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<PlasmaBoltWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<DisruptorWeaponAtb>(out _)
-            || ship.TryGetComponentsByAttribute<MissileLauncherAtb>(out _);
+        /// <summary>A ship design is a WARSHIP if any component design it mounts carries a weapon attribute. Now the
+        /// ONE definition lives in <see cref="Pulsar4X.Ships.ShipRoleTools.IsWarship(ShipDesign)"/> (One Verb, Both
+        /// Seats — the Forces window and the AI must classify a warship the same way); this delegates so the two can
+        /// never drift. Byte-identical to the old inline predicate. Internal for the Phase A-2b gauge.</summary>
+        internal static bool IsWarship(ShipDesign ship) => ShipRoleTools.IsWarship(ship);
 
         /// <summary>The number of WEAPON MOUNTS a design carries (summed across every weapon type) — the coarse
         /// firepower proxy the Phase A-2b <see cref="PickWarship"/> scores a warship on (MilitarySolve). A per-design
