@@ -298,3 +298,8 @@ run it — these need the local Windows build.
       Battalions tab's per-formation table now draw each row via extracted methods (`DrawShipCombatRow` /
       `DrawBattalionRowColumns`) instead of inline code. Confirm both tables render exactly as before — same columns,
       same values, same order (this is prep for the S5 All-Forces roster; no player-visible change is intended).
+- [ ] **B-S4 — battalion selection still behaves identically (byte-identical refactor).** The Battalions tab's
+      selection is now carried in one `ForceRef` value instead of two loose ints. Confirm clicking a battalion row still
+      selects it (highlight + the order surface appears below), clicking another switches selection, and the initial
+      "nothing selected" state is unchanged. No player-visible change is intended — this is the shared selection model
+      the S5 All-Forces roster will sit on.

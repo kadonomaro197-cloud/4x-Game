@@ -1144,9 +1144,35 @@ namespace Pulsar4X.Client
         private int _battBodyFilter = 0;     // 0 = all worlds;  else 1-based index into the frame's bodies list
         private bool _battHasOrdersOnly = false;
 
-        // Selection — a formation is identified across bodies by (body id, formation id).
-        private int _selBattalionBodyId = -1;
-        private int _selBattalionFormationId = -1;
+        // FORCES-WINDOW-DESIGN §S4 — the one "selected force" the coming All-Forces roster (S5) points at, across kinds.
+        // A force is identified by its KIND + a stable key: a ship or fleet by its entity id, a battalion by
+        // (bodyId, formationId) — the exact (body, formation) pair a battalion has always been keyed by across worlds.
+        // B-S4 introduces the type and migrates the Battalions tab's selection onto it (byte-identical); S5's roster
+        // reuses it for ships + fleets, and S9 adds Station/Colony. A plain value-typed struct: cheap, no allocation.
+        private enum ForceKind { None = 0, Fleet, Ship, Battalion }
+        private readonly struct ForceRef
+        {
+            public readonly ForceKind Kind;
+            public readonly int EntityId;     // ship/fleet entity id; -1 for a battalion or None
+            public readonly int BodyId;       // battalion's body entity id; -1 otherwise
+            public readonly int FormationId;  // battalion's formation id; -1 otherwise
+            private ForceRef(ForceKind kind, int entityId, int bodyId, int formationId)
+            { Kind = kind; EntityId = entityId; BodyId = bodyId; FormationId = formationId; }
+
+            public static readonly ForceRef None = new ForceRef(ForceKind.None, -1, -1, -1);
+            public static ForceRef OfFleet(Entity e) => new ForceRef(ForceKind.Fleet, e?.Id ?? -1, -1, -1);
+            public static ForceRef OfShip(Entity e)  => new ForceRef(ForceKind.Ship,  e?.Id ?? -1, -1, -1);
+            public static ForceRef OfBattalion(Entity body, GroundFormation f)
+                => new ForceRef(ForceKind.Battalion, -1, body?.Id ?? -1, f?.FormationId ?? -1);
+
+            public bool IsNone => Kind == ForceKind.None;
+            // The battalion identity test — replaces the old "body.Id == _selBattalionBodyId && f.FormationId == …".
+            public bool IsBattalion(int bodyId, int formationId)
+                => Kind == ForceKind.Battalion && BodyId == bodyId && FormationId == formationId;
+        }
+
+        // Selection — a formation is identified across bodies by (body id, formation id), now carried in one ForceRef.
+        private ForceRef _selBattalion = ForceRef.None;
         private int _battStanceChoice = 0;
         private string _battStatus = "";
         private bool _battErrorLogged;
@@ -1247,14 +1273,13 @@ namespace Pulsar4X.Client
                 {
                     var f = r.formation;
                     int members = GroundFormationTools.MemberCount(r.forces, f);
-                    bool isSel = r.body.Id == _selBattalionBodyId && f.FormationId == _selBattalionFormationId;
+                    bool isSel = _selBattalion.IsBattalion(r.body.Id, f.FormationId);
 
                     ImGui.TableNextColumn();
                     string label = $"{f.Name} ({members})##batt{r.body.Id}_{f.FormationId}";
                     if(ImGui.Selectable(label, isSel, ImGuiSelectableFlags.SpanAllColumns))
                     {
-                        _selBattalionBodyId = r.body.Id;
-                        _selBattalionFormationId = f.FormationId;
+                        _selBattalion = ForceRef.OfBattalion(r.body, f);
                         isSel = true;
                     }
 
