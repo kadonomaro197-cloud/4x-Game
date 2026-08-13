@@ -1,0 +1,480 @@
+<title>Sensors, re-derived — one equation, five jobs, five broken dials</title>
+<style>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary .n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch — ";color:var(--ink3)}
+@media(min-width:700px){
+ .w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+ .ten{grid-template-columns:1fr 1fr}
+ .tenq{border-left:1px solid var(--rule2)}
+ .tenq:nth-child(odd){border-left:0}
+ .nums{grid-template-columns:repeat(5,1fr)}
+ .opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+ .oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)} .num.sh.a b{color:var(--warn)} .num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+</style>
+
+/* sensors additions, in the same idiom */
+.axr{margin:0 0 9px}.axr:last-of-type{margin-bottom:0}
+.axq{font:10px/1.35 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin:0 0 5px}
+.bandbar{position:relative;height:26px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);overflow:hidden;margin:5px 0 3px}
+.bandbar i{position:absolute;top:0;bottom:0;display:block}
+.bandbar i.sig{background:color-mix(in srgb,var(--warn) 30%,transparent);border-left:1px solid var(--warn);border-right:1px solid var(--warn)}
+.bandbar i.rec{background:color-mix(in srgb,var(--ac) 34%,transparent);border-left:2px solid var(--ac);border-right:2px solid var(--ac)}
+.bandbar u{position:absolute;top:2px;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3);text-decoration:none}
+.bscale{display:flex;justify-content:space-between;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.num.g b{color:var(--ac2)} .num.a b{color:var(--warn)} .num.r b{color:var(--flag)}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 1 of the remaining eight</p>
+<h1>One equation, read from five ends. Four of the dials write nothing at all.</h1>
+<p class="lead">Every sensor, cloak, jammer and survey in the game is the <b>same inverse-square line</b> read from a different side. Nine attributes, five jobs, and <b>four dials that fail the only test that matters</b> — two of them exploitable. Build one below and watch what the sim would actually read.</p>
+<p class="lead" style="margin-top:10px">🔴 <b>And one broken line underneath all of it.</b> The band-matching gate never checks the receiver's upper edge — so <b>the loudest thing on a ship is detected by a sensor that cannot see its wavelength</b>, and the door's one honest trade is defeated. The game currently <em>depends</em> on that bug.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>The nine, as five jobs</h2>
+<p class="sub">The whole door in one line, and then who reads it from where.</p>
+<div class="okbox" style="margin:0 0 13px"><b>attenuation:</b> <code>signal = source × 1e6 ÷ (4π r²)</code> &nbsp;·&nbsp; <b>and its inverse:</b> <code>range = √( source × 1e6 ÷ 4π·threshold )</code><br>
+<span style="color:var(--ink3)">Both verbatim from <code>SensorTools.AttenuationCalc</code> / <code>RangeForSignal</code>. Everything below is that equation with one term in your hands.</span></div>
+<div class="ten">
+<div class="tenq"><h4>Listen — how far can I see?</h4><div class="vars"><span class="tag">Antenna size</span><span class="tag">Band centre</span><span class="tag">Bandwidth</span><span class="tag">Scan interval</span></div><p>Lowers <b>your threshold</b>. A bigger dish hears a fainter whisper; a narrower window hears it better still but across fewer kinds of signal.</p></div>
+<div class="tenq"><h4>Look — resolve a thing I already found</h4><div class="vars"><span class="tag">Survey speed</span></div><p>The same read pointed at a fixed target with a completion counter. Geological survey finds minerals; gravitational survey finds jump points.</p></div>
+<div class="tenq"><h4>Track — hold a lock good enough to shoot</h4><div class="vars"><span class="tag">Range</span><span class="tag">Tracking speed</span><span class="tag">✗ Size vs Range</span><span class="tag">✗ Size vs Tracking</span></div><p>Threshold plus an angular-rate gate. <b>The last two write nothing</b> — they only add mass, so a player sets both to minimum and pays 1/16.</p></div>
+<div class="tenq"><h4>Hide — be seen from less far</h4><div class="vars"><span class="tag">Concealment</span></div><p>Lowers <b>your own source</b>. Because range goes as the square root of signal, showing 20% as loud is seen at 45% the distance.</p></div>
+<div class="tenq"><h4>Blind — make THEM see from less far</h4><div class="vars"><span class="tag">Barrage strength</span><span class="tag">Reach</span><span class="tag">✗ Self-noise</span></div><p>Raises <b>their</b> threshold. <b>The self-noise is a dial and costs nothing</b> — so the jammer's whole stated downside is opt-out.</p></div>
+<div class="tenq"><h4>And one that is not a sensor at all</h4><div class="vars"><span class="tag">Op capacity</span><span class="tag">Counter-intel</span></div><p><code>IntelDirectorateAtb</code> is a <b>seat and a staff rating</b>, not a reading of the spectrum. It belongs to <b>Command</b> — the door whose whole content is officer + post + capacity.</p></div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Listen · Look · Track</b> are the <em>what you can see</em> axis. <b>Hide · Blind</b> are the <em>what you emit</em> axis. That split was predicted before any of this was read, and it is the one part of the prediction that held.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Build one</h2>
+<p class="sub">One choice, and <b>the choice changes which sliders exist</b> — because a dial that writes nothing in a given job should not be on screen. Every number is the real shipped formula at starting tech.</p>
+<div class="build">
+<div class="bsec"><p class="blab">What does this part do with the spectrum</p><div class="chips">
+<button class="chip" type="button" data-v="listen" aria-pressed="true">Listen</button>
+<button class="chip" type="button" data-v="look" aria-pressed="false">Look</button>
+<button class="chip" type="button" data-v="track" aria-pressed="false">Track</button>
+<button class="chip" type="button" data-v="hide" aria-pressed="false">Hide</button>
+<button class="chip" type="button" data-v="blind" aria-pressed="false">Blind</button></div>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="sliders">
+<div class="sl" id="w1"><div class="slh"><span id="n1">Antenna size</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="0" aria-label="dial one"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Band centre</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="68" aria-label="dial two"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div></div>
+<div class="sl" id="w3"><div class="slh"><span id="n3">Bandwidth</span><span id="s3"></span></div><input type="range" id="d3" min="0" max="100" value="50" aria-label="dial three"><div class="ends"><span id="e3a"></span><span id="e3b"></span></div></div>
+<div class="sl" id="w4"><div class="slh"><span id="n4">Scan interval</span><span id="s4"></span></div><input type="range" id="d4" min="0" max="100" value="35" aria-label="dial four"><div class="ends"><span id="e4a"></span><span id="e4b"></span></div></div>
+</div>
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums" id="nums">
+<div class="num set"><i id="l_a1"></i><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4"></i><b id="v_a4"></b></div>
+<div class="num fixed" id="massbox"><i>Mass</i><b id="v_mass"></b></div>
+</div>
+<div id="bandwrap">
+<p class="blab" style="margin:15px 0 3px">Your window against what the game actually emits</p>
+<div class="bandbar" id="bar"></div>
+<div class="bscale"><span>0 nm</span><span>visible</span><span>near IR</span><span>mid IR</span><span>2600 nm</span></div>
+</div>
+<div class="mu" id="muwrap">
+<p class="blab" style="margin:15px 0 3px">How far off you would first pick each of them up</p>
+<p class="muN">The four things in the game that emit. <b>Real magnitudes</b> from the shipped templates; range is <code>RangeForSignal</code> run against your threshold.</p>
+<div class="mus">
+<div class="mt"><i>Reactor</i><b id="m_rx"></b><s>1705 nm · the loudest thing aboard</s></div>
+<div class="mt"><i>Warp bubble held</i><b id="m_wp"></b><s>828 nm · a ship at FTL</s></div>
+<div class="mt"><i>Thruster plume</i><b id="m_th"></b><s>828 nm · under acceleration</s></div>
+<div class="mt"><i>Cloaked thruster</i><b id="m_ck"></b><s>828 nm · ×0.2 concealment</s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Teal</b> = you set it. <b>Grey</b> = the formula decided it. Sliders appear and vanish with the job: <b>Listen has four, Look and Hide have one, Track has two, Blind has two</b> — and the ones that vanish are the ones that would write nothing.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔴 The only receiver in the game is tuned to visible light. Everything in the game emits infrared.</h2>
+<p class="big">This is the finding, and it took doing the arithmetic to see. Three things aboard a ship emit; here is where each sits, and where the shipped sensor is pointed.</p>
+<div class="scroll"><table class="t">
+<tr><th>Emitter</th><th>Temperature</th><th>Peak</th><th>Its band</th><th>Stock magnitude</th><th>In the receiver's window?</th></tr>
+<tr><td><b>Reactor</b></td><td>1700 K</td><td><b>1705 nm</b></td><td>1305–2305 nm</td><td><b class="r">11,250,000</b></td><td>🔴 <b class="r">NO — nowhere near</b></td></tr>
+<tr><td>Warp drive, bubble held</td><td>3500 K</td><td>828 nm</td><td>428–1428 nm</td><td>3,179,000</td><td><b class="a">its lower tail only</b></td></tr>
+<tr><td>Thruster plume</td><td>3500 K</td><td>828 nm</td><td>428–1428 nm</td><td>109,103</td><td><b class="a">its lower tail only</b></td></tr>
+<tr><td><b>The shipped sensor</b></td><td>—</td><td><b>600 nm</b></td><td><b>475–725 nm</b></td><td>—</td><td>— <s>that is the human eye</s></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>Not one emitter peak falls inside the receiver's window.</b> The reactor — which is <b>100× louder than a thruster</b> and therefore the number that actually sets your detection range — sits a full 1000 nm outside it.</p>
+<div class="warnbox"><b>So why does detection work at all? Because the gate is broken.</b> <code>SensorTools.cs</code> tests<br>
+<code>Math.Max(recvMin, sigMin) &lt; Math.Max(sigMin, sigMax)</code><br>
+and the right-hand side is just <code>sigMax</code>, so <b>the receiver's upper edge is never consulted.</b> The test reduces to <em>"is my band's bottom edge below the signal's top edge"</em> — which lets through every signal at a <b>longer</b> wavelength than your band and blocks every signal at a shorter one. A standard overlap test would read <code>max(recvMin, sigMin) &lt; min(recvMax, sigMax)</code>.</div>
+<div class="warnbox" style="border-left-color:var(--warn)"><b>And the game DEPENDS on that bug.</b> Fix the line on its own and the reactor becomes invisible — detection range against a stock ship collapses from <b>0.40 Gm to 0.04 Gm</b>, and a ship with its engines off becomes <b>completely undetectable</b>. That is precisely the <em>"sat at Luna, saw nothing, no battle"</em> failure the whole detection rebalance was written to cure. <b>The fix has to be one change: correct the overlap test AND give the base mod an infrared receiver</b> — which is the same ruling the FTL-band question was already waiting on.</div>
+<p class="sub" style="margin-top:11px">It also means the <b>band-centre dial has a dominant setting</b>: tune it as short as it goes and the one-sided test passes for everything in the game. Try it in the builder above.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What this kills</h2>
+<div class="kill"><h4>🔴 Resolution — dead AND free. The worst dial found in any door.</h4><p><code>SensorTools.cs:125</code> reads it into a local variable and <b>never uses it again</b>; that local is the only reader in the entire repository. And it is <b>not in the mass formula</b>, so it costs nothing either. A slider with a 0.1–1000 range that writes nothing and costs nothing. <b>Worse than the old Amphibious dial</b>, which at least charged mass for its silence. <b>Do not delete it — wire it.</b> The code comments beg for it (<em>"resolution should be required to pick out multiple ships close together instead of just one big signal"</em>), <code>SignalQuality</code> already exists, and resolution is what turns <em>"something is out there"</em> into <em>"it is three destroyers."</em></p></div>
+<div class="kill"><h4>🔴 Two fire-control dials cost mass and write nothing — a free 16× saving</h4><p><code>Size vs Range</code> and <code>Size vs TrackingSpeed</code> appear in <b>exactly one place</b>: the mass formula. Neither is passed to the attribute. So set both to their 0.25 minimum and fire-control mass drops to <b>one sixteenth</b> with no loss of range or tracking. <b>Fix this before Chassis</b> (door 3), which is about to build its entire budget on a currency that can be cheated.</p></div>
+<div class="kill"><h4>🔴 The jammer's downside is player-optional, so it is not a trade</h4><p>Its own docstring states the catch: <em>"blind them, and paint a target on yourself."</em> But <code>Self Signature Boost</code> is a <b>dial</b> (1–10) and it is <b>not in the mass formula</b>. So a player sets it to 1 and gets a jammer with no beacon penalty at all. 🔒 <b>A penalty you can dial away for free is not a cost, it is decoration.</b> The coupling is obvious and physical — <b>a barrage jammer's noise IS its self-signature</b> — so they should be one number, not two dials.</p></div>
+<div class="kill"><h4>🔴 Scan interval is a free ladder</h4><p>It writes something real (the reschedule interval), but for a <em>sensor</em> it costs <b>nothing</b> — no mass, no power. The only energy path is the solar-array branch, which is not a sensor. So shorter is strictly better and every player pins it at one second. Give it a power draw and <b>sweep-often-and-run-hot vs sweep-rarely-and-stay-cold</b> becomes a real EMCON decision that composes with the rest of the detection game.</p></div>
+<div class="kill"><h4>🔴 And antenna size is a free ladder too — I had this one wrong</h4><p>I first wrote that this dial was already honest, because range goes as antenna size and mass as its square, so <em>range ∝ √mass</em>. <b>The arithmetic says otherwise.</b> Mass is <code>90 + 0.01 × size²</code>, and the quadratic term does not overtake the 90 kg constant until <b>size ≈ 95</b> — while the shipped sensor sits at <b>1.25</b>. So across the dial's entire usable range the mass is effectively flat: <b>size 10 buys 8× the detection range for +1 kg.</b> The cost law is right in principle and mis-scaled by two orders of magnitude in practice.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The one honest trade — and the bug takes it away</h2>
+<div class="lay"><h4>Bandwidth is a genuine zero-sum, and it is exact</h4>
+<p>Bandwidth writes <b>two</b> things: the width of your window, and the efficiency term inside your sensitivity. Work it through and <b>coverage × range² is a constant</b> — verified numerically at <b>39.34</b> across the whole dial:</p></div>
+<div class="scroll"><table class="t">
+<tr><th>Bandwidth</th><th>Window width</th><th>Range vs a reactor</th><th>coverage × range²</th></tr>
+<tr><td>1 nm</td><td>1 nm</td><td><b class="g">6.27 Gm</b></td><td>39.34</td></tr>
+<tr><td>62.5 nm</td><td>62.5 nm</td><td>0.79 Gm</td><td>39.34</td></tr>
+<tr><td><b>250 nm</b> <s>shipped</s></td><td>250 nm</td><td>0.40 Gm</td><td>39.34</td></tr>
+<tr><td>500 nm</td><td>500 nm</td><td><b class="a">0.28 Gm</b></td><td>39.34</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>A narrow window hears a whisper from far away; a wide one hears many kinds of thing but only close by.</b> That is a real decision, it already ships, and the designer presents it as two unrelated numbers.</p>
+<div class="warnbox">🔴 <b>Except the gate bug cancels it.</b> If your band's lower edge only has to sit below the signal's upper edge, then a <b>1 nm</b> window still detects everything in the game — so you take the 6.27 Gm and give up nothing. <b>The one honest trade in this door is only honest once the overlap test is fixed.</b> Two findings, one line of code.</p></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The proof</h2>
+<p class="sub">Every sensor-family component the engine builds today falls out of the one choice. Checked against what the base-mod templates actually construct.</p>
+<div class="scroll"><table class="t">
+<tr><th>Component in the game today</th><th>Job</th><th>Its dials</th><th>State</th></tr>
+<tr><td>Passive Sensor</td><td><b>Listen</b></td><td>antenna size · band centre · bandwidth · scan interval <s>+ resolution</s></td><td><b class="a">3 of 4 are free ladders; resolution is dead</b></td></tr>
+<tr><td>Geological Surveyor</td><td><b>Look</b></td><td>survey speed</td><td><b class="g">honest — mass goes as speed²</b></td></tr>
+<tr><td>Gravitational Surveyor</td><td><b>Look</b></td><td>survey speed</td><td><b class="g">honest</b> — arrives from Propulsion this pass</td></tr>
+<tr><td>Laser Weapon Turret</td><td><b>Track</b></td><td>range · tracking speed <s>+ two mass-only dials</s></td><td>🔴 <b class="r">a free 16× mass saving</b></td></tr>
+<tr><td>Point-Defense Director</td><td><b>Track</b></td><td>range · tracking speed</td><td><b class="g">honest</b> — no phantom dials</td></tr>
+<tr><td>Cloak Device</td><td><b>Hide</b></td><td>concealment</td><td><b class="g">honest — mass rises as it gets quieter</b></td></tr>
+<tr><td>Barrage Jammer</td><td><b>Blind</b></td><td>strength · reach <s>+ self-noise</s></td><td><b class="a">downside is opt-out</b></td></tr>
+<tr><td>Ground Radar</td><td><b>Listen</b> <s>simplified</s></td><td>range (km)</td><td><b class="a">prices reach LINEARLY where space is quadratic</b></td></tr>
+<tr><td>Intelligence Directorate</td><td>— <b>not a sensor</b></td><td>op capacity · counter-intel</td><td>➡ <b>moves to Command</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>Nothing needed inventing, and the shape held:</b> five jobs, one equation, and the sliders that survive are the ones that write something. <b>The two best-built attributes in the door are the cloak and the jammer</b> — health-scaled, flag-gated, clamped, gauged — which is the opposite of what I predicted. 🔒 <b>The rot is in the OLDEST components, not the newest.</b> Recent parts were written with the conventions in hand; the long-standing ones predate them and nobody has had a reason to re-read them. For the remaining seven doors, look hardest at the oldest attribute.</p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>One choice — what this part does with the spectrum — and the choice decides which sliders exist.</b> Five jobs (Listen · Look · Track · Hide · Blind), one inverse-square equation read from five ends, and a clean split into <em>what you can see</em> × <em>what you emit</em>.</p>
+<p>🔴 <b>Five dials fail the only test that matters</b> (does it write a sim variable, and does it cost something): resolution is dead <em>and</em> free · two fire-control dials cost mass and write nothing, for a free 16× saving · the jammer's self-noise is opt-out · the scan interval is free · and antenna size is free across its whole usable range. <b>Two of those are exploits, not omissions.</b></p>
+<p>🔴 <b>And one broken line sits under everything:</b> the band-matching gate never checks the receiver's upper edge, so the loudest emitter aboard a ship is detected by a sensor a thousand nanometres off its wavelength — and the door's one genuine trade (coverage ↔ reach, exact to <b>39.34</b>) is cancelled, because a 1 nm window still sees everything. <b>The game depends on the bug</b>: fix the line alone and a parked ship becomes undetectable.</p>
+<p><b>Yours to call:</b> ① <b>the band ruling</b> — correct the overlap test <em>and</em> add an infrared receiver in one change, or compute the band and remove the dial. This is the same ruling the deferred FTL-band question was waiting on, so one decision closes both. ② <b>one cost law for reach</b>, or two — ground radar prices it linearly, space quadratically. ③ whether to <b>wire resolution</b> (contact fidelity becomes a purchase) or cut it.</p>
+<p><b>Six slices are named and ranked, and none is built.</b> The one I would build first is the pair of fire-control dials — because Chassis is two doors away and would otherwise inherit a mass budget that can be cheated.</p>
+</div></footer>
+
+<script>
+
+// ── the shipped arithmetic, verbatim ────────────────────────────────────────────────────────────────────────
+// techs.json at level 0:  sensitivity 0.01 · efficiency 0.75 · bandwidth 500
+// Effective Size = AntennaSize x 0.75
+// Efficiency     = 1 / (Bandwidth / 500)
+// Sensitivity    = 0.01 / (EffSize^2 x Efficiency)          <- LOWER is better
+// threshold_kW   = Sensitivity x 0.001
+// range          = sqrt(source x 1e6 / (4 pi x threshold))  <- SensorTools.RangeForSignal
+// receiver band  = peak +/- bandwidth/2                      <- SensorReceiverAtb ctor
+// mass           = 90 + 0.01 x AntennaSize^2
+const T_SENS=0.01, T_EFF=0.75, T_BW=500;
+// the four things in the game that emit, with their REAL template magnitudes
+const EM=[
+ {k:'rx', n:'Reactor',           temp:1700, mag:50*1500*0.1*1500},          // power x 0.1 x mass
+ {k:'wp', n:'Warp bubble held',  temp:3500, mag:2500*1000},                 // sustain kW x 1000 (engine default 2.5 MW)
+ {k:'th', n:'Thruster plume',    temp:3500, mag:109103},                    // = Thrust
+ {k:'ck', n:'Cloaked thruster',  temp:3500, mag:109103*0.2}                 // x the stock cloak
+];
+function wien(k){const w=2898000/k; return {min:w-400, avg:w, max:w+600};}
+EM.forEach(e=>e.band=wien(e.temp));
+let job='listen';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function gm(m){return m>=1e9?(m/1e9).toFixed(2)+' Gm':m>=1e6?(m/1e6).toFixed(1)+' Mm':(m/1e3).toFixed(0)+' km';}
+function fmt(v){return v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(v<10?2:0);}
+function rangeFor(src,thr){return (src<=0||thr<=0)?0:Math.sqrt(src*1e6/(4*Math.PI*thr));}
+// the gate EXACTLY as SensorTools.cs writes it — note the receiver's MAX is never consulted
+function gateAsWritten(rec,sig){return Math.max(rec.min,sig.min) < Math.max(sig.min,sig.max);}
+function gateCorrect(rec,sig){return Math.max(rec.min,sig.min) < Math.min(rec.max,sig.max);}
+
+const SCALE=['Compact','Light','','Heavy','Capital'];
+function bucket(v,n){return Math.min(n-1,Math.floor(v/100*n));}
+const NOUN={listen:['Search Antenna','Search Array','Deep Array'], look:['Survey Probe','Survey Suite','Survey Observatory'],
+            track:['Ranging Sight','Fire Director','Grand Director'], hide:['Damping Skin','Cloak Device','Cloak Mantle'],
+            blind:['Noise Emitter','Barrage Jammer','Barrage Mast']};
+const TEMPER={listen:['Wide','','Narrow'], look:['','',''], track:['Close','','Standoff'],
+              hide:['','',''], blind:['Local','','Theatre']};
+function compose(parts){const out=[],seen=new Set();
+ for(const p of parts){ if(!p) continue; for(const w of String(p).split(' ')){
+   const k=w.toLowerCase(); if(seen.has(k)) continue; seen.add(k); out.push(w);} }
+ return out.join(' ');}
+function partName(o){
+ // scale reads well on an antenna or an observatory; on a director or a cloak it just pads the name.
+ let scale=(job==='listen'||job==='look')?SCALE[bucket(o.d1,5)]:'';
+ let noun=NOUN[job][bucket(o.d1,3)], temper=TEMPER[job][bucket(job==='listen'?100-o.d3:o.d1,3)];
+ if(SCALE.some(w=>w&&noun.includes(w))) scale='';
+ if(temper==='Narrow'&&/Deep/.test(noun)) temper='';
+ if(temper==='Standoff'&&/Master/.test(noun)) temper='';
+ let n=compose([scale,temper,noun]);
+ return n.split(' ').length>4 ? compose([scale,noun]) : n;
+}
+
+function drawBand(rec){
+ const W=2600, bar=$('bar'); bar.innerHTML='';
+ const pct=v=>Math.max(0,Math.min(100,v/W*100));
+ for(const e of EM){ if(e.k==='ck') continue;
+   const d=document.createElement('i'); d.className='sig';
+   d.style.left=pct(e.band.min)+'%'; d.style.width=Math.max(0.5,pct(e.band.max)-pct(e.band.min))+'%';
+   d.title=e.n+' '+Math.round(e.band.min)+'-'+Math.round(e.band.max)+' nm'; bar.appendChild(d);
+   const u=document.createElement('u'); u.style.left=(pct(e.band.avg)+0.6)+'%'; u.textContent=e.n.split(' ')[0]; bar.appendChild(u); }
+ const r=document.createElement('i'); r.className='rec';
+ r.style.left=pct(rec.min)+'%'; r.style.width=Math.max(0.6,pct(rec.max)-pct(rec.min))+'%';
+ r.title='your window '+Math.round(rec.min)+'-'+Math.round(rec.max)+' nm'; bar.appendChild(r);
+}
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, d3=+$('d3').value, d4=+$('d4').value;
+ show('w2', job==='listen'); show('w3', job==='listen'||job==='blind'||job==='track'); show('w4', job==='listen');
+ show('bandwrap', job==='listen'); show('muwrap', job==='listen'); show('massbox', true);
+ set('v_name', partName({d1,d3}));
+ set('v_namesub','scale ← size · temper ← '+(job==='listen'?'how narrow the window is':'the second dial')+' · noun ← the job');
+
+ if(job==='listen'){
+   const size=1.25+d1*0.2875;                   // 1.25 (the SHIPPED sensor) .. 30 — the useful part of a 1..2500 dial
+   const peak=Math.pow(10, 0.5+d2*0.0335);      // ~3 nm .. ~2500 nm, log — the real dial spans 0.01..1e12
+   const bw=1+d3*4.99;                          // 1 .. 500 (the tech ceiling)
+   const scanS=Math.round(1+Math.pow(d4/100,3)*86399);
+   const effSize=size*T_EFF, efficiency=1/(bw/T_BW);
+   const sens=T_SENS/(effSize*effSize*efficiency), thr=sens*0.001;
+   const rec={min:peak-bw/2, avg:peak, max:peak+bw/2};
+   const mass=90+0.01*size*size;
+   set('n1','Antenna size'); set('s1',size.toFixed(2)+' m');
+   set('e1a','1.25 — the shipped sensor'); set('e1b','30 — an observatory');
+   set('n2','Band centre'); set('s2',Math.round(peak)+' nm');
+   set('e2a','ultraviolet'); set('e2b','mid infrared');
+   set('n3','Bandwidth'); set('s3',Math.round(bw)+' nm wide');
+   set('e3a','1 — a keyhole'); set('e3b','500 — wide open');
+   set('n4','Scan interval'); set('s4',scanS<60?scanS+' s':(scanS/60).toFixed(0)+' min');
+   set('e4a','1 s — constant sweep'); set('e4b','24 h — one look a day');
+   set('l_a1','Window — set');            set('v_a1',Math.round(rec.min)+'–'+Math.round(rec.max)+' nm');
+   set('l_a2','Sensitivity — emergent');  set('v_a2',thr.toExponential(2)+' kW');
+   set('l_a3','Coverage × range² — fixed'); set('v_a3',(bw*Math.pow(rangeFor(EM[0].mag,thr)/1e9,2)).toFixed(2));
+   const seenNow=EM.filter(e=>e.k!=='ck'&&gateAsWritten(rec,e.band)).length;
+   const seenFixed=EM.filter(e=>e.k!=='ck'&&gateCorrect(rec,e.band)).length;
+   set('l_a4','Emitters your band admits'); set('v_a4',seenNow+' of 3  ▸ '+seenFixed+' if fixed');
+   $('l_a4').parentElement.className='num '+(seenNow>seenFixed?'a':seenFixed===0?'r':'g');
+   set('v_mass',mass.toFixed(1)+' kg');
+   drawBand(rec);
+   for(const e of EM){ const r=rangeFor(e.mag,thr);
+     const ok = e.k==='ck' ? gateAsWritten(rec,e.band) : gateAsWritten(rec,e.band);
+     set('m_'+e.k, ok ? gm(r) : 'blind'); }
+   set('oname','Detection to '+gm(rangeFor(EM[0].mag,thr))+' against a reactor');
+   $('odesc').innerHTML='range goes as <b>√signal</b>, so every doubling of reach needs four times the signal — which is why a big antenna and a narrow window are the only two things that really move it.';
+   $('verdict').innerHTML = seenNow>seenFixed
+     ? '⚠ <b>'+(seenNow-seenFixed)+' of those emitters is admitted ONLY because the gate never checks your upper edge.</b> Fix the line and this sensor loses them.'
+     : seenFixed===0 ? '🔴 <b>This sensor is blind to everything in the game</b> — your window overlaps no emitter, and even the broken gate turns it away.'
+     : '✅ <b>Every emitter here is a genuine overlap</b> — this window would still work with the gate fixed.';
+   $('jobnote').textContent='Lower your own threshold. The two dials that actually move detection range are antenna size and how narrow you cut the window — and at starting tech both are nearly free, which is the problem.';
+ } else if(job==='look'){
+   const speed=1+Math.round(d1*0.09);           // 1..10, the template's real range
+   const mass=Math.pow(10*speed,2);
+   const passes=Math.ceil(200/speed);
+   set('n1','Survey speed'); set('s1','×'+speed);
+   set('e1a','1 — a lone probe'); set('e1b','10 — a survey flotilla');
+   set('l_a1','Survey speed — set');       set('v_a1','×'+speed);
+   set('l_a2','Passes for a typical point'); set('v_a2',passes+'');
+   set('l_a3','Cost law — fixed');          set('v_a3','(10 × speed)²');
+   set('l_a4','Points per pass');           set('v_a4',speed+'');
+   set('v_mass',fmt(mass)+' kg');
+   set('oname','A '+(speed<3?'probe':speed<7?'survey ship':'survey flotilla'));
+   $('odesc').innerHTML='the same inverse-square read, pointed at <b>a fixed target with a completion counter</b> instead of watching for the unknown.';
+   $('verdict').innerHTML='✅ <b>The honest one.</b> Mass goes as the SQUARE of survey speed, so a fast surveyor is genuinely dear — one dial, a real cost, nothing hidden.';
+   $('jobnote').textContent='Resolve something you already know is there. Geological survey finds minerals; gravitational survey finds jump points — and the gravitational one only arrived at this door because Propulsion handed it over.';
+ } else if(job==='track'){
+   const rangeK=10+d1*1.65;                     // 10..175, the real dial
+   const track=1250+d3*237.5;                   // 1250..25000
+   const honest=(rangeK+track/100);
+   set('n1','Range'); set('s1',rangeK.toFixed(0)+' km');
+   set('e1a','10 — point blank'); set('e1b','175 — standoff');
+   set('n3','Tracking speed'); set('s3',Math.round(track)+' km/s');
+   set('e3a','1250 — sluggish'); set('e3b','25000 — whips round');
+   set('l_a1','Range — set');           set('v_a1',rangeK.toFixed(0)+' km');
+   set('l_a2','Tracking speed — set');  set('v_a2',Math.round(track)+' km/s');
+   set('l_a3','Mass as designed');      set('v_a3',honest.toFixed(0)+' kg');
+   set('l_a4','Mass if you exploit it'); set('v_a4',(honest/16).toFixed(1)+' kg  ▸ ÷16');
+   $('l_a4').parentElement.className='num r';
+   set('v_mass',honest.toFixed(0)+' kg');
+   set('oname','A director good to '+rangeK.toFixed(0)+' km');
+   $('odesc').innerHTML='your threshold <b>plus an angular-rate gate</b> — it is not enough to see a target, you have to swing onto it faster than it crosses.';
+   $('verdict').innerHTML='🔴 <b>And there are two more dials on this part that write NOTHING.</b> <code>Size vs Range</code> and <code>Size vs TrackingSpeed</code> appear only in the mass formula, so setting both to 0.25 divides this mass by <b>sixteen</b> and costs you nothing. Fix before Chassis.';
+   $('jobnote').textContent='Hold a lock good enough to shoot. The two real dials are honest and coupled to mass — the two phantom ones beside them are not.';
+ } else if(job==='hide'){
+   const mult=1.0-d1*0.0095;                    // 1.0 .. 0.05, the real dial
+   const mass=200+400*(1-mult);
+   const rangeMult=Math.sqrt(mult);
+   set('n1','Concealment'); set('s1','shows '+(mult*100).toFixed(0)+'% as loud');
+   set('e1a','1.00 — bare hull'); set('e1b','0.05 — a ghost');
+   set('l_a1','Signature shown — set'); set('v_a1',(mult*100).toFixed(0)+'%');
+   set('l_a2','Detected at — emergent'); set('v_a2','×'+rangeMult.toFixed(2)+' the range');
+   set('l_a3','Against a stock sensor'); set('v_a3',gm(rangeFor(EM[2].mag*mult,5.689e-6)));
+   set('l_a4','Lost with the component'); set('v_a4','health-scaled');
+   set('v_mass',mass.toFixed(0)+' kg');
+   set('oname',mult<0.15?'A ghost':mult<0.5?'A quiet hull':'Barely damped');
+   $('odesc').innerHTML='lowers <b>your own source</b>. Because range goes as √signal, halving your signature only buys you <b>29%</b> off the range you are seen at — stealth is expensive on purpose.';
+   $('verdict').innerHTML='✅ <b>Honest.</b> Mass rises as it gets quieter, the effect is health-scaled so a shot-off cloak lights you up, and it never reaches zero. One of the two best-built parts in the door.';
+   $('jobnote').textContent='Be seen from less far. Note what it does NOT do: an active radar ping still bounces off your hull — going dark does not shrink you.';
+ } else {
+   const degrade=1+d1*0.15;                     // 1..16, the real dial
+   const reachGm=0.1+d3*0.049;                  // 0.1..5 Gm
+   const coupled=Math.sqrt(degrade);            // the FIX: self-noise coupled to strength, not a free dial
+   const mass=200+100*degrade+50*reachGm;
+   set('n1','Barrage strength'); set('s1','÷'+degrade.toFixed(1)+' their signal');
+   set('e1a','1 — silent'); set('e1b','16 — a wall of noise');
+   set('n3','Reach'); set('s3',reachGm.toFixed(2)+' Gm');
+   set('e3a','0.1 Gm — close in'); set('e3b','5 Gm — theatre wide');
+   set('l_a1','Their range becomes');   set('v_a1','×'+(1/Math.sqrt(degrade)).toFixed(2));
+   set('l_a2','Reach — set');           set('v_a2',reachGm.toFixed(2)+' Gm');
+   set('l_a3','Your own noise — COUPLED'); set('v_a3','×'+coupled.toFixed(2)+'  (proposed)');
+   set('l_a4','Your own noise — as shipped'); set('v_a4','a free dial, 1–10');
+   $('l_a4').parentElement.className='num r';
+   set('v_mass',mass.toFixed(0)+' kg');
+   set('oname','Blinds to ×'+(1/Math.sqrt(degrade)).toFixed(2)+' out to '+reachGm.toFixed(2)+' Gm');
+   $('odesc').innerHTML='raises <b>their</b> threshold instead of lowering yours — the only part in the door that acts on someone else’s equation.';
+   $('verdict').innerHTML='🔴 <b>As shipped its downside is opt-out:</b> self-noise is a separate dial that costs no mass, so a player sets it to 1 and jams for free. 🔒 <b>A penalty you can dial away is decoration.</b> A barrage jammer’s noise IS its strength — the two should be one number, which is what the third tile shows.';
+   $('jobnote').textContent='Make them see from less far. The combat resolver already wipes a blind fleet taking zero losses, so manufacturing blindness is a real weapon — it just has to cost something.';
+ }
+}
+// Each job OPENS ON ITS REAL SHIPPED COMPONENT, so the first number you see is always a number the game
+// actually ships. Slider positions back-solved from the base-mod templates.
+const STOCK={listen:{d1:0,d2:68,d3:50,d4:35},   // passive-sensor  1.25 m · 600 nm · 250 nm · 3600 s
+             look:{d1:0},                        // geo/grav surveyor  speed 1
+             track:{d1:6,d3:16},                 // beam-fire-control  20 km · 5000 km/s
+             hide:{d1:84},                       // cloak-device  0.2
+             blind:{d1:20,d3:18}};               // jammer  degrade 4 · reach 1 Gm
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [k,v] of Object.entries(STOCK[job]||{})) $(k).value=v;
+ render();}));
+['d1','d2','d3','d4'].forEach(i=>$(i).addEventListener('input',render));
+render();
+
+</script>

@@ -3,6 +3,12 @@
 **Status:** principle-locked (2026-07-05, the developer's call). Cross-cutting — governs the WHOLE build system.
 **Read this before designing or building ANY "buildable thing" at any scale.**
 
+> **⚠ As-built correction 2026-08-09 (`docs/DOCS-CONTRADICTIONS-2026-08-09.md`; reader trace: `docs/assembler/06-OUTPUTS-BY-DOOR.md`).** The principle holds, but the *implementation* is not one shared core — it is **FOUR parallel assemblers** (`GroundUnitAssembly` · `StationAssembly` · `BuildingAssembly` · `ShipFactory`); the shared chassis interface (`IChassisAtb.StructuralBudget`) is wired in only **2 of the 4** (Station + Building via the interface; ship + ground bypass to the concrete property). Refreshing the §3 survey table (2026-07-05):
+> - **Installation** is now its OWN assembly (`BuildingAssembly`: foundation `BuildingChassisAtb` + modules, `FootprintBudget` gate) — no longer a "leaf part, not an assembly."
+> - **Station** is now a designed assembly (`StationAssembly`: `StationChassisAtb` + modules, `StructuralAllowance` budget gate) — no longer a gate-less "host that accumulates components."
+> - **Megastructure** is now expressible/built (a Death Star Battle-Station host, `deathstar` preset, 2026-08-02) — no longer "doesn't exist." (The super-*weapon* reader is still pending.)
+
+
 > This is the top-level principle. The ship designer is its existing precedent (at ship scale); the ground-unit
 > assembler (`GroundUnitAssembly`) is its unit-scale realization. Everything else buildable converges onto it.
 

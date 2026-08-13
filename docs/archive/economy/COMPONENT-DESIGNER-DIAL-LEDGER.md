@@ -1,10 +1,14 @@
+> # 🗄 ARCHIVED 2026-08-03 — SUPERSEDED DESIGNER DIAL SPEC
+>
+> **The DESIGN model here — the old "11 categories / 37 doors" dial-by-dial spec — is SUPERSEDED.** The canonical component designers are the **12 door HTMLs** (`docs/Actual HTMLs Of designers/`) + **`docs/economy/DESIGNER-NORTH-STAR.md`**, which COLLAPSES the 37 doors / 41 dial-groups down to a few choices + sliders per category (worked end-to-end for Weapons: 5 doors + 41 dials → 2 choices + 4 sliders). Do NOT design from the 37-door model here. Locked developer decisions live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.
+
 # The Component Designer — DIAL BUILD LEDGER (what's actually WIRED)
 
-**As of:** 2026-07-12 · the honest **code** companion to `docs/economy/COMPONENT-DESIGNER-DIALS.md` (the design spec).
+**As of:** 2026-07-12 · the honest **code** companion to `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` (the design spec).
 
 ## Why this doc exists
 
-`docs/economy/COMPONENT-DESIGNER-DIALS.md` is a **design** spec. Every one of its 37 doors is stamped **🔒 LOCKED**, which means *the design decision is made* — **it does NOT mean the code is built.** That one word does a lot of damage: 579 KB of uniform 🔒 reads as "the component designer is finished," when in truth the design is finished and the **code is a fraction of it**. This ledger measures the axis the spec doesn't: **what actually moves a number the simulation reads.**
+`docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` is a **design** spec. Every one of its 37 doors is stamped **🔒 LOCKED**, which means *the design decision is made* — **it does NOT mean the code is built.** That one word does a lot of damage: 579 KB of uniform 🔒 reads as "the component designer is finished," when in truth the design is finished and the **code is a fraction of it**. This ledger measures the axis the spec doesn't: **what actually moves a number the simulation reads.**
 
 **The test for "wired" (all three rungs, verified in code — file:line, never trusted from the spec):**
 1. an attribute field on the door's `*Atb` class carries the dial,
@@ -13,7 +17,7 @@
 
 A dial that has the field but no resolver read is **⚫ design-only / dead knob**, no matter what the spec says. This ledger was built from a 7-agent code audit (1 door-level + 6 dial-level) against the live engine.
 
-> **Read `docs/economy/COMPONENT-DESIGNER-DIALS.md` for the *design* of each dial; read THIS for whether it's *built*, and if not, the exact wire+test to build it.**
+> **Read `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` for the *design* of each dial; read THIS for whether it's *built*, and if not, the exact wire+test to build it.**
 
 ---
 
@@ -230,7 +234,7 @@ Every item is "wire an existing/near-existing field into a resolver + add a test
 
 ---
 
-## Spec corrections — where `docs/economy/COMPONENT-DESIGNER-DIALS.md` drifted from code (BOTH directions)
+## Spec corrections — where `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` drifted from code (BOTH directions)
 
 The ledger found the spec wrong in two directions — it over-claims wired dials AND under-claims a working one:
 

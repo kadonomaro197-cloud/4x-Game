@@ -1,5 +1,7 @@
 # R4 — COMBAT WITH INFRASTRUCTURE (destroy/capture) — design-ready ledger (condensed)
 
+> **🔒 CANON OVERRIDE 2026-08-09 — superseded by `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` M8/M16/M18.** Two things here are overtaken: (1) **region-triggered capture** (flip `hex.OwnerFactionID` when the REGION flips) is replaced by per-mini-hex ownership + majority roll-up; region capture is gone. (2) The **`CaptureInfrastructure` order** proposed here was M18-DELETED in design ("standing on the tile makes it yours; the roll-up does it automatically"). **⚠ Code note:** `CaptureInfrastructure` is not merely proposed — it is **BUILT and ships** (`GroundForcesDB.cs:298` enum, factory `:348`, `ResolveInfraOrder`, client Raze/Capture buttons), so honouring M18 needs a **code follow-up**, not just this banner. `DestroyInfrastructure`/RAZE stays.
+
 ## Data model (a building = ONE ComponentInstance with up to THREE located records)
 - Region.InstallationIds (Galaxy/PlanetRegionsDB.cs:62) — FULL economy list; Region.OwnerFactionID EXISTS :65.
 - GroundHex.InstallationIds (Galaxy/GroundHex.cs:58) — FOOTPRINT-only subset (GroundFootprintAtb designs), placed at region centre hex (GroundBuildings.LocateFootprintsOnHexes :36) or global band-centre (:80). **GroundHex.OwnerFactionID EXISTS :26 — currently INERT (only writer CaptureRegionHexContents; no reader).**

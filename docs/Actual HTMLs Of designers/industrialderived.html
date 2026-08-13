@@ -1,0 +1,580 @@
+<meta charset="utf-8">
+<title>Industrial, re-derived - the healthiest door, and its three exceptions</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark].chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary.n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch - ";color:var(--ink3)}
+@media(min-width:700px){
+.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+.ten{grid-template-columns:1fr 1fr}
+.tenq{border-left:1px solid var(--rule2)}
+.tenq:nth-child(odd){border-left:0}
+.nums{grid-template-columns:repeat(5,1fr)}
+.opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+.oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)}.t b.a{color:var(--warn)}.t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)}.num.sh.a b{color:var(--warn)}.num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)}.mt.a b{color:var(--warn)}.mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)}.num.a b{color:var(--warn)}.num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* -- added for the remaining six doors (same idiom) ---------------------- */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)}.bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+
+.jump{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);
+ box-shadow:var(--sh);padding:8px 0;font-size:12.5px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jump.w{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.jump b{color:var(--ink3);font-weight:600;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;font-size:10.5px}
+.jump a{color:var(--ink2);text-decoration:none;padding:4px 9px;border:1px solid var(--rule);border-radius:999px;white-space:nowrap}
+.jump a:hover{color:var(--ink);border-color:var(--ac);background:var(--card2)}
+.jump a.new{color:var(--ac2);border-color:var(--ac)}
+.chelp{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.5}
+.chelp b{color:var(--ink2);font-weight:600}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}
+.legend dd{margin:0}
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.dead{border-color:var(--flag);color:var(--flag)}
+.mk.chk{border-color:var(--warn);color:var(--warn)}
+.num i,.mt i{display:block}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X - component designer - door 7 of the remaining eight</p>
+<h1>The healthiest door in the designer - which is what makes its three exceptions readable.</h1>
+<p class="lead">Mines, refineries, factories, shipyards, construction services, launch pads, field constructors, combat-engineer kits. Ten templates, one shape: <b>output is proportional to size, and size is what you pay for.</b> Seven of the ten get that exactly right - <b>a bigger mine produces more and costs more, in step</b>, so there is no dominant setting and no free win. After six doors of leaks, that is worth saying plainly.</p>
+<p class="lead" style="margin-top:10px"><b>And the three that fail all fail the same way, which finally names the rule.</b> <code>research-lab</code>, <code>bunker</code> and <code>infrastructure</code> have a <b>hard-coded number in their <code>Mass</code> formula</b> - and because all seven cost channels are computed from <code>[Mass]</code>, that single fact makes <b>every dial on those templates free at a stroke.</b> A 100-point research lab costs exactly what a 1-point lab costs.</p>
+<p class="lead" style="margin-top:10px"><b>Plus two dials that are simply dead.</b> The factory's <code>Fighter Construction Points</code> is <b>the only adjustable dial it presents besides Size</b>, and it is not in the dictionary that becomes the industry rate - nor is there any <code>fighter-construction</code> industry type for it to feed. And the research lab's <code>Cost Per Day</code> is stored on the attribute and <b>read by nothing in the codebase.</b></p>
+<p class="lead" style="margin-top:10px"><b>The rule this door confirms, and it is mechanically checkable:</b> a dial is free exactly when the template's <code>Mass</code> formula does not read it. Two shapes - <code>Mass = a constant</code>, or <code>Mass = a different dial</code>. <b>Every leak in all seven doors so far is one of those two.</b> That is a CI test, not a judgement call.</p>
+</div></div>
+<nav class="jump" aria-label="Section navigation"><div class="w">
+<b>Jump to</b><a href="#i-door">The door</a><a href="#i-build" class="new"> Build one</a>
+<a href="#i-kills">What it kills</a><a href="#i-proof">The proof</a>
+</div></nav>
+
+<section class="band"><div class="w">
+<h2 id="i-door">Seven templates that get it right - the pattern to copy</h2>
+<p class="sub">Every formula verbatim. Read the last column: output and mass move together, so capability-per-tonne is flat and neither end of the dial dominates.</p>
+<div class="scroll"><table class="t">
+<tr><th>Template</th><th>Its dial</th><th>What it produces</th><th>Its <code>Mass</code></th><th>Verdict</th></tr>
+<tr><td><b>mine</b></td><td><code>Area</code> 10k-100M</td><td><code>Area x 0.00001</code> minerals</td><td><code>Area x 0.05</code></td><td><b class="g">flat</b></td></tr>
+<tr><td><b>automine</b></td><td><code>Size</code> 5-5,000</td><td><code>Size x 0.005</code></td><td><code>Size x 2000</code></td><td><b class="g">flat</b></td></tr>
+<tr><td><b>refinery</b></td><td><code>Size</code> 1k-10k</td><td><code>Size x 0.1</code> refinery points</td><td><code>Size</code></td><td><b class="g">flat - and crew = exactly 1 per point</b></td></tr>
+<tr><td><b>factory</b></td><td><code>Size</code> 1k-tech cap</td><td><code>Size x 0.1</code> x three point types</td><td><code>Size x 1000</code></td><td><b class="g">flat</b> <s>crew Sizex5 → <b class="a">x0.5</b> (recal), BP Sizex20</s></td></tr>
+<tr><td><b>shipyard</b></td><td><code>Slip Size</code> - <code>Crew Size</code></td><td><code>Crew Size x 0.02</code> assembly points</td><td><code>Slip Size x 8</code>, crew = <code>Crew Size</code></td><td><b class="g">both dials priced</b></td></tr>
+<tr><td><b>local-construction</b></td><td><code>Level</code> 1-256</td><td><code>Level x 5</code> construction points</td><td><code>Level x 5000</code></td><td><b class="g">flat</b> <s>crew Levelx55</s></td></tr>
+<tr><td><b>launch-complex</b></td><td><code>Max Tonnage</code> 10k-10M</td><td>the tonnage it can lift</td><td><code>Max Tonnage x 0.01</code></td><td><b class="g">flat</b></td></tr>
+<tr><td><b>constructor</b> <s>field</s></td><td><code>Construction Capacity</code></td><td>on-site assembly rate</td><td><code>Capacity x 1</code></td><td><b class="g">flat</b></td></tr>
+<tr><td><b>ground-constructor</b></td><td><code>BuildRate</code> 10-500</td><td>beachhead build rate</td><td><code>BuildRate x 2</code></td><td><b class="g">flat</b></td></tr>
+</table></div>
+<div class="okbox"> <b>And note what the shape actually is, because the build plan guessed wrong about it in an interesting way.</b> The prediction was <em>"expect rate <-> efficiency."</em> There is no such trade here and there should not be: industry is a <b>pure scale dial</b> - how much plant did you build - and the honest test for a scale dial is not <em>"is there a trade?"</em> but <em>"does benefit / cost stay flat or fall?"</em> On all nine rows above it stays flat. <b>A factory does not need a decision inside it; the decision is how many you build and where.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The two mines pass the justification rule - measured, not assumed</h2>
+<p class="big">Two ways to dig, and the obvious worry is that one strictly dominates. It does not, and the numbers say why.</p>
+<div class="scroll"><table class="t">
+<tr><th>At its shipped setting</th><th>Output</th><th>Mass</th><th>Output per kg</th><th>Crew</th><th>Mounts on</th><th>Its justification</th></tr>
+<tr><td><b>mine</b> <s>Area 1,000,000</s></td><td>10.0</td><td>50 t</td><td><b class="g">0.0002</b> <- wins x80</td><td><b class="a">500</b> <s>was 5,000</s></td><td>colony - station</td><td><b>output per kilogram</b></td></tr>
+<tr><td><b>automine</b> <s>Size 5</s></td><td>0.025</td><td>10 t</td><td>0.0000025</td><td><b class="g">0</b> <- wins</td><td><b class="g">colony - SHIP CARGO</b> <- wins</td><td><b>unmanned, and transportable</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>The mine is eighty times better per kilogram; the automine needs nobody and fits in a hold.</b> Each wins an axis outright, so neither is clutter - which is exactly the rule the Power door produced (<em>every option behind a door must win at least one axis</em>), satisfied here without anyone having to fix anything. <b>And it is the right pair of axes:</b> crew is a genuinely scarce pool (<code>ManpowerTools</code>), and "fits in a cargo hold" is what makes an automine the thing you drop on an asteroid you have not colonised. <b>The 5,000-crew figure on a full-size mine was steep</b> — a calibration question, not a structural one, and this campaign has now <b>answered it</b>.</p>
+<div class="okbox" style="border-left-color:var(--flag)"><b>CREW CALIBRATION DECISION (the source tweak — done here, not fudged downstream).</b> The two steep crew coefficients are cut <b>10×</b> so no single template swallows a colony's whole workforce: <b>mine</b> <code>Area×0.005 → ×0.0005</code> (5,000 → <b>500</b> per 1 km²), <b>factory</b> <code>Size×5 → ×0.5</code> (25,000 → <b>2,500</b> per default plant). The refinery's clean <b>1 crew per output point</b> is the anchor; mining and manufacturing stay the most hands-on jobs, just not <em>50×</em> the refinery. <b>And cutting them exposes the real employment lever:</b> with realistic industry crew the shipped set employs almost nobody, because <em>only</em> mines and factories carry labour — so the other half of this fix lives in the Civic door, where <b>infrastructure</b> now carries <b>service employment</b> (crew scaled to the population it houses — the sector that actually staffs a country). Downstream, <code>docs/ground/planetview.html</code> composes these recalibrated numbers into the civilization's books.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2><code>Mass = 100000</code> - and with one constant, every dial on the research lab goes free</h2>
+<p class="big">The research lab is the most consequential template in this door: research is what unlocks every other door. Here is its entire cost structure.</p>
+<div class="warnbox" style="margin:0 0 11px"><code>"Mass": "100000"</code> - <code>"Volume": "1000"</code> - <code>"CrewReq": "20"</code> - <code>"ResearchCost": "10"</code> - <code>"CreditCost": "120"</code> - <code>"BuildPointCost": "[Mass] / 2"</code><br><b style="color:var(--flag)">Every single one is a constant, or derived from a constant. Nothing on this template reads a dial.</b></div>
+<div class="scroll"><table class="t">
+<tr><th>Its dials</th><th>Range</th><th>What it does</th><th>Cost of moving it</th></tr>
+<tr><td><code>Research Points</code></td><td>1 -> <b>100</b></td><td>research points per economy tick - <b>the whole purpose of the building</b></td><td><b class="r">nothing</b></td></tr>
+<tr><td><code>Cost Per Day</code></td><td>0 -> 100,000</td><td><b class="r">nothing - the field is never read</b></td><td><b class="r">nothing</b></td></tr>
+<tr><td><code>Research Specialty</code></td><td>a tech category</td><td><b class="g">real</b> - <code>bonusCategory</code>, which the research processor honours</td><td>n/a - a choice, not a scale</td></tr>
+</table></div>
+<div class="warnbox"><b>So a 100-point lab and a 1-point lab are the same building.</b> 100 tonnes, 20 crew, 120 credits, 10 research to unlock, 50,000 build points - identical at either end. <b>A hundredfold difference in the rate at which your empire advances, for the same price.</b> Nobody would ever build anything but a 100-point lab, which means the dial is not a decision; it is a formality with a default that punishes anyone who leaves it alone. <b>And the shipped design leaves it at 10.</b></div>
+<div class="warnbox"><b><code>Cost Per Day</code> is dead.</b> <code>ResearchPointsAtbDB</code> stores <code>_costPerDay</code> with a public getter, and <b>nothing in the engine or the client reads it.</b> Grepping <code>.CostPerDay</code> finds three consumers and all three are on different classes - <code>ResearcherDB</code> and <code>AdministratorDB</code>, which model a <em>scientist's</em> funding, not a lab's running cost. <b>So the lab has an upkeep field that never bills anybody</b>, and a 0-100,000 slider in front of it. That is the second confirmed dead attribute field in the designer, after <code>LogiBaseAtb</code>.</div>
+<div class="okbox"> <b>The fix is the door's own pattern, applied to the one template that missed it.</b> <code>Mass = Research Points x k</code> - the same shape as the refinery (<code>Mass = Size</code>, output <code>Size x 0.1</code>) and the factory (<code>Mass = Size x 1000</code>). Anchor <code>k</code> on the shipped 10-point / 100-tonne lab and it is byte-identical: <code>k = 10,000</code>. Then a 100-point lab weighs a thousand tonnes, needs proportional crew, and is a real investment. <b>And decide <code>Cost Per Day</code>: bill it as the lab's operating cost - which is a genuinely good mechanic and the obvious intent - or delete the dial.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The factory's only adjustable dial does nothing</h2>
+<p class="big">The factory presents four "Construction Points" properties. Three are read-outs derived from <code>Size</code>. The fourth is the only slider - and it is not connected.</p>
+<div class="scroll"><table class="t">
+<tr><th>Property</th><th>Kind</th><th>Formula</th><th>In the industry rate dictionary?</th></tr>
+<tr><td><code>Component Construction Points</code></td><td>read-out</td><td><code>Size x 0.1</code></td><td><b class="g">component-construction</b></td></tr>
+<tr><td><code>Installation Construction Points</code></td><td>read-out</td><td><code>Size x 0.1</code></td><td><b class="g">installation-construction</b></td></tr>
+<tr><td><code>Ordnance Construction Points</code></td><td>read-out</td><td><code>Size x 0.1</code></td><td><b class="g">ordnance-construction</b></td></tr>
+<tr><td><code>Fighter Construction Points</code></td><td><b class="r">a real slider, 0 -> 1,000</b></td><td><code>0</code></td><td><b class="r">NO - absent from the dict</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>The <code>DataDict</code> that becomes the <code>IndustryAtb</code> rate table lists exactly three keys</b> - <code>component-construction</code>, <code>installation-construction</code>, <code>ordnance-construction</code>. Fighter points are not among them. And there is <b>no <code>fighter-construction</code> industry type in the game at all</b>: the five types are <code>refining</code>, <code>component-construction</code>, <code>installation-construction</code>, <code>ordnance-construction</code> and <code>ship-assembly</code>. So the dial has nowhere to go even if it were wired. <b>It is a 0-1,000 slider, on the most-built installation in the game, that writes nothing and costs nothing.</b></p>
+<div class="okbox"> <b>Which makes it the cleanest decision in the door: fighters are either a production type or they are not.</b> If they are, add the industry type and derive the points from <code>Size</code> like the other three - one line each, and the factory's cost structure already handles it. If they are not, delete the dial. <b>What it must not stay is the one thing a player can adjust on a factory, doing nothing.</b> Note the shipped default is <code>0</code>, so nothing in the game is currently wrong because of it - this is a UI honesty problem, not a balance one.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2 id="i-build">Build one</h2>
+<p class="sub">One question - how much plant, and of what kind? Every number is the real shipped formula, and each kind opens on its real shipped design. Tick the box to price the three constant-mass templates the way the other seven already are.</p>
+<div class="build">
+<div class="bsec"><p class="blab">The door - what kind of industry</p><div class="chips">
+<button class="chip" type="button" data-v="mine" aria-pressed="true" title=" PRICED. Area 10,000..100M. Output = Area x 0.00001, Mass = Area x 0.05 - output per tonne stays flat across the whole dial. 80x the output per kilogram of the automine.">Mine</button>
+<button class="chip" type="button" data-v="automine" aria-pressed="false" title=" PRICED. Unmanned (crew 0) and it mounts in a SHIP CARGO hold - that is what it buys for its far worse output per tonne.">Automine</button>
+<button class="chip" type="button" data-v="refinery" aria-pressed="false" title=" PRICED, and the cleanest chain in the door: exactly 1 crew per refinery point.">Refinery</button>
+<button class="chip" type="button" data-v="factory" aria-pressed="false" title=" Mostly priced - but its Fighter Construction Points slider writes to no industry type and does nothing at all.">Factory</button>
+<button class="chip" type="button" data-v="yard" aria-pressed="false" title="The domain-typed unit factory. Pick a domain below - it names the facility (Drydock / Naval Yard / Airfield / Vehicle Works / Training Depot) and sets what it builds. Berth tonnage gates what fits; assembly rate is throughput.">Unit Assembly </button>
+<button class="chip" type="button" data-v="lab" aria-pressed="false" title=" Mass = 100000, a CONSTANT. With one constant every dial on the lab goes free - Research Points AND a Cost Per Day that is never read by anything.">Research lab </button>
+<button class="chip" type="button" data-v="bunker" aria-pressed="false" title=" Mass = 50000, a CONSTANT. LocalFortify and AdjacentProjection are both free, and TileFootprint costs without buying anything.">Bunker </button></div>
+<div class="chips" id="domrow" style="display:none;margin-top:7px">
+<button class="chip ydom" type="button" data-dom="space" aria-pressed="true" title="Orbital Drydock - spacecraft and stations, in vacuum.">Space</button>
+<button class="chip ydom" type="button" data-dom="naval" aria-pressed="false" title="Naval Yard - warships and submarines, in a wet dock.">Naval</button>
+<button class="chip ydom" type="button" data-dom="air" aria-pressed="false" title="Airfield - aircraft and aerospace.">Air</button>
+<button class="chip ydom" type="button" data-dom="vehicle" aria-pressed="false" title="Vehicle Works - tanks, artillery, walkers.">Vehicle</button>
+<button class="chip ydom" type="button" data-dom="infantry" aria-pressed="false" title="Training Depot - infantry and personnel, TRAINED not built.">Infantry</button></div>
+<p class="chelp" id="domhelp" style="display:none;margin:6px 0 0"></p>
+<p class="chelp">The <b>forced choice</b>: it picks the template, and therefore <b>whether the dials below cost anything</b>. Seven of ten templates in this door price their output honestly - <b>this is the healthiest door in the designer</b>. The two marked are the exceptions, and they fail the same way: <b>a constant <code>Mass</code>.</b></p>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<div class="sl" id="w1"><div class="slh"><span id="n1">Size</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="43" aria-label="Primary dial"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div>
+<p class="chelp" id="h1help"></p></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Crew size</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="50" aria-label="Second dial"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div>
+<p class="chelp" id="h2help"></p></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix"><span>Price the constant-mass templates the way the other seven already are <b>(proposed - slice I1)</b></span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">-</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">-</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><u class="mk sim" id="k_a1">reaches the sim</u><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><u class="mk calc" id="k_a2">computed</u><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><u class="mk chk" id="k_a3">design check</u><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4">Mass</i><b id="v_a4"></b></div>
+<div class="num fixed"><i id="l_a5">Crew</i><b id="v_a5"></b></div>
+<div class="num fixed"><i>Build cost</i><b id="v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it is worth, per unit of what it costs</p>
+<p class="muN">The ladder test, on the two currencies that actually bind: <b>mass</b> (the chassis budget) and <b>crew</b> (a scarce pool).</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">Output</i><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Output per tonne</i><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Output per crew</i><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Ladder test</i><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>Genuinely read by the running game.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it from the dial.</dd>
+<dt><u class="mk dead">a CONSTANT</u></dt><dd><b>Mass does not move.</b> Every dial above it is therefore free - this is the entire failure mode of the two exceptions.</dd>
+<dt><u class="mk chk">design check</u></dt><dd>This panel's own verdict on whether the dial is honest.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>The contrast to try.</b> Pick <b>Mine</b> and drag the area from end to end - <b>output per tonne never moves</b>, because mass tracks the dial. Now pick <b>Research lab </b> and do the same: <b>the mass sits at 100,000 kg and never budges</b>, so every point of research is free. Same door, two answers about whether capability costs anything.</p>
+</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="i-kills">What this kills</h2>
+<div class="leak"><h4><code>bunker</code> - <code>Mass = 50000</code>, so a perfect fortress costs what a token one does</h4><p><code>LocalFortify</code> (0 -> 1) and <code>AdjacentProjection</code> (0 -> 1) are both free. The shipped bunker fortifies its own region by <b>0.25</b> and projects <b>0.12</b> to neighbours; a player-designed one can do <b>1.00 and 1.00</b> - total local fortification <em>and</em> full cover projected to every adjacent region - for the identical 50 tonnes, 50 crew and 200 credits. <b>And this is precisely where the Defense door's ruling landed:</b> fortification was cut from Defense because it is <em>infrastructure, not a combat defence</em> - correctly - and it arrived here unpriced. Plus <code>TileFootprint</code> (1 -> 40), which is the <b>same cost-with-no-benefit dial the building foundation has</b>: a bigger footprint is a bigger target on the ground map and buys nothing, so the minimum strictly dominates.</p></div>
+<div class="leak"><h4><code>infrastructure</code> - <code>Mass = 1000</code> AND <code>BuildPointCost = 100</code>, with <b>six</b> free dials</h4><p><code>Support Colonists</code> 0-5,000 - <code>Storage Amount</code> 0-5,000 - <code>Support Capacity</code> 0-10,000 - <code>Housing Comfort</code> 0-50 - and the gravity and pressure tolerance ranges. <b>Two constants in the cost block make all six free at once</b>, and <code>CreditCost</code> is <code>0</code>, so the most load-bearing installation in the colony game costs a flat tonne and a hundred build points whatever you ask of it. <b>Most of those dials belong to the Civic door</b> (housing, population support, tolerances) and are covered there; the one that is Industrial's is <code>Support Capacity</code> - the <code>InfrastructureCapacityAtb</code> that every other installation on the colony draws against. <b>It is the colony's equivalent of a chassis budget, and it is free.</b></p></div>
+<div class="leak"><h4><code>Cost Per Day</code> and <code>Fighter Construction Points</code> - two dials that write nothing</h4><p Covered above, and worth putting side by side because they are the door's only two truly <em>dead</em> dials - as opposed to free ones. Together with <code>LogiBaseAtb.LogisticCapacity</code> from the Logistical door, that is <b>three dead dials across seven doors</b>, and all three have the same tell: <b>a real slider in the designer, a real field on the attribute, and no consumer.</b> A grep for the field name returns only its own declaration and its own constructor.</p></div>
+<div class="okbox"><b>And one thing that could have been a leak and is not.</b> The <code>shipyard</code> has two dials, and the naive reading is that <code>Crew Size</code> is a free output multiplier - it drives both <code>Component Construction Points</code> (<code>x0.01</code>) and <code>Ship Assembly Points</code> (<code>x0.02</code>) while <code>Mass</code> reads only <code>Slip Size</code>. But <code>CrewReq</code> is <b><code>PropertyValue('Crew Size')</code> - the dial itself, one for one.</b> So the output is paid for in the currency that is actually scarce, rather than in mass. <b>Which is the seven-channels rule working correctly for once:</b> the question is never <em>"is it in the mass formula"</em> but <em>"which of the seven channels, and is it one the player is constrained by?"</em> - and for a planet-side shipyard, people bind harder than kilograms.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The rule this door finally makes mechanical</h2>
+<p class="big">Seven doors in, every leak found has had the same signature. Industrial is the door that makes it unmistakable, because here the honest and broken templates sit in the same file.</p>
+<div class="okbox" style="margin:0 0 12px;border-left-color:var(--ac)"><b>A dial is FREE exactly when the template's <code>Mass</code> formula does not read it.</b><br><span style="color:var(--ink3)">Because all seven cost channels - Mass - Volume - CrewReq - ResearchCost - CreditCost - BuildPointCost - ResourceCost - are computed from <code>[Mass]</code> in almost every template, <b>the mass formula is the single point of control.</b></span></div>
+<div class="scroll"><table class="t">
+<tr><th>Failure shape</th><th>What it looks like</th><th>Where it has turned up</th></tr>
+<tr><td><b>A. <code>Mass = a constant</code></b></td><td>every dial on the template is free, all at once</td><td><code>research-lab</code> - <code>bunker</code> - <code>infrastructure</code> - <code>station-chassis</code> - <code>building-foundation</code> - all four ground frames - <code>troop-bay</code> - <code>space-port</code></td></tr>
+<tr><td><b>B. <code>Mass = a DIFFERENT dial</code></b></td><td>you declare your own price, independent of capability</td><td>all six broken <b>Enhancers</b> (<code>CarryMass</code> / <code>Cadre Mass</code> / <code>Automation Mass</code>) - the <b>ship hull's</b> <code>Mass Budget</code> beside <code>Hull Mass</code></td></tr>
+<tr><td><b>C. <s>the dial writes nothing</s></b></td><td><s>a separate bug - it makes the cheapest setting dominant instead</s></td><td><s><code>Fighter Construction Points</code> - <code>Cost Per Day</code> - <code>LogiBaseAtb</code> - <code>Size</code> on a ground frame - the fire-control pair</s></td></tr>
+</table></div>
+<div class="okbox"><b>So the gauge is a dozen lines, and it is the highest-leverage test in the project.</b> Load the base mod, and for every template, for every property whose <code>GuiHint</code> starts with <code>GuiSelection</code> (i.e. a real player dial): assert that the property's name appears in <b>at least one</b> of the seven cost formulas, <em>or</em> in the argument list of an <code>AtbConstrArgs</code> (so it reaches the simulation), and <b>flag it if it appears in neither</b>. That single test catches shape A, shape B and shape C at once - <b>it would have found every leak in all seven doors</b>, and it fails on any new one somebody adds two years from now. It needs an explicit allow-list for deliberate exceptions, and writing that list <em>is</em> the design review.</div>
+<p class="sub" style="margin-top:11px"><b>And it is the answer to the honest objection about all of this work.</b> Six doors of hand-audited findings do not stay found - the next person adds a template and the audit rots. <b>A test does not rot.</b> This one is cheap, it is data-only (no engine change, no save-format risk), and it turns <em>"somebody should check the dials cost something"</em> into a red CI run.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="i-proof">Does it reproduce what exists?</h2>
+<div class="scroll"><table class="t">
+<tr><th>Template today</th><th>What it produces</th><th>Under the derived door</th></tr>
+<tr><td><b>mine</b> - <b>automine</b></td><td>minerals</td><td><b class="g">unchanged</b> - and each already wins an axis (per-kg vs unmanned+transportable)</td></tr>
+<tr><td><b>refinery</b></td><td>refining points</td><td><b class="g">unchanged</b> - 1 crew per point, mass = size</td></tr>
+<tr><td><b>factory</b></td><td>component - installation - ordnance points</td><td><b class="a">size unchanged; DECIDE <code>Fighter Construction Points</code></b> - wire it with an industry type, or delete it</td></tr>
+<tr><td><b>shipyard</b></td><td>ship assembly + ship size limit</td><td><b class="g">unchanged</b> - output paid for in crew, which is the binding currency here</td></tr>
+<tr><td><b>local-construction</b> - <b>launch-complex</b> - <b>constructor</b> - <b>ground-constructor</b></td><td>construction / lift</td><td><b class="g">unchanged</b></td></tr>
+<tr><td><b>research-lab</b></td><td>research points</td><td><b class="r"><code>Mass = Research Points x 10,000</code></b> <s>byte-identical on the shipped 10-point lab</s>; and decide <code>Cost Per Day</code></td></tr>
+<tr><td><b>bunker</b></td><td>fortification</td><td><b class="r">fortification must enter the mass formula</b>; and <code>TileFootprint</code> should BUY footprint rather than cost nothing</td></tr>
+<tr><td><b>infrastructure</b></td><td>support capacity <s>+ five Civic dials</s></td><td><b class="r">two constants make six dials free</b> - <code>Support Capacity</code> is this door's; the rest go to Civic</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>Prediction check, and it is the most useful score yet.</b> The build plan said: <em>"Healthy. Expect <b>rate <-> efficiency</b> as the shape, and the finding to be about <b>missing costs</b> rather than missing dials."</em> - <b>Healthy </b> (seven of ten templates honest, the best door of the seven derived). <b>Missing costs </b> exactly right. <b>Rate <-> efficiency </b>, and instructively: industry has no internal trade and does not need one, because <b>it is a pure scale dial and the correct test for a scale dial is whether benefit / cost stays flat.</b> It does, on all nine honest rows. <b>What the prediction missed entirely was the two dead dials</b> - which is the same thing the Sensors prediction missed, and the same thing the Logistical one missed. <b>Standing lesson: predictions catch the SHAPE of a door and reliably miss its dead code. Only a grep finds a dial with no consumer.</b></p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>One question - how much plant, and of what kind?</b> One choice (mine - refine - manufacture - assemble ships - research - construct - fortify - lift) and one size slider, plus crew on a shipyard. It reproduces all ten templates.</p>
+<p><b>The headline is genuinely good news, which has not happened yet in this campaign:</b> seven of the ten templates are correct. Output is linear in the dial, mass is linear in the dial, and capability-per-tonne is flat - so there is no dominant setting anywhere in the mining, refining, manufacturing, construction or lift chain. <b>The economy spine is sound.</b> And the two mines independently satisfy the justification rule without anyone having designed for it.</p>
+<p><b>Three templates fail, and they fail identically:</b> <code>research-lab</code>, <code>bunker</code> and <code>infrastructure</code> each have a <b>hard-coded number where the mass formula should read a dial</b>, which makes every dial on them free simultaneously. The worst is the lab, because <b>research is what gates every other door</b> and a hundredfold research rate costs nothing.</p>
+<p><b>Plus two dead dials:</b> the factory's <code>Fighter Construction Points</code> - <b>the only adjustable dial it presents besides Size</b>, absent from the industry rate dictionary, with no <code>fighter-construction</code> industry type existing for it to feed - and the lab's <code>Cost Per Day</code>, stored on the attribute and read by nothing.</p>
+<p><b>And the door's real deliverable is a rule that has become mechanical.</b> Every leak in seven doors is one of two shapes: <b><code>Mass = a constant</code></b> or <b><code>Mass = a different dial</code></b>. Which means a test can find them: <b>for every <code>GuiSelection*</code> property in every template, assert its name appears in at least one of the seven cost formulas or in an <code>AtbConstrArgs</code> - and flag it if it appears in neither.</b> Data-only, no engine change, no save risk, a dozen lines. <b>It would have found every finding in this campaign, and it does not rot the way a hand audit does.</b> If only one thing gets built out of all eight doors, I would build that.</p>
+<p><b>Two decisions are yours:</b> whether <b>fighters are a production type</b> (add the industry type and derive the points from Size, or delete the dial), and whether a lab's <b><code>Cost Per Day</code> should actually bill the colony</b> - it is a good mechanic and clearly the original intent, but it is currently a slider in front of an unread field.</p>
+</div></footer>
+<script>
+
+// -- shipped arithmetic from installations.json, EXCEPT the two mine/factory CREW coeffs, RECALIBRATED
+//    this campaign (the flagged "steep crew" calibration question, now answered — see the decision box) ------
+// mine Area 10000..1e8 out = Area*0.00001 Mass = Area*0.05 Crew = Area*0.0005  (shipped x0.005=5,000/km2 -> recal x0.0005=500)
+// automine Size 5..5000 out = Size*0.005 Mass = Size*2000 Crew = 0 (ShipCargo mount)
+// refinery Size 1000..10000 out = Size*0.1 Mass = Size Crew = [Mass]*0.1   (unchanged — the clean anchor, 1 crew/point)
+// factory Size 1000..cap out = Size*0.1 x3 Mass = Size*1000 Crew = Size*0.5 BP = Size*20  (shipped Crew Size*5=25,000 -> recal Size*0.5=2,500)
+// + Fighter Construction Points 0..1000 <- a real slider, NOT in the DataDict, no industry type
+// shipyard Slip Size - Crew Size out = CrewSize*0.02 Mass = SlipSize*8 Crew = CrewSize (1:1)
+// research-lab Mass = 100000 CONSTANT - Vol 1000 - Crew 20 - RC 10 - Cr 120 - BP = [Mass]/2
+// Research Points 1..100 <- FREE. Cost Per Day 0..100000 <- FREE *and* never read
+// bunker Mass = 50000 CONSTANT - Crew 50 - Cr 200
+// LocalFortify 0..1 - AdjacentProjection 0..1 <- both FREE. TileFootprint 1..40 cost-no-benefit
+const IND = {
+ mine: {d1:'Area', lo:10000, hi:1e8, def:1e6, out:a=>a*0.00001, mass:(a,b)=>a*0.05*(1+3*b), crew:(a,b)=>a*0.0005*(1-b),  /* RECALIBRATED this campaign: crew coeff x0.005 -> x0.0005, so a 1 km2 mine is 500 crew not 5,000 (see the crew-calibration decision) */
+ cr:()=>120, bp:m=>m, rc:()=>0, unit:' min/tick', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'],
+ noun:['Dig','Mine','Strip Mine'], mount:'colony - station', why:'output per kilogram - 80x the automine'},
+ automine: {d1:'Size', lo:5, hi:5000, def:5, out:a=>a*0.005, mass:a=>a*2000, crew:()=>0,
+ cr:()=>120, bp:m=>m, rc:()=>0, unit:' min/tick', priced:true, two:false,
+ noun:['Robominer','RoboMiner Rig','Miner Swarm'], mount:'colony - SHIP CARGO', why:'unmanned, and it fits in a hold'},
+ refinery: {d1:'Size', lo:1000, hi:10000,def:5000, out:a=>a*0.1, mass:(a,b)=>a*(1+3*b), crew:(a,b)=>a*0.1*(1-b),
+ cr:m=>120, bp:m=>m, rc:()=>0, unit:' refine pts', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'],
+ noun:['Cracking Plant','Refinery','Refinery Complex'], mount:'colony - station', why:'1 crew per refinery point, less what you automate'},
+ factory: {d1:'Size', lo:1000, hi:25000,def:5000, out:a=>a*0.1, mass:(a,b)=>a*1000*(1+3*b), crew:(a,b)=>a*0.5*(1-b),  /* RECALIBRATED this campaign: crew coeff x5 -> x0.5, so a default factory is 2,500 crew not 25,000 (see the crew-calibration decision) */
+ cr:()=>120, bp:a=>a*20, rc:()=>0, unit:' pts x 3 types', priced:true, two:true, lin2:true, d2:'Automation', l2:0, h2:0.9, def2:0, t2:['Manual','Automated'], bpFromDial:true,
+ noun:['Workshop','Factory','Manufactory'], mount:'colony - station', why:'three point types, all derived from Size'},
+ yard: {d1:'Berth tonnage', lo:100, hi:200000, def:10000, d2:'Assembly rate', l2:10, h2:5000, def2:200,
+ out:(a,b)=>b, mass:a=>a*8, crew:(a,b)=>b*0.2, t2:['Slow','Rapid'],
+ cr:()=>120, bp:m=>m, rc:()=>0, unit:' build pts/day', priced:true, two:true, isYard:true,
+ noun:['Slipway','Shipyard','Fleet Dockyard'], mount:'colony - station', why:'a domain-typed unit factory: berth tonnage gates what fits, assembly rate is throughput, and the DOMAIN names it'},
+ lab: {d1:'Research Points', lo:1, hi:100, def:10, out:a=>a, mass:()=>100000, crew:()=>20,
+ cr:()=>120, bp:m=>m/2, rc:()=>10, unit:' RP/tick', priced:false, two:true, lin2:true, d2:'Field focus', l2:0, h2:100, def2:0, t2:['General','Specialist'],
+ fixMass:a=>a*10000,
+ noun:['Study','Research Lab','Research Campus'], mount:'colony - station - ship', why:' nothing - Mass is the constant 100000'},
+ bunker: {d1:'LocalFortify', lo:0, hi:1, def:0.25, out:a=>a, mass:()=>50000, crew:()=>50,
+ cr:()=>200, bp:m=>m, rc:()=>0, unit:' fortify', priced:false, two:true, lin2:true, linear:true, d2:'Adjacent projection', l2:0, h2:1, def2:0.12, t2:['Local','Projecting'],
+ fixMass:a=>50000*(0.2+a*3.2),
+ noun:['Redoubt','Bunker','Fortress'], mount:'colony', why:' nothing - Mass is the constant 50000'}
+};
+// The unit factory is ONE building, DOMAIN-typed. The domain is a forced choice (you cannot build a
+// submarine in a vacuum drydock) and it NAMES the facility: a yard builds hulls, a depot TRAINS
+// infantry - so "yard" is wrong for troops. The numeric ranges are identical across domains; the
+// domain only changes the facility name, the dial labels, the unit, and the noun ladder.
+const YARD_DOM = {
+ space:   {fac:'Orbital Drydock', d1:'Berth tonnage',   d2:'Assembly rate', unit:' build pts/day',  builds:'spacecraft and orbital stations', noun:['Slipway','Orbital Drydock','Fleet Dockyard']},
+ naval:   {fac:'Naval Yard',      d1:'Slip tonnage',    d2:'Assembly rate', unit:' build pts/day',  builds:'warships and submarines',         noun:['Boat Slip','Naval Yard','Grand Dockyard']},
+ air:     {fac:'Airfield',        d1:'Airframe mass',   d2:'Assembly rate', unit:' build pts/day',  builds:'aircraft and aerospace',          noun:['Airstrip','Airfield','Aerospace Works']},
+ vehicle: {fac:'Vehicle Works',   d1:'Chassis mass',    d2:'Assembly rate', unit:' build pts/day',  builds:'tanks, artillery and walkers',    noun:['Motor Pool','Vehicle Works','Armor Plant']},
+ infantry:{fac:'Training Depot',  d1:'Billet capacity', d2:'Training rate',  unit:' recruits/cycle', builds:'infantry and personnel',          noun:['Muster Post','Training Depot','Grand Barracks']}
+};
+let job='mine', dom='space';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(2)+'G':a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':a>=1?v.toFixed(a<10?2:0):v.toPrecision(2);}
+function kg(v){return Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' kt':Math.abs(v)>=1000?(v/1000).toFixed(1)+' t':v.toFixed(0)+' kg';}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+function unmap(v,lo,hi){return 100*Math.log(v/lo)/Math.log(hi/lo);}
+function lin(d,lo,hi){return lo+(hi-lo)*d/100;}
+function unlin(v,lo,hi){return 100*(v-lo)/(hi-lo);}
+function band(v,cuts){let i=0;while(i<cuts.length&&v>=cuts[i])i++;return i;}
+
+// -- name each word off how far a slider is dragged from its shipped position (STOCK), as a
+// FRACTION of the available travel: uniform responsiveness for every template, a clean shipped
+// name (small dead zone -> just the noun), and a moderate drag of either slider changes a word.
+const SCALE_HI=['Expanded','Large','Major','Industrial'], SCALE_LO=['Compact','Small','Pilot'];
+const TEMPER_HI=['Well-Crewed','Heavy-Crewed','Overcrewed'], TEMPER_LO=['Lean-Crewed','Spare-Crewed','Skeleton-Crewed']; // shipyard crew axis
+function tierWord(d,p0,lo,hi){
+ const dead=0.05;                                  // +/-5% of travel around shipped -> no adjective
+ if(d>=p0){ const g=(100-p0)>0?(d-p0)/(100-p0):0; if(g<dead)return '';
+  return hi[Math.min(hi.length-1,Math.floor((g-dead)/(1-dead)*hi.length))]; }
+ const f=p0>0?(p0-d)/p0:0; if(f<dead)return '';
+ return lo[Math.min(lo.length-1,Math.floor((f-dead)/(1-dead)*lo.length))];
+}
+// the SECOND dial names itself off a per-template word pair (Manual/Automated, Slow/Rapid, ...), so
+// automation does not read as 'crew'. Neutral near the shipped position -> no adjective.
+function temper2(d2,m0,t2){ if(!t2) return '';
+ const g = d2>=m0? ((100-m0)>0?(d2-m0)/(100-m0):0) : -((m0>0)?(m0-d2)/m0:0);
+ if(Math.abs(g)<0.15) return ''; return g>0? t2[1]: t2[0]; }
+function partName(d1,d2){
+ const I=IND[job], p0=STOCK[job]?STOCK[job].d1:50, m0=(STOCK[job]&&STOCK[job].d2!=null)?STOCK[job].d2:50;
+ const nouns = I.isYard? YARD_DOM[dom].noun : I.noun;
+ let scale=tierWord(d1,p0,SCALE_LO,SCALE_HI);
+ let noun = d1 < p0-0.4*p0 ? nouns[0] : d1 > p0+0.4*(100-p0) ? nouns[2] : nouns[1];
+ let temper = I.two? temper2(d2,m0,I.t2): '';
+ const nf=noun.split(' ')[0].toLowerCase();        // drop scale only if it repeats the noun's first word
+ if(scale && scale.toLowerCase()===nf) scale='';
+ return [scale,temper,noun].filter(Boolean).join(' ');
+}
+const STOCK={};
+for(const k in IND){ const I=IND[k];
+ STOCK[k]={d1:Math.round(I.linear?unlin(I.def,I.lo,I.hi):unmap(I.def,I.lo,I.hi))};
+ if(I.two) STOCK[k].d2=Math.round(I.lin2? unlin(I.def2,I.l2,I.h2): unmap(I.def2,I.l2,I.h2)); }
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, fixed=$('fix').checked;
+ const I=IND[job];
+ const YD = I.isYard? YARD_DOM[dom]: null;                       // the domain flavor, when this is the unit factory
+ const d1Label = YD? YD.d1 : I.d1, d2Label = YD? YD.d2 : I.d2, uLabel = YD? YD.unit : I.unit;
+ show('w2',!!I.two);
+ show('domrow', !!I.isYard); show('domhelp', !!I.isYard);
+ if(YD){
+  document.querySelectorAll('.ydom').forEach(c=>c.setAttribute('aria-pressed', c.dataset.dom===dom));
+  $('domhelp').innerHTML = '<b>'+YD.fac+'</b> builds <b>'+YD.builds+'</b>. The domain is a forced choice - you cannot build a submarine in a vacuum drydock - and it NAMES the facility: infantry come from a <b>Training Depot</b>, not a yard.';
+ }
+ set('v_name', partName(d1,d2));
+
+ const v = I.linear? lin(d1,I.lo,I.hi): (d1===STOCK[job].d1? I.def: logmap(d1,I.lo,I.hi));
+ const v2 = I.two? (d2===STOCK[job].d2? I.def2: (I.lin2? lin(d2,I.l2,I.h2): logmap(d2,I.l2,I.h2))): 0;
+ const out = I.two? I.out(v,v2): I.out(v);
+ const mass = (fixed && I.fixMass)? I.fixMass(v): I.mass(v, v2);
+ const crew = I.two? I.crew(v,v2): I.crew(v);
+ const credits = I.cr(mass), bp = I.bpFromDial? I.bp(v): I.bp(mass), research = I.rc(mass);
+
+ set('n1', d1Label + (I.priced?'':(fixed?' now priced':' free - Mass is a constant')));
+ set('s1', (I.linear?v.toFixed(2):fmt(v)));
+ set('e1a', I.linear?I.lo.toFixed(2):fmt(I.lo)); set('e1b', (I.linear?I.hi.toFixed(2):fmt(I.hi))+' - shipped = '+(I.linear?I.def.toFixed(2):fmt(I.def)));
+ if(I.two){ set('n2',d2Label); set('s2',fmt(v2)); set('e2a',fmt(I.l2)); set('e2b',fmt(I.h2)+' - shipped = '+fmt(I.def2)); }
+
+ const perT = out/Math.max(1e-9,mass/1000);
+ const perCrew = crew>0? out/crew: Infinity;
+ set('l_a1','Output - emergent'); set('v_a1',fmt(out)+uLabel);
+ set('l_a2', I.priced?'Mass - tracks the dial':(fixed?'Mass - now tracks the dial':'Mass - a CONSTANT'));
+ set('v_a2', kg(mass)+((!I.priced&&!fixed)?' < never moves':''));
+ const flat = I.priced || fixed;
+ // A template\'s ladder metric is output per unit of the currency it is actually PRICED IN. For nine of the
+ // ten that is mass; for the shipyard it is CREW (Mass reads Slip Size, CrewReq reads Crew Size one-for-one).
+ const ladder = I.isYard? perCrew: perT;
+ const ladderLbl = I.isYard? 'Output per crew': 'Output per tonne';
+ set('l_a3', flat?ladderLbl+' - FLAT':ladderLbl+' unbounded');
+ set('v_a3', fmt(ladder)+(flat?' < constant across the dial':' ^ rises with no cost'));
+ $('l_a3').parentElement.className='num '+(flat?'g':'r');
+ // -- OUTPUT MARKERS -- this door\'s headline is whether the DIAL costs anything, and the two
+ // exceptions fail identically: a constant Mass makes every dial above it free.
+ function mk(id,kind,text){ const e=$(id); if(!e) return; e.className='mk '+kind; e.textContent=text; }
+ mk('k_a1','sim','reaches the sim');
+ mk('k_a2', flat? 'calc': 'dead', flat? 'computed': 'a CONSTANT');
+ mk('k_a3', flat? 'sim': 'dead', flat? 'flat - honest': 'unbounded');
+ $('d1').setAttribute('aria-label', $('n1').textContent+' - '+$('s1').textContent);
+ if(I.two) $('d2').setAttribute('aria-label', $('n2').textContent+' - '+$('s2').textContent);
+ $('h1help').innerHTML = I.priced
+? ' <b>The size dial, and this template PRICES it.</b> Drag it and watch <i>Mass</i> climb with you - so output per tonne stays flat and no setting dominates.'
+: fixed
+? ' <b>Now priced by the proposed fix</b> - mass tracks the dial instead of sitting at a constant.'
+: ' <b>Free.</b> <code>Mass</code> on this template is a hard-coded constant, so dragging this dial buys output and costs <b>nothing</b>. Watch <i>Mass</i> below refuse to move.';
+ $('h2help').innerHTML = !I.two
+? 'Only appears on templates with a second dial.'
+: I.isYard
+? '<b>Assembly rate</b> is the throughput - build-points/day the line runs at. It costs <b>crew</b>: a faster yard needs more workers, and crew is the scarce pool a planet-side yard is really paid in.'
+: I.d2==='Automation'
+? '<b>Automation</b> trades a scarce resource for a plentiful one: drag it up and watch <b>crew fall while mass rises</b> - machinery instead of miners/hands. The same trade the food farm already prices, applied to the manned plants.'
+: I.d2==='Field focus'
+? '<b>Field focus</b> concentrates the lab into ONE research field (its <code>bonusCategory</code>) for a bonus there, instead of spreading points across all. Which field is a choice, like the academy\'s leader type - and on this constant-mass template it costs nothing, the exception the fix box prices.'
+: '<b>Adjacent projection</b> extends the bunker\'s fortification into NEIGHBOURING regions (its <code>AdjacentProjection</code> attribute), not just its own - and on this constant-mass template it too is free until the fix box prices it.';
+ set('v_a4', kg(mass));
+ set('l_a5','Crew'); set('v_a5', crew<1?'0 - unmanned':fmt(crew));
+ set('v_cost', fmt(credits)+' cr - '+fmt(bp)+' BP'+(research>0?' - '+fmt(research)+' RP':''));
+
+ set('l_m1','Output'); set('m_1',fmt(out)); set('s_m1',uLabel.trim());
+ set('l_m2', I.isYard?'Output per crew':'Output per tonne'); set('m_2',fmt(I.isYard?perCrew:perT));
+ set('s_m2', flat?(I.isYard?'flat - crew is what it is priced in':'flat - no dominant setting'):' rises for free');
+ $('m_2').parentElement.className='mt '+(flat?'g':'r');
+ set('l_m3', I.isYard?'Output per tonne':'Output per crew');
+ set('m_3', I.isYard?fmt(perT):(crew<1?'inf':fmt(perCrew)));
+ set('s_m3', I.isYard?'mass tracks the berth instead':(crew<1?'nobody aboard':'people are scarce'));
+ $('m_3').parentElement.className='mt '+(crew<1?'g':'');
+ set('l_m4','Ladder test'); set('m_4', flat?' passes':' fails');
+ set('s_m4', flat?'benefit / cost is constant':'benefit rises, cost stands still');
+ $('m_4').parentElement.className='mt '+(flat?'g':'r');
+
+ let note, verdict;
+ if(job==='lab'){
+ note = fixed
+? '<b>Mass = Research Points x 10,000</b>, anchored so the shipped 10-point / 100-tonne lab is <b>byte-identical</b>. Now a 100-point lab weighs a thousand tonnes and needs proportional crew - a real investment, in the same shape the refinery and factory already use.'
+: ' <b>Every cost on this template is a constant.</b> <code>Mass = 100000</code>, Volume 1000, Crew 20, Credits 120, Research 10, and BuildPoints = <code>[Mass]/2</code>. So <code>Research Points</code> (1 -> 100) is free: <b>a hundredfold difference in how fast your empire advances, for the same price.</b> The shipped design leaves it at 10.';
+ verdict = fixed
+? ' <b>And the second dial is now a REAL one.</b> <code>Field focus</code> concentrates the lab into ONE research field - a Weapons Lab, a Propulsion Institute - through the <code>bonusCategory</code> the engine already reads, replacing the dead <code>Cost Per Day</code> slider that fronted a field nothing consumed.'
+: ' <b>The most consequential free dial in the designer, because research gates every other door.</b> Its second dial is <code>Field focus</code>: concentrate research into ONE field for a bonus there (the engine\'s <code>bonusCategory</code>), or stay a generalist - which field is a choice, like the academy\'s leader type. <b>It replaces the old dead <code>Cost Per Day</code> dial</b>, which was stored and read by nothing.';
+ } else if(job==='bunker'){
+ note = fixed
+? 'Fortification now enters the mass formula, anchored so the shipped 0.25 bunker is <b>byte-identical</b> at 50 tonnes. A total fortress weighs seven times a token emplacement.'
+: ' <b><code>Mass = 50000</code>, a constant</b> - so <code>LocalFortify</code> (0 -> 1) and <code>AdjacentProjection</code> (0 -> 1) are both free. The shipped bunker fortifies its region <b>0.25</b> and projects <b>0.12</b>; a player-designed one does <b>1.00 and 1.00</b> for the identical 50 tonnes, 50 crew and 200 credits.';
+ verdict = fixed
+? ' <b>And <code>TileFootprint</code> should become what BUYS the fortification</b> - a bigger emplacement covering more ground - instead of a 1-40 dial whose only effect is a bigger target.'
+: ' <b>This is exactly where the Defense door\'s ruling landed.</b> Fortification was cut from Defense because it is <em>infrastructure, not a combat defence</em> - correctly - and it arrived here unpriced. Plus <code>TileFootprint</code> 1-40: a cost with no benefit, so the minimum strictly dominates. The same dial the building foundation has.';
+ } else if(job==='yard'){
+ const YD2=YARD_DOM[dom];
+ note = ' <b>One building, domain-typed.</b> Right now it is an <b>'+YD2.fac+'</b> building <b>'+YD2.builds+'</b>. Two priced dials: <code>'+YD2.d1+'</code> gates the largest unit that FITS (a corvette slip cannot lay a dreadnought), and <code>'+YD2.d2+'</code> is throughput - the build-points/day the industry line runs at. Mass tracks the berth, crew tracks the rate.';
+ verdict = ' <b>The DOMAIN is the forced choice, and it names the facility - because a yard is wrong for troops.</b> Ships and subs come off a slip; infantry come out of a <b>Training Depot</b>, tanks off a <b>Vehicle Works</b> line. Same two dials, five names, because the physical plant differs by medium. Each domain builds only the units whose chassis-environment it matches (the Chassis door).';
+ } else if(job==='factory'){
+ note = ' <b>Honest on its real dials.</b> <code>Size</code> drives three point types at <code>x 0.1</code> each; <code>Automation</code> trades crew for mass - and the factory\'s crew bill was <code>Size x 5</code> (25,000), the steepest in the door, now <b>RECALIBRATED to <code>Size x 0.5</code> (2,500)</b>. <b>The one dead dial that remains:</b> <code>Fighter Construction Points</code> (0 -> 1,000) is absent from the <code>DataDict</code> that becomes the industry rate table, and there is no <code>fighter-construction</code> industry type for it to feed.';
+ verdict = ' <b>The cleanest decision in the door:</b> fighters are either a production type or they are not. Add the type and derive the points from <code>Size</code> like the other three - or delete the dial. The shipped default is <code>0</code>, so nothing is currently mis-balanced; it is a UI honesty problem.';
+ } else if(job==='mine' || job==='automine'){
+ note = ' <b>On the AREA dial, output and mass move together - output-per-tonne stays flat.</b> The second dial, <code>Automation</code>, is a different trade: it spends mass to cut miners. ' + (job==='mine'
+? 'A full-size mine gives <b>80x the output per kilogram</b> of an automine - that is its justification. Its crew was a steep 5,000 at the shipped area; <b>RECALIBRATED this campaign to 500</b> (<code>Area x 0.0005</code>, a 10x cut).'
+: 'An automine is 80x worse per kilogram - and needs <b>zero crew</b> and mounts on <b>ShipCargo</b>, so you can drop it on a rock you have not colonised. <b>That is its justification, and it is a real one.</b>');
+ verdict = ' <b>Both mines win an axis outright, so neither is clutter</b> - the Power door\'s justification rule satisfied here without anyone having designed for it. Switch between them and watch <b>output per tonne</b> and <b>output per crew</b> trade places.';
+ } else {
+ note = ' <b>Output = <code>Size x 0.1</code>, Mass = <code>Size</code>, Crew = <code>Size x 0.1</code></b> - one crew per refinery point, <b>less what you automate</b> (the <code>Automation</code> dial trades mass for crew). On the Size dial, output per tonne stays flat. This is the template the others should copy.';
+ verdict = ' <b>Nothing to change.</b> A pure scale dial with a flat benefit / cost ratio: the decision is how much plant you build and where, not what setting you pick.';
+ }
+ $('odesc').innerHTML=note;
+ $('verdict').innerHTML=verdict;
+ set('oname', fmt(out)+I.unit+' for '+kg(mass)+' and '+(crew<1?'nobody':fmt(crew)+' crew'));
+ $('jobnote').textContent = I.priced
+? 'Mounts on '+I.mount+'. Its justification: '+I.why
+: ' Mounts on '+I.mount+'. What moving its dial costs: '+I.why;
+ set('v_namesub', I.two? 'scale <- '+d1Label.toLowerCase()+' - temper <- '+d2Label.toLowerCase()+' - noun <- the plant'
+: 'scale <- how much plant you built - noun <- the plant');
+}
+document.querySelectorAll('.chip[data-v]').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [kk,val] of Object.entries(STOCK[job]||{})) $(kk).value=val;
+ render();}));
+document.querySelectorAll('.ydom').forEach(c=>c.addEventListener('click',()=>{
+ dom=c.dataset.dom; render();}));
+['d1','d2'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+for(const [kk,val] of Object.entries(STOCK.mine)) $(kk).value=val;
+render();
+
+</script>

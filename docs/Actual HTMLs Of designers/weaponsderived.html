@@ -1,0 +1,419 @@
+<meta charset="utf-8">
+<title>Weapons, re-derived - two choices and four sliders</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark].chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 4px;font-size:12.5px;color:var(--ink2)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 12px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.dnsub b{color:var(--ac2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+.num.sh.g b{color:var(--ac2)}.num.sh.a b{color:var(--warn)}.num.sh.r b{color:var(--flag)}
+
+/* the "how much lands" tiles */
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)}.mt.a b{color:var(--warn)}.mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)}.t b.a{color:var(--warn)}.t b.r{color:var(--flag)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* kill boxes */
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+
+@media(min-width:700px){
+.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+.ten{grid-template-columns:1fr 1fr}
+.tenq{border-left:1px solid var(--rule2)}
+.tenq:nth-child(odd){border-left:0}
+.nums{grid-template-columns:repeat(5,1fr)}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* section nav */
+.jump{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);
+ box-shadow:var(--sh);padding:8px 0;font-size:12.5px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jump.w{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.jump b{color:var(--ink3);font-weight:600;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;font-size:10.5px}
+.jump a{color:var(--ink2);text-decoration:none;padding:4px 9px;border:1px solid var(--rule);border-radius:999px;white-space:nowrap}
+.jump a:hover{color:var(--ink);border-color:var(--ac);background:var(--card2)}
+.jump a.new{color:var(--ac2);border-color:var(--ac)}
+
+/* control help + legend */
+.chelp{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.5}
+.chelp b{color:var(--ink2);font-weight:600}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}
+.legend dd{margin:0}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:2px;border:1px solid var(--rule)}
+.swatch.set{background:var(--ac)}.swatch.fixed{background:var(--ink3)}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X &middot; component designer &middot; re-derived from the resolver</p>
+<h1>Ten numbers reach the fight. Everything else is cost or flavour.</h1>
+<p class="lead">Five weapon doors and forty-one dial groups collapse to <b>two choices and four sliders</b> &mdash; because the combat math only ever reads ten values off a weapon. The rest is naming, cost and description. <b>Pick how it gets there and what it is good against; then set how hard, how big each shot, how far, how concentrated.</b> Build one below and watch all ten values move.</p>
+<p class="lead" style="margin-top:10px">This is a <b>derived</b> door, not an invented one: every dial writes a variable the resolver already reads, and the two choices &times; four sliders reproduce <b>all eleven weapons the engine builds today</b> &mdash; and reach roughly a thousand more the current template pile never named.</p>
+</div></div>
+
+<nav class="jump" aria-label="Section navigation"><div class="w">
+<b>Jump to</b><a href="#w-ten">The ten values</a><a href="#w-build" class="new"> The designer</a>
+<a href="#w-axis">The two doors</a><a href="#w-proof" class="new"> The proof</a><a href="#w-kills">What it kills</a>
+</div></nav>
+
+<section class="band"><div class="w">
+<h2 id="w-ten">The ten, as five questions</h2>
+<p class="sub">Grouped by what they are actually deciding. Every slider and both doors below write one or more of these &mdash; and the resolver reads nothing else off the weapon.</p>
+<div class="ten">
+<div class="tenq"><h4>How hard does it hit?</h4><div class="vars"><span class="tag">Damage per second</span></div><p>Which is damage per shot &times; rate of fire &mdash; set either and the other follows.</p></div>
+<div class="tenq"><h4>Does it land?</h4><div class="vars"><span class="tag">Shot speed</span><span class="tag">Follows a dodge</span><span class="tag">Volume of fire</span></div><p>Three ways to beat a dodge: too fast to avoid, it steers after you, or so many coming that some land regardless. The math takes whichever of the first two is better, then puts a floor under it for volume.</p></div>
+<div class="tenq"><h4>What gets through?</h4><div class="vars"><span class="tag">Good against</span><span class="tag">Armour pierced</span><span class="tag">Damage per shot</span></div><p>What it&rsquo;s good against is the shield answer &mdash; it decides how much a shield soaks, from all of it to none. Armour pierced cancels plate point for point. Damage per shot decides whether many small hits bounce where one big hit punches through.</p></div>
+<div class="tenq"><h4>How far?</h4><div class="vars"><span class="tag">Range</span></div><p>How far it can hit from &mdash; and the longest reach in the fight sets how big the battle is.</p></div>
+<div class="tenq"><h4>What does it cost to run?</h4><div class="vars"><span class="tag">Runs on</span><span class="tag">Shot down in flight</span></div><p>Contact needs nothing, a beam burns power, a projectile or missile eats ammo &mdash; and a missile is the only thing point-defence can shoot down on the way in.</p></div>
+</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="w-build">Build one</h2>
+<p class="sub">Two choices, four sliders. The readout is the ten values the resolver would actually read &mdash; teal is a number <b>you</b> set, grey is one the door <b>forced</b>. The panel also names the shipped weapon your current settings reproduce.</p>
+<div class="build">
+<div class="bsec"><p class="blab">Door 1 &mdash; how it gets there</p>
+<div class="chips">
+<button class="chip" type="button" data-g="fam" data-v="contact" aria-pressed="false">Contact</button>
+<button class="chip" type="button" data-g="fam" data-v="beam" aria-pressed="true">Beam</button>
+<button class="chip" type="button" data-g="fam" data-v="proj" aria-pressed="false">Projectile</button>
+<button class="chip" type="button" data-g="fam" data-v="guided" aria-pressed="false">Guided</button></div>
+<p class="chelp">Physics, not taste. <b>Contact</b> &mdash; nothing crosses the gap, so nothing supplies it (you must close). <b>Beam</b> &mdash; light speed, undodgeable, runs on power. <b>Projectile</b> &mdash; finite speed, a nimble target can juke it, runs on ammo. <b>Guided</b> &mdash; slow but it steers, runs on ammo, and is the <b>only</b> family point-defence can answer &mdash; which is exactly why a missile&rsquo;s <b>warhead</b> (its shot-size dial) can be scaled all the way to a <b>one-shot</b>: the balance is not a damage cap, it is the point-defence screen that shoots it down on the way in.</p></div>
+<div class="bsec"><p class="blab">Door 2 &mdash; what it&rsquo;s good against</p>
+<div class="chips">
+<button class="chip" type="button" data-g="nat" data-v="kinetic" aria-pressed="false">Kinetic</button>
+<button class="chip" type="button" data-g="nat" data-v="energy" aria-pressed="true">Energy</button>
+<button class="chip" type="button" data-g="nat" data-v="explos" aria-pressed="false">Explosive</button>
+<button class="chip" type="button" data-g="nat" data-v="exotic" aria-pressed="false">Exotic</button></div>
+<p class="sub" id="natline" style="margin:9px 0 0">Shields stop <b>50%</b> of this. Best against unshielded hulls; worst against reflective / ablative armour.</p>
+<p class="chelp">This sets the <b>shield soak fraction</b>, and the attacker fixes it &mdash; same on every target. Kinetic 100%, Explosive 75%, Energy 50%, Exotic 0%. It does <b>not</b> set the armour number: the defender&rsquo;s plating decides that.</p></div>
+<div class="bsec">
+<div class="sl"><div class="slh"><span>Total damage</span><span id="s_scale">how much hurt, per second</span></div><input type="range" id="scale" min="0" max="100" value="59" aria-label="Total damage"><div class="ends"><span>sidearm · 200 J/s</span><span>heavy turbolaser · 8 MJ/s</span></div>
+<p class="chelp">Writes <code>DamagePerSecond</code> &mdash; the damage budget the next slider splits.</p></div>
+<div class="sl"><div class="slh"><span>Shot size &harr; rate of fire</span><span>the same damage, split two ways</span></div><input type="range" id="shot" min="0" max="100" value="35" aria-label="Shot size versus rate of fire"><div class="ends"><span>small shots, fast</span><span>big shots, slow</span></div>
+<p class="chelp">Splits the budget into <code>DamagePerShot</code> and <code>Rate</code> &mdash; dps = shot &times; rate, so set two and the third is decided. <b>Armour cares which:</b> a hail of small shots is soaked, one big shot punches through. Shields soak the same fraction either way.</p></div>
+<div class="sl"><div class="slh"><span>Range</span><span></span></div><input type="range" id="rng" min="0" max="100" value="40" aria-label="Range"><div class="ends"><span>knife-fight</span><span>stand off</span></div>
+<p class="chelp">Writes <code>Range_m</code> &mdash; and the longest reach present sets the battle&rsquo;s size.</p></div>
+<div class="sl"><div class="slh"><span>Focus</span><span>same damage, spread or concentrated</span></div><input type="range" id="foc" min="0" max="100" value="50" aria-label="Focus"><div class="ends"><span>spread wide</span><span>all on one point</span></div>
+<p class="chelp">Writes <code>Penetration</code> (armour pierced) and <code>VolumeOfFire</code> &mdash; concentrated pierces plate, spread hoses a crowd.</p></div>
+</div>
+<div class="out">
+<p class="oname" id="oname">Repeating Laser</p><p class="odesc" id="odesc">Light speed. Undodgeable because of the number, not because someone decided so.</p>
+<p class="dnsub" id="reprod"></p>
+<div class="nums">
+<div class="num set"><i>Damage per second</i><b id="v_dps">8.1k J/s</b></div>
+<div class="num set"><i>Damage per shot</i><b id="v_shot">2.1k J</b></div>
+<div class="num set"><i>Rate of fire</i><b id="v_rate">3.8/s</b></div>
+<div class="num set"><i>Volume of fire</i><b id="v_sat">8.3</b></div>
+<div class="num set"><i>Reach</i><b id="v_rng">24.6k m</b></div>
+<div class="num fixed"><i>Shot speed</i><b id="v_vel">3.0e8 m/s</b></div>
+<div class="num fixed"><i>Follows a dodge</i><b id="v_trk">n/a</b></div>
+<div class="num set"><i>Armour pierced</i><b id="v_pen">30</b></div>
+<div class="num set"><i>Heat build-up</i><b id="v_heat">62.4 kJ/s</b></div>
+<div class="num fixed sh a"><i>Shields stop</i><b id="v_shield">50% of it</b></div>
+<div class="num fixed"><i>Shot down in flight</i><b id="v_pd">no</b></div>
+<div class="num fixed"><i>Runs on</i><b id="v_sup">power</b></div>
+<div class="num set"><i>Grid draw</i><b id="v_draw">—</b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">How much of it actually lands</p>
+<p class="muN">Against four targets. Reference armour <b>400</b> &mdash; the same flat-per-shot maths the resolver runs.</p>
+<div class="mus">
+<div class="mt"><i>Unprotected</i><b id="m_none">100%</b><s>nothing in the way</s></div>
+<div class="mt a"><i>Shielded</i><b id="m_sh">50%</b><s id="m_shn">50% soaked</s></div>
+<div class="mt g"><i>Armoured</i><b id="m_ar">74%</b><s id="m_arn">pierces 30 of 400</s></div>
+<div class="mt r"><i>Shield + armour</i><b id="m_bo">24%</b><s>the capital ship</s></div>
+</div>
+</div>
+</div>
+</div>
+<div class="legend">
+<h4>How to read the readout</h4>
+<dl>
+<dt><span class="swatch set"></span>teal</dt><dd>A value <b>you</b> chose with a slider &mdash; it reaches the simulation directly.</dd>
+<dt><span class="swatch fixed"></span>grey</dt><dd>A value <b>door 1 forced</b> &mdash; shot speed, dodge-following and runs-on come with the delivery, you don&rsquo;t get a say.</dd>
+<dt>the tiles</dt><dd>What fraction actually lands against four defences &mdash; the asymmetry made visible: the shield number is yours and fixed, the armour number is the defender&rsquo;s.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>Damage per second, damage per shot and rate of fire are not three dials.</b> Set two and the third is decided for you &mdash; drag <em>shot size</em> and watch per-shot and rate trade while the dps total holds.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2 id="w-axis">Axis 1 &mdash; how it gets there</h2>
+<p class="sub">Not taste &mdash; physics. What you send decides how fast it arrives, whether it can correct, and what has to feed it.</p>
+<div class="scroll"><table class="t">
+<tbody><tr><th>Setting</th><th>Shot speed</th><th>Follows a dodge</th><th>Runs on</th><th>Shot down in flight</th></tr>
+<tr><td>Contact</td><td>&mdash; nothing travels</td><td>&mdash;</td><td>nothing</td><td>no</td></tr>
+<tr><td>Beam</td><td>light speed</td><td>n/a</td><td>power</td><td>no</td></tr>
+<tr><td>Projectile</td><td>finite</td><td>~0</td><td>ammo</td><td>no</td></tr>
+<tr><td>Guided</td><td>slow</td><td>high</td><td>ammo</td><td><b>yes</b></td></tr>
+</tbody></table></div>
+<h2 style="margin-top:24px">Axis 2 &mdash; what it&rsquo;s good against</h2>
+<p class="sub">Which defence it defeats &mdash; and which one stops it cold. Independent of axis 1, so four by four is sixteen real weapons before you touch a slider.</p>
+<div class="scroll"><table class="t">
+<tbody><tr><th>Setting</th><th>vs Shields</th><th>vs Armour</th><th>vs Hull</th></tr>
+<tr><td>Exotic</td><td><b class="g">0% soaked</b><br><s>passes straight through</s></td><td>whatever their plate is tuned to</td><td>full</td></tr>
+<tr><td>Energy</td><td><b class="a">50% soaked</b><br><s>half bleeds through</s></td><td>whatever their plate is tuned to</td><td>full</td></tr>
+<tr><td>Explosive</td><td><b class="a">75% soaked</b></td><td>whatever their plate is tuned to</td><td>full</td></tr>
+<tr><td>Kinetic</td><td><b class="r">100% soaked</b><br><s>shield eats all of it</s></td><td>whatever their plate is tuned to</td><td>full</td></tr>
+</tbody></table></div>
+<p class="sub" style="margin-top:10px"><b>The asymmetry is the point.</b> Against a <b>shield</b> the numbers are fixed &mdash; <em>you</em> decide them when you pick the setting, and they are the same on every target in the game. Against <b>armour</b> there is no fixed number, because the <em>defender</em> chose it: plating carries its own four resistances, so ablative plate can shrug off energy and thin against slugs. And past both, a hull is a hull &mdash; damage is damage, and <b>nobody</b> decides it.</p>
+<p class="sub" style="margin-top:8px">Which means <b>Exotic</b> is the only setting that ignores a shield outright, and <b>Energy</b> is the practical middle &mdash; half of it bleeds through, so it still hurts a shielded target where a kinetic round accomplishes nothing at all.</p>
+<p class="sub" style="margin-top:8px"><b>And armour cares about shot size, shields do not.</b> Armour subtracts a flat amount from <em>each shot</em>, so a hail of small shots is nearly all absorbed while one big shot mostly gets through. A shield soaks the same fraction either way. That is why the shot-size slider changes the &ldquo;Armoured&rdquo; number in the builder and never touches &ldquo;Shielded.&rdquo; It is also why a railgun and a flak battery differ though they share a family and a dps budget.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="w-proof">The proof</h2>
+<p class="sub">All eleven weapons the engine builds today &mdash; six in space, five on the ground &mdash; fall out of the two choices. Family and setting checked against what <code>ShipCombatValueDB</code> and the base-mod ground weapons actually construct; the reaches are the real authored metres.</p>
+<div class="scroll"><table class="t">
+<tbody><tr><th>Weapon in the game today</th><th>Gets there by</th><th>Good against</th><th>Sliders</th></tr>
+<tr><td>Laser</td><td>Beam</td><td>Energy</td><td>small shots, fast</td></tr>
+<tr><td>Disruptor</td><td>Beam</td><td>Exotic</td><td>&mdash;</td></tr>
+<tr><td>Railgun</td><td>Projectile</td><td>Kinetic</td><td>big shots, long reach, concentrated</td></tr>
+<tr><td>Flak</td><td>Projectile</td><td>Kinetic</td><td>tiny shots, huge rate, spread wide</td></tr>
+<tr><td>Plasma</td><td>Projectile</td><td>Energy</td><td>medium both</td></tr>
+<tr><td>Missile</td><td>Guided</td><td>Explosive</td><td>&mdash;</td></tr>
+<tr><td>Ground rifle</td><td>Projectile</td><td>Kinetic</td><td>small shots &middot; 500 m</td></tr>
+<tr><td>Autocannon</td><td>Projectile</td><td>Kinetic</td><td>medium &middot; 2 km</td></tr>
+<tr><td>Tank cannon</td><td>Projectile</td><td>Kinetic</td><td>big shots &middot; 4 km</td></tr>
+<tr><td>Ground energy weapon</td><td>Beam</td><td>Energy</td><td>&middot; 20 km</td></tr>
+<tr><td>Claw / melee</td><td>Contact</td><td>Kinetic</td><td>contact only</td></tr>
+</tbody></table></div>
+<p class="sub" style="margin-top:11px"><b>Nothing needed inventing.</b> The same two choices also reach a compact sidearm, a spinal siege lance and a scatter-gun that none of these eleven occupy &mdash; <b>1,073 distinct weapon names</b> are reachable from the sliders. <b>And plasma finally means something:</b> the thrown-energy corner. That is why it sat oddly beside a railgun &mdash; it is not one. Today it borrows the railgun&rsquo;s range constant, which is the code admitting it never knew what plasma was.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2 id="w-kills">What this kills</h2>
+<div class="kill"><h4>Pulse vs Continuous Beam</h4><p>A pulse of light travels at light speed too. There is <b>no number</b> that makes one dodgeable and the other not &mdash; the distinction was fiction. They are one weapon at two shot-size positions.</p></div>
+<div class="kill"><h4>The Exotic door</h4><p>Exotic is a setting on <b>what it&rsquo;s good against</b>, not a way of getting there. A gravitic beam is Beam + Exotic; a warp torpedo is Guided + Exotic. And the non-damage parts &mdash; mind control, jump inhibition &mdash; <b>write none of the ten</b>. They are not weapons; calling them a weapon door hid that.</p></div>
+<div class="kill"><h4>Four of the six old delivery types</h4><p>Beam &middot; Bolt &middot; Slug &middot; Cloud &middot; Guided &middot; Blast. The engine only ever asks them one question: <b>can point-defence shoot this down on the way in?</b> Bolt, Slug and Cloud all answer no, identically &mdash; three names for one row.</p></div>
+<div class="okbox"><b>The collapse is honest because it is derived.</b> Every door and slider here writes a variable the resolver already reads &mdash; <code>DamagePerSecond</code>, <code>DamagePerShot</code>, <code>Rate</code>, <code>VolumeOfFire</code>, <code>Range_m</code>, <code>Penetration</code>, the shield soak, shot speed, dodge-following and runs-on. A dial that wrote nothing would be a bug in the design; there are none here.</p></div>
+</div></section>
+
+<footer><div class="w">
+<div class="state">
+<h3>Status</h3>
+<p><b>Weapons:</b> re-derived above &mdash; 5 doors and 41 dial groups become <b>2 choices and 4 sliders</b>. This is a proposal that reproduces every existing gun, not yet the shipped designer.</p>
+<p>The template pile that this replaces grew 67 &rarr; 89 &rarr; 96 &mdash; expanding exactly where the derivation says it should shrink. Two intrinsic tests gate every dial: <b>which sim variable does it write</b>, and <b>can it be set knowing only the component</b> (if not, it is an assembly decision or an emergent readout, never a dial).</p>
+</div>
+</div></footer>
+
+<script>
+const FAM={
+ contact:{n:'Contact',vel:'—',trk:'—',sup:'nothing',pd:'no',rng:[0,0],
+   note:'Nothing crosses the gap, so nothing supplies it — that is why melee has no logistics. You must close.'},
+ beam:{n:'Beam',vel:'3.0e8 m/s',trk:'n/a',sup:'power',pd:'no',rng:[1,60],
+   note:'Light speed. Undodgeable because of the number, not because someone decided so.'},
+ proj:{n:'Projectile',vel:'2.0e4 m/s',trk:'0.05',sup:'ammo',pd:'no',rng:[5,100],
+   note:'Finite speed, no correction after it leaves the barrel — a nimble target can juke it.'},
+ guided:{n:'Guided',vel:'1.2e3 m/s',trk:'0.90',sup:'ammo',pd:'YES',rng:[20,100],
+   note:'Slow, but it steers. The only family point-defence can answer.'}};
+const NAT={
+ kinetic:{n:'Kinetic',beat:'armour, if concentrated',lose:'shields soak it fully',soak:'1.0'},
+ energy :{n:'Energy', beat:'unshielded hulls',      lose:'reflective / ablative armour',soak:'0.5'},
+ explos :{n:'Explosive',beat:'crowds, soft targets', lose:'hard armour',soak:'0.75'},
+ exotic :{n:'Exotic',  beat:'ignores shields entirely',lose:'wasted on cheap targets',soak:'0.0'}};
+
+// -- compositional namer: scale prefix + core noun (by shot size) + focus adjective --
+// Generic ordnance vocabulary only - no franchise names.
+const NOUN={
+ 'beam|energy'   :['Pulse Array','Repeating Laser','Laser','Beam Projector','Lance'],
+ 'beam|exotic'   :['Nullifier Array','Repeating Disruptor','Disruptor','Phase Projector','Phase Lance'],
+ 'beam|kinetic'  :['Particle Spray','Particle Repeater','Particle Beam','Mass Stream','Mass Lance'],
+ 'beam|explos'   :['Rupture Array','Rupture Repeater','Detonation Beam','Blast Projector','Sunder Lance'],
+ 'proj|kinetic'  :['Flak Battery','Chaingun','Autocannon','Cannon','Mass Driver'],
+ 'proj|energy'   :['Plasma Sprayer','Plasma Repeater','Plasma Gun','Plasma Cannon','Plasma Projector'],
+ 'proj|explos'   :['Shrapnel Gun','Grenade Repeater','Grenade Launcher','Mortar','Siege Mortar'],
+ 'proj|exotic'   :['Phase Scatter','Phase Repeater','Phase Gun','Phase Cannon','Void Driver'],
+ 'guided|explos' :['Rocket Swarm','Rocket Pod','Missile','Torpedo','Heavy Torpedo'],
+ 'guided|kinetic':['Impactor Swarm','Impactor Rack','Kinetic Missile','Kill Vehicle','Orbital Impactor'],
+ 'guided|energy' :['Charge Swarm','Charge Rack','Energy Torpedo','Beam Drone','Heavy Beam Drone'],
+ 'guided|exotic' :['Phase Swarm','Phase Rack','Phase Torpedo','Void Torpedo','Singularity Torpedo'],
+ 'contact|kinetic':['Claws','Blade','Maul','Power Fist','Siege Ram'],
+ 'contact|energy' :['Shock Prod','Arc Blade','Energy Blade','Plasma Glaive','Plasma Greatsword'],
+ 'contact|explos' :['Breach Spike','Charge Gauntlet','Breach Charge','Demolition Ram','Siege Charge'],
+ 'contact|exotic' :['Phase Talon','Phase Blade','Void Blade','Void Cleaver','Singularity Edge']};
+const SCALE  =['Compact','Light','','Naval','Spinal'];
+const SCALE_C=['Compact','Light','','Heavy','Siege'];      // contact family reads oddly with naval/spinal
+const FOCUS  =['Scatter','','Focused'];
+function tier5(v){return v<20?0:v<40?1:v<60?2:v<80?3:4}
+function tier3(v){return v<34?0:v<67?1:2}
+function nameFor(fam,nat,scale,shot,foc){
+  const noun=(NOUN[fam+'|'+nat]||['Weapon'])[tier5(shot)];
+  let pre=(fam==='contact'?SCALE_C:SCALE)[tier5(scale)];
+  let adj=FOCUS[tier3(foc)];
+  // a spread lance or a focused scattergun is a contradiction - drop the adjective when the noun already says it
+  const n=noun.toLowerCase();
+  if(adj==='Scatter'&&/scatter|spray|flak|shrapnel|swarm|array/.test(n))adj='';
+  if(adj==='Focused'&&/lance|driver|projector|kill|singularity/.test(n))adj='';
+  // never repeat a word
+  const parts=[pre,adj,noun].filter(Boolean);
+  const seen=new Set();
+  const out=parts.join(' ').split(' ').filter(w=>{const k=w.toLowerCase();
+    if(seen.has(k))return false;seen.add(k);return true;});
+  return out.join(' ');
+}
+
+// -- the eleven shipped weapons, as door + slider signatures, for the "reproduces" readout.
+// Matched on family + nature first (a hard match), then nearest by shot-size and focus.
+const SHIPPED=[
+ {name:'Laser',                fam:'beam',   nat:'energy', shot:33,foc:50},
+ {name:'Ground energy weapon', fam:'beam',   nat:'energy', shot:52,foc:48},
+ {name:'Disruptor',            fam:'beam',   nat:'exotic', shot:35,foc:50},
+ {name:'Railgun',              fam:'proj',   nat:'kinetic',shot:78,foc:88},
+ {name:'Tank cannon',          fam:'proj',   nat:'kinetic',shot:75,foc:70},
+ {name:'Autocannon',           fam:'proj',   nat:'kinetic',shot:50,foc:55},
+ {name:'Ground rifle',         fam:'proj',   nat:'kinetic',shot:28,foc:62},
+ {name:'Flak',                 fam:'proj',   nat:'kinetic',shot:8, foc:8 },
+ {name:'Plasma',               fam:'proj',   nat:'energy', shot:50,foc:50},
+ {name:'Missile',              fam:'guided', nat:'explos', shot:60,foc:60},
+ {name:'Claw / melee',         fam:'contact',nat:'kinetic',shot:45,foc:50}];
+function reproduce(fam,nat,shot,foc){
+  const pool=SHIPPED.filter(w=>w.fam===fam&&w.nat===nat);
+  if(!pool.length)return null;
+  let best=pool[0],bd=1e9;
+  for(const w of pool){const d=Math.abs(w.shot-shot)*1.4+Math.abs(w.foc-foc);
+    if(d<bd){bd=d;best=w;}}
+  return {name:best.name,close:bd<24};
+}
+
+let fam='beam',nat='energy';
+const $=id=>document.getElementById(id);
+function fmt(v){ if(v>=1e6)return (v/1e6).toFixed(1)+'M'; if(v>=1e3)return (v/1e3).toFixed(1)+'k'; return v.toFixed(v<10?1:0);}
+function render(){
+ const f=FAM[fam],nt=NAT[nat];
+ const scale=+$('scale').value, shot=+$('shot').value, rng=+$('rng').value, foc=+$('foc').value;
+ // dps is the budget; shot-size splits it between per-shot and rate (the honest coupling)
+ const dps=Math.round(200*Math.pow(10,scale/21.7));   // 200 J/s sidearm .. 8.1 MJ/s heavy turbolaser (reaches the assembler's capital weapons)
+ const perShot=dps*Math.pow(10,(shot-50)/26);
+ const rate=dps/perShot;
+ const spread=(100-foc)/100;
+ const sat=fam==='contact'?1:Math.max(1,rate*(0.4+3.6*spread));
+ const pen=fam==='contact'?foc*0.4:foc*(fam==='proj'?0.9:0.6);
+ const heat=fam==='beam'?dps*0.004*(1+(100-shot)/70):dps*0.0008;
+ const range=fam==='contact'?0:Math.round((f.rng[0]+(f.rng[1]-f.rng[0])*rng/100)*1000);
+ $('oname').textContent=nameFor(fam,nat,scale,shot,foc);
+ $('odesc').textContent=f.note;
+ // which shipped weapon does this reproduce?
+ const rep=reproduce(fam,nat,shot,foc);
+ $('reprod').innerHTML = rep
+   ? (rep.close? 'Reproduces the shipped <b>'+rep.name+'</b>'
+              : 'Nearest shipped gun: <b>'+rep.name+'</b> — the sliders have pushed it past what that one is')
+   : 'A weapon no shipped gun occupies — one of the ~1,073 the two choices reach.';
+ const set=(id,v)=>{$(id).textContent=v;};
+ set('v_dps',fmt(dps)+' J/s'); set('v_shot',fmt(perShot)+' J'+(fam==='guided'?' — warhead':'')); set('v_rate',rate>=1?fmt(rate)+'/s':rate.toFixed(2)+'/s');
+ set('v_sat',fmt(sat)); set('v_rng',fam==='contact'?'contact':fmt(range)+' m');
+ set('v_vel',f.vel); set('v_trk',f.trk); set('v_pen',pen.toFixed(0));
+ set('v_heat',heat.toFixed(1)+' kJ/s'); set('v_shield',Math.round(nt.soak*100)+'% of it');
+ const sh=$('v_shield').parentElement; sh.className='num fixed sh '+(nt.soak<=0?'g':nt.soak>=1?'r':'a');
+ set('v_pd',f.pd==='YES'?'yes — PD can':'no'); set('v_sup',f.sup);
+ // grid draw: a beam's reactor draw in watts EQUALS its damage in J/s (firing draws Energy/1000 kJ = Energy J).
+ // Same number as "Damage per second" above — the damage IS the energy drawn. Ammo weapons draw no grid power.
+ set('v_draw', f.sup==='power' ? fmt(dps)+' W  (= the damage)' : (f.sup==='ammo' ? 'ammo — none' : 'none'));
+ // damage actually delivered - shield drains first, then flat-per-shot armour (CombatKernel order)
+ const ARM=400,PERPT=1.5,MINPASS=0.1,NF=1.0;
+ const eff=Math.max(0,ARM-pen);
+ const thru=(ps)=>ps<=0?0:Math.max(ps-eff*PERPT*NF, ps*MINPASS)/ps;
+ const fSh=1-nt.soak;
+ const fAr=thru(perShot);
+ const fBo=fSh<=0?0:fSh*thru(perShot*fSh);
+ const put=(id,fr)=>{const el=$(id);el.textContent=(fr*100).toFixed(fr>=0.1?0:1)+'%';
+   const p=el.parentElement;p.className='mt '+(fr>=0.7?'g':fr>=0.3?'a':'r');};
+ put('m_sh',fSh); put('m_ar',fAr); put('m_bo',fBo);
+ $('m_shn').textContent=nt.soak>=1?'shield eats all of it':nt.soak<=0?'passes straight through':Math.round(nt.soak*100)+'% soaked';
+ $('m_arn').textContent=fAr<=MINPASS+0.001?'shots too small — floored':pen>0?'pierces '+pen.toFixed(0)+' of 400':'flat soak per shot';
+ $('natline').innerHTML='Shields stop <b>'+Math.round(nt.soak*100)+'%</b> of this. Best against '+nt.beat+'; worst against '+nt.lose+'.';
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+ const g=c.dataset.g; if(g==='fam')fam=c.dataset.v; else nat=c.dataset.v;
+ document.querySelectorAll('.chip[data-g="'+g+'"]').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ render();}));
+['scale','shot','rng','foc'].forEach(id=>$(id).addEventListener('input',render));
+render();
+</script>

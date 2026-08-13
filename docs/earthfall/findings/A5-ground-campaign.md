@@ -1,5 +1,7 @@
 # A5 — GROUND-INVASION CAMPAIGN STEP-AND-CLICK LEDGER (verbatim agent output)
 
+> **🔒 CANON OVERRIDE 2026-08-09 — capture model superseded by `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` M8/M16.** This ledger's "whole-planet capture (`TryCapturePlanet` requires ALL regions one holder)" and "region-owner-flip" mechanism are **replaced**: ownership is stored **per mini-hex**, a regional hex flips on the **majority of its occupied mini-hexes**, and **region capture is gone**. Read M8/M16 for the live model; the capture passages below are historical.
+
 ## Orientation
 `Factions/ConquerResolver.cs` is the only AI arm driving any part. Rungs (ConquerResolver.cs:28-380), gated by EnableOrderEmission:
 Rung 0 LAND → 1 STRIKE → 1b STRIKE-JUMP → 1.3 SAIL transport → 1.5 LOAD → 2 BUILD-TRANSPORT → 2.5 REBUILD-GARRISON → 3 MASS. **No bombard rung, no ground-maneuver rung.**

@@ -1,3 +1,5 @@
+> 🗄 **ARCHIVED 2026-08-13 — superseded / job done.** Operation Earthfall landed 2026-07-21 (all lanes merged, CI-green); this point-in-time audit + its resolution plan are fully implemented. The one residual (M4 beachhead region→hex retrofit) is tracked live in `docs/TESTING-TRACKER.md` + `docs/earthfall/CAMPAIGN-REPORT.md`. Kept for history; do not follow as live.
+
 # Operation Earthfall — Implementation Audit (plan-vs-code, line-by-line)
 
 **As of 2026-07-22. The last verification pass before DEV-PC play-testing.**

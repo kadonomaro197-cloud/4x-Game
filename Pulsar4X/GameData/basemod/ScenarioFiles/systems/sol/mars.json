@@ -13,7 +13,7 @@
           "Albedo": 0.25,
           "Mass": 0.64174E24,
           "Radius": 3396.2,
-          "Tectonics": "earth-like",
+          "Tectonics": "dead",
           "LengthOfDay": "1.00:37:00"
         },
         "Orbit": {
@@ -27,7 +27,7 @@
         "Atmosphere": {
           "Pressure": 0.87,
           "Hydrosphere": false,
-          "HyrdoExtent": 0,
+          "HydroExtent": 0,
           "GreenhouseFactor": 0,
           "GreenhousePressure": 0,
           "SurfaceTemperature": -63,

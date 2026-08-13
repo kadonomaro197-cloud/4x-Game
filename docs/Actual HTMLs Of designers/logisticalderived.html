@@ -1,0 +1,974 @@
+<title>Logistical, re-derived — thirteen boxes, two attributes, and the one cargo that has no consumer</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary .n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch — ";color:var(--ink3)}
+@media(min-width:700px){
+ .w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+ .ten{grid-template-columns:1fr 1fr}
+ .tenq{border-left:1px solid var(--rule2)}
+ .tenq:nth-child(odd){border-left:0}
+ .nums{grid-template-columns:repeat(5,1fr)}
+ .opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+ .oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)} .num.sh.a b{color:var(--warn)} .num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)} .num.a b{color:var(--warn)} .num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* ── added for the remaining six doors (same idiom) ────────────────────── */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)} .bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+
+/* ── section nav (added with the colonists pass) ───────────────────────────── */
+.jump{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);
+  box-shadow:var(--sh);padding:8px 0;font-size:12.5px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jump .w{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.jump b{color:var(--ink3);font-weight:600;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;font-size:10.5px}
+.jump a{color:var(--ink2);text-decoration:none;padding:4px 9px;border:1px solid var(--rule);border-radius:999px;white-space:nowrap}
+.jump a:hover{color:var(--ink);border-color:var(--ac);background:var(--card2)}
+.jump a.new{color:var(--ac2);border-color:var(--ac)}
+/* ── control help: every dial and button says what it does ─────────────────── */
+.chelp{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.5}
+.chelp b{color:var(--ink2);font-weight:600}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}
+.legend dd{margin:0}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.sw-set{background:var(--ac)} .sw-calc{background:var(--ink3)}
+.sw-g{background:#3f9a55} .sw-r{background:var(--flag)}
+/* ── output MARKERS: every readout says where it came from and whether the sim reads it ── */
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+  text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+  border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.dead{border-color:var(--flag);color:var(--flag)}
+.mk.chk{border-color:var(--warn);color:var(--warn)}
+.num i,.mt i{display:block}
+/* packing chips (colonists) reuse the gchip look */
+.pchip{font:inherit;cursor:pointer;padding:7px 13px;border-radius:999px;border:1px solid var(--rule);
+  background:var(--card);color:var(--ink2)}
+.pchip[aria-pressed=true]{border-color:var(--ac);background:var(--ac);color:#fff}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 4 of the remaining eight · <b>updated 2026-07-30 — colonists</b></p>
+<h1>Thirteen templates, and every one of them is the same two attributes with a different label on the box.</h1>
+<p class="lead">Cargo holds, warehouses, fuel tanks, ordnance racks, magazines, troop bays, spaceports, shuttlebays. Read what the simulation actually receives and there are exactly <b>two</b> things: <b>a store</b> (what cargo type, how much volume) and <b>a mover</b> (how fast, how far). Everything else is the same pair with a different string. So the door is <b>one question with two answers, one choice, and two sliders</b> — and it reproduces all thirteen.</p>
+<p class="lead" style="margin-top:10px">🔴 <b>And it is by far the worst-maintained door in the designer.</b> Seven findings, and three of them are things that are actively wrong in the shipped data rather than merely un-dialled: <b>a template that is defined twice and silently merged</b>, <b>a fuel tank that asks for sixty-five billion crew</b>, and <b>a storage formula that subtracts a rate from a volume and comes out negative.</b></p>
+<p class="lead" style="margin-top:10px">🔑 <b>It is also where the Chassis door's dead dial turns out to have a home.</b> A ground frame's <code>Size</code> — documented, unread, free — is exactly the number the transport system should consume, and instead the transport reads a hard-coded three-value table. <b>Two doors, one missing wire.</b></p>
+</div></div>
+<nav class="jump" aria-label="Section navigation"><div class="w">
+<b>Jump to</b>
+<a href="#s-door">The door</a>
+<a href="#s-bugs">The 4 defects</a>
+<a href="#s-build">▶ Build one</a>
+<a href="#s-cargo">What is cargo</a>
+<a href="#s-variety">Cargo variety</a>
+<a href="#s-dock">The dock</a>
+<a href="#s-colonists" class="new">★ Colonists</a>
+</div></nav>
+
+<section class="band"><div class="w">
+<h2 id="s-door">The whole door, as two questions</h2>
+<p class="sub">What the simulation receives from a logistical component. That is the entire input surface — two attributes.</p>
+<div class="ten">
+<div class="tenq"><h4>Does it HOLD something?</h4><div class="vars"><span class="tag">Cargo type</span><span class="tag">Volume</span></div><p><code>CargoStorageAtb(storeTypeID, maxVolume)</code>. Two fields. The type is a string — <code>general-storage</code>, <code>fuel-storage</code>, <code>ordnance-storage</code> — and the volume is added to the host's store. <b>Nine of the thirteen templates are this and nothing else.</b></p></div>
+<div class="tenq"><h4>Does it MOVE something?</h4><div class="vars"><span class="tag">Transfer rate</span><span class="tag">Transfer range</span></div><p><code>CargoTransferAtb(rate, range)</code>. Two fields. How fast cargo crosses, and from how far away. <b>Four templates are this</b>, and two of them are both at once.</p></div>
+<div class="tenq"><h4>The three special stores</h4><div class="vars"><span class="tag">Ammo, in kg</span><span class="tag">Troops, in carry-size</span><span class="tag">Fuel, in m³</span></div><p>They look like separate systems and they are not — they are <b>cargo types with their own consumer</b>. Ammo feeds the combat resolver's dry-magazine gate; troops feed the invasion chain; fuel feeds the engine. <b>Same "a store of type X, volume V" shape.</b></p></div>
+<div class="tenq"><h4>What is NOT here</h4><div class="vars"><span class="tag">Logistic Capacity</span></div><p><code>LogiBaseAtb</code> — a real attribute, on a real template, with a real 5–100 dial, and <b>zero readers anywhere in the codebase outside its own file.</b> The only completely dead attribute found in eight doors.</p></div>
+</div>
+<div class="okbox">🔑 <b>So the collapse is the same shape as Weapons'.</b> Thirteen templates × up to four dials each → <b>one choice (what it holds) and two sliders (how much · and if it moves, rate ↔ range)</b>. Nothing is lost: a magazine is <em>a store of ammo</em>, a troop bay is <em>a store of troops</em>, a fuel tank is <em>a store of fuel</em>, a spaceport is <em>a store that also moves</em>. The differences that matter are <b>which consumer reads the store</b> — and that already falls out of the cargo type.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="s-bugs">🔴 <code>spaceport</code> is defined twice, and one of them is silently eaten</h2>
+<p class="big">Two different templates, in two different files, with the same <code>UniqueID</code>. The mod loader does not skip the second one and does not warn about it — it <b>merges it property-by-property over the first</b>, and the load order decides who wins.</p>
+<div class="scroll"><table class="t">
+<tr><th></th><th><code>installations.json</code> — loads FIRST</th><th><code>storage.json</code> — loads SECOND</th></tr>
+<tr><td><b>Name</b></td><td>Planetary Spaceport Complex</td><td><b class="g">Space Port ◄ wins</b></td></tr>
+<tr><td><b>Type</b></td><td>Facility</td><td><b class="g">Cargo Hold ◄ wins</b></td></tr>
+<tr><td><b>Its dials</b></td><td><code>Warehouse Size</code> 100–1,000,000 · <code>Cargo Transfer Rate</code> · <code>Transfer Range</code></td><td><b class="g"><code>Size</code> 2,000–2,000,000 · <code>Rate vs Range</code> 1–9 ◄ wins</b></td></tr>
+<tr><td><b>What it gives the sim</b></td><td>a <b>store</b> (50,000 m³) <b>AND</b> a mover</td><td><b class="g">a mover only ◄ wins</b></td></tr>
+<tr><td><b>Mounts on</b></td><td>PlanetInstallation</td><td><b class="g">ShipCargo, PlanetInstallation ◄ wins</b></td></tr>
+</table></div>
+<div class="warnbox"><b>🔴 The consequence: the spaceport a colony builds stores nothing.</b> <code>ModLoader.ApplyModGeneric</code> takes the <code>Default</code> operation branch on a duplicate ID and reflects over every non-null property, replacing it — including the whole <code>Properties</code> list, because no <code>CollectionOperation</code> is specified. So <code>Warehouse Size</code>, <code>Total Cargo Stored</code> and the <code>DBargsStorage</code> attribute are <b>gone</b>. <code>default-design-spaceport</code> is a shipped design, unlocked on <b>Earth, Kithrin, the UMF and the devtest faction</b> — so every start in the game has a spaceport that can only move cargo, never hold it.</div>
+<div class="warnbox"><b>⚠ And the existing guard cannot see it.</b> <code>BaseModIntegrityTests.BaseMod_LoadsWithNoSkippedEntries</code> was written for exactly this class of bug — a blueprint silently dropped at load. But a <b>merge is not a skip</b>: nothing is added to <code>SkippedEntries</code>, no console line is printed, the template count is unchanged, and the resulting blueprint is valid. <b>It is invisible to every gauge in the project.</b></div>
+<p class="sub" style="margin-top:11px">🔑 <b>And it is not the only one.</b> Swept every <code>UniqueID</code> across all twenty template files: <b>300 ids, seven collisions.</b> <code>spaceport</code> (storage vs installations) · <code>stainless-steel</code> (particleMaterials vs materials) · <code>water</code> (particleMaterials vs minerals) · <code>ground-balanced</code> · <code>ground-offensive</code> · <code>ground-defensive</code> (groundStances vs combatDoctrines) · and <code>hydrogen-sulphide</code>, <b>twice inside the same file</b>. Some may be deliberate overrides. None of them says so, and none of them is checked.</p>
+<div class="okbox">✅ <b>The cheap gauge:</b> a test that loads the base mod and asserts <b>no <code>UniqueID</code> appears in two template files</b> unless it is on an explicit allow-list. It is a dozen lines, it runs in milliseconds, and it closes a whole class of silent data bug that no existing test can see. <b>That is the first thing I would build in this door</b> — before any dial work, because a merged template makes every other measurement here unreliable.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔴 Two fuel tanks: one is physics, the other asks for sixty-five billion crew</h2>
+<p class="big">Both hold fuel. Both mount anywhere. One is the best-authored template I have read in this codebase; the other is the worst.</p>
+<div class="scroll"><table class="t">
+<tr><th></th><th><code>stainless-steel-fuel-tank</code></th><th><code>fuel-cargo-hold</code></th></tr>
+<tr><td><b>You set</b></td><td><code>Tank Volume</code> — the thing you actually want</td><td><code>Tank Radius</code> — you set a radius and hope</td></tr>
+<tr><td><b>Its mass</b></td><td><code>Dry Weight</code> = the volume of a <b>4 mm steel shell</b> at 8,000 kg/m³ — real geometry</td><td>🔴 <code>Tank Radius</code> — <b>a 2,500 kg tank holding 65 billion m³</b></td></tr>
+<tr><td><b>Its crew</b></td><td><b class="g">0</b> — nobody mans a tank</td><td>🔴 <b class="r"><code>PropertyValue('Tank Volume')</code></b><s>= (4/3)π(2500)³ = 65,449,847,000 crew</s></td></tr>
+<tr><td><b>Shipped designs</b></td><td><b class="g">4</b> — 1,000 / 1,500 / 3,000 m³ and a 5,000,000 m³ fuel farm</td><td><b class="r">none</b></td></tr>
+<tr><td><b>Unlocked on Earth</b></td><td><b class="g">yes</b></td><td>🔴 <b class="r">yes — one click away in the designer</b></td></tr>
+</table></div>
+<div class="okbox"><b>✅ Look at what the good one does, because it is the model for this whole door.</b> You set the volume you want. It solves the radius from the volume, then computes the mass of the steel shell needed to contain it: <code>1.333π(r³ − (r−0.004)³) × 8000</code>. A 2,500 m³ tank comes out at <b>8.42 m radius and 28.5 tonnes dry</b>. That is a real number, derived from a real wall thickness, and it means <b>a bigger tank costs more steel for a physical reason</b> — the square-cube law again, arrived at honestly. <b>Nothing in this door needs designing; it needs the good template copied over the bad one.</b></div>
+<div class="warnbox">🔴 <b>Same class of bug as the reactor's <code>CrewReq: "[Mass]"</code>, and worse by seven orders of magnitude.</b> Crew is a real scarce pool (<code>ManpowerTools.ResolveBuild</code>) and component crew sums into a ship's requirement and a colony's infrastructure demand, so a <code>fuel-cargo-hold</code> is not merely mis-priced — <b>it can never be built by anyone.</b> It ships unlocked with no design, which is the only reason nobody has hit it. <b>The fix is to delete the template</b>, not to re-tune it: its honest twin already ships four working designs.</div>
+<p class="sub" style="margin-top:11px">🔴 <b>And a third crew bug in the same door:</b> <code>space-port</code> (the hyphenated one — yes, there are three spaceports) has <code>CrewReq: "1000000"</code>, hard-coded, on a 500-tonne facility. <b>One million people to run a cargo dock.</b> It is not unlocked anywhere and has no design, so it is latent — but it is the third template in one door whose crew figure makes it unbuildable, which stops being a coincidence and starts being a pattern: <b>nobody has ever costed this door.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>🔴 A storage formula that subtracts a rate from a volume — and comes out negative</h2>
+<p class="big">The ordnance rack and the (eaten) planetary spaceport share this line:</p>
+<div class="warnbox" style="margin-top:0"><code>Total Cargo Stored = Rack Size − Size Efficiency − <b>Cargo Transfer Rate</b></code><br><span style="color:var(--ink3)">Rack Size is a <b>volume</b> in m³. Cargo Transfer Rate is a <b>rate</b>, in units per second. Subtracting one from the other is not a balance decision; it is a units error.</span></div>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Setting</th><th>Rack Size</th><th>− Size Efficiency</th><th>− Transfer Rate</th><th>Storage the ship gets</th></tr>
+<tr><td><b>Template default</b></td><td>50,000</td><td>500</td><td>50,000</td><td>🔴 <b class="r">−500 m³</b> <s>it REMOVES storage</s></td></tr>
+<tr><td><b>The shipped design</b> <s>Ordnance Rack 2.5t</s></td><td>2,627</td><td>26</td><td>100</td><td><b class="g">2,501 m³ ✅</b> <s>which is where its name comes from</s></td></tr>
+<tr><td>a plausible player design</td><td>100,000</td><td>1,000</td><td>10,000</td><td><b class="a">89,000 m³</b> <s>silently 10% short</s></td></tr>
+<tr><td>rate turned up</td><td>100,000</td><td>1,000</td><td>1,000,000</td><td>🔴 <b class="r">−901,000 m³</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔴 <b>And nothing clamps it.</b> <code>CargoStorageAtb.OnComponentInstallation</code> does <code>db.TypeStores[type].MaxVolume += MaxVolume</code> — raw, unguarded, no floor at zero. So installing a default-configured ordnance rack <b>subtracts 500 m³ from the ship's existing ordnance store</b>. The shipped design escapes only because somebody happened to set the transfer rate to 100 while tuning it to hit 2.5 t. <b>Every design a player makes at the template defaults is broken, and it fails quietly by making the ship's magazine smaller.</b></p>
+<div class="okbox">✅ <b>The fix is two characters and a clamp.</b> Transfer rate should not be subtracted from storage at all — a dock's throughput does not consume its warehouse. If the intent was <em>"the machinery takes up room"</em>, that is what <code>Size Efficiency</code> already does. And <code>CargoStorageAtb</code> should floor <code>MaxVolume</code> at zero on principle, the way every other attribute in the codebase clamps its constructor arguments.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>⚠️ <code>Rate vs Range</code> — a split dial that destroys value in both directions</h2>
+<p class="big">This one <em>looks</em> exactly right. It is a single 1–9 dial that trades transfer rate against transfer range, which is the honest split-dial shape the whole campaign has been asking for. Run the arithmetic across its span and it fails the ladder test — <b>backwards.</b></p>
+<div class="scroll"><table class="t">
+<tr><th><code>Rate vs Range</code></th><th>Transfer rate</th><th>Transfer range</th><th>rate × range</th><th>Verdict</th></tr>
+<tr><td><b>1</b></td><td>2.75</td><td>3,375</td><td><b class="g">9,281</b></td><td><b class="g">◄ dominant</b></td></tr>
+<tr><td><b>2</b> <s>the shipped shuttlebay</s></td><td>3.00</td><td>3,000</td><td>9,000</td><td>near-optimal</td></tr>
+<tr><td><b>5</b> <s>the template default</s></td><td>3.75</td><td>1,875</td><td><b class="a">7,031</b></td><td>−24%</td></tr>
+<tr><td><b>9</b></td><td>4.75</td><td>375</td><td><b class="r">1,781</b></td><td>🔴 <b class="r">−81%</b></td></tr>
+</table></div>
+<div class="warnbox"><b>🔴 The product is not invariant — it collapses by 5.2× while the rate you are buying rises only 1.73×.</b> Rate is <code>Size×0.5 + Size×0.5×RvR×0.1</code> (additive, so it saturates) while range is <code>Size×0.5 − Size×0.5×RvR×0.1</code> (subtractive, so it goes to zero). <b>You give up 89% of your range to gain 73% more rate.</b> By §34.7a that makes <code>1</code> strictly dominant for anyone who cares about range at all — and the fact that the shipped shuttlebay sits at <code>2</code> is why nobody noticed: <b>the one design in the game is already parked at the good end.</b></div>
+<div class="okbox">✅ <b>And the fix keeps the dial, which matters — it is the right idea.</b> Make it multiplicative on both sides, the way the RTG's output-versus-lifetime split already is: <code>rate = base × k</code> and <code>range = base ÷ k</code>. Then rate × range is <b>flat</b> by construction, a dock genuinely chooses between reaching further and moving faster, and neither end is free. <b>The template already has the correct SHAPE; it just has a plus where it needs a multiply.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="s-build">Build one</h2>
+<p class="sub">One question with two answers, one choice, two sliders — and it reproduces all thirteen templates plus the two new people-compartments. Every control below says what it changes and which number it writes. Each answer opens on its <b>real shipped part</b>, so the panel starts by reproducing the game rather than a guess.</p>
+<div class="build">
+<div class="bsec"><p class="blab">① The door — does it hold, or does it move?</p>
+<p class="chelp">This is the <b>forced choice</b>: it decides <b>which attribute the component gets</b>, and therefore which sliders exist below. <b>Hold</b> → <code>CargoStorageAtb</code>. <b>Move</b> → <code>CargoTransferAtb</code>. <b>Both</b> → both, on one component.</p><div class="chips">
+<button class="chip" type="button" data-v="hold" aria-pressed="true" title="Gives the component CargoStorageAtb — a store with a cargo type and a volume. Hides the transfer slider.">Hold — a store</button>
+<button class="chip" type="button" data-v="move" aria-pressed="false" title="Gives the component CargoTransferAtb — a rate and a range. Hides the cargo-type buttons; it moves cargo but holds none.">Move — a transfer</button>
+<button class="chip" type="button" data-v="both" aria-pressed="false" title="Gives the component BOTH attributes. This is the combination where the shipped negative-storage bug lives.">Both — a dock</button></div>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="typesec"><p class="blab">② What does it hold?</p>
+<p class="chelp">Writes <b>one string</b> — the <code>CargoTypeID</code> — into <code>CargoStorageAtb</code>. <b>That single string is the only real difference between nine of the thirteen templates.</b> It also decides <b>which consumer in the engine can read the contents</b>, shown in the readout as <i>Its consumer</i>.</p><div class="chips">
+<button class="gchip" type="button" data-g="general" aria-pressed="true" title="CargoTypeID = general-storage. Ore, metal, parts. Read by the colony and ship cargo system.">General cargo</button>
+<button class="gchip" type="button" data-g="fuel" aria-pressed="false" title="CargoTypeID = fuel-storage. Read by the engine's fuel draw. The best-authored template in the door.">Fuel</button>
+<button class="gchip" type="button" data-g="ordnance" aria-pressed="false" title="CargoTypeID = ordnance-storage. Read by the missile launcher. Pick 'Both' with this to see the negative-storage bug.">Ordnance</button>
+<button class="gchip" type="button" data-g="ammo" aria-pressed="false" title="CargoTypeID = ammo. Read by the resolver's dry-magazine gate. The only honest cost chain in the door.">Ammo</button>
+<button class="gchip" type="button" data-g="troops" aria-pressed="false" title="Troop bay. Read by GroundTransport — the invasion chain. Its Mass is a hard-coded constant.">Troops</button>
+<button class="gchip" type="button" data-g="people" aria-pressed="false" title="NEW: passenger-storage or cryogenic-storage. Carries colonists — and nothing in the engine can read them, which is why you cannot colonise.">★ Colonists</button>
+<button class="gchip" type="button" data-g="strike" aria-pressed="false" title="🆕 The BERTH class: strikecraft-bay. Holds whole craft (a docked ship is ICargoable) — pick 'Both' to add the LAUNCH mover. The store works today; the launch verb is engine-pending (ParasiteLauncherReady fires nothing, DockTools has no game caller).">🆕 Craft — a berth</button></div>
+<p class="sub" id="gnote" style="margin:9px 0 0"></p>
+<div id="packsec" style="display:none;margin-top:13px">
+<p class="blab">②b How are they carried — awake, or frozen?</p>
+<p class="chelp">A second <b>forced choice</b>, because it swaps the <code>CargoTypeID</code> <i>and</i> the room one person needs: a <b>berth is 10 m³</b>, a <b>cryo pod is 2 m³</b> (<code>PassengerPacking.cs</code>). Five times the people in the same hull — which is why, as built, <b>cryo has no downside and strictly wins</b>. Tick the fixes box to give it one.</p>
+<div class="chips">
+<button class="pchip" type="button" data-p="cabin" aria-pressed="true" title="passenger-storage. 10 m3 per berth. They arrive awake and can work immediately.">Passenger cabin — awake</button>
+<button class="pchip" type="button" data-p="cryo" aria-pressed="false" title="cryogenic-storage. 2 m3 per pod — five times the density, less mass, less crew. As built it has no cost at all.">Cryogenic bay — frozen</button>
+</div><p class="sub" id="pnote" style="margin:9px 0 0"></p></div></div>
+
+<div class="bsec">
+<p class="blab">③ The sliders — how much of it</p>
+<div class="sl" id="w1"><div class="slh"><span id="n1">How much</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="35" aria-label="Size of the component"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div>
+<p class="chelp" id="h1help">The <b>size dial</b>. It is the only number you set on nine of the thirteen templates — everything else (mass, crew, cost) is computed from it. The scale is logarithmic, and the right-hand end shows the shipped design so you can find it.</p></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Rate vs Range</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="12" aria-label="Second dial"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div>
+<p class="chelp" id="h2help">Only appears when the component <b>moves</b> cargo.</p></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix"> <span><b>Apply the proposed fixes</b> — this switches the panel from <i>what the game does today</i> to <i>what this door proposes</i>. It changes three things at once: a <b>flat</b> rate × range product (L2), storage that stops subtracting a rate from a volume (L3), and a <b>cost for cryogenics</b> so it stops being a free win. Nothing here is built — it is the proposal, side by side with the shipped arithmetic.</span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><u class="mk set" id="k_a1">you set it</u><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><u class="mk set" id="k_a2">you set it</u><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><u class="mk calc" id="k_a3">computed</u><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4">Mass</i><u class="mk calc" id="k_a4">computed</u><b id="v_a4"></b></div>
+<div class="num fixed"><i id="l_a5">Crew</i><u class="mk calc" id="k_a5">computed</u><b id="v_a5"></b></div>
+<div class="num fixed"><i>Build cost</i><u class="mk calc" id="k_cost">computed</u><b id="v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it actually holds or moves</p>
+<p class="muN">Against real consumers: the engine's fuel draw, the resolver's dry-magazine gate, and the invasion chain's carry-size table.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">Holds</i><u class="mk sim" id="k_m1">reaches the sim</u><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Per tonne of component</i><u class="mk calc" id="k_m2">comparison only</u><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">rate × range</i><u class="mk chk" id="k_m3">design check</u><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Which consumer reads it</i><u class="mk sim" id="k_m4">reaches the sim</u><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><span class="swatch sw-set"></span>Teal number</dt><dd>A value <b>you set</b> with a control above.</dd>
+<dt><span class="swatch sw-calc"></span>Grey number</dt><dd>A value the <b>formula computed</b> for you — you cannot set it directly.</dd>
+<dt><span class="swatch sw-g"></span>Green label</dt><dd>This behaves correctly in the shipped game.</dd>
+<dt><span class="swatch sw-r"></span>Red label</dt><dd>This is <b>actively wrong</b> in the shipped data — the number the simulation receives is not the one the designer intended.</dd>
+<dt>Its consumer</dt><dd>Which system in the engine <b>actually reads</b> what this component holds. <b>If nothing reads it, the component does nothing</b> — which is the whole finding for Colonists.</dd>
+</dl>
+<h4 style="margin-top:12px">Every output carries a marker</h4>
+<dl>
+<dt><u class="mk set">you set it</u></dt><dd>You chose this value with a control above.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it — you cannot set it directly.</dd>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>This number is genuinely read by the running game.</dd>
+<dt><u class="mk chk">design check</u></dt><dd>Not a game value — this panel's own verdict on whether the dial is honest.</dd>
+<dt><u class="mk dead">NOTHING reads it</u></dt><dd><b>The number exists and no system consumes it.</b> The component can be designed, built and installed, and it will do nothing.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>Two things to try.</b> ① Pick <b>Ordnance</b> + <b>Both</b>, leave the box unticked, drag the transfer rate up, and <b>watch the storage go negative</b> — that is the shipped template default, and <code>CargoStorageAtb</code> has no floor at zero. ② Pick <b>Colonists</b> and read the consumer line.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔑 The Chassis door's dead dial has a home, and it is here</h2>
+<p class="big">A ground frame carries a <code>Size</code> dial: 1–10 on a human frame, 1–60 on a tracked chassis. Its own source says it <em>"feeds transport carry-size (a bigger frame → more bay room)."</em> Grepped the tree in the Chassis pass: <b>zero readers.</b> Here is what reads carry-size instead:</p>
+<div class="warnbox" style="margin-top:0"><code>GroundTransport.CarrySizeOf(GroundUnitType type) =&gt; type switch { Infantry =&gt; 1.0, Artillery =&gt; 2.0, Armor =&gt; 3.0, _ =&gt; 1.0 };</code><br><span style="color:var(--ink3)">A hard-coded three-value table on the unit's <b>type enum</b> — not on the design.</span></div>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Unit</th><th>Its frame's <code>Size</code></th><th>Bay room it actually eats</th><th></th></tr>
+<tr><td>A rifleman</td><td>1</td><td>1.0</td><td><b class="g">✅ correct by luck</b></td></tr>
+<tr><td>A Space Marine on a walker frame</td><td>4</td><td>1.0 <s>if classified Infantry</s></td><td>🔴 <b class="r">4× too light</b></td></tr>
+<tr><td>A Titan on a scaled walker frame</td><td>40</td><td>1.0 <s>same enum</s></td><td>🔴 <b class="r">40× too light</b></td></tr>
+<tr><td>A light scout on a tracked chassis</td><td>1</td><td>3.0 <s>Armor enum</s></td><td>🔴 <b class="r">3× too heavy</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>So one troop bay hauls a thousand Titans, and the designer's whole "anyone can build anything" promise breaks at the loading ramp.</b> The atb's own documentation describes the correct behaviour — <em>"how MANY fit is a size calc (bay capacity vs each unit's carry-size), not a fixed slot count"</em> — and the size calc reads a table that predates the frame dial. <b>Both halves were built; nobody connected them.</b></p>
+<div class="okbox"><b>✅ The fix is one line, and it makes two doors' dead ends into one working mechanic.</b> <code>CarrySizeOf</code> reads the unit's frame <code>Size</code> when it has one, falling back to the type table when it does not (a code-built or modded unit). The Chassis door's free dial starts costing bay room; the Logistical door's bay capacity starts meaning something; and a Titan stops fitting in a rifleman's seat. <b>This is what the Prime Directive means by "a system is only as done as its connections."</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What this kills</h2>
+<div class="leak"><h4>🔴 <code>LogiBaseAtb</code> — the only completely dead attribute in eight doors</h4><p>A real attribute class, a real template (<code>logistics-office</code>), a real dial (<code>Logistic Capacity</code>, 5–100), a real shipped design (<code>default-design-logistics-office</code>). And <b>every single reference to it in the entire codebase is inside its own file</b> — the class declaration, its own install hook, its own constructor. Nothing reads what it writes. It is not even unlocked on Earth, so no player has ever built one. <b>The logistics system it was meant to gate (<code>Logistics/</code>, the automated cargo routes) does not consult it.</b> Either wire it as the cap on how many logistics routes a colony can run — which is a genuinely good mechanic and the obvious intent — or delete it. <b>What it must not stay is a dial that looks live.</b></p></div>
+<div class="leak"><h4>🔴 <code>troop-bay</code> — <code>Mass</code> is the hard-coded constant <code>5000</code></h4><p>So <code>Capacity</code> (1 → 60) and <code>CarryClass</code> (personnel vs vehicle) are both <b>free</b>: a sixty-troop bay weighs the same five tonnes as a one-troop bay, takes the same ten crew, and costs the same materials. <b>The same constant-mass leak the Chassis door found on three of its four chassis</b> — which makes it a pattern worth naming: <b>a hard-coded <code>Mass</code> makes every dial on that template free at a stroke</b>, because all seven cost channels are computed from <code>[Mass]</code>.</p></div>
+<div class="leak"><h4>⚠️ <code>warehouse-facility</code> — the shipped design asks for 100× what the template allows</h4><p><code>Storage Volume</code> is capped at <b>10,000</b> by the template's <code>MaxFormula</code>, and <code>default-design-warehouse</code> sets it to <b>1,000,000</b>. It clamps silently. This one is <b>already known and already cost the project a day</b> — it is the storage cap that jammed the whole colony economy and quarantined <code>EconomyReadoutTests</code> for a week (the fix was to drop the start stockpiles, not to raise the cap). Recorded here because it is the same door and the same failure mode: <b>a design asking for something the template will not give it, with no error.</b></p></div>
+<div class="leak" style="border-left-color:var(--ac)"><h4>✅ <code>ship-magazine</code> — the one honest cost CHAIN in the door, and the only one with research</h4><p><code>Mass = Ammo Capacity × 1.2</code>. Volume, crew, credits, build points and materials all follow from it, so there is no way to buy capacity cheaply. And it is <b>the only logistical template in the game with a non-zero <code>ResearchCost</code></b> — every other one is <code>"0"</code>, so a magazine is the one piece of logistics you have to discover before you can build it. <b>Copy this cost structure onto the other twelve and most of this door's problems are gone.</b><br><br>⚠ <b>One caveat, so this is not oversold:</b> its crew coefficient is <code>[Mass] × 0.02</code>, which puts <b>120 people</b> on the shipped 5,000 kg magazine. That is a calibration question, not a structural one — the chain is right, the constant is steep — but it is worth a look while you are in there, because crew is now a scarce pool.</p></div>
+
+<div class="leak"><h4>🔴 A cargo hold weighs <b>one percent</b> of what it holds — so the mass budget cannot constrain cargo</h4><p><code>Mass = Size Efficiency × 1.0</code>, and <code>Size Efficiency = Max(1, Storage Volume × 0.01)</code>. So a <b>1,000 m³ cargo hold weighs 10 kg</b>, and the 10,000 m³ ceiling weighs <b>100 kg</b>. The shipped <em>"Cargo Hold 5t"</em> masses <b>50 kg</b>. Its own <code>Volume</code> is computed correctly (volume + machinery, so it takes up real room) — <b>only the mass is off by two orders of magnitude.</b><br><br>🔑 <b>Which is a Chassis-door problem wearing a Logistical hat.</b> A ship's hull enforces a <b>mass</b> budget, and <code>ShipDesign</code> sums <code>MassPerUnit</code> against it — so cargo capacity is very nearly free against the one wall a ship has. Even with the Chassis budget properly priced, <b>a freighter could carry an unbounded hold.</b> The two findings compound: fix the budget and cargo still escapes it. <b>A hold's mass should track the tankage that contains it, exactly the way the good fuel tank already does</b> — a steel shell around a volume, which is a real number with a real square-cube law in it.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The two debts this door was owed</h2>
+<p class="sub">Two earlier doors sent work here. Both arrive cleanly, and one of them arrives on a broken template.</p>
+<div class="scroll"><table class="t">
+<tr><th>Debt</th><th>From</th><th>Why it was sent here</th><th>How it lands</th></tr>
+<tr><td><b>Fuel load</b></td><td>Propulsion §23.1</td><td>The <b>intrinsic test</b>: how much fuel you carry cannot be set knowing only the engine — it is a property of the tank, and the tank is a separate part. So it is not an engine dial.</td><td>⚠ <b>Lands correctly, on two templates — one of which is unbuildable.</b> Keep <code>stainless-steel-fuel-tank</code> (physics, crew 0, four shipped designs), delete <code>fuel-cargo-hold</code>.</td></tr>
+<tr><td><b>Magazines</b></td><td>Weapons + Propulsion</td><td>Same test: how many rounds you carry is not a property of the gun. An ammo-fed weapon needs a magazine <em>somewhere on the host</em>, which is an assembly question, not a weapon question.</td><td>✅ <b>Lands perfectly.</b> <code>ship-magazine</code> and <code>ground-magazine</code> both exist, both bind, both are read — the ground one by a real hard gate (<code>GroundUnitAssembly</code> refuses an ammo weapon with no magazine) and the drain/dry-silence path is built and tested.</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>The intrinsic test earned its keep twice here.</b> Both debts were sent to this door by asking one question — <em>can this be set knowing only this part?</em> — and in both cases the answer put the dial on the container rather than the consumer. <b>That is the boundary between the Component Designer and the Entity Assembler, and it held.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Does it reproduce what exists?</h2>
+<p class="sub">All thirteen templates, under the derived door. <b>One template is deleted as a broken duplicate of a better one; one is merged out of existence by a bug we are fixing; one dead attribute is decided.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Template today</th><th>Answer</th><th>Under the derived door</th></tr>
+<tr><td>general-cargo-hold</td><td><b>Hold</b></td><td>general cargo × volume — <b class="a">and its mass must stop being 1% of its volume</b></td></tr>
+<tr><td>warehouse-facility</td><td><b>Hold</b></td><td>general cargo × volume, colony mount — <b class="a">and raise the 10,000 cap or fix the design</b></td></tr>
+<tr><td>stainless-steel-fuel-tank</td><td><b>Hold</b></td><td>fuel × volume — <b class="g">unchanged, and the model for the door</b></td></tr>
+<tr><td><s>fuel-cargo-hold</s></td><td><b>Hold</b></td><td>🔴 <b class="r">DELETE</b> — a duplicate of the above with 65 billion crew</td></tr>
+<tr><td>ordnance-cargo-hold</td><td><b>Both</b></td><td>ordnance × volume + rate ↔ range — <b class="a">stop subtracting the rate</b></td></tr>
+<tr><td>ship-magazine</td><td><b>Hold</b></td><td>ammo × capacity — <b class="g">unchanged; the honest one</b></td></tr>
+<tr><td>ground-magazine</td><td><b>Hold</b></td><td>ammo × capacity, ground mount — <b class="g">unchanged</b></td></tr>
+<tr><td>troop-bay</td><td><b>Hold</b></td><td>troops × carry-room — <b class="a">capacity must cost mass; carry-size must read the frame</b></td></tr>
+<tr><td>spaceport <s>storage.json</s></td><td><b>Both</b></td><td>general cargo × volume + rate ↔ range — <b class="a">restore the store the merge ate</b></td></tr>
+<tr><td>spaceport <s>installations.json</s></td><td><b>Both</b></td><td>🔴 <b class="r">RENAME</b> — it is a different part and it deserves its own id</td></tr>
+<tr><td>cargo-Shuttlebay</td><td><b>Move</b></td><td>rate ↔ range — <b class="a">make the product flat</b></td></tr>
+<tr><td>space-port</td><td><b>Move</b></td><td>rate ↔ range — <b class="a">and one million crew is not a crew figure</b></td></tr>
+<tr><td>logistics-office</td><td>—</td><td>🔴 <b class="r">DECIDE</b> — wire <code>LogiBaseAtb</code> as the route cap, or delete it</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>And the §36 lesson holds a fourth time, in its strongest form yet.</b> <em>"Look hardest at the oldest attribute."</em> <code>CargoStorageAtb</code> and <code>CargoTransferAtb</code> are two of the oldest files in the engine — no XML docs, no clamps, no conventions, four fields between them — and they hold <b>every one of this door's seven findings</b>. The newest things in the door (<code>ground-magazine</code>, <code>GroundBayAtb</code>, both written in July with full documentation) are the only parts that are clean. <b>The rot is reliably in the oldest code, and it is reliably in the pricing, not the plumbing.</b></p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>One question — does it hold something, or move something?</b> Two answers plus "both", one choice (what it holds), two sliders (how much · rate ↔ range). It reproduces all thirteen templates and collapses ~30 dials to <b>one choice and two sliders</b>.</p>
+<p>🔴 <b>The headline is that this door is not under-dialled, it is UNMAINTAINED.</b> Three of the seven findings are live data defects rather than missing decisions: a template <b>defined twice and silently merged</b> so every start's spaceport stores nothing · a fuel tank asking <b>sixty-five billion crew</b> · and a storage formula that <b>subtracts a rate from a volume and goes negative at the template defaults</b>. The other four are the familiar shape: a dead attribute, a constant mass making every dial free, a split dial that loses value, and a known clamp.</p>
+<p>🔑 <b>And it compounds with Chassis in both directions.</b> A cargo hold weighs <b>1% of what it holds</b> (a 1,000 m³ hold masses 10 kg), and a ship's only wall is a <b>mass</b> budget — so even a correctly-priced hull cannot constrain cargo. The good fuel tank shows the fix: mass is the <b>steel shell around the volume</b>, which brings its own square-cube law.</p>
+<p>🔑 <b>And it holds the campaign's clearest cross-door wire.</b> The Chassis door's dead <code>Size</code> dial is exactly what <code>GroundTransport.CarrySizeOf</code> should read, and instead it reads a hard-coded three-value table — so <b>a Titan takes the same bay room as a rifleman</b>. One line connects two doors' dead ends into a working mechanic.</p>
+<p>✅ <b>Two things here are genuinely excellent and should be copied, not changed:</b> <code>stainless-steel-fuel-tank</code>, which derives its mass from the geometry of a 4 mm steel shell, and <code>ship-magazine</code>, the only logistical template with an honest cost chain <em>and</em> the only one that costs research at all.</p>
+<p><b>The order I would build it in, and the first slice is not a dial:</b> <b>L1 — the duplicate-<code>UniqueID</code> test</b> (a dozen lines; a merged template makes every other measurement in this door untrustworthy, and no existing gauge can see it). Then L2 the negative-storage fix + a clamp on <code>CargoStorageAtb</code>, L3 the flat rate × range product, L4 delete <code>fuel-cargo-hold</code>, L5 the <code>CarrySizeOf</code> wire, L6 mass for the troop bay. <b>Your ruling is needed on exactly one thing: <code>LogiBaseAtb</code> — wire it as the cap on a colony's logistics routes, or delete it?</b> It is the only genuinely dead attribute in the designer, and it has been dead long enough that either answer is defensible.</p>
+</div></footer>
+
+<section class="band"><div class="w">
+<h2>⑪ THE DOOR ITSELF — "what is it carrying?"</h2>
+<p class="big"><b>Your ruling:</b> <em>"for cargo, you should also include things like food, people (some general term), resources both refined and unrefined, and also ships/other entities, anything else that would be shipped, stored, or needs to be moved."</em></p>
+<p class="sub"><b>The mechanism first, because it decides everything else.</b> Anything carryable declares a <code>CargoTypeID</code> — the KIND of compartment it needs. A hold declares the same string through <code>CargoStorageAtb(storeTypeID, maxVolume)</code>. <code>CargoMath.GetFreeVolume</code> looks the item's string up in the hold's compartment list — <b class="r">and on a miss it returns 0. No exception, no log.</b> So <em>"this ship physically cannot carry that"</em> and <em>"this ship has no room right now"</em> are <b>the same reading on the same gauge</b>. That is why everything below survived unnoticed.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="s-cargo">What is ALREADY cargo — and two surprises</h2>
+<div class="scroll"><table class="t">
+<tr><th>Implements <code>ICargoable</code></th><th>What it is</th><th>Its class</th><th>Carryable before this slice?</th></tr>
+<tr><td><code>Mineral</code></td><td><b>unrefined resource</b></td><td>general</td><td><b class="g">✅ yes</b></td></tr>
+<tr><td><code>ProcessedMaterial</code></td><td><b>refined resource</b></td><td>general / fuel</td><td><b class="g">✅ yes</b></td></tr>
+<tr><td><code>ComponentDesign</code> · <code>ComponentInstance</code></td><td>a part, crated</td><td>general</td><td><b class="g">✅ yes</b></td></tr>
+<tr><td><code>OrdnanceDesign</code></td><td>a missile</td><td>ordnance</td><td><b class="g">✅ yes</b></td></tr>
+<tr><td><b><code>ShipDesign</code></b></td><td>🔑 <b>a whole SHIP</b></td><td>—</td><td><b class="r">🔴 nothing provides a berth for one</b></td></tr>
+<tr><td><b><code>TeamObject</code></b> (every <code>Scientist</code>)</td><td>🔑 <b>a team of PEOPLE</b></td><td>passenger</td><td><b class="r">🔴 nothing provided it — a silent 0</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>So "refined and unrefined resources" was already done, and "people" and "ships" were already DECLARED</b> — the engine had been reaching for both for a long time. <code>ShipFactory.cs:246</code> even carries the note <code>// TODO: check for additional people on board (passengers, officers, scientists etc)</code>.</p>
+<p class="sub" style="margin-top:9px">🔴 <b>But six classes were declared and only three had a provider.</b> Both cargo holds hard-code <code>AtbConstrArgs('general-storage', …)</code>, so <b>the compartment's class was never a dial</b> — you could not design a passenger liner, a cryo ark or a reefer — while <code>TeamObject</code> asked for <code>passenger-storage</code> every time one was created. <b>A research team could not be loaded onto anything in the game.</b></p>
+<p class="sub" style="margin-top:9px">🔴 <b>And FOOD does not exist as a thing at all.</b> <code>SustenanceProcessor.cs:14</code> says so in its own words: <em>"food from the — <b>not-yet-existing</b> — food cargo good, so 0 for now."</em> Food is an installation OUTPUT read off installed components, so <b>it is grown and eaten in the same place and can never be shipped</b> — a colony that cannot farm can never be supplied by one that can. That removes the single most classic reason a supply line exists.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔒 The rule that keeps the taxonomy honest</h2>
+<p class="big"><b>A cargo class exists only if it needs a physically DIFFERENT compartment.</b> If two things can ride in the same box, they are the same class.</p>
+<p class="sub">That is what stops this becoming thirty flavours of crate — and it is the §39.8 rule again: <b>each class must win one axis outright.</b> The axes are the requirements a box has to meet: <b>pressure · temperature · continuous power · containment · an acceleration limit · what failure costs · and whether the contents pour or take a seat.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Class</th><th>The requirement that makes it its own compartment</th><th>Carries</th><th>Wins outright</th></tr>
+<tr><td><b>General</b></td><td>none — the baseline</td><td>ore, materials, machinery, parts</td><td><b class="g">cheapest per m³, no power</b></td></tr>
+<tr><td><b>Fuel / fluid</b></td><td>sealed pressure vessel, no free surface</td><td>fuels, reaction mass, <b>water</b>, gases</td><td><b class="g">the only one that holds a liquid or gas</b></td></tr>
+<tr><td><b>Ordnance</b></td><td>blast isolation + handling gear</td><td>missiles, shells, ground ammunition</td><td><b class="g">the only one rated for cargo that detonates</b></td></tr>
+<tr><td><b>Passengers</b> 🔧</td><td>pressure · air · water · <b>an acceleration limit</b> · draws power</td><td>passengers, <b>colonists</b>, a drafted workforce, research teams, prisoners, refugees</td><td><b class="g">the only one whose contents walk out and go to work</b></td></tr>
+<tr><td><b>Cryogenic</b> 🔧</td><td>continuous refrigeration; needs no air or food</td><td>colonists at scale, casualties in stasis, seed stock, gene banks</td><td><b class="g">cheapest per PERSON (5× a berth) and needs nobody to tend it</b></td></tr>
+<tr><td><b>Refrigerated</b> 🆕</td><td>powered cooling; <b>contents degrade with TIME</b></td><td><b>food</b>, biomass, medical stock, anything alive</td><td><b class="g">the only one whose contents are still worth having on arrival</b></td></tr>
+<tr><td><b>Containment</b> 🆕</td><td>shielding or a field; <b>failure damages the CARRIER</b></td><td>volatiles, radioactives, antimatter, biohazard, xeno specimens</td><td><b class="g">the only one rated for cargo dangerous to its own ship</b></td></tr>
+<tr><td><b>Energy</b></td><td>a charge, not a mass</td><td>charged cells</td><td><b class="g">measured in kJ, not m³</b></td></tr>
+<tr><td><b>Berth</b> 🆕 <em>(not built)</em></td><td>a <b>unit slot</b>, not a volume</td><td>ground units, vehicles, small craft, a docked ship, drones</td><td><b class="g">the only one whose cargo departs under its own power</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px">🔧 = declared but unbuildable before this slice · 🆕 = new</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The science-fiction cross-check — what the franchises FORCED</h2>
+<p class="sub">Run as a completeness test on the nine, not as decoration. Three candidates were <b>refused</b>, each with a reason written down.</p>
+<div class="scroll"><table class="t">
+<tr><th>Trade good</th><th>Where</th><th>Lands in</th><th>Verdict</th></tr>
+<tr><td>Water / ice hauling</td><td>The Expanse (Ceres), BSG, Star Trek</td><td>Fuel/fluid — and <code>water</code> is <em>already</em> a <code>Mineral</code></td><td><b class="g">✅ covered twice over</b></td></tr>
+<tr><td>Tylium, naquadah, dilithium, element zero</td><td>BSG, Stargate, Trek, Mass Effect</td><td>General — or <b>Containment</b> if dangerous raw</td><td><b class="g">✅ and it is why Containment earns its place</b></td></tr>
+<tr><td>A refugee civilian fleet</td><td>BSG — the entire premise of the show</td><td><b>Passengers</b></td><td><b class="g">✅ the class that was unbuildable</b></td></tr>
+<tr><td>Ark ships, colonist sleepers</td><td>Andromeda, The Expanse, Stellaris colony ships</td><td><b>Cryogenic</b></td><td><b class="g">✅ and it is why cryo is priced per PERSON</b></td></tr>
+<tr><td>A grain shipment, bacta, medical relief</td><td>Star Trek, Star Wars</td><td><b>Refrigerated</b></td><td>🆕 <b>forced the class</b></td></tr>
+<tr><td>Antimatter, a live specimen, a containment breach</td><td>Trek, Alien, Babylon 5</td><td><b>Containment</b></td><td>🆕 <b>forced the class</b></td></tr>
+<tr><td>A freighter carrying starfighters; the Normandy's shuttle and Mako; ODST pods</td><td>Star Wars, Mass Effect, Halo</td><td><b>Berth</b></td><td>🔴 <b>forced the class the engine cannot express</b></td></tr>
+<tr><td>Smuggling / concealed holds</td><td>Star Wars, B5 black market</td><td><em>would be a compartment PROPERTY (hidden from inspection)</em></td><td>⚠ <b>HELD BACK</b> — needs a customs/inspection system that does not exist</td></tr>
+<tr><td>Courier data, diplomatic dispatches</td><td>Trek, Babylon 5</td><td><em>massless — needs no different box</em></td><td>⚠ <b>HELD BACK</b> — fails the compartment test; it is the intel ledger's job</td></tr>
+<tr><td>A drop pod that deploys under fire</td><td>Halo ODST, Warhammer</td><td><em>a delivery METHOD, not a container</em></td><td>⚠ <b>HELD BACK</b> — Propulsion's axis, named so it is not lost</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>"It needs no different box" is a valid reason to refuse a class. "It sounds cool" is not.</b></p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>✅ What shipped — and the one number you ruled on</h2>
+<p class="sub"><b>Four compartment templates</b>, all on the <b>existing</b> two-argument <code>CargoStorageAtb</code> — so no constructor overload and <b>no save-load risk</b> (landmine L13): <code>passenger-cabin</code> · <code>cryo-bay</code> · <code>refrigerated-hold</code> · <code>containment-hold</code>. Plus the two new classes, and <b>every class description now names the axis it wins.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Compartment</th><th>Capacity</th><th>Mass</th><th>kg per m³</th><th>Crew</th><th>Its axis</th></tr>
+<tr><td>General hold "5t"</td><td>5,000 m³</td><td><b>5,000 kg</b></td><td><b class="g">1.0</b></td><td>5</td><td>cheapest capacity there is</td></tr>
+<tr><td>Refrigerated</td><td>500 m³</td><td>1,000 kg</td><td>2.0</td><td>1</td><td>contents survive the trip</td></tr>
+<tr><td>Cryogenic bay</td><td>500 m³</td><td>1,500 kg</td><td>3.0</td><td><b class="g">1</b></td><td><b>5× the people, half the crew</b></td></tr>
+<tr><td>Passenger cabin</td><td>500 m³</td><td>2,000 kg</td><td>4.0</td><td>2</td><td>they arrive awake and able to work</td></tr>
+<tr><td>Containment</td><td>500 m³</td><td>3,000 kg</td><td><b class="r">6.0</b></td><td>2</td><td><b>the shielding IS the capability</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>YOUR RULING — "make the field kgs no tonnes."</b> Every hold's <code>Mass</code> was <code>Size Efficiency × 1.0</code> where <code>Size Efficiency = volume × 0.01</code>, so a <b>5,000 m³ hold massed 50 kg</b>. The property's own description called itself <em>"the amount of <b>tonnage</b> taken up by racking, office space etc."</em> — <b>the author was thinking in tonnes and the field is kilograms.</b></p>
+<p class="sub" style="margin-top:8px">🔑 <b>And the factor was not a guess — the shipped design NAMES pin it at exactly 100.</b> <code>Cargo Hold 1t</code> is a 1,000 m³ design and <code>Cargo Hold 5t</code> a 5,000 m³ one. Restore the ×100 and they mass <b>exactly 1,000 kg and 5,000 kg</b>. <b>The names were right the whole time; the formula had lost the unit.</b> That is why this is a UNIT fix rather than a balance change — and it is the one part of the slice that is deliberately not byte-identical. Six ships mount a hold; the biggest change is the <b>Freighter</b> (+4,950 kg against its medium hull's 90,000 kg budget), and <code>ShipMassBudgetTests</code> is the gauge that adjudicates it.</p>
+<p class="sub" style="margin-top:8px">⚠ <b>One calibration gap left FLAGGED rather than quietly folded in:</b> this puts a bare hold at <b>1.0 kg per m³</b>, where a real 33 m³ shipping container masses about 2,200 kg — roughly <b>67 kg/m³</b>. So the family is still ~67× lighter than a steel box. <b>That is a balance call sitting on top of a unit fix, and they are not the same decision.</b></p>
+<p class="sub" style="margin-top:8px">🔑 <b>One line of engine code:</b> <code>TeamObject.VolumePerUnit</code> reported <code>0.065 × teamSize</code> — <b>65 litres a head, the volume of a human body</b>, with no room for anything that keeps one alive. On that figure a 500 m³ cabin berths <b>seven thousand people</b>. It is now <code>PassengerPacking</code>: <b>10 m³ a berth, 2 m³ a cryo pod</b> — and because <code>CargoTypeID</code> is settable, <b>freezing the same team really does shrink what it needs.</b> Provably byte-identical, because nothing provided <code>passenger-storage</code>, so that number had <b>never once been read.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What is next, in order — and what I refused to bundle</h2>
+<div class="scroll"><table class="t">
+<tr><th>#</th><th>Slice</th><th>Why it is next, and why it is not now</th></tr>
+<tr><td><b>1</b></td><td><b>Food as a good</b> — define the material, have <code>food-production</code> produce it, let <code>SustenanceProcessor</code> consume a stockpile with installed output as fallback</td><td>Its own TODO, and the thing that makes a supply line matter. <b>Not bundled here on purpose: a food good with nothing reading it is the exact bug this campaign exists to delete.</b> Food has its BOX now and gets its SUBSTANCE next.</td></tr>
+<tr><td><b>2</b></td><td><b>Berth</b> — unify <code>GroundBayAtb</code> into <code>CargoTypeID</code></td><td>Also gives ships-carrying-ships for free (<code>ShipDesign</code> is already <code>ICargoable</code>; the only other trace is an unused <code>ParasiteLauncherReady</code> event). <b>There are FOUR parallel stores today</b> — <code>CargoStorageDB</code> · <code>GroundBayAtb</code> · <code>EnergyStoreAtb</code> · <code>GroundMagazineAtb</code> — each re-inventing "a compartment that only accepts one kind".</td></tr>
+<tr><td><b>3</b></td><td><b>A generic component POWER DRAW</b></td><td>The four powered compartments have <b>no way to say they need power</b>, because <code>WeaponSupply.PowerDraw_W</code> switches on <b>weapon</b> attribute types. Until it exists, "the cryo pods die if the reactor does" and the reefer's spoilage cannot be wired. <b>Same shape as the Chassis finding: the check is general in its signature and hard-coded in its body.</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>A registration rung the L6 chain never recorded:</b> a <b>cargo TYPE id is itself unlocked</b> through <code>StartingItems</code> — which is why <code>general-storage</code> and <code>fuel-storage</code> are already in Earth's list. So a new compartment is a <b>three-part</b> registration: <b>class id · template id · design id</b>. (<code>ordnance-storage</code> was missing from Earth entirely and is now added.)</p>
+<p class="sub" style="margin-top:9px">⚠ <b>Two pre-existing data bugs found while validating this slice — reported, not fixed.</b> ① <code>default-design-missle-sensors</code> → <code>missle-electronics-suite</code> and <code>default-design-prox-frag-5kg</code> → <code>missle-payload</code> are <b>templates that do not exist</b> (they are spelled <code>missile-</code>, two s). Latent only because neither design sits in a colony's list — <b>but <code>ordnanceDesigns/missile-250.json</code> references one of them</b>, so unlocking that missile throws. ② <code>default-design-fuel-farm-5000k</code> spells its properties lowercase and binds only because Newtonsoft is case-insensitive. <b>Both are exactly what one data-only test would catch, and neither is visible to <code>dotnet test</code> today.</b></p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2 id="s-variety">⑫ "WHERE ARE THE FIXES FOR THE VAST VARIATIONS IN CARGO TYPE?"</h2>
+<p class="big"><b>It landed.</b> The section above derived nine classes and shipped four <em>compartments</em> — and then classified <b>not one existing good</b> into any of them. <b>The variety was in the design, not in the game.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Compartment</th><th>Goods in it</th><th>Share</th></tr>
+<tr><td><b><code>general-storage</code></b></td><td><b>30</b></td><td><b class="r">81%</b></td></tr>
+<tr><td><code>fuel-storage</code></td><td>5</td><td>14%</td></tr>
+<tr><td><code>battery-storage</code></td><td>2</td><td>5%</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>37 shippable goods and 30 of them in one box.</b> Eight compartments existed and 81% of all cargo still rode the generic one. That is what the question was about, and it had not been delivered.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>🔴 And the MIRROR test I failed to write found two goods NOTHING could hold</h2>
+<p class="sub">The structural rule shipped above walks <b>classes → providers</b>. That is <b>half the joint</b>. Walking <b>goods → providers</b> finds that <code>electricity</code> and <code>lithium-battery</code> both declare <b><code>battery-storage</code>, which nothing provides</b> — so neither can be stored or shipped by anything, reported as the usual silent <code>0</code>.</p>
+<div class="warnbox"><b>🔒 And my own allow-list had excused it.</b> I allow-listed <code>battery-storage</code> on the grounds that <em>"energy is stored by <code>EnergyStoreAtb</code>"</em>. That is true of <code>electricity</code> — a charge. It is <b>plainly wrong for <code>lithium-battery</code></b>, which is a <b>manufactured object</b>: you can build one and then have nowhere to put it.<br><br><b>An allow-list entry that reasons about the CLASS can hide a bug about a GOOD.</b> The lesson generalises past cargo: <b>a two-sided joint must be tested from both sides, and an exemption must name the THING it exempts, not the category.</b></div>
+<div class="scroll"><table class="t">
+<tr><th>Fix</th><th>Was</th><th>Is</th></tr>
+<tr><td><code>lithium-battery</code></td><td><code>battery-storage</code> — a manufactured item <b>storable nowhere</b></td><td><code>general-storage</code>. Strictly additive: from zero capacity to real capacity.</td></tr>
+<tr><td><b><code>food</code> exists</b> 🆕</td><td><b>did not exist.</b> <code>SustenanceProcessor.cs:14</code> said so: <em>"food from the — <b>not-yet-existing</b> — food cargo good, so 0 for now"</em></td><td>a <code>ProcessedMaterial</code> riding <b><code>perishable-storage</code></b>, refined from hydrocarbons + water + regolith, unlocked at Earth. <b>The first good the taxonomy exists FOR</b> — a bare hold refuses it.</td></tr>
+<tr><td><b>the consumer is WIRED</b></td><td>food supply was installed-component output only, so food was grown and eaten in the same place</td><td><code>DrawStoredFood</code> counts a stockpile <b>and consumes it</b>. <b class="g">A colony that cannot farm can now be supplied by one that can.</b></td></tr>
+<tr><td><b>the surplus BANKS</b></td><td>farm output was a per-day rate consumed the instant it was computed, so <b>a colony growing ten times what it eats had nothing to ship</b></td><td><code>BankFoodSurplus</code>. Exactly one branch runs per month — short ⇒ draw, over ⇒ bank — so nothing double-counts.</td></tr>
+<tr><td>the mirror gauge</td><td>classes → providers only</td><td><code>EveryGood_NamesACompartmentSomethingProvides</code>, allow-list naming the <em>good</em>.</td></tr>
+</table></div>
+<div class="okbox"><b>✅ And the perishable failure mode is the RIGHT one, not a silent loss.</b> Food rides <code>perishable-storage</code>, which only a <code>refrigerated-hold</code> provides — so <b>a farming colony with no cold store banks nothing and the surplus spoils.</b> That is what "perishable" <em>means</em>, and it is a real reason to build cold storage at a breadbasket rather than a rule bolted on afterwards.</div>
+<p class="sub" style="margin-top:10px">🔑 <b>The units are careful because this campaign has already been bitten by exactly this shape</b> (the reactor <code>Lifetime</code> bug): demand and farm output are <b>per-day rates</b>, a stockpile is a <b>quantity</b>, and the processor runs <b>monthly</b> — so a draw converts back to a daily rate. Adding a raw stockpile to a rate would have made one crate of rations look like an infinite farm. ✅ <b>Byte-identical at the stock <code>PerCapitaFoodDemand</code> of 0</b>, asserted on both sides.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>⏭ 82% of goods are STILL generic — and the reason it is held back is the bug itself</h2>
+<p class="sub">The obvious next move is to reclassify the goods that are physically something else: <code>water</code> and <code>hydrocarbons</code> are <b>liquids</b> and belong in the fluid class; raw <code>fissionables</code> is <b>radioactive</b> and belongs in containment.</p>
+<div class="warnbox"><b>🔴 Held back deliberately: all three are MINED, and mining writes into cargo.</b> <code>MineResourcesProcessor</code> adds to the colony's hold, and if the destination compartment has no room <b>the loss is a silent zero</b> — the exact failure this whole slice exists to remove. <code>general-storage</code> at the start colony is a 10,000 m³ warehouse; <code>fuel-storage</code> is a few thousand m³ of tanks, and the start stockpiles were already tuned against the warehouse cap. <b>Moving a mined good to a smaller box would quietly throw away production, and nothing would tell you.</b><br><br>So it needs its own slice with a capacity gauge first: <b><em>can this host actually hold what it mines?</em></b> — a test worth owning regardless.</div>
+<p class="sub" style="margin-top:10px">⚠ <b><code>electricity</code> is the one remaining orphan, and it is a real ruling rather than an oversight:</b> <em>should power be shippable cargo?</em> Charged cells are a genuine science-fiction trade good — but wiring it through <code>CargoStorageAtb</code> would give the game a <b>fifth parallel way to hold a charge</b>, and a fifth parallel store is not a fix.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="s-dock">⑬ THE DOCK — moved OUT of this door and built as its own area</h2>
+<p class="big"><b>Your ruling, and it corrects the table above:</b> <em>"did you build berth for an actual dock that can be built? that should be its own area."</em> <b>Berth should never have been in the cargo-class list.</b></p>
+<p class="sub">Every compartment measures its contents in <b>cubic metres poured in</b>. A dock holds a <b>discrete vessel that arrives and leaves under its own power</b>, so the question it answers is <b>how many, and how big</b> — not <em>how much fits</em>. Pouring a frigate into a warehouse by volume would let you carry <b>half a frigate</b>. That is exactly why <code>GroundBayAtb</code> had to invent its own capacity system for troops instead of using a cargo type.</p>
+<p class="sub" style="margin-top:9px">✅ <b>So it is its own area: <code>GameEngine/Docking/</code>, with its own template file <code>TemplateFiles/docking.json</code>.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Piece</th><th>What it is</th></tr>
+<tr><td><code>DockBayAtb</code></td><td>The buildable component. <b>Two gates:</b> <code>BerthTonnage</code> (the budget) and <code>MaxHullMass</code> (<b>the door</b> — the largest SINGLE vessel that fits). The ctor <b>clamps the door to the budget</b>, so bad data cannot open a door wider than the bay.</td></tr>
+<tr><td><code>DockedShipsDB</code></td><td>The carrier's registry — <b>ids, not references</b>, and an id that no longer resolves is skipped rather than throwing. Carries <code>Clone()</code>, because <b>L12</b> would otherwise turn it into a bare <code>System.Object</code> the moment a carrier <b>jumps systems</b> — the one case a dock most needs to survive.</td></tr>
+<tr><td><code>DockTools</code></td><td>Health-scaled on-demand reads (a shot-up bay holds less), <code>CanDock</code> with a <b>stated reason</b> per refusal, dock/undock, and <b><code>UndockAll</code> — the grave rung.</b></td></tr>
+</table></div>
+<div class="okbox"><b>🔑 The dial is a SPLIT, and it is the honest shape.</b> <code>Berth Tonnage</code> is carved into <code>Berths</code>, so <b><code>Max Hull Mass = tonnage ÷ berths</code></b>: the <b>total capacity is invariant</b> and you choose <em>few wide doors</em> or <em>many narrow ones</em>. Neither strictly dominates — and <b>every extra door costs structure and deck crew</b>, so a <b>carrier is a real commitment beside a tender</b> rather than free flexibility.</div>
+<div class="scroll"><table class="t">
+<tr><th>Shipped design</th><th>Total</th><th>Berths</th><th>Door</th><th>What it is</th></tr>
+<tr><td><code>heavy-berth</code></td><td>60 t</td><td><b>1</b></td><td><b>60 t</b></td><td>a tender — one wide door, cheapest</td></tr>
+<tr><td><code>docking-bay</code></td><td>60 t</td><td><b>4</b></td><td><b>15 t</b></td><td>a carrier — four narrow doors, more structure + crew</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">✅ <b>The consequence that makes it more than a spreadsheet row:</b> a docked ship is re-parented with <code>PositionDB.SetParent</code>, which preserves absolute position across the switch — <b>the same mechanism that makes a moon follow its planet</b> — so it genuinely travels with the carrier and stops being independently located. Undocking hands it back to whatever the carrier itself orbits. 🔒 <b>And <code>UndockAll</code> releases everything ALIVE:</b> losing a hangar must never silently delete the ships inside it.</p>
+<p class="sub" style="margin-top:8px">✅ <b>Byte-identical by construction:</b> no base-mod ship mounts a bay and <b>nothing in the engine calls <code>DockTools</code></b> — a ship docks only when something asks. <b>The ORDER is the next slice, and it will be ONE verb both seats issue</b> (your law) because it is one method here.</p>
+<div class="warnbox"><b>⚠ A landmine found while building it, and it nearly got me: there are TWO <code>PositionDB</code> classes.</b> The one in <code>Engine/Datablobs/PositionDB.cs</code> is <b>entirely commented out</b> — the file opens its <code>using</code>s and then a <code>/*</code>. So <code>using Pulsar4X.Datablobs</code> for it <b>compiles and silently gets you nothing</b>; the live class is <b><code>Pulsar4X.Movement.PositionDB</code></b> in <code>Movement/MoveState.cs</code>. A <code>^namespace</code> grep finds the <b>dead</b> one first — which is how I found it, by grepping and getting the wrong answer.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="s-colonists">⑭ COLONISTS — the cargo with no consumer, and the reason you cannot colonise</h2>
+<p class="sub">The taxonomy pass listed colonists as item three of five: a good that still needed a consumer. That was the wrong reading. Tracing what actually consumes them turned up something much larger, and it is not a small bug — it is a missing verb in the core loop.</p>
+
+<div class="kill">
+<h4>🔴 The finding</h4>
+<p><b>Population in this engine is multiplicative-only.</b> Every write to a colony's population is a <b>multiply</b>, and the setter is a <b>set</b>, never an add:</p>
+<p style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.8;margin-top:8px">
+newPop = (long)(value * (1.0 + growthRate + migration - starvation));&nbsp;&nbsp;<s>// PopulationProcessor</s><br>
+population[id] = newPopulation;&nbsp;&nbsp;<s>// UpdatePopulation — a SET</s></p>
+<p style="margin-top:9px">There is <b>no <code>pop + n</code> anywhere in the codebase</b>. Population can only ever scale what is already there — like a pump with no prime, it can run forever and never move anything. <b>So zero is an absorbing state.</b></p>
+</div>
+
+<p class="sub" style="margin-top:14px">And zero is exactly where colonies start:</p>
+<div class="scroll"><table class="t">
+<tr><th>Evidence</th><th>What it says</th></tr>
+<tr><td><code>ColonyFactory.CreateColony(faction, species, planet, <b>long initialPopulation = 0</b>)</code></td><td>the default is <b>zero</b></td></tr>
+<tr><td><code>CreateColonyOrder.Execute</code> (<code>:52</code>)</td><td>calls it with <b>three arguments</b> — so it takes that default</td></tr>
+<tr><td><code>CreateColonyOrder.IsValidCommand</code></td><td>returns <b class="r">true unconditionally</b> — no ship, no cost, no people, no distance</td></tr>
+<tr><td><code>ExpandResolver.cs:23</code> — the AI's own comment</td><td><em>"an instant order (<b>no colony ship, no landing</b>): CreateColonyOrder → ColonyFactory"</em></td></tr>
+<tr><td><code>DefaultStartFactory.cs:198</code></td><td>🔴 <b class="r">founds Mars with no population argument</b> — it ships at zero and stays there for the whole campaign</td></tr>
+</table></div>
+
+<div class="big"><b>Founding works. Populating does not exist.</b> You can plant a colony anywhere, instantly and for free, and it will be an empty shell forever. The second X of 4X has no mechanism.</div>
+
+<p class="sub" style="margin-top:14px">🔑 <b>And "migration" is not movement either.</b> <code>MigrationRate(morale)</code> is a ± fraction applied to a colony's <b>own</b> population — morale above 50 makes that colony grow, below 50 makes it shrink. Nobody ever leaves one place and arrives at another. <b>It is a birth-and-death modifier wearing a movement name.</b></p>
+
+<h2>Why this reframes colonists from a nice-to-have into the keystone</h2>
+<p class="sub">On the taxonomy list, colonists were a good in search of a consumer. They are not. <b>They are the only additive population source the game could have</b> — the prime on the pump. Without one, "settle a new world" is a button that produces an empty shell, and <code>docs/MVP.md</code>'s finish line — <em>"you can take a planet"</em> — is hollow, because you cannot then hold it with people.</p>
+
+<h2>The design — derived, not invented</h2>
+
+<div class="okbox"><b>✅ The precedent already exists, and it settles the hard question.</b> <code>TeamObject : ICargoable</code> (<code>Tech/TeamObject.cs:9</code>) is a research team you can already load onto a ship: <code>CargoTypeID = passenger-storage</code>, <code>MassPerUnit = teamSize × 100 kg</code>, volume from <code>PassengerPacking</code>. <b>People are already a carryable cargo type in this engine.</b></div>
+
+<p class="sub" style="margin-top:12px">That matters because of <b>the intrinsic test (§1a)</b>. A colonist is not generic — a human colonist is not a Kithrin one — so the good must carry a <b>species</b>. A JSON <code>ProcessedMaterial</code> has no species field, and authoring one material per species is a combinatorial mess that grows every time a species is added. But <code>TeamObject</code> proves the engine already supports a <b>runtime, per-instance cargo object carrying its own payload</b>. A <code>ColonistPacket</code> holding <code>SpeciesId + Count</code> is that same shape, already load-bearing.</p>
+
+<div class="scroll"><table class="t">
+<tr><th>Rung</th><th>Colonists, cradle to grave</th></tr>
+<tr><td>producer</td><td>a <b>draft</b> drawn from a source colony's population — <b>it costs that colony those people</b> (the hard draw already locked in <code>MORALE-AND-POPULATION-DESIGN.md</code>)</td></tr>
+<tr><td>component</td><td><code>passenger-cabin</code> / <code>cryo-bay</code> — <b>both already shipped</b> in <code>storage.json</code></td></tr>
+<tr><td>the decision</td><td><b>awake or frozen</b> — and who you can afford to send away</td></tr>
+<tr><td>consumer</td><td>unload <b>adds</b> to <code>ColonyInfoDB.Population</code> — <b class="r">the one rung that does not exist</b></td></tr>
+<tr><td>the grave</td><td>kill the transport and <b>the colonists die</b> — which makes escorting a colony convoy a real decision</td></tr>
+</table></div>
+
+<h2>The forced choice, and why it fails §39.8 today</h2>
+<p class="sub">Two compartments exist and each should win an axis outright. Drive the panel above with <b>Colonists</b> selected and read the numbers — they are the shipped formulas, not estimates:</p>
+<div class="scroll"><table class="t">
+<tr><th>At 500 m³</th><th>Passenger cabin</th><th>Cryogenic bay</th></tr>
+<tr><td>Room per person</td><td>10 m³ a berth</td><td><b>2 m³ a pod</b></td></tr>
+<tr><td>People carried</td><td>50</td><td><b class="g">250 — five times as many</b></td></tr>
+<tr><td>Mass</td><td>2.1 t</td><td><b class="g">1.5 t — lighter</b></td></tr>
+<tr><td>Crew</td><td>2.05</td><td><b class="g">1.00 — fewer</b></td></tr>
+<tr><td>Cost</td><td>615 cr</td><td>539 cr — <b class="g">cheaper too</b></td></tr>
+</table></div>
+
+<div class="kill">
+<h4>🔴 So cryogenics is strictly better on every single axis</h4>
+<p>Five times the people, for less mass, less crew and less money. <b>Nobody would ever build a passenger cabin.</b> That is a door with one real answer, which is not a door at all — it is the same dominance the fuel ladder had before exhaust velocity was traded against fuel grade.</p>
+</div>
+
+<div class="okbox" style="margin-top:12px"><b>✅ The fix is the physically honest one: cryo colonists thaw.</b> They land, but do not count as population until a revival period passes. Now each end wins an axis outright — <b>the cabin buys TIME</b> (they work the day they arrive; the right call for a small, urgent seeding) and <b>cryo buys VOLUME</b> (five times the people; the right call for bulk migration where time is cheap). Tick <b>Apply the proposed fixes</b> in the panel to see it.</div>
+
+<h2>What I am deliberately NOT bundling</h2>
+<p class="sub">🚫 <b>Turning morale-migration into real inter-colony transfer.</b> It is the correct end state — people leaving an unhappy world should <em>arrive</em> somewhere, not evaporate — but it rewrites the population loop for every colony at once, and it is a much larger change than adding an unload path. <b>Named here so it is not lost, not smuggled into this slice.</b></p>
+<p class="sub" style="margin-top:8px">🚫 <b>A per-species colonist material per species.</b> Rejected above on the intrinsic test.</p>
+<p class="sub" style="margin-top:8px">🚫 <b>Making colony founding require a full logistics chain in v1.</b> The order should stop being free, but gating it behind a working supply line before people can even be carried would leave the game strictly worse than it is now.</p>
+
+<h2>Build order, and the gauge for each</h2>
+<div class="scroll"><table class="t">
+<tr><th>#</th><th>Slice</th><th>Gauge</th></tr>
+<tr><td><b>C1</b></td><td><b>The additive path.</b> <code>ColonistPacket : ICargoable</code> (species + count) and an unload that <b>adds</b> to <code>ColonyInfoDB.Population</code>. This is the whole finding, and it is the smallest slice.</td><td>a colony at 0 population, handed a packet, is no longer at 0 — the red-before/green-after that no test in the suite can pass today</td></tr>
+<tr><td><b>C2</b></td><td><b>The draft.</b> Drawing colonists off a source colony <b>costs it those people</b>, so sending settlers is a real decision rather than free.</td><td>source population falls by exactly the number loaded; total population across both colonies is conserved</td></tr>
+<tr><td><b>C3</b></td><td><b>The thaw.</b> Cryo colonists land but do not count as population until the revival period elapses — the cost that stops cryo dominating.</td><td>cabin and cryo each win an axis; neither is better on all of them (the §39.8 bar, as a test)</td></tr>
+<tr><td><b>C4</b></td><td><b>Founding stops being free.</b> <code>IsValidCommand</code> stops returning unconditional <code>true</code>.</td><td>a faction with no colonists aboard cannot found a colony; the AI's <code>ExpandResolver</code> path still works, using the same orders</td></tr>
+</table></div>
+
+<div class="okbox" style="margin-top:13px"><b>✅ One Verb, Both Seats — it holds.</b> Load, move and unload are orders that <b>already exist</b>, and founding is already an order both the player (<code>SystemWindow.cs:139</code>) and the AI (<code>ExpandResolver.cs:89</code>) issue through the same queue. So the AI colonises with <b>exactly the primitives the player uses</b> — no parallel path, which is the thing your law forbids.</div>
+
+<p class="sub" style="margin-top:13px">⚠️ <b>Honest scope note.</b> <b>None of C1–C4 is built.</b> The two compartments are shipped and real; everything above them in this section is a proposal, and the panel's unticked state is what the game does today.</p>
+</div></section>
+
+<script>
+
+// ── the shipped arithmetic, verbatim from storage.json / installations.json / ordnance.json / weapons.json ──
+//  general-cargo-hold   Storage Volume 10..10000   Mass = SizeEff*1.0   SizeEff = Max(1, Vol*0.01)
+//  warehouse-facility   Storage Volume 10..10000   Mass = SizeEff*1.5   <- shipped design asks 1,000,000 (clamps)
+//  stainless-steel-fuel-tank  Tank Volume 1..1e6   Mass = 1.333*Pi*(r^3-(r-0.004)^3)*8000   Crew 0   <- the good one
+//  fuel-cargo-hold      Tank Radius 1..1e6        Mass = Tank Radius   Crew = TANK VOLUME  <- 65e9 crew
+//  ordnance-cargo-hold  Rack Size 100..1e6        Total Stored = Rack - SizeEff - TRANSFER RATE  <- negative
+//  ship-magazine        Ammo Capacity 100..1e5    Mass = Cap*1.2   ResearchCost = [Mass]  <- the only honest one
+//  ground-magazine      Capacity 100..5000        Mass = Cap*2     Crew 5
+//  troop-bay            Capacity 1..60            Mass = 5000 CONSTANT  <- capacity is free
+//  cargo-Shuttlebay     Size 2000..200000, Rate vs Range 1..9
+//                       rate  = 0.001 * (S*0.5 + S*0.5*RvR*0.1)      <- ADDITIVE, saturates
+//                       range = 1.5   * (S*0.5 - S*0.5*RvR*0.1)      <- SUBTRACTIVE, goes to zero
+//                       => rate x range FALLS 5.2x across the span. RvR=1 dominates.
+//  spaceport            DEFINED TWICE. storage.json loads second and replaces the Properties list wholesale.
+const TYPE = {
+  general:  {store:'general-storage',  unit:'m³',   lo:10,   hi:10000,  def:1000,   massK:1.0,  crewK:0.1, bp:4.5, cr:0.12, rc:0,
+             noun:['Locker','Cargo Hold','Cargo Bay'], consumer:'the colony + ship cargo system', per:'m³ per t'},
+  fuel:     {store:'fuel-storage',     unit:'m³',   lo:1,    hi:1000000,def:1500,   massK:0,    crewK:0,   bp:0.1, cr:1.0,  rc:0,
+             noun:['Drum','Fuel Tank','Fuel Farm'], consumer:'the engine — NewtonThrust fuel draw', per:'m³ per t'},
+  ordnance: {store:'ordnance-storage', unit:'m³',   lo:100,  hi:1000000,def:2627,   massK:1.0,  crewK:0.1, bp:1.0, cr:0,    rc:0,
+             noun:['Rack','Ordnance Rack','Ordnance Magazine'], consumer:'the missile launcher', per:'m³ per t'},
+  ammo:     {store:'ammo',             unit:'kg',   lo:100,  hi:100000, def:5000,   massK:1.2,  crewK:0.02,bp:1.0, cr:1.0,  rc:1.0,
+             noun:['Ready Rack','Ammo Magazine','Deep Magazine'], consumer:'the resolver’s dry-magazine gate', per:'kg per t'},
+  troops:   {store:'troops',           unit:'carry',lo:1,    hi:60,     def:6,      massK:0,    crewK:0,   bp:4.5, cr:0.12, rc:0,
+             noun:['Berth','Troop Bay','Trooper Deck'], consumer:'GroundTransport — the invasion chain', per:'carry per t'},
+  // ── NEW 2026-07-30 · the two people-compartments, verbatim from storage.json ──
+  people:   {store:'passenger-storage', unit:'m³',   lo:10,   hi:10000,  def:500,    massK:4.0,  crewK:0.4, bp:6.0, cr:0.3,  rc:0,
+             noun:['Cabin','Passenger Deck','Colony Module'],
+             consumer:'🔴 NOTHING — no system reads colonists', per:'people per t'},
+  // ── NEW · the BERTH class from the taxonomy below, wired into the panel: a store of craft that also LAUNCHES them ──
+  strike:   {store:'strikecraft-bay',   unit:'m³',   lo:500,  hi:1000000,def:12000,  massK:1.6,  crewK:0.2, bp:3.0, cr:0.25, rc:0.5,
+             noun:['Launch Cradle','Strike Bay','Flight Deck'],
+             consumer:'⚠ ENGINE-PENDING launch — a docked craft is ICargoable (ShipDesign), so the STORE holds it; the LAUNCH verb has no game caller (ParasiteLauncherReady fires nothing, DockTools unused)', per:'m³ per t'}
+};
+// passenger-cabin  Mass = SizeEff*400  Crew = Max(2, SizeEff*0.4)   Credit *0.3   BP *6.0   berth 10 m³
+// cryo-bay         Mass = SizeEff*300  Crew = Max(1, SizeEff*0.05)  Credit *0.35  BP *6.5   pod    2 m³
+const PACK = {
+  cabin: {store:'passenger-storage',  room:10, massK:400, crewMin:2, crewK:0.40, cr:0.30, bp:6.0,
+          noun:['Cabin','Passenger Deck','Colony Module'], thaw:0},
+  cryo:  {store:'cryogenic-storage',  room:2,  massK:300, crewMin:1, crewK:0.05, cr:0.35, bp:6.5,
+          noun:['Pod Rack','Cryogenic Bay','Sleeper Hold'], thaw:30}
+};
+const KG_PER_PERSON = 100;      // PassengerPacking.MassPerPerson_kg
+const RIFLEMAN=1.0, MARINE_SIZE=4, TITAN_SIZE=40;      // GroundTransport.CarrySizeOf vs the frame Size dial
+
+let job='hold', typ='general', pack='cabin';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(2)+'G':a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(a<10?2:0);}
+function kg(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+' kt':a>=1000?(v/1000).toFixed(1)+' t':v.toFixed(0)+' kg';}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+function unmap(v,lo,hi){return 100*Math.log(v/lo)/Math.log(hi/lo);}
+function band(v,cuts){let i=0;while(i<cuts.length&&v>=cuts[i])i++;return i;}
+
+// ── compositional naming: generic vocabulary, one temper axis, the 5-word cap can never fire
+const SCALE=['Compact','Light','','Heavy','Bulk'];
+const MOVER=['Ramp','Shuttlebay','Spaceport'];
+const TEMPER=['Long-Reach','','Fast-Cycle'];      // low RvR = reach, high RvR = rate
+function partName(d1,d2){
+  let noun, scale, temper='';
+  if(job==='move'){
+    const s=logmap(d1,2000,200000);
+    scale=SCALE[band(s,[4000,9000,30000,120000])]; noun=MOVER[band(s,[9000,30000])];
+    temper=TEMPER[band(1+d2*0.08,[3.5,6.5])];
+  } else {
+    const T=TYPE[typ], v=logmap(d1,T.lo,T.hi);
+    scale=SCALE[band(v,[T.def*0.25,T.def*0.7,T.def*2,T.def*8])];
+    noun=(typ==='people'?PACK[pack].noun:T.noun)[band(v,[T.def*0.7,T.def*2])];
+  }
+  if(SCALE.some(w=>w&&noun.includes(w))) scale='';
+  return [scale,temper,noun].filter(Boolean).join(' ');
+}
+
+// each answer OPENS ON ITS REAL SHIPPED PART
+const STOCK={ general:{d1:Math.round(unmap(1000,10,10000))}, fuel:{d1:Math.round(unmap(1500,1,1000000))},
+              ordnance:{d1:Math.round(unmap(2627,100,1000000)), d2:12}, ammo:{d1:Math.round(unmap(5000,100,100000))},
+              troops:{d1:Math.round(unmap(6,1,60))},
+              people:{d1:Math.round(unmap(500,10,10000))},
+              strike:{d1:Math.round(unmap(12000,500,1000000)), d2:12},
+              move:{d1:Math.round(unmap(5000,2000,200000)), d2:12} };
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, fixed=$('fix').checked;
+ show('typesec', job!=='move');
+ show('w2', job!=='hold');
+ show('packsec', job!=='move' && typ==='people');
+ set('v_name', partName(d1,d2));
+
+ // ── the MOVER half (CargoTransferAtb) — present for 'move' and 'both'
+ const size = job==='move' ? logmap(d1,2000,200000) : 5000;
+ const rvr  = 1 + d2*0.08;                                  // the real 1..9 dial
+ let rate, range;
+ if(fixed){                                                 // the fix: multiplicative both sides ⇒ flat product
+   const k = Math.pow(3, (rvr-5)/4);                         // anchored at RvR 5 ⇒ k = 1 ⇒ byte-identical mid-dial
+   rate  = 0.001*(size*0.5)*k;
+   range = 1.5*(size*0.5)/k;
+ } else {                                                   // the shipped formulas
+   rate  = 0.001*(size*0.5 + size*0.5*rvr*0.1);
+   range = 1.5  *(size*0.5 - size*0.5*rvr*0.1);
+ }
+
+ let held=0, mass=0, crew=0, credits=0, bp=0, research=0, unitStr='', note, verdict, thirdL, thirdV, thirdC='g';
+
+ if(job==='move'){
+   mass = size*1.5; crew = Math.max(5, size*0.001); credits = mass*0.12; bp = mass*4.5;
+   set('n1','Bay size'); set('s1',fmt(size)); set('e1a','2,000 — the shipped shuttlebay'); set('e1b','200,000');
+   set('n2', fixed?'Rate ↔ range  ✅ now flat':'Rate vs Range  ⚠️ loses value'); set('s2',rvr.toFixed(0)+' of 9');
+   set('e2a','1 — all reach'); set('e2b','9 — all rate');
+   thirdL = fixed?'rate × range — INVARIANT':'rate × range  ⚠️ collapses';
+   thirdV = fmt(rate*range)+(fixed?'  ◄ flat':'  ▼ −81% at 9');
+   thirdC = fixed?'g':'r';
+   set('l_a1','Transfer rate'); set('v_a1',rate.toFixed(2)+' /s');
+   set('l_a2','Transfer range'); set('v_a2',fmt(range)+' m');
+   unitStr = 'moves only — holds nothing';
+   note = fixed
+     ? 'Multiplicative on both sides, anchored at the dial’s midpoint so a stock shuttlebay is byte-identical: <b>rate × range is now flat</b>. A dock genuinely chooses between reaching further and cycling faster, and neither end is free.'
+     : '⚠️ <b>The shape is right and the arithmetic is not.</b> Rate is <code>base + base×RvR×0.1</code> — additive, so it saturates. Range is <code>base − base×RvR×0.1</code> — subtractive, so it goes to zero. Drag it right: <b>range falls 89% to buy 73% more rate.</b>';
+   verdict = fixed
+     ? '✅ <b>A split dial that passes the ladder test.</b> Same fix the RTG’s output-versus-lifetime split already implements — a multiply where the template has a plus.'
+     : '⚠️ <b>So <code>1</code> is strictly dominant for anyone who cares about range.</b> The shipped shuttlebay sits at <b>2</b>, near the good end — which is exactly why nobody noticed.';
+   $('jobnote').textContent='A mover. Two numbers reach the sim: how fast cargo crosses, and from how far.';
+ } else {
+   const T=TYPE[typ];
+   const asked = logmap(d1,T.lo,T.hi);
+   // the ordnance/spaceport bug: Total Stored = asked - SizeEff - TRANSFER RATE (a rate, subtracted from a volume)
+   const sizeEff = Math.max(1, asked*0.01);
+   const rawRate = job==='both' ? logmap(d2,100,1000000) : 0;
+   held = (typ==='ordnance'||job==='both')
+        ? (fixed ? asked - sizeEff : asked - sizeEff - rawRate)
+        : asked;
+   if(typ==='fuel'){                                        // the honest one: mass from a 4 mm steel shell
+     const r = Math.pow(3*asked/(4*Math.PI), 1/3);
+     mass = 1.333*Math.PI*(Math.pow(r,3)-Math.pow(Math.max(0,r-0.004),3))*8000;
+     crew = 0;
+   } else if(typ==='troops'){
+     mass = fixed ? 5000*(asked/T.def) : 5000;              // the fix: capacity costs mass
+     crew = 10;
+   } else if(typ==='people'){
+     const P = PACK[pack];
+     mass = sizeEff*P.massK;                                // shipped: SizeEff * 400 (cabin) / 300 (cryo)
+     crew = Math.max(P.crewMin, sizeEff*P.crewK);
+   } else {
+     mass = (typ==='ammo') ? asked*1.2 : sizeEff*T.massK;
+     crew = Math.max(typ==='ammo'?0:1, mass*T.crewK);
+   }
+   credits = mass*(T.cr||0.12); bp = mass*T.bp; research = mass*T.rc;
+   if(typ==='people'){ credits = mass*PACK[pack].cr; bp = mass*PACK[pack].bp; }
+   set('n1', typ==='troops'?'Carry room':typ==='ammo'?'Ammo capacity':typ==='fuel'?'Tank volume':typ==='people'?'Compartment volume':'Storage volume');
+   set('s1', fmt(asked)+' '+T.unit);
+   set('e1a', fmt(T.lo)+' '+T.unit); set('e1b', fmt(T.hi)+'  ·  shipped = '+fmt(T.def));
+   if(job==='both'){ set('n2', fixed?'Transfer rate — no longer eats the store':'Transfer rate  🔴 SUBTRACTED from storage');
+     set('s2', fmt(rawRate)+' /s'); set('e2a','100'); set('e2b','1,000,000  — the template default is 50,000'); }
+   thirdL = held<0 ? 'Storage the host GETS  🔴 NEGATIVE' : 'Storage the host gets';
+   thirdV = fmt(held)+' '+T.unit+(held<0?'  ◄ it REMOVES storage':'');
+   thirdC = held<0?'r':(held<asked*0.95?'a':'g');
+   set('l_a1','Holds — what you asked for'); set('v_a1',fmt(asked)+' '+T.unit);
+   set('l_a2','Cargo type — the string'); set('v_a2',T.store);
+   unitStr = typ==='troops' ? Math.floor(held/RIFLEMAN)+' riflemen  ·  but also '+Math.floor(held/RIFLEMAN)+' Titans'
+           : typ==='people' ? Math.floor(held/PACK[pack].room).toLocaleString()+' colonists'+(pack==='cryo'?' (frozen)':' (awake)')
+           : fmt(held)+' '+T.unit;
+   // 🔑 THE FINDING, made visible: the hold carries people and DELIVERS NOBODY.
+   if(typ==='people'){
+     const P=PACK[pack], carried=Math.floor(held/P.room);
+     set('l_a1','Compartment volume'); set('v_a1',fmt(asked)+' m³');
+     set('l_a2','Cargo type — the string'); set('v_a2',P.store);
+     thirdL = fixed ? 'Colonists DELIVERED to the colony' : 'Colonists DELIVERED  🔴 ZERO';
+     thirdV = fixed ? carried.toLocaleString()+(P.thaw?'  after '+P.thaw+' days thaw':'  on arrival')
+                    : '0  of '+carried.toLocaleString()+'  ◄ nothing can unload them';
+     thirdC = fixed ? 'g' : 'r';
+   }
+   if(typ==='strike'){
+     note = '⚠️ <b>The store half WORKS today; the launch half does not.</b> A whole craft is <code>ICargoable</code> (<code>ShipDesign</code>), so a compartment of type <code>strikecraft-bay</code> holds one the same way a hold holds ore — this is the <b>Berth class</b> in the taxonomy below, and it needs no new engine code. What is missing is the verb that gets a craft back OUT: pick <b>Both</b> to add the launch mover, and note that <code>ParasiteLauncherReady</code> is an event the engine <b>defines and never fires</b>, with <code>DockTools</code> holding the docking machinery but <b>no game caller</b>. So a loaded bay just sits there.';
+     verdict = '🔴 <b>The carrier gap in one line: the hangar is a solved store, the launch is an unbuilt verb.</b> This is slice #2 (Berth) crossed with slice #3 (a generic power draw) — the store rides the existing two-argument <code>CargoStorageAtb</code> (no constructor overload, no save-load risk — landmine L13), but the mover needs a game caller for <code>ParasiteLauncherReady</code> and a strike-craft-as-sub-fleet resolver before a launched wing can fight. Kept here, marked <b>ENGINE-PENDING</b>, so the compartment is designable now and nobody ships a launch button that does nothing.';
+   } else if(typ==='fuel'){
+     note = '✅ <b>The best-authored template in this door.</b> You set the volume you want; it solves the radius, then computes the mass of the <b>4 mm steel shell</b> needed to contain it — <code>1.333π(r³ − (r−0.004)³) × 8000</code>. A bigger tank costs more steel for a physical reason, and <b>nobody mans a tank</b> (crew 0). 🔴 Its twin <code>fuel-cargo-hold</code> sets crew to the tank’s VOLUME — <b>65 billion people</b> — and is unlocked on Earth.';
+     verdict = '✅ <b>Copy this and delete the other one.</b> Four shipped designs ride this template (1,000 / 1,500 / 3,000 m³ and a 5,000 km³ fuel farm); zero ride the broken twin.';
+   } else if(typ==='ammo'){
+     note = '✅ <b>The only fully honest cost chain in the door.</b> <code>Mass = Ammo Capacity × 1.2</code>, and volume, crew, credits, build points and materials all follow from it. It is also <b>the only logistical template in the game with a non-zero <code>ResearchCost</code></b> — everything else is <code>"0"</code>.';
+     verdict = '✅ <b>A magazine is the one piece of logistics you must discover before you can build it.</b> That is how the other twelve should read.';
+   } else if(typ==='troops'){
+     note = fixed
+       ? 'Capacity now costs mass, and <b>carry-size is read from the unit’s frame</b> instead of a three-value table — so a Titan finally eats forty times the bay room of a rifleman.'
+       : '🔴 <b><code>Mass</code> is the hard-coded constant 5000</b>, so capacity and carry-class are both free: a 60-troop bay weighs the same five tonnes as a 1-troop bay. 🔑 <b>And worse — <code>GroundTransport.CarrySizeOf</code> is a hard-coded switch on unit TYPE</b> (Infantry 1 / Artillery 2 / Armor 3). It never reads the frame’s <code>Size</code> dial, so a Titan takes the same seat as a rifleman.';
+     verdict = fixed
+       ? '✅ <b>One line joins two doors:</b> the Chassis door’s dead <code>Size</code> dial becomes the bay room a unit consumes.'
+       : '🔴 <b>One bay hauls a thousand Titans.</b> The attribute’s own docs describe the correct behaviour — <em>"a size calc, not a fixed slot count"</em> — and the size calc predates the frame dial.';
+   } else if(typ==='people'){
+     const P=PACK[pack], carried=Math.floor(held/P.room);
+     note = fixed
+       ? 'A colonist draft is drawn from a source colony (it <b>costs that colony those people</b>), rides this compartment, and on unload is <b>added</b> to <code>ColonyInfoDB.Population</code>. '
+         + (pack==='cryo'
+            ? 'Cryogenics now carries its cost: the sleepers land but <b>do not count as population for 30 days</b> while they thaw. Cheap per head, dead time on arrival.'
+            : 'A berth is expensive per head and they <b>work the day they land</b>. The right call for a small, urgent seeding.')
+       : '🔴 <b>This compartment is real, and it goes nowhere.</b> The volume, the mass, the crew and the cost are all shipped and correct — the two templates exist in <code>storage.json</code> today. '
+         + 'But <b>every write to colony population in the entire engine is a MULTIPLY</b>: <code>newPop = value × (1 + growth + migration)</code>, and <code>UpdatePopulation</code> is a <b>set</b>, never an add. '
+         + 'There is <b>no <code>pop + n</code> anywhere</b>. So there is nowhere for these people to be put down.';
+     verdict = fixed
+       ? '✅ <b>Two ways to move people, and each wins an axis outright.</b> The cabin buys <b>time</b> — they work on arrival. Cryo buys <b>volume</b> — five times the people in the same hull. Neither dominates, which is the §39.8 bar.'
+       : (pack==='cryo'
+          ? '🔴 <b>And as built, cryo is strictly better on every axis.</b> Five times the people, <b>less</b> mass and <b>less</b> crew than a cabin of the same size. Nobody would ever build a passenger cabin. That is a door with one real answer, which is not a door.'
+          : '🔴 <b>Zero is an absorbing state.</b> <code>CreateColonyOrder</code> founds every colony at population <b>0</b>, and 0 × anything is 0 — forever. <b>Mars ships this way in the default start</b> (<code>DefaultStartFactory.cs:198</code>). You can found a colony; you can never populate one.');
+   } else if(job==='both' && !fixed){
+     note = '🔴 <b>Watch the third number.</b> <code>Total Cargo Stored = Rack Size − Size Efficiency − <b>Cargo Transfer Rate</b></code> — a rate, in units per second, subtracted from a volume in cubic metres. At the template’s own defaults (50,000 rack, 50,000 rate) that is <b>−500 m³</b>, and <code>CargoStorageAtb</code> has no floor at zero: it <b>subtracts</b> from the host’s store.';
+     verdict = '🔴 <b>The shipped Ordnance Rack escapes it by luck</b> — somebody set the rate to 100 while tuning the design to 2.5 t. Every design a player makes at the defaults is broken, and it fails silently by shrinking the ship’s magazine.';
+   } else {
+     note = fixed
+       ? 'Storage is now just <b>what you asked for, minus the machinery</b> — a dock’s throughput no longer eats its own warehouse.'
+       : 'A plain store: a cargo-type string and a volume. <b>That is the entire attribute</b> — <code>CargoStorageAtb(storeTypeID, maxVolume)</code>, two fields. Nine of the thirteen templates are exactly this.';
+     verdict = fixed
+       ? '✅ <b>And the door is honest once mass tracks the volume</b> — which it already does here, via <code>Size Efficiency</code>.'
+       : '✅ <b>This half of the door is basically fine.</b> Mass tracks the volume through <code>Size Efficiency</code>, so a bigger hold costs more. ⚠ Except <code>warehouse-facility</code>, whose shipped design asks for 100× the cap the template allows — and gets clamped in silence.';
+   }
+   $('gnote').innerHTML = typ==='people'
+     ? 'Read by <b>nothing</b>. Every other cargo type on this row has a system that consumes it; colonists have none — which is the entire finding in section ⑭.'
+     : 'Read by '+T.consumer+'. The cargo type is a STRING — which is the only thing that makes these thirteen templates different from each other.';
+   if(typ==='people'){
+     const P=PACK[pack];
+     $('pnote').innerHTML = pack==='cryo'
+       ? '<code>cryogenic-storage</code> · <b>2 m³ a pod</b> · mass <code>SizeEff × 300</code> · crew <code>Max(1, SizeEff × 0.05)</code>. Five times the people of a cabin, for <b>less</b> mass and <b>less</b> crew.'
+       : '<code>passenger-storage</code> · <b>10 m³ a berth</b> · mass <code>SizeEff × 400</code> · crew <code>Max(2, SizeEff × 0.4)</code>. Roomy, heavy, and well crewed — they arrive ready to work.';
+   }
+   $('jobnote').textContent = job==='both'
+     ? 'A dock — it holds AND moves. Two attributes on one component, which is where the negative-storage bug lives.'
+     : 'A store. Two numbers reach the sim: what kind of cargo, and how much of it.';
+ }
+
+ // every dial states what it is and what it writes — including for a screen reader
+ $('d1').setAttribute('aria-label', $('n1').textContent+' — '+$('s1').textContent);
+ $('d2').setAttribute('aria-label', $('n2').textContent+' — '+$('s2').textContent);
+ $('h1help').innerHTML = job==='move'
+   ? 'The <b>size of the bay</b>. Mass, crew and cost all follow from it, and so do both transfer numbers.'
+   : typ==='people'
+   ? 'The <b>volume of the compartment</b> in cubic metres — the only number you set. How many <i>people</i> that is depends entirely on the packing choice above: divide by <b>10</b> for berths, by <b>2</b> for pods.'
+   : 'The <b>size dial</b> — on nine of the thirteen templates it is the only number you set; mass, crew and cost are all computed from it. Logarithmic, and the right-hand end names the shipped design.';
+ $('h2help').innerHTML = job==='hold'
+   ? 'Only appears when the component <b>moves</b> cargo. Pick <b>Move</b> or <b>Both</b> above.'
+   : job==='both'
+   ? '🔴 Writes the <b>transfer rate</b> — which the shipped ordnance formula <b>subtracts from the storage volume</b>. Drag it right and watch the store go negative.'
+   : 'Splits one budget two ways: <b>reach</b> at the left, <b>throughput</b> at the right. It should be a fair trade and today it is not — the product falls 5.2× from left to right.';
+ // ── OUTPUT MARKERS ── every readout states its provenance, and the consumer rows state
+ //    whether the simulation actually READS the number. A number nothing reads is the
+ //    "pretty" failure this whole campaign exists to find, so it is marked, not implied.
+ function mk(id,kind,text){ const e=$(id); e.className='mk '+kind; e.textContent=text; }
+ mk('k_a1','set','you set it');
+ mk('k_a2','set', job==='move' ? 'computed' : 'you set it');
+ if(job==='move') mk('k_a2','calc','computed');
+ mk('k_a3', thirdC==='r' ? 'dead' : 'calc', thirdC==='r' ? 'broken' : 'computed');
+ mk('k_a4','calc','computed'); mk('k_a5','calc','computed'); mk('k_cost','calc','computed');
+ set('l_a3',thirdL); set('v_a3',thirdV); $('l_a3').parentElement.className='num '+thirdC;
+ set('v_a4', kg(mass));
+ set('l_a5','Crew'); set('v_a5', crew<1?'0  — unmanned':fmt(crew));
+ set('v_cost', fmt(credits)+' cr  ·  '+fmt(bp)+' BP'+(research>0?'  ·  '+fmt(research)+' RP':'  ·  no research'));
+ set('l_m1', job==='move'?'It moves':'It holds'); set('m_1', job==='move'?rate.toFixed(2)+' /s':fmt(held));
+ set('s_m1', job==='move'?'over '+fmt(range)+' m':unitStr);
+ const perT = mass>0 ? (job==='move'?rate:held)/(mass/1000) : 0;
+ set('l_m2','Per tonne of component'); set('m_2', fmt(perT));
+ set('s_m2', job==='move'?'/s per t':(TYPE[typ]?TYPE[typ].per:''));
+ set('l_m3', job==='hold'?'Does the dial cost?':'rate × range');
+ const peopleBad = (typ==='people' && pack==='cryo' && !fixed);
+ const badDial = (typ==='troops'&&!fixed) || peopleBad;
+ set('m_3', job==='hold' ? (badDial?'🔴 no':'✅ yes') : fmt(rate*range));
+ set('s_m3', job==='hold' ? ((typ==='troops'&&!fixed) ? 'Mass is a constant 5000'
+                            : peopleBad ? 'cryo is lighter AND denser — a free win'
+                            : 'mass tracks the volume')
+                          : (fixed?'flat — a real trade':'🔴 falls 5.2× across the dial'));
+ $('m_3').parentElement.className='mt '+(job==='hold' ? (badDial?'r':'g') : (fixed?'g':'r'));
+ // the two rows that answer "does the engine read this?"
+ mk('k_m1','sim','reaches the sim');
+ mk('k_m2','calc','comparison only');
+ mk('k_m3','chk','design check');
+ mk('k_m4', (typ==='people' && job!=='move' && !fixed) ? 'dead'
+            : typ==='strike' ? 'chk'
+            : 'sim',
+            (typ==='people' && job!=='move' && !fixed) ? 'NOTHING reads it'
+            : typ==='strike' ? (job==='hold' ? 'store reads · launch pending' : 'launch — no caller yet')
+            : 'reaches the sim');
+ set('l_m4','Its consumer');
+ if(typ==='people' && job!=='move'){
+   set('m_4', fixed?'ColonyInfoDB.Population':'🔴 NOTHING');
+   set('s_m4', fixed?'proposed: unload ADDS population — slice C1'
+                    :'no additive population path exists in the engine');
+   $('m_4').parentElement.className='mt '+(fixed?'g':'r');
+ } else if(typ==='strike'){
+   set('m_4', job==='hold' ? 'strikecraft-bay' : '⚠ ParasiteLauncherReady');
+   set('s_m4', job==='hold' ? 'the STORE reads it (a docked craft is ICargoable) — the launch verb does not'
+                            : 'ENGINE-PENDING: the event exists but nothing fires it, and DockTools has no game caller');
+   $('m_4').parentElement.className='mt a';
+ } else {
+   set('m_4', job==='move'?'cargo xfer':(TYPE[typ]?TYPE[typ].store:''));
+   set('s_m4', job==='move'?'the logistics + transfer orders':(TYPE[typ]?TYPE[typ].consumer:''));
+   $('m_4').parentElement.className='mt';
+ }
+ set('oname', job==='move' ? rate.toFixed(2)+' /s out to '+fmt(range)+' m'
+            : typ==='people' ? Math.floor(held/PACK[pack].room).toLocaleString()+' colonists in '+fmt(held)+' m³ of '+PACK[pack].store
+            : fmt(held)+' '+TYPE[typ].unit+' of '+TYPE[typ].store);
+ $('odesc').innerHTML=note;
+ $('verdict').innerHTML=verdict;
+ set('v_namesub', job==='move' ? 'scale ← bay size · temper ← rate versus reach · noun ← the job'
+   : job==='both' ? 'scale ← volume · temper ← rate versus reach · noun ← what it holds'
+   : 'scale ← volume · noun ← what it holds');
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ const k = job==='move'?'move':typ;
+ for(const [kk,v] of Object.entries(STOCK[k]||{})) $(kk).value=v;
+ render();}));
+document.querySelectorAll('.gchip').forEach(c=>c.addEventListener('click',()=>{
+ typ=c.dataset.g; document.querySelectorAll('.gchip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [kk,v] of Object.entries(STOCK[typ]||{})) $(kk).value=v;
+ render();}));
+document.querySelectorAll('.pchip').forEach(c=>c.addEventListener('click',()=>{
+ pack=c.dataset.p; document.querySelectorAll('.pchip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ render();}));
+['d1','d2'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+for(const [kk,v] of Object.entries(STOCK.general)) $(kk).value=v;
+render();
+
+</script>

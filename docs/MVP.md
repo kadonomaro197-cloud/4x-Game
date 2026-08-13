@@ -72,7 +72,7 @@ If any step in that chain doesn't work, v1 isn't done. If a feature isn't *on* t
 
 ## 3. IN — the must-haves (and where they stand on the map)
 
-| # | Must-have | Minimum that counts | Status today (`SYSTEMS-STATUS-AND-TEST-PLAN.md`) |
+| # | Must-have | Minimum that counts | Status today (`docs/SYSTEM-CONNECTION-MAP.md` + `docs/TESTING-TRACKER.md`) |
 |---|-----------|---------------------|--------------------------------------------------|
 | A | **Economy produces military goods** | Mine → refine → build installations, ships, *and* ground units, from the colony's own output | Engine ✅ (mining/refining/production gauged). Build-installations link + ground-unit build = **to do.** |
 | B | **Space combat actually resolves** | Two fleets fight; one side wins. No new weapon tech. | 🟢 **DONE (2026-06-25)** — the `GameEngine/Combat/` auto-resolve engine: hostile fleets in range auto-engage and a battle plays out over game-time until one side is wiped or breaks off. Decides by **strength math** (each ship rated for firepower/toughness), not the per-pixel beam/missile sim (which deposits ~0 damage — parked v2). Player's lever is **doctrine** (per-fleet *and* per-component), plus **retreat** and an **engagement lock**. 8 CI-green test fixtures. **This is the template we mirror for ground combat.** See `docs/combat/COMBAT-DESIGN.md`. |
@@ -213,7 +213,7 @@ order when the §1 loop is done; do **not** pull them onto the v1 path (that's t
 ## 7. How to use this doc
 
 1. **New idea?** → §6 Parking Lot. Not the build.
-2. **Starting a stage?** → open `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`, read the systems it connects to, work
+2. **Starting a stage?** → open `docs/SYSTEM-CONNECTION-MAP.md` (the `SYSTEMS-STATUS-AND-TEST-PLAN` it used to name was RETIRED 2026-07-27), read the systems it connects to, work
    those too (the Prime Directive). Combat design lives in `docs/combat/COMBAT-DESIGN.md`; ground/infrastructure
    design in `docs/aurora/`. Build the *slice*, not the whole spec.
 3. **Stage done?** → it has a gauge (test) and the systems-map row is updated.

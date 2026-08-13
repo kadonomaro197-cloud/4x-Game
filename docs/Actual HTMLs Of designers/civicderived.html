@@ -1,0 +1,602 @@
+<meta charset="utf-8">
+<title>Civic, re-derived - the morale term that can never fire</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark].chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary.n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch - ";color:var(--ink3)}
+@media(min-width:700px){
+.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+.ten{grid-template-columns:1fr 1fr}
+.tenq{border-left:1px solid var(--rule2)}
+.tenq:nth-child(odd){border-left:0}
+.nums{grid-template-columns:repeat(5,1fr)}
+.opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+.oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)}.t b.a{color:var(--warn)}.t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)}.num.sh.a b{color:var(--warn)}.num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)}.mt.a b{color:var(--warn)}.mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)}.num.a b{color:var(--warn)}.num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* -- added for the remaining six doors (same idiom) ---------------------- */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)}.bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X - component designer - door 8 of the remaining eight - the last one</p>
+<h1>The widest term in the morale model can never fire, because nothing in the game declares a job.</h1>
+<p class="lead">Housing, population support, food, employment, gravity and pressure tolerance, research labs, academies. The biggest door by dial count and the most entangled, because the morale plan already built half of it. <b>So the job here was never to design morale - it was to check whether the model that exists is actually being fed.</b></p>
+<p class="lead" style="margin-top:10px"><b>And one input is not fed at all.</b> <code>ColonyMoraleDB</code> has a complete, two-sided, documented employment term: <b>up to +15 morale for full employment, down to -25 for unemployment</b> - a forty-point band, the widest single factor in the model. It reads <code>GetTotalJobs</code>, which sums <code>EmploymentAtbDB.Jobs</code> across a colony's installed components. <b>No template in the game carries <code>EmploymentAtbDB</code>.</b> So jobs is always 0, the ratio is always the "no data" sentinel, and employment contributes <b>exactly zero, forever.</b></p>
+<p class="lead" style="margin-top:10px"><b>And the producer already exists as data - it is just not published.</b> A factory's <code>CrewReq</code> is <code>Size x 5</code>. That number <em>is</em> how many people the factory employs. Every installation in the game already declares its headcount; none of them declares it as a job. <b>The fix is to publish what is already computed.</b></p>
+<p class="lead" style="margin-top:10px"><b>This door also holds the single best-priced template in the whole game</b> - and it correctly implements the exact trade the Enhancers door gives away for free.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>A complete morale model with three inputs, and the widest one is a dead wire</h2>
+<p class="big">Traced end to end through <code>PopulationProcessor</code> -> <code>ColonyMoraleDB.ComputeMorale</code>. Every rung of the employment chain is built except the first.</p>
+<div class="scroll"><table class="t">
+<tr><th>Rung</th><th>Where</th><th>State</th></tr>
+<tr><td>The morale term exists</td><td><code>ColonyMoraleDB:39,41</code> - <code>MaxEmploymentBonus = 15.0</code> - <code>MaxUnemploymentPenalty = 25.0</code></td><td><b class="g">built</b></td></tr>
+<tr><td>It is two-sided and careful</td><td><code>:132-139</code> - full employment bonuses, shortfall penalises, and a documented <b>negative sentinel</b> so "no job data" reads neutral rather than as 100% unemployment</td><td><b class="g">built</b></td></tr>
+<tr><td>It is measured against the right denominator</td><td><code>PopulationProcessor:74-76</code> - jobs / <b>workforce</b> (the drawable fraction), not raw headcount, with a comment explaining why</td><td><b class="g">built</b></td></tr>
+<tr><td>Something aggregates the jobs</td><td><code>ComponentInstancesDBExtensions.GetTotalJobs</code> - sums <code>EmploymentAtbDB.Jobs</code> over installed components</td><td><b class="g">built</b></td></tr>
+<tr><td>The attribute exists</td><td><code>EmploymentAtbDB</code> - with a <code>Clone</code>, a double overload for the NCalc binder, the works</td><td><b class="g">built</b></td></tr>
+<tr><td><b>Some template DECLARES jobs</b></td><td>grepped all twenty template files for <code>EmploymentAtb</code></td><td><b class="r">ZERO. Nothing produces it.</b></td></tr>
+</table></div>
+<div class="warnbox"><b>So <code>employmentRatio</code> is permanently <code>-1.0</code>, and employment contributes 0 to every colony's morale in every game.</b> The code is correct, commented, tested at both ends, and inert - <b>which is the hardest kind of gap to see, because nothing is broken.</b> No exception, no warning, no wrong number: a factor that reads as neutral looks exactly like a factor that is balanced. <b>It is the exact mirror of <code>LogiBaseAtb</code> from the Logistical door</b> - that one is a producer with no consumer; this is a <b>consumer with no producer.</b> Both are invisible to every test in the project, and both need the same tool to find: a grep for the type name, checking that it appears on <em>both</em> sides.</div>
+<div class="okbox"><b>And the fix needs no new design and almost no new data, because the number already exists.</b> Every installation already declares a <code>CrewReq</code> - a factory needs <code>Size x 0.5</code> people <s>(recalibrated from x5)</s>, a refinery <code>[Mass] x 0.1</code>, a mine <code>Area x 0.0005</code> <s>(from x0.005)</s>, a research lab 20. <b>Those figures ARE the jobs the installation provides.</b> The colony already treats crew as a demand elsewhere (<code>InfrastructureProcessor</code> reads it as capacity demand), so deriving <code>Jobs</code> from an installation's crew requirement is consistent with how the rest of the engine already reads that number. <b>One derivation, and a forty-point morale band comes alive on every colony in the game - including the deliberate failure case where you build industry faster than population.</b></div>
+<div class="okbox" style="border-left-color:var(--flag)"><b>CREW CALIBRATION — the Civic half (paired with the Industrial door's mine/factory 10× cut).</b> Publishing <code>CrewReq</code> as jobs exposes a structural hole: in the shipped set <b>only mines and factories carry real labour</b> — infrastructure is a flat <code>10</code> — so once the two steep industry coeffs are cut, a colony employs almost nobody. The sector that actually staffs a country is <b>services</b>, and it rides on population. <b>Infrastructure now carries service employment: <code>Crew = Support Colonists × k</code></b>, and <b><code>k</code> is a DENSITY dial — it IS the employment half of the rural-vs-metropolis difference.</b> A thin frontier town runs <code>k ≈ 0.2</code> (1 service worker per 5 residents); a dense city runs <b><code>k ≈ 0.5</code></b> — nearly its whole working-age population (½ of pop) employed in utilities, transit, healthcare, education, admin, retail and finance. Note the STRUCTURE: because infrastructure both <em>houses</em> and <em>employs</em>, the count of arcologies can't move the employment ratio (each adds pop AND jobs in fixed proportion) — <b>only <code>k</code> can</b>, which is why "fewer housing blocks" never reaches full employment and the service coefficient is the real lever. It also <b>prices the once-free <code>Support Colonists</code> dial in labour</b>, closing the constant-<code>Mass</code> gap. Downstream, <code>docs/ground/planetview.html</code> runs the super-city at <code>k = 0.5</code> → <b>~90% employment, services the overwhelming employer</b> — as in a real metropolis.</div>
+<p class="sub" style="margin-top:11px"><b>Which means it is also the biggest live behaviour change in any of the eight doors, and it should not be slipped in quietly.</b> Turning employment on will move every colony's morale, in both directions, and morale feeds migration, tax income and legitimacy. <b>Flag-gated and measured against the existing <code>MoraleTests</code> baseline</b> - the same treatment the fuel gate got.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The best-priced template in the game - and it already fixes another door's leak</h2>
+<p class="big">One template in eight doors prices <b>three dials</b>, one of them <b>cubically</b>, and gets a cross-cutting trade right that a different door gives away free. It is the farm.</p>
+<div class="okbox" style="margin:0 0 11px;border-left-color:var(--ac)"><code>Mass = Food Output x 0.1  +  Food Quality3 x 200  +  Automation x 500</code><br><code>CrewReq = Max(1, Food Output x 0.02 x (1 - Automation))</code><br><span style="color:var(--ink3)">Research = <code>[Mass] x 2</code> - Credits = <code>[Mass]</code> - BuildPoints = <code>[Mass]</code> - all downstream of a mass that reads every dial.</span></div>
+<div class="scroll"><table class="t">
+<tr><th>Dial</th><th>Range</th><th>How it is priced</th><th>At the extremes</th></tr>
+<tr><td><code>Food Output</code></td><td>100 -> 20,000</td><td>linear in mass, linear in crew</td><td><b class="g">flat - a pure scale dial</b></td></tr>
+<tr><td><code>Food Quality</code></td><td>0.5 -> 3.0</td><td><b class="g">CUBIC</b> - <code>Quality3 x 200</code></td><td>0.5 -> 25 kg - 1.0 -> 200 kg - 3.0 -> <b>5,400 kg</b></td></tr>
+<tr><td><code>Automation</code></td><td>0 -> 0.9</td><td>costs 500 kg per unit, <b>and buys crew down</b></td><td>at 0.9: <b class="g">90% of the crew gone, 450 kg paid</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>The cubic is the interesting one.</b> Tripling food quality costs <b>twenty-seven times</b> the quality component of the mass - a deliberate, steep diminishing return on a dial whose benefit (a morale bonus above "not starving") is bounded. That is the ladder test not merely passed but passed <em>aggressively</em>: the top of the dial is reachable and expensive, which is exactly what you want from a luxury stat. <b>Nobody in eight doors else wrote a cubic cost curve.</b></p>
+<div class="warnbox"><b>And look at the crew formula, because it is the Enhancers door's leak already solved.</b> <code>Automation</code> reduces <code>CrewReq</code> multiplicatively and <b>costs mass to do it</b> - trading a scarce pool for a plentiful one, at a stated rate. That is <b>precisely</b> what the Enhancers door's <code>crew-automation</code> suite promises in its own description (<em>"spend mass and high tech instead of scarce workforce"</em>) and then hands over free, because its <code>Crew Reduction</code> dial is not in its mass formula. <b>Two templates, one mechanic, and the farm gets it right.</b> That is the fourth time in this campaign the fix has turned out to be already written somewhere in the repository.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Three buildings that used to blur together - now made distinct</h2>
+<p class="big">Life support, housing and the orbital habitat all touched "population" and overlapped. They are now three DISTINCT jobs, told apart by what they DO and where they sit.</p>
+<div class="scroll"><table class="t">
+<tr><th>Building</th><th>Its job</th><th>Dials</th><th>Where</th></tr>
+<tr><td><b>Life Support</b></td><td><b>Keeps people ALIVE</b> - the threshold that lets a colony exist on a hostile world at all</td><td>Sustained population + redundancy</td><td>planet</td></tr>
+<tr><td><b>Residency</b></td><td><b>HOUSES people</b> for morale</td><td>Colonists housed + living comfort (-> +20 morale)</td><td>planet</td></tr>
+<tr><td><b>Space Habitat</b></td><td><b>Does BOTH at once</b> - because in orbit there is no ground to stand on</td><td>Station population + habitat comfort</td><td>station</td></tr>
+</table></div>
+<div class="warnbox"><b>The one still unpriced: the Space Habitat.</b> Its <code>Mass = 1000</code> is a constant, so a station that houses a MILLION people costs one tonne, zero credits and a hundred build points - the same as one housing nobody. <b>Population is the resource the entire colony game is built on</b> - industry, research, tax, manpower and morale - and this ceiling is a free dial with a six-figure range. Life Support and Residency are now priced (mass tracks their dials); the habitat is the <b>last constant-mass template in the door</b>.</div>
+<div class="okbox"> <b>One thing here is genuinely well handled and worth defending:</b> the habitat deliberately carries <b>no gravity or pressure tolerance attribute at all</b>, which is how a space station escapes a planet's environment. That is the right modelling choice, and it is also a documented landmine - <b>you cannot achieve it by setting the tolerance dials to zero</b>, because template property values are clamped to their tech-formula bounds at instantiation, so a 0 silently will not stick. Authoring a separate template without the attribute is the only way to do it. <b>Somebody hit that wall and solved it correctly.</b></div>
+<p class="sub" style="margin-top:11px"><b>Comfort caps at +20</b> (<code>ColonyMoraleDB.MaxComfortBonus = 20.0</code>) across every building that provides it - <b>Residency, Recreation and the Habitat</b> - so a comfort dial that runs past 20 is inert above the cap. They ADD toward that +20, so a happy colony is built from several sources, not one - which is exactly why more than one civic building now feeds it.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Build one</h2>
+<p class="sub">One question - what does this installation give the people? Each answer opens on its real shipped design. Tick the box to price the constant-mass templates the way the farm already is. (Jobs are not a template here - they are published from every industry building's <code>CrewReq</code>, an emergent colony total; see the employment finding above.)</p>
+<div class="build">
+<div class="bsec"><p class="blab">What does it provide</p><div class="chips">
+<button class="chip" type="button" data-v="food" aria-pressed="true">Food </button>
+<button class="chip" type="button" data-v="infra" aria-pressed="false" title="SURVIVAL enabler: how many people it keeps alive on a world at all, plus redundancy. No comfort - that is the Residency.">Life support </button>
+<button class="chip" type="button" data-v="habitat" aria-pressed="false" title="ORBITAL self-contained host: provides its own life support AND housing in one, because a station has no ground. Mounts on a station.">A space habitat </button>
+<button class="chip" type="button" data-v="academy" aria-pressed="false" title="Trains ONE kind of leader - pick the type below (Navy / Ground / Governance / Science / Diplomacy / Intelligence / Commerce). It names the school.">Officers </button>
+<button class="chip" type="button" data-v="residency" aria-pressed="false" title="Planetary HOUSING: Colonists Housed = capacity added; Living Comfort feeds morale (capped at +20). Jobs are NOT a building - they are emitted by every industry building's CrewReq.">Residency </button>
+<button class="chip" type="button" data-v="medical" aria-pressed="false" title="Health: patient capacity + care quality -> lower mortality, higher morale.">Medical </button>
+<button class="chip" type="button" data-v="recreation" aria-pressed="false" title="ENTERTAINMENT / amenities: theaters, parks, arenas. Feeds a NEW uncapped CivicAmenity morale line (comfort is pegged at +20 and saturated on developed worlds) - the QoL axis that separates a metropolis from a village.">Entertainment </button>
+<button class="chip" type="button" data-v="security" aria-pressed="false" title="LAW ENFORCEMENT / public order: feeds a NEW PublicOrder input on LegitimacyInputs - props legitimacy, holds a discontented colony off the RebellionDB track. The governability gauge, distinct from happiness.">Law enforcement </button>
+<button class="chip" type="button" data-v="market" aria-pressed="false" title="TRADE: commerce throughput -> a NEW ColonyCommerce income category on the existing faction Ledger (the pipe tax already uses), and its bustle also feeds the amenity morale line.">Trade / Market </button>
+<button class="chip" type="button" data-v="admin" aria-pressed="false" title="Governance: span of control for delegated officers (the AdminSpaceAtb seats governors and ministers sit in).">Administration </button></div>
+<div class="chips" id="leaderrow" style="display:none;margin-top:7px">
+<button class="chip lchip" type="button" data-leader="navy" aria-pressed="true" title="Naval Academy - admirals and fleet commanders.">Navy</button>
+<button class="chip lchip" type="button" data-leader="ground" aria-pressed="false" title="War College - marshals and battalion commanders.">Ground</button>
+<button class="chip lchip" type="button" data-leader="gov" aria-pressed="false" title="Administration School - planetary and system governors.">Governance</button>
+<button class="chip lchip" type="button" data-leader="science" aria-pressed="false" title="Science Institute - scientists and lab directors.">Science</button>
+<button class="chip lchip" type="button" data-leader="diplo" aria-pressed="false" title="Diplomatic Corps - foreign ministers and envoys.">Diplomacy</button>
+<button class="chip lchip" type="button" data-leader="intel" aria-pressed="false" title="Intelligence Academy - spymasters and security chiefs.">Intelligence</button>
+<button class="chip lchip" type="button" data-leader="trade" aria-pressed="false" title="Trade School - trade and interior ministers.">Commerce</button></div>
+<p class="chelp" id="leaderhelp" style="display:none;margin:6px 0 0"></p>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<div class="sl" id="w1"><div class="slh"><span id="n1">Output</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="55" aria-label="dial one"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Quality</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="20" aria-label="dial two"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div></div>
+<div class="sl" id="w3"><div class="slh"><span id="n3">Automation</span><span id="s3"></span></div><input type="range" id="d3" min="0" max="100" value="0" aria-label="dial three"><div class="ends"><span id="e3a"></span><span id="e3b"></span></div></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix"><span>Price the constant-mass templates the way the farm already is <b>(proposed - slice V1)</b></span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">-</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">-</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4">Mass</i><b id="v_a4"></b></div>
+<div class="num fixed"><i id="l_a5">Crew</i><b id="v_a5"></b></div>
+<div class="num fixed"><i>Cost</i><b id="v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it does to the people</p>
+<p class="muN">Against the real morale model: the +/-40-point employment band, the +20 comfort cap, and the food-quality bonus.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">Provides</i><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Morale effect</i><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Per tonne</i><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Ladder test</i><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Teal</b> = you set it. <b>Grey</b> = the formula decided it. Pick <b>Food</b> and drag <b>Quality</b>: the mass goes up <b>cubically</b> - that is what a properly priced luxury dial looks like. Then pick <b>A space habitat</b> and drag: <b>a million colonists, and the cost never moves.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>WIRED THIS SESSION — the metropolis-vs-village dials (developer request, grounded against source)</h2>
+<p class="big">"Distinguish rural India from New York City with the SAME buildings; add entertainment/influence, law enforcement, and trade." The difference is <b>TWO gauges the engine already keeps</b>, cranked by <b>count × dial</b> — nothing hand-labels a colony "city."</p>
+<div class="scroll"><table class="t">
+<tr><th>New dial / building</th><th>Writes to (real variable, file)</th><th>Gauge</th><th>Grade</th></tr>
+<tr><td><b>Jobs</b> — already on every building via <code>CrewReq</code></td><td><code>EmploymentAtbDB.Jobs</code> → the +15/−25 employment term (<code>ColonyMoraleDB.cs:39</code>)</td><td>MORALE</td><td><b class="g">BUILD-NOW</b> — dead until a producer declares it (this door's headline)</td></tr>
+<tr><td><b>Entertainment / amenities</b> (Entertainment)</td><td>NEW <code>CivicAmenity</code> line on <code>MoraleInputs</code> (<code>ColonyMoraleDB.cs:200-218</code>)</td><td>MORALE (uncapped)</td><td><b class="a">NEW-INPUT</b> — 1 field + 1 coeff + 1 tally line</td></tr>
+<tr><td><b>Weather / climate</b> (developer ask)</td><td>NEW <code>WeatherMorale</code> line on <code>MoraleInputs</code>, fed by the rolling-storm system (dust/ash/fire/acid over the colony) + baseline climate</td><td>MORALE (transient, ±)</td><td><b class="a">NEW-INPUT</b> — same seam; the storms already exist</td></tr>
+<tr><td><b>Law enforcement</b> (Law enforcement)</td><td>NEW <code>PublicOrder</code> input on <code>LegitimacyInputs</code> → <code>LegitimacyDB.Legitimacy</code> → holds off <code>RebellionDB</code></td><td>LEGITIMACY</td><td><b class="a">NEW-INPUT</b> — 1 field + 1 coeff; also un-blocks the <code>SowUnrest</code> no-op</td></tr>
+<tr><td><b>Trade / Market</b></td><td>NEW <code>ColonyCommerce</code> category on the faction <code>Ledger</code> (the live tax pipe) + the amenity line</td><td>MONEY (+ amenity)</td><td><b class="a">NEW-INPUT</b> — reuses the Ledger plumbing</td></tr>
+<tr><td><b>Influence / prestige</b></td><td>does NOT exist — only orbital "sphere of influence"; nearest hook is legitimacy</td><td>—</td><td><b class="r">NEW-SCORE — defer</b> (a whole resource, not a dial)</td></tr>
+</table></div>
+<div class="okbox"><b>The two gauges, and why it works.</b> <b>MORALE</b> = are they happy → runs <code>MigrationRate</code> (a high-morale colony sucks population in, a low one drains out). <b>LEGITIMACY</b> = are they governable → runs toward <code>RebellionDB</code>. A metropolis cranks BOTH high (jobs + amenities + policing + commerce) and <b>snowballs</b> as migration compounds it; a village runs the same buildings at idle and stays small. <b>Neither gauge can be written directly</b> — both are re-derived every month from a list of input line-items, so each dial adds ONE input to a tally the engine re-sums (the exact seam tax/food already use). <b>Build order:</b> Jobs (free JSON) first, then the amenity + public-order lines (same cheap one-input pattern), then the commerce term. Composed downstream in <code>docs/ground/planetview.html</code> as a super-city's morale / legitimacy / commerce books.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>An eighth cost channel - and my own rule would have flagged it wrongly</h2>
+<p class="big">The Industrial door produced a rule: <em>a dial is free exactly when the template's <code>Mass</code> formula does not read it</em>, and proposed a test that flags any <code>GuiSelection</code> dial absent from all seven cost formulas. The academies are the counter-example that keeps that test honest.</p>
+<div class="scroll"><table class="t">
+<tr><th>Academy dial</th><th>Range</th><th>In a cost formula?</th><th>But is it free?</th></tr>
+<tr><td><code>Class Size</code></td><td>10 -> 2,500 <s>naval</s></td><td><b class="g"><code>Mass = Class Size x 100</code></b>, crew x0.25, research x0.5</td><td><b class="g">no - properly priced</b></td></tr>
+<tr><td><code>Class Length</code></td><td>1 -> 48 months</td><td><b class="r">no - in none of the seven</b></td><td><b class="g">NO - it costs TIME</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b><code>NavalAcademyAtb.cs:46</code>: <code>graduationDate = StarSysDateTime + TimeSpan.FromDays(TrainingPeriodInMonths x 30)</code>.</b> A 48-month program takes four years to produce its first officer where a 1-month program takes a month - so a longer course buys better graduates (the research academy's description: <em>"a longer program graduates scientists with a higher research-competence ceiling"</em>) and pays for it in <b>throughput</b>. That is a real, binding cost. It is simply not one of the seven channels.</p>
+<div class="okbox"><b>So the proposed test needs an allow-list, and writing that list is the point.</b> A dial is honest if it is priced in <b>any</b> currency the player is actually constrained by - <b>mass - volume - crew - research - credits - build points - resources - and TIME.</b> The test should flag every dial that appears in none of the seven <em>and</em> require a one-line justification for each entry on the allow-list. <b>"It costs time" is a valid entry; "nobody noticed" is not.</b> That turns the allow-list into the design review the campaign has been doing by hand - and unlike the hand audit, it does not rot.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Reconciling against the morale plan - which is what this door was really for</h2>
+<p class="big">The build plan flagged Civic as <em>"most entangled - half-wired by an already-live separate plan; reconcile against it rather than deriving over the top."</em> That was right, and here is the reconciliation.</p>
+<div class="scroll"><table class="t">
+<tr><th>Morale input</th><th>The model</th><th>What feeds it today</th><th>Verdict</th></tr>
+<tr><td><b>Employment</b></td><td>+15 / -25 - the widest band</td><td><b class="r">nothing - no template declares a job</b></td><td><b class="r">permanently 0</b></td></tr>
+<tr><td><b>Crowding</b></td><td>-35 past 85% of capacity</td><td><b class="g">population vs <code>PopulationSupportAtbDB</code></b></td><td><b class="g">live</b> - but the capacity dial is free</td></tr>
+<tr><td><b>Comfort</b></td><td>+20 cap</td><td><b class="g"><code>GetHousingComfort</code></b></td><td><b class="a">live; the dial is free and 60% of its range is inert</b></td></tr>
+<tr><td><b>Food shortage + quality</b></td><td>penalty + a quality bonus</td><td><b class="g"><code>SustenanceProcessor</code> -> the farm</b></td><td><b class="g">live, and the farm is properly priced</b></td></tr>
+<tr><td><b>Power shortage</b></td><td>a penalty</td><td><b class="a">reads a colony's <code>EnergyGenAbilityDB</code> - calibrated to zero demand</b></td><td><b class="a">inert until demand is switched on</b></td></tr>
+<tr><td><b>Tax</b></td><td>a penalty, government-capped</td><td><b class="g"><code>ColonyEconomyDB.TaxRate</code></b></td><td><b class="g">live</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>So the morale plan did its job: the model is complete, coefficient-named and government-ready.</b> Four of six inputs are live. <b>What Civic owes it is not design - it is two producers.</b> Employment needs a template to declare jobs (and the crew figure already is that number); power needs the colony power plant the Power door just unblocked by giving the solar array a colony mount. <b>Both are data changes against a model that is already built and already tested.</b></p>
+<div class="warnbox"><b>And one honest caveat on all of it.</b> Every "live" row above means <em>the wire is connected</em>, not <em>the number is right</em>. None of these coefficients has been played with - the campaign has been about whether a dial <b>writes</b> and whether it <b>costs</b>, which is a code-and-data question a grep can answer. <b>Whether -35 for crowding feels like anything is a question only a played game answers</b>, and no page can substitute for that.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Does it reproduce what exists?</h2>
+<div class="scroll"><table class="t">
+<tr><th>Template today</th><th>It provides</th><th>Under the derived door</th></tr>
+<tr><td><b>food-production</b></td><td>food + quality</td><td><b class="g">unchanged - the reference implementation for the whole designer</b></td></tr>
+<tr><td><b>infrastructure</b></td><td>life support - capacity - comfort - storage - tolerances</td><td><b class="r"><code>Mass</code> must read the dials</b>; comfort's range should stop at the model's +20 cap</td></tr>
+<tr><td><b>space-habitat</b></td><td>life support - capacity - comfort - storage</td><td><b class="r">same, and its 1,000,000-colonist ceiling needs a reason</b>; keep the deliberate absence of tolerances</td></tr>
+<tr><td><b>naval-academy</b> - <b>research-academy</b></td><td>officers - specialist scientists</td><td><b class="g">unchanged</b> - <code>Class Size</code> priced in mass, <code>Class Length</code> priced in <b>time</b></td></tr>
+<tr><td><b>research-lab</b></td><td>research points</td><td><s>covered in the Industrial door - <code>Mass</code> is a constant, so <code>Research Points</code> is free</s></td></tr>
+<tr><td><b>(nothing)</b></td><td><b>jobs</b></td><td><b class="r">the missing producer - derive <code>EmploymentAtbDB.Jobs</code> from the installation's existing <code>CrewReq</code></b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>And the last score on the "which template is honest" question, now that all eight doors are read.</b> Age does not predict it. Newness does not predict it. What predicts it, with no exceptions across roughly ninety templates: <b>whether the <code>Mass</code> formula reads the dial.</b> The farm reads all three of its dials and is the best template in the game; the habitat reads none of its four and is the worst. <b>They are in the same file, forty lines apart.</b></p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands - and where the campaign does</h3>
+<p><b>One question - what does this installation give the people?</b> Food, life support, housing, comfort, health, security, governance, officers, research - nine civic buildings, each a distinct job.</p>
+<p><b>The headline is the sharpest built-but-unreachable finding in eight doors:</b> the morale model's employment term is a <b>forty-point band</b> - the widest factor in it - and it is <b>permanently zero, in every game, because no installation in the game declares a job.</b> The term is written, commented, two-sided, correctly denominated against workforce rather than headcount, and tested. The producer was never added. <b>And the number it needs already exists on every template as <code>CrewReq</code>.</b></p>
+<p><b>Plus the largest free number anywhere:</b> <code>space-habitat</code> supports up to <b>a million colonists</b> for one tonne, zero credits and a hundred build points - two hundred times its sibling's ceiling on an identical, entirely constant cost block. Population is the resource everything else in the colony game is derived from.</p>
+<p><b>And the best template in the game is here.</b> <code>food-production</code> prices three dials - one of them <b>cubically</b> - and implements the automation-buys-crew-down trade <b>correctly</b>, which is the same trade the Enhancers door hands over free. <b>Fourth time in this campaign the fix was already written somewhere in the repository.</b></p>
+<p><b>Prediction check:</b> the plan said <em>"most entangled; expect significant overlap with the morale plan and at least one thing that is infrastructure, not a component."</em> <b>Entangled. Overlap </b> - and the reconciliation is the useful part: the morale plan built the consumers correctly and Civic owes it <b>two producers</b>, not a design. <b>The infrastructure-not-a-component guess </b> - everything here really is a component; what turned up instead was the opposite shape, <b>a component with no template.</b></p>
+<p><b>The one thing I would build out of all eight doors.</b> Every finding across all of them is one of three shapes - <b><code>Mass</code> = a constant</b>, <b><code>Mass</code> = a different dial</b>, or <b>the dial/attribute has no counterpart on the other side</b> - and all three are mechanically detectable. <b>One data-only test</b>: for every player dial in every template, assert it appears in at least one of the seven cost formulas or in an <code>AtbConstrArgs</code>; for every <code>*Atb</code> class, assert it has both a producing template and a consuming reader; and keep an explicit allow-list where the honest answer is <em>"it costs time"</em> or <em>"it is a choice, not a scale."</em> <b>It would have found every finding in this campaign, it costs no engine change and no save risk, and unlike eight pages of hand audit, it does not rot.</b></p>
+</div></footer>
+<script>
+
+// -- the shipped arithmetic, verbatim from installations.json + ColonyMoraleDB.cs ----------------------------
+// food-production Food Output 100..20000 - Food Quality 0.5..3.0 - Automation 0..0.9
+// Mass = Output*0.1 + Quality^3*200 + Automation*500 <- ALL THREE priced, one CUBICALLY
+// Crew = Max(1, Output*0.02*(1-Automation)) <- automation buys crew down AND costs mass
+// Research = [Mass]*2 - Credits = [Mass] - BP = [Mass]
+// infrastructure Mass = 1000 CONSTANT - Credits = 0 - BP = 100
+// Support Colonists 0..5000 - Storage 0..5000 - Support Capacity 0..10000 - Housing Comfort 0..50
+// space-habitat Mass = 1000 CONSTANT - Credits = 0 - BP = 100
+// Support Colonists 0..1,000,000 <- 200x its sibling\'s ceiling, same cost block
+// naval-academy Class Size 10..2500 - Class Length 1..48 months
+// Mass = Class Size*100 (priced); Class Length priced in TIME: graduation = now + months*30 days
+// ColonyMoraleDB MaxEmploymentBonus 15 - MaxUnemploymentPenalty 25 - MaxComfortBonus 20 - MaxCrowdingPenalty 35
+// employmentRatio = (jobs>0 && workforce>0)? jobs/workforce: -1.0 <- jobs is ALWAYS 0
+const MAX_EMP = 15, MAX_UNEMP = 25, MAX_COMFORT = 20;
+const CIV = {
+ food: {n1:'Food output', lo:100, hi:20000, def:3000, n2:'Food quality', l2:0.5, h2:3.0, def2:1.0,
+ n3:'Automation', l3:0, h3:0.9, def3:0, priced:true, dials:3,
+ noun:['Garden','Agri-Complex','Hydroponics Arcology'], unit:' food/day'},
+ infra: {n1:'Sustained population', lo:0, hi:20000, def:2000, n2:'Redundancy', l2:0, h2:3, def2:1,
+ priced:true, dials:2, kind:'survival', unit:' sustained',
+ noun:['Life Support Node','Life Support Grid','Biosphere Complex']},
+ habitat: {n1:'Station population', lo:0, hi:1000000, def:500, n2:'Habitat comfort', l2:0, h2:50, def2:5,
+ priced:false, dials:2, mass:1000, bp:100, crew:10, orbital:true,
+ noun:['Can','Space Habitat','Orbital City'], unit:' colonists'},
+ academy: {n1:'Class size', lo:10, hi:2500, def:1000, n2:'Class length', l2:1, h2:48, def2:24,
+ priced:true, dials:2, time:true, leaderSel:true,
+ noun:['Officer School','Naval Academy','War College'], unit:' cadets'},
+ residency: {n1:'Colonists housed', lo:0, hi:50000, def:2000, n2:'Living comfort', l2:0, h2:50, def2:10,
+ priced:true, dials:2,
+ noun:['Tenements','Residential District','Arcology Housing'], unit:' residents'},
+ medical: {n1:'Patient capacity', lo:0, hi:20000, def:2000, n2:'Care quality', l2:0, h2:10, def2:3,
+ priced:true, dials:2, kind:'health', unit:' beds',
+ noun:['Clinic','Hospital','Medical Center']},
+ recreation:{n1:'Capacity served', lo:0, hi:30000, def:3000, n2:'Amenity quality', l2:0, h2:20, def2:5,
+ priced:true, dials:2, kind:'comfort', unit:' served',
+ noun:['Park','Recreation Center','Grand Concourse']},
+ security: {n1:'Coverage', lo:0, hi:20000, def:2000, n2:'Response', l2:0, h2:10, def2:3,
+ priced:true, dials:2, kind:'order', unit:' policed',
+ noun:['Watch Post','Precinct HQ','Metropolitan Police']},
+ market: {n1:'Commerce throughput', lo:0, hi:50000, def:5000, n2:'Market amenity', l2:0, h2:20, def2:5,
+ priced:true, dials:2, kind:'commerce', unit:' commerce/mo',
+ noun:['Bazaar','Trade Hub','Grand Exchange']},
+ admin: {n1:'Admin capacity', lo:0, hi:50, def:5, n2:'Efficiency', l2:0, h2:3, def2:1,
+ priced:true, dials:2, kind:'governance', unit:' span',
+ noun:['Town Hall','Administration Center','Capitol Complex']}
+};
+// The academy trains ONE kind of leader - the type is a forced choice that names the school. Maps to
+// the Command door's domains (Navy / Ground / Governance / Science / Diplomacy / Intelligence / Commerce).
+const ACAD_DOM = {
+ navy:   {sch:'Naval Academy',         trains:'admirals and fleet commanders',     noun:['Cadet School','Naval Academy','Grand Admiralty College']},
+ ground: {sch:'War College',           trains:'marshals and battalion commanders', noun:['Drill School','War College','Staff College']},
+ gov:    {sch:'Administration School', trains:'planetary and system governors',    noun:['Civil School','Administration School','Academy of State']},
+ science:{sch:'Science Institute',     trains:'scientists and lab directors',      noun:['Study Hall','Science Institute','Grand Institute']},
+ diplo:  {sch:'Diplomatic Corps',      trains:'foreign ministers and envoys',      noun:['Envoy School','Diplomatic Corps','Foreign Academy']},
+ intel:  {sch:'Intelligence Academy',  trains:'spymasters and security chiefs',    noun:['Watch School','Intelligence Academy','Cipher College']},
+ trade:  {sch:'Trade School',          trains:'trade and interior ministers',      noun:['Commerce School','Trade School','Merchant College']}
+};
+let leader='navy';
+let job='food';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':a>=1?v.toFixed(a<10?2:0):v.toPrecision(2);}
+function kg(v){return Math.abs(v)>=1e6?(v/1e6).toFixed(2)+' kt':Math.abs(v)>=1000?(v/1000).toFixed(1)+' t':v.toFixed(0)+' kg';}
+function lin(d,lo,hi){return lo+(hi-lo)*d/100;}
+function unlin(v,lo,hi){return 100*(v-lo)/(hi-lo);}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+function unmap(v,lo,hi){return 100*Math.log(v/lo)/Math.log(hi/lo);}
+function band(v,cuts){let i=0;while(i<cuts.length&&v>=cuts[i])i++;return i;}
+
+// -- name each word off how far a slider is dragged from its shipped position (STOCK), as a
+// FRACTION of the available travel: uniform responsiveness for every template, a clean shipped
+// name (small dead zone -> just the noun), and a moderate drag of either slider changes a word.
+const SCALE_HI=['Expanded','Large','Greater','City'], SCALE_LO=['Modest','Small','Hamlet'];
+const TEMPER_HI=['Comfortable','Gracious','Lavish'], TEMPER_LO=['Basic','Spartan','Bare']; // comfort/quality axis
+function tierWord(d,p0,lo,hi){
+ const dead=0.05;                                  // +/-5% of travel around shipped -> no adjective
+ if(d>=p0){ const g=(100-p0)>0?(d-p0)/(100-p0):0; if(g<dead)return '';
+  return hi[Math.min(hi.length-1,Math.floor((g-dead)/(1-dead)*hi.length))]; }
+ const f=p0>0?(p0-d)/p0:0; if(f<dead)return '';
+ return lo[Math.min(lo.length-1,Math.floor((f-dead)/(1-dead)*lo.length))];
+}
+function partName(d1,d2){
+ const C=CIV[job];
+ const p0=STOCK[job]?STOCK[job].d1:50, m0=(STOCK[job]&&STOCK[job].d2!=null)?STOCK[job].d2:50;
+ const nouns = C.leaderSel? ACAD_DOM[leader].noun : C.noun;
+ let scale=tierWord(d1,p0,SCALE_LO,SCALE_HI);
+ let noun = d1 < p0-0.4*p0 ? nouns[0] : d1 > p0+0.4*(100-p0) ? nouns[2] : nouns[1];
+ let temper = C.dials>1? tierWord(d2,m0,TEMPER_LO,TEMPER_HI): '';
+ if(scale && noun.toLowerCase().includes(scale.toLowerCase())) scale=''; // drop scale if the noun already carries it
+ return [scale,temper,noun].filter(Boolean).join(' ');
+}
+const STOCK={
+ food: {d1:Math.round(unmap(3000,100,20000)), d2:Math.round(unlin(1.0,0.5,3.0)), d3:0},
+ infra: {d1:Math.round(unlin(2000,0,20000)), d2:Math.round(unlin(1,0,3))},
+ habitat:{d1:Math.round(unlin(500,0,1000000)), d2:Math.round(unlin(5,0,50))},
+ academy:{d1:Math.round(unmap(1000,10,2500)), d2:Math.round(unlin(24,1,48))},
+ residency:{d1:Math.round(unlin(2000,0,50000)), d2:Math.round(unlin(10,0,50))},
+ medical:{d1:Math.round(unlin(2000,0,20000)), d2:Math.round(unlin(3,0,10))},
+ recreation:{d1:Math.round(unlin(3000,0,30000)), d2:Math.round(unlin(5,0,20))},
+ security:{d1:Math.round(unlin(2000,0,20000)), d2:Math.round(unlin(3,0,10))},
+ market:{d1:Math.round(unlin(5000,0,50000)), d2:Math.round(unlin(5,0,20))},
+ admin:{d1:Math.round(unlin(5,0,50)), d2:Math.round(unlin(1,0,3))}
+};
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, d3=+$('d3').value, fixed=$('fix').checked;
+ const C=CIV[job];
+ show('w2', C.dials>1);
+ show('w3', C.dials>2);
+ show('leaderrow', !!C.leaderSel); show('leaderhelp', !!C.leaderSel);
+ if(C.leaderSel){
+  document.querySelectorAll('.lchip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.leader===leader));
+  $('leaderhelp').innerHTML = '<b>'+ACAD_DOM[leader].sch+'</b> trains <b>'+ACAD_DOM[leader].trains+'</b>. The leader TYPE is a forced choice - a War College and a Diplomatic Corps teach nothing alike - and it names the school.';
+ }
+ set('v_name', partName(d1,d2));
+
+ // Snap to the AUTHORED default at the stock slider position - the habitat\'s shipped 500 is 0.05% of a
+ // 1,000,000 range, so an integer slider cannot represent it, and the shipped design must read exactly.
+ const v = (d1===STOCK[job].d1 && C.def)
+? C.def
+: ((job==='food'||job==='academy')? logmap(d1,C.lo,C.hi): lin(d1,C.lo,C.hi));
+ const v2 = C.dials>1? lin(d2,C.l2,C.h2): 0;
+ const v3 = C.dials>2? lin(d3,C.l3,C.h3): 0;
+
+ let mass, crew, credits, bp, research, out, moraleTxt, moraleCls, thirdL, thirdV, thirdC, note, verdict, provides;
+
+ if(job==='food'){
+ mass = v*0.1 + Math.pow(v2,3)*200 + v3*500;
+ crew = Math.max(1, v*0.02*(1-v3));
+ research = mass*2; credits = mass; bp = mass;
+ out = v;
+ const quality = Math.max(0, v2-1.0)*8; // the M5c above-baseline quality bonus, illustrative
+ moraleTxt = '+'+quality.toFixed(1); moraleCls = quality>0?'g':'';
+ thirdL = 'Quality\'s share of the mass - CUBIC'; thirdV = kg(Math.pow(v2,3)*200)+' < '+v2.toFixed(2)+'3 x 200'; thirdC='g';
+ provides = fmt(v)+' food/day at quality '+v2.toFixed(2);
+ note = ' <b>The best-priced template in the game.</b> <code>Mass = Output x 0.1 + <b>Quality3 x 200</b> + Automation x 500</code> - all three dials priced, and quality <b>cubically</b>: tripling it costs twenty-seven times as much. Drag <b>Automation</b> and watch the crew fall while the mass rises: <b>a scarce resource traded for a plentiful one at a stated rate.</b>';
+ verdict = ' <b>And that automation trade is the Enhancers door\'s leak, already solved.</b> Its <code>crew-automation</code> suite promises exactly this in its own description - <em>"spend mass and high tech instead of scarce workforce"</em> - and then gives it away, because its <code>Crew Reduction</code> dial is not in its mass formula. <b>The farm charges for it. Fourth time the fix was already in the repository.</b>';
+ } else if(job==='academy'){
+ const A=ACAD_DOM[leader];
+ mass = v*100; crew = v*0.25; research = v*0.5; credits = 120; bp = mass;
+ out = v;
+ const yrs = v2/12;
+ moraleTxt = yrs.toFixed(1)+' yr'; moraleCls='';
+ thirdL = 'Class length - priced in TIME'; thirdV = v2.toFixed(0)+' months to first graduate'; thirdC='g';
+ provides = fmt(v)+' '+A.sch+' graduates per '+yrs.toFixed(1)+'-year course - '+A.trains;
+ note = ' <b>An academy trains ONE kind of leader, and the type is a forced choice.</b> A <b>'+A.sch+'</b> produces '+A.trains+' - not admirals AND governors. <code>Class Size</code> is priced (<code>Mass = Class Size x 100</code>); <code>Class Length</code> pays in TIME (<code>graduation = now + months x 30 days</code>) - a longer course, better graduates, lower throughput.';
+ verdict = ' <b>The leader TYPE maps to the Command door\'s roles</b> - Navy, Ground, Governance, Science, Diplomacy, Intelligence, Commerce. One school per field, because a War College and a Diplomatic Corps teach nothing alike, and their graduates fill different command seats. The single "War College" ceiling is gone.';
+ } else if(job==='residency'){
+ // Jobs are NOT a building - they are what every industry building DECLARES via its CrewReq (see the
+ // employment finding above). The real Civic housing template is a residency: capacity + comfort. Both priced.
+ mass = v*0.5 + Math.pow(v2,2)*300;          // capacity is bulk; comfort is a quadratic quality premium
+ crew = Math.max(1, v*0.002);                // a little management crew, scales with residents
+ research = 0; credits = mass; bp = mass/10;
+ out = v;                                    // colonists housed
+ const comfort = Math.min(MAX_COMFORT, v2);
+ moraleTxt = '+'+comfort.toFixed(0)+(v2>MAX_COMFORT?' < capped at 20':''); moraleCls = v2>MAX_COMFORT?'a':'g';
+ thirdL = 'Comfort\'s share of the mass - QUADRATIC'; thirdV = kg(Math.pow(v2,2)*300)+' < '+v2.toFixed(0)+'2 x 300'; thirdC='g';
+ provides = fmt(v)+' residents at comfort '+v2.toFixed(0)+' (+'+comfort.toFixed(0)+' morale)';
+ note = ' <b>Jobs were never a building</b> - they are what a colony\'s industry buildings DECLARE, through the <code>CrewReq</code> every installation already carries (the employment finding above). So this slot is a <b>residency</b>, the door\'s real housing template: <code>Colonists Housed</code> is the capacity it adds, <code>Living Comfort</code> feeds <code>ColonyMoraleDB</code> directly. Mass is priced on both - capacity is bulk, comfort a <b>quadratic</b> premium, so a gilded arcology costs.';
+ verdict = ' <b>Comfort is capped at +20</b> (<code>ColonyMoraleDB.MaxComfortBonus = 20</code>), so the dial runs to 50 but only the first 20 reach morale - the same inert-range note as infrastructure. Capacity has no ceiling: an arcology can house a city, and it pays for it in mass.';
+ } else if(C.kind){
+ // The priced civic buildings whose effect is not raw housing: life support (survival), medical (health),
+ // recreation (comfort), security (order), admin (governance). One capacity + quality shape, five effects.
+ mass = v*0.4 + Math.pow(v2,2)*250;
+ crew = Math.max(1, v*0.003);
+ research = 0; credits = mass; bp = mass/10;
+ out = v;
+ thirdL = 'Quality\'s share of the mass - QUADRATIC'; thirdV = kg(Math.pow(v2,2)*250)+' < '+v2.toFixed(0)+'2 x 250'; thirdC='g';
+ if(C.kind==='survival'){
+  moraleTxt = fmt(v)+' alive'; moraleCls='';
+  provides = fmt(v)+' kept alive, redundancy '+v2.toFixed(0)+' (rides out '+v2.toFixed(0)+' supply cuts)';
+  note = ' <b>The SURVIVAL enabler, not housing.</b> Life support is the threshold that lets people exist on a world at all - <code>Sustained Population</code> is how many it keeps breathing; <code>Redundancy</code> is how many outages or hits it rides out before mass casualties. <b>No comfort dial</b> - staying alive is not being happy (that is the Residency).';
+  verdict = ' <b>Distinct from Residency and Habitat by JOB.</b> Life support keeps people ALIVE (a planetary threshold); Residency HOUSES them for morale; a Space Habitat does both, because in orbit there is no ground to stand on. Three buildings, three jobs - not one building three times.';
+ } else if(C.kind==='health'){
+  moraleTxt = '+'+v2.toFixed(0)+' health'; moraleCls='g';
+  provides = fmt(v)+' beds at care '+v2.toFixed(0)+' (lowers mortality, lifts morale)';
+  note = ' <b>Health is its own morale input.</b> <code>Patient Capacity</code> covers the population; <code>Care Quality</code> lowers mortality and adds morale. A colony that can treat its people keeps more of them.';
+  verdict = ' <b>A new morale consumer on a different axis from comfort.</b> Capacity is bulk, quality is the quadratic premium - a flagship hospital costs.';
+ } else if(C.kind==='comfort'){
+  moraleTxt = '+'+v2.toFixed(0)+' amenity'; moraleCls='g';
+  provides = fmt(v)+' served, amenity +'+v2.toFixed(0)+' morale (UNCAPPED)';
+  note = ' <b>ENTERTAINMENT / amenities - the QoL axis a metropolis has and a village does not.</b> Parks, theaters, arenas, the concourse. It CANNOT ride the housing <code>Comfort</code> band - that is capped at +20 (<code>MaxComfortBonus</code>) and Earth\'s base infrastructure already pegs it, so a comfort building adds ZERO on a developed world. Instead it feeds a NEW <code>CivicAmenity</code> line on <code>MoraleInputs</code> (one field + one coefficient + one line in <code>ComputeMorale</code>, the exact pattern tax/food already use) - an UNCAPPED happiness axis every civic building can stack.';
+  verdict = ' <b>This is the developer\'s "entertainment centers" ask, grounded.</b> Comfort is pegged and food-quality is food-only, so the amenity line is the clean, un-saturated QoL lever that makes New York != a rural town. NEEDS a one-time engine add (the new morale line); the buildings that feed it are pure data after that.';
+ } else if(C.kind==='order'){
+  moraleTxt = '+'+(v2*2).toFixed(0)+' legitimacy'; moraleCls='g';
+  provides = fmt(v)+' policed, response '+v2.toFixed(0)+' (props legitimacy, holds off rebellion)';
+  note = ' <b>LAW ENFORCEMENT acts on the OTHER gauge: legitimacy, not happiness.</b> <code>Coverage</code> is the population it polices; <code>Response</code> is how hard. It feeds a NEW <code>PublicOrder</code> input on <code>LegitimacyInputs</code> - which already keeps neutral-sentinel slots for exactly this - so it props the live <code>LegitimacyDB.Legitimacy</code> score and holds a discontented colony off the <code>RebellionDB</code> track. (Note: "unrest" is not a stored variable - it is computed inline as (50-morale)/50 - so a police building writes LEGITIMACY, which is the real lever.)';
+  verdict = ' <b>The governability lever, distinct from morale</b> - a city can be entertained but ungoverned, or policed but miserable. The lever an authoritarian/militarist government leans on (order without morale). BONUS: a persistent legitimacy input is exactly what the <code>SowUnrest</code> espionage action is documented as waiting on, so this un-blocks that no-op too. NEEDS a one-time engine add (the new legitimacy input).';
+ } else if(C.kind==='commerce'){
+  const buzz = Math.min(MAX_COMFORT, v2);
+  moraleTxt = '+'+buzz.toFixed(0)+' amenity'; moraleCls='g';
+  provides = fmt(v)+' commerce/mo to the Ledger, market buzz +'+buzz.toFixed(0)+' amenity morale';
+  note = ' <b>The door\'s first MONEY building.</b> <code>Commerce throughput</code> pays credits into the faction <code>Ledger</code> each month through a NEW <code>ColonyCommerce</code> transaction category - the SAME pipe colony tax already flows through, so it is one new faucet, not new plumbing. <code>Market amenity</code> feeds the NEW civic-amenity morale line, because a bustling market lifts spirits as well as the books.';
+  verdict = ' <b>Trade connects money to attractiveness.</b> A commercial metropolis both earns and pulls migration; a subsistence village does neither - the same template, opposite settlements. (Commerce income + the amenity line are one-time engine adds; the Ledger they ride is already live.)';
+ } else {
+  moraleTxt = v.toFixed(0)+' span'; moraleCls='';
+  provides = fmt(v)+' admin capacity at efficiency '+v2.toFixed(0)+' (span of control for delegates)';
+  note = ' <b>Administration is capacity to DELEGATE.</b> <code>Admin Capacity</code> is the span of control it adds - the <code>AdminSpaceAtb</code> seats governors and ministers sit in; <code>Efficiency</code> is how much each seat is worth. Without it a growing empire outruns the leaders who can run it.';
+  verdict = ' <b>The building the Governance / Delegation layer needs</b> - it turns "play at your own altitude" into a thing you BUILD, and staff with the academy\'s graduates.';
+ }
+ } else {
+ // Only the Space Habitat reaches here now - the orbital, self-contained host.
+ mass = fixed? 1000*(1 + v/C.def*0.5 + v2/10): C.mass;
+ crew = C.crew; bp = fixed? mass/10: C.bp; credits = 0; research = 0;
+ out = v;
+ const comfort = Math.min(MAX_COMFORT, v2);
+ moraleTxt = '+'+comfort.toFixed(0)+(v2>MAX_COMFORT?' < capped':''); moraleCls = v2>MAX_COMFORT?'a':'g';
+ thirdL = fixed?'Mass - now reads the dials':'Mass - a CONSTANT'; thirdV = fixed?kg(mass):kg(C.mass)+' < never moves'; thirdC = fixed?'g':'r';
+ provides = fmt(v)+' station colonists, comfort '+v2.toFixed(0);
+ note = ' <b>The orbital, self-contained host - it does the job of BOTH the others, because in space there is no ground.</b> A Space Habitat provides its own life support AND its own housing and comfort in one structure: it is the only host that works where there is no planet to stand on. '
+  + (fixed? '' : '<b>Today its <code>Mass = 1000</code> is a constant,</b> so a station that holds a million people is a one-tonne rounding error - the last unpriced template in the door.');
+ verdict = fixed
+  ? ' <b>Priced, a habitat that houses a million is a real construction project.</b> Comfort still caps at +20 (<code>MaxComfortBonus</code>).'
+  : ' <b>The distinction from Life Support and Residency is LOCATION:</b> those are planetary (one keeps you alive, one houses you); this is orbital and does both at once. It also carries <b>no gravity or pressure attribute</b> - which is how a station escapes a planet\'s environment (and cannot be faked by zeroing those dials - template values clamp to tech bounds).';
+ }
+
+ set('n1', C.n1 + (C.missing&&!fixed? ' no template declares it': (C.priced?'':(fixed?' now priced':' free'))));
+ set('s1', fmt(v));
+ set('e1a', fmt(C.lo)); set('e1b', fmt(C.hi)+' - shipped = '+(C.def?fmt(C.def):'-'));
+ if(C.dials>1){ set('n2', C.n2 + (job==='food'?' CUBIC cost':(job==='academy'?' costs TIME':''))); set('s2', v2.toFixed(2));
+ set('e2a', C.l2.toFixed(1)); set('e2b', C.h2.toFixed(1)+' - shipped = '+C.def2); }
+ if(C.dials>2){ set('n3', C.n3+' buys crew down'); set('s3',(v3*100).toFixed(0)+'%'); set('e3a','0'); set('e3b','90%'); }
+
+ set('l_a1','What it provides'); set('v_a1',fmt(out)+C.unit);
+ set('l_a2', C.priced?'Mass - reads the dials':(fixed?'Mass - now reads them':'Mass - CONSTANT'));
+ set('v_a2', kg(mass)+((!C.priced&&!fixed&&!C.missing)?' < never moves':''));
+ set('l_a3',thirdL); set('v_a3',thirdV); $('l_a3').parentElement.className='num '+thirdC;
+ set('v_a4', kg(mass));
+ set('l_a5','Crew'); set('v_a5', crew<1?'0':fmt(crew));
+ set('v_cost', fmt(credits)+' cr - '+fmt(bp)+' BP'+(research>0?' - '+fmt(research)+' RP':''));
+
+ set('l_m1','Provides'); set('m_1',fmt(out)); set('s_m1',provides);
+ set('l_m2', (C.kind==='survival'||C.kind==='governance')?'Effect':(C.kind==='order')?'Legitimacy effect':(C.kind==='commerce')?'Income + amenity':'Morale effect'); set('m_2',moraleTxt);
+ set('s_m2', job==='food'? 'food-quality bonus above baseline'
+: job==='academy'? 'to the first graduate'
+: C.kind==='survival'? 'people kept alive - survival, not morale'
+: C.kind==='health'? 'health -> lower mortality + morale'
+: C.kind==='comfort'? 'amenity morale (uncapped, a NEW line)'
+: C.kind==='order'? 'legitimacy propped -> holds off rebellion'
+: C.kind==='commerce'? 'commerce -> Ledger + amenity morale'
+: C.kind==='governance'? 'span of control for delegates'
+: 'comfort, capped at +20');
+ $('m_2').parentElement.className='mt '+moraleCls;
+ const perT = mass>0? out/(mass/1000): Infinity;
+ set('l_m3','Per tonne'); set('m_3', mass>0?fmt(perT):'inf');
+ set('s_m3', mass>0?C.unit.trim()+' per t':'weighs nothing at all');
+ const flat = C.priced || fixed;
+ set('l_m4','Ladder test'); set('m_4', C.missing&&!fixed? ' n/a': (flat?' passes':' fails'));
+ set('s_m4', C.missing&&!fixed? 'the dial does not exist yet': (flat?'cost rises with the dial':'benefit rises, cost stands still'));
+ $('m_4').parentElement.className='mt '+((C.missing&&!fixed)?'r':(flat?'g':'r'));
+
+ $('odesc').innerHTML=note;
+ $('verdict').innerHTML=verdict;
+ set('oname', provides);
+ $('jobnote').textContent = (C.priced? 'Its mass reads its dials, so nothing on it is free.': ' Its mass is a constant, so everything on it is free.');
+ set('v_namesub', C.dials>1? 'scale <- how much it provides - temper <- how comfortable - noun <- what it is'
+: 'scale <- how much it provides - noun <- what it is');
+}
+document.querySelectorAll('.chip[data-v]').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [kk,val] of Object.entries(STOCK[job]||{})) $(kk).value=val;
+ render();}));
+document.querySelectorAll('.lchip').forEach(c=>c.addEventListener('click',()=>{
+ leader=c.dataset.leader; render();}));
+['d1','d2','d3'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+for(const [kk,val] of Object.entries(STOCK.food)) $(kk).value=val;
+render();
+
+</script>

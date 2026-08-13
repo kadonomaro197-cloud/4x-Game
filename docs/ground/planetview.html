@@ -1,0 +1,1815 @@
+<title>Planet View — the surface as the game actually models it</title>
+<style>
+  /* ============ TOKENS — light "daylight survey chart" is the bare :root ============ */
+  :root{
+    --ground:#e7ecf1; --panel:#ffffff; --panel-2:#f1f5f8; --inset:#eaf0f4; --sunk:#dfe7ed;
+    --ink:#12202b; --ink-soft:#48606f; --ink-faint:#7c94a3;
+    --line:#cdd9e1; --line-strong:#b0c1cc;
+    --accent:#d5741f; --accent-soft:#f6e6d3; --accent-ink:#9a4e0c;
+    --live:#1c9160; --live-bg:#dcefe6;
+    --data:#b07d16; --data-bg:#f5ecd4;
+    --theory:#3f6bb0; --theory-bg:#e0e8f4;
+    /* terrain (real RegionFeatureType palette) */
+    --t-plains:#c3b25a; --t-forest:#3f7d4e; --t-jungle:#2f6b41; --t-mount:#8593a0; --t-volcanic:#a8492c;
+    --t-desert:#cbb277; --t-barren:#9c8465; --t-coast:#6fb0c0; --t-ocean:#2f6f88; --t-ice:#dcecf3; --t-tundra:#93a48f;
+    --t-highland:#a89a86; --t-wetland:#2f6b5a;
+    --shadow:0 1px 2px rgba(18,32,43,.07), 0 8px 26px rgba(18,32,43,.07);
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --theory:#6ba0e0; --theory-bg:#132339;
+    --t-plains:#9c8f3f; --t-forest:#2f6b41; --t-jungle:#255736; --t-mount:#5a6773; --t-volcanic:#8a3a22;
+    --t-desert:#9c8752; --t-barren:#75604a; --t-coast:#357182; --t-ocean:#1f5871; --t-ice:#9fcdda; --t-tundra:#5f6f5c;
+    --t-highland:#6e6152; --t-wetland:#255747;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --theory:#6ba0e0; --theory-bg:#132339;
+    --t-plains:#9c8f3f; --t-forest:#2f6b41; --t-jungle:#255736; --t-mount:#5a6773; --t-volcanic:#8a3a22;
+    --t-desert:#9c8752; --t-barren:#75604a; --t-coast:#357182; --t-ocean:#1f5871; --t-ice:#9fcdda; --t-tundra:#5f6f5c;
+    --t-highland:#6e6152; --t-wetland:#255747;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15.5px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(14px,3vw,32px) 72px}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  .mono{font-family:var(--mono)}
+  .cite{font-family:var(--mono);font-size:.74em;color:var(--ink-faint);word-break:break-word}
+
+  header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:700;display:flex;gap:9px;align-items:center}
+  header .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  h1{font-size:clamp(25px,4.2vw,40px);font-weight:820;letter-spacing:-.02em;line-height:1.04;margin:12px 0 0}
+  .sub{margin:12px 0 0;color:var(--ink-soft);max-width:76ch;font-size:15.5px}
+  .sub b{color:var(--ink);font-weight:680}
+
+  /* grade key */
+  .gradekey{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .gradekey b{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;margin-right:5px}
+  .gk-live b{background:var(--live-bg);color:var(--live)} .gk-data b{background:var(--data-bg);color:var(--data)} .gk-theory b{background:var(--theory-bg);color:var(--theory)}
+
+  /* planet selector + condition strip */
+  .console{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden}
+  .planetbar{display:flex;gap:8px;flex-wrap:wrap;padding:13px 15px;background:var(--panel-2);border-bottom:1px solid var(--line);align-items:center}
+  .planetbar .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-right:4px}
+  .pbtn{font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:all .13s}
+  .pbtn:hover{border-color:var(--line-strong);color:var(--ink)}
+  .pbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .pbtn .tag{font-family:var(--mono);font-size:10px;opacity:.7}
+  .cond{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--line)}
+  .cell{background:var(--panel);padding:10px 13px}
+  .cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);display:flex;justify-content:space-between;gap:4px;align-items:center}
+  .cell .k .b{font-weight:800;font-size:8.5px;padding:1px 4px;border-radius:4px}
+  .cell .k .b.DATA{background:var(--data-bg);color:var(--data)} .cell .k .b.LIVE{background:var(--live-bg);color:var(--live)}
+  .cell .v{font-weight:720;font-size:14.5px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .cell .v small{font-weight:500;color:var(--ink-soft);font-size:11.5px}
+
+  /* the map + readout */
+  .stage{display:grid;grid-template-columns:1fr 356px;gap:0;background:var(--line)}
+  @media(max-width:900px){.stage{grid-template-columns:1fr}}
+  .mapwrap{background:var(--sunk);padding:16px;position:relative;min-width:0}
+  .maphead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .maphead .t{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink-soft)}
+  .maphead .t b{color:var(--ink)}
+  .poles{display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;position:absolute;left:2px;top:52px;bottom:74px;pointer-events:none}
+  .regionrow{display:flex;gap:0;margin:0 0 4px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
+  .regionrow span{flex:1;text-align:center;padding:2px 0;border-bottom:2px solid var(--line-strong)}
+  .mapscroll{overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+  svg.map{display:block;margin:0;touch-action:manipulation}
+  svg.map polygon{cursor:pointer;transition:filter .1s}
+  svg.map polygon:hover{filter:brightness(1.18)}
+  svg.map polygon.sel{stroke:var(--accent);stroke-width:2.2}
+  svg.map polygon:focus-visible{outline:none;stroke:var(--accent);stroke-width:2.2}
+  .maptools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  .tbtn{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+  .tbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+  .legend{display:flex;gap:5px 12px;flex-wrap:wrap;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  /* comprehensive legend */
+  .biglegend{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:5px}
+  .lgrow{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
+  .lgh{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;font-size:9.5px;min-width:74px;font-weight:700}
+  .lg{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .lg i{display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid var(--line-strong)}
+  .lg i.tint{border:none;border-radius:3px}
+  .tint.amber{background:var(--accent);opacity:.55} .tint.blue{background:var(--theory);opacity:.6} .tint.night{background:#0a1730;opacity:.85}
+  .lg b{font-size:11px}
+  .lg b.gr{font-weight:800;font-size:9px;padding:1px 4px;border-radius:4px}
+  b.gr.LIVE{background:var(--live-bg);color:var(--live)} b.gr.DATA{background:var(--data-bg);color:var(--data)} b.gr.THEORY{background:var(--theory-bg);color:var(--theory)}
+  /* grid-scale + potato-budget panel */
+  .scalepanel{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .scalepanel .sph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+  .scalepanel .sph .tt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .scalepanel .sph .tt b{color:var(--accent-ink)}
+  .dial{display:inline-flex;gap:4px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+  .dial button{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  .dial button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ladder{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+  .rung{flex:1;min-width:120px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  .rung .rk{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .rung .rv{font-weight:800;font-size:15px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .rung .rs{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:1px}
+  .rung.hi{border-color:var(--accent);background:var(--accent-soft)}
+  .rung.hi .rv{color:var(--accent-ink)}
+  table.pt{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mono)}
+  table.pt th,table.pt td{padding:4px 7px;border-bottom:1px solid var(--line);text-align:right}
+  table.pt th{font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.pt td:first-child,table.pt th:first-child{text-align:left;color:var(--ink)}
+  table.pt tr.cur td{background:var(--accent-soft)}
+  table.pt tr.cur td:first-child{font-weight:800;color:var(--accent-ink)}
+  .budget{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px}
+  .bcard{background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px;border-left:3px solid var(--live)}
+  .bcard.warn{border-left-color:var(--data)}
+  .bcard .bk{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+  .bcard .bvv{font-weight:800;font-size:13px;margin-top:2px}
+  .bcard .bd{font-size:11px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
+  .guards{margin-top:9px;font-size:11.5px;color:var(--ink-soft);background:var(--inset);border:1px dashed var(--line-strong);border-radius:9px;padding:9px 11px;line-height:1.5}
+  .guards b{color:var(--ink)} .guards .g{color:var(--accent-ink);font-weight:700}
+  /* micro-hex sub-grid (zoom into a tapped hex) */
+  .micro{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:2px}
+  .micro .mh{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .micro .mh b{color:var(--ink)}
+  svg.microsvg{width:100%;height:auto;display:block}
+  svg.microsvg polygon{cursor:pointer}
+  svg.microsvg polygon:hover{filter:brightness(1.15)}
+  .micro .cap{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
+
+  /* readout panel */
+  .readout{background:var(--panel);padding:16px 17px;min-width:0}
+  .readout .rh{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .readout .loc{font-weight:800;font-size:18px;letter-spacing:-.01em;margin:3px 0 2px}
+  .readout .coord{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  .sect{margin-top:15px}
+  .sect>.sh{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin-bottom:7px}
+  .sect>.sh .badge{font-weight:800;font-size:9px;padding:2px 6px;border-radius:5px}
+  .badge.LIVE{background:var(--live-bg);color:var(--live)} .badge.DATA{background:var(--data-bg);color:var(--data)} .badge.THEORY{background:var(--theory-bg);color:var(--theory)}
+  .row{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .row b.up{color:var(--live)} .row b.dn{color:var(--accent-ink)}
+  .haz{display:grid;grid-template-columns:1fr auto;gap:2px 9px;align-items:center;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:6px}
+  .haz .hn{font-size:12.5px;font-weight:640}
+  .haz .hn small{display:block;font-weight:400;color:var(--ink-soft);font-size:11px;font-family:var(--mono)}
+  .haz .hv{font-family:var(--mono);font-size:12.5px;font-weight:800;color:var(--accent-ink);text-align:right;white-space:nowrap}
+  .bleed{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;padding:9px 11px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .bleed .bl{font-size:12px;color:var(--accent-ink);font-weight:700}
+  .bleed .bv{font-family:var(--mono);font-weight:800;font-size:15px;color:var(--ink)}
+  .tac{margin-top:13px;font-size:13px;color:var(--ink-soft);line-height:1.5;background:var(--inset);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px}
+  .tac b{color:var(--ink)}
+  .flag{margin-top:9px;font-size:12px;color:var(--ink-soft);border:1px dashed var(--line-strong);border-radius:8px;padding:8px 10px}
+  .flag b{color:var(--accent-ink)}
+  .empty{color:var(--ink-faint);font-size:14px;padding:32px 4px;text-align:center;font-family:var(--mono)}
+  .resolve{margin-top:12px;width:100%;font-family:var(--sans);font-weight:700;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:10px;padding:11px;cursor:pointer}
+  .resolve:hover{filter:brightness(1.06)}
+
+  /* the self-sufficient city */
+  .citywrap{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:18px;margin-top:8px}
+  @media(max-width:820px){.citywrap{grid-template-columns:1fr}}
+  svg.citysvg{width:100%;height:auto;display:block;background:var(--sunk);border:1px solid var(--line);border-radius:12px}
+  svg.citysvg polygon{cursor:pointer;transition:filter .1s}
+  svg.citysvg polygon:hover{filter:brightness(1.15)}
+  svg.citysvg polygon.selb{stroke:var(--accent);stroke-width:2.4}
+  .citylegend{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:8px;display:flex;gap:5px 12px;flex-wrap:wrap}
+  .citylegend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+  table.cty{width:100%;border-collapse:collapse;font-size:12px}
+  table.cty th,table.cty td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+  table.cty th{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.cty td:first-child,table.cty th:first-child{text-align:left}
+  table.cty td .bi{margin-right:6px}
+  table.cty tr.selr td{background:var(--accent-soft)}
+  .boost{font-family:var(--mono);font-weight:800;font-size:11px;padding:1px 5px;border-radius:5px}
+  .boost.up{background:var(--live-bg);color:var(--live)} .boost.dn{background:var(--accent-soft);color:var(--accent-ink)} .boost.flat{background:var(--sunk);color:var(--ink-faint)}
+  .ledger{margin-top:12px;display:grid;grid-template-columns:1fr;gap:6px}
+  .lrow{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;background:var(--inset);border:1px solid var(--line);border-left:3px solid var(--live);border-radius:8px;padding:8px 11px}
+  .lrow.deficit{border-left-color:var(--accent)}
+  .lrow .lk{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+  .lrow .lb{height:7px;border-radius:4px;background:var(--sunk);overflow:hidden;position:relative}
+  .lrow .lb span{position:absolute;left:0;top:0;bottom:0;background:var(--live);border-radius:4px}
+  .lrow.deficit .lb span{background:var(--accent)}
+  .lrow .lv{font-family:var(--mono);font-size:11.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .verdict{margin-top:12px;background:var(--live-bg);border:1px solid var(--live);border-radius:10px;padding:11px 13px;font-size:13.5px;color:var(--ink);font-weight:600}
+  .verdict b{color:var(--live)}
+  .cityflag{margin-top:10px;font-size:12.5px;color:var(--ink-soft);border:1px dashed var(--line-strong);border-radius:9px;padding:10px 12px;line-height:1.5}
+  .cityflag b{color:var(--accent-ink)}
+  .movesim{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .movesim button{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  .movesim button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* province roster (in the readout) */
+  .rblurb{font-size:12.5px;color:var(--ink-soft);margin:0 0 8px;line-height:1.5}
+  .rchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .rchip{display:flex;flex-direction:column;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 9px;min-width:70px}
+  .rchip i{font-style:normal;font-size:14px} .rchip s{text-decoration:none;font-family:var(--mono);font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);margin-top:1px}
+  .rchip{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* ── THE CIVILIZATION DASHBOARD — the empire-wide books below the map ── */
+  .civdash{background:var(--panel);border-top:1px solid var(--line)}
+  .civdash:empty{display:none}
+  .civnote{padding:16px;font-size:13.5px;color:var(--ink-soft);text-align:center;font-family:var(--mono)}
+  .civhead{padding:16px 17px 4px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .civhead h3{font-size:17px;font-weight:780;letter-spacing:-.01em}
+  .civhead p{margin:6px 0 0;font-size:12.5px;color:var(--ink-soft);max-width:80ch;line-height:1.55}
+  .bigms{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--line);margin:12px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .bigm{background:var(--panel);padding:11px 13px;display:flex;flex-direction:column;gap:1px}
+  .bigm i{font-style:normal;font-size:15px} .bigm b{font-size:19px;font-weight:820;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:2px}
+  .bigm u{text-decoration:none;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .bigm s{text-decoration:none;font-size:10.5px;color:var(--ink-soft);margin-top:2px;line-height:1.35}
+  .bigm.good{background:var(--live-bg)} .bigm.good b{color:var(--live)}
+  .bigm.warn{background:var(--data-bg)} .bigm.warn b{color:var(--data)}
+  .civreality{padding:13px 17px 4px;display:grid;gap:9px}
+  .crx{font-size:12.5px;color:var(--ink-soft);line-height:1.55;background:var(--inset);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 9px 9px 0;padding:9px 12px}
+  .crx b{color:var(--ink)} .crh{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--accent-ink);margin-right:6px}
+  .crn{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-faint)} .crn b{color:var(--ink-soft)}
+  .crwarn{color:var(--accent-ink);font-weight:600}
+  .mbtn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:3px 8px;cursor:pointer;margin-left:4px}
+  .mbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pcards{padding:13px 17px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
+  .pcard{background:var(--inset);border:1px solid var(--line);border-radius:11px;padding:11px 12px;border-top:3px solid var(--accent)}
+  .pch{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pch b{font-size:14px;font-weight:760} .pjump{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;padding:3px 8px;cursor:pointer}
+  .pcr{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px;letter-spacing:.02em}
+  .pcm{display:flex;gap:5px 10px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .pcj{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:7px;padding-top:6px;border-top:1px solid var(--line)}
+  .civfoot{padding:4px 17px 16px;font-size:11.5px;color:var(--ink-soft);line-height:1.6}
+  .civfoot .gr{font-weight:800;font-size:9px;padding:1px 5px;border-radius:4px}
+  .civfoot .gr.LIVE{background:var(--live-bg);color:var(--live)} .civfoot .gr.THEORY{background:var(--theory-bg);color:var(--theory)}
+  /* the two gauges (morale/legitimacy) + commerce */
+  .gauges{padding:12px 17px 2px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:11px}
+  .gauge{background:var(--inset);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .gauge .gh{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--ink);display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+  .gauge .gh span{font-weight:500;color:var(--ink-faint);font-size:10.5px} .gauge .gh .gnew{margin-left:auto;color:var(--theory);background:var(--theory-bg);padding:1px 6px;border-radius:5px;font-size:9px}
+  .gbar{height:12px;border-radius:6px;background:var(--sunk);overflow:hidden;margin:8px 0 6px;position:relative}
+  .gbar span{position:absolute;left:0;top:0;bottom:0;background:var(--live);border-radius:6px}
+  .gbar.leg span{background:var(--accent)} .gbar.com span{background:var(--data)}
+  .gv{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums} .gv b{font-weight:800} .gv .up{color:var(--live)}
+  .gtag{font-family:var(--sans);font-size:10.5px;color:var(--live);background:var(--live-bg);padding:1px 6px;border-radius:5px;margin-left:4px}
+  .gtag.storm{color:var(--accent-ink);background:var(--accent-soft)}
+  .gbreak{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
+  .gbreak .gsub{color:var(--ink-soft)} .gbreak .gnewi{color:var(--theory)}
+  /* the "build a Venator?" panel */
+  .vgrid{display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:11px}
+  @media(max-width:760px){.vgrid{grid-template-columns:1fr}}
+  .vcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+  .vcard.vwide{}
+  .vh{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);margin-bottom:8px}
+  .vh span{font-weight:500;color:var(--ink-faint)}
+  .vrow{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .vrow b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .vscroll{overflow-x:auto}
+  table.vtab{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+  table.vtab th,table.vtab td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  table.vtab th{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  table.vtab td:first-child,table.vtab th:first-child{text-align:left;color:var(--ink)}
+  table.vtab b{color:var(--accent-ink)}
+  .vpass{color:var(--live)} .vfail{color:var(--accent-ink)} .vsame{color:var(--live)}
+  .vnote{font-size:11.5px;color:var(--ink-soft);line-height:1.55;margin-top:8px} .vnote b{color:var(--ink)}
+  .vbottom{margin-top:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;padding:11px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .vbottom b{color:var(--accent-ink)}
+
+  /* sections below */
+  .sec{margin-top:44px}
+  .sec h2{font-size:clamp(18px,2.4vw,23px);font-weight:760;letter-spacing:-.01em;display:flex;gap:12px;align-items:baseline}
+  .sec h2 .n{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink);font-weight:700}
+  .sec p.lead{color:var(--ink-soft);max-width:78ch;margin:8px 0 20px;font-size:15px}
+  .zoom{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:760px){.zoom{grid-template-columns:1fr 1fr}}
+  .z{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:var(--shadow);border-top:3px solid var(--line-strong)}
+  .z.here{border-top-color:var(--accent)}
+  .z .zk{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+  .z h3{font-size:15.5px;font-weight:740;margin:3px 0 6px}
+  .z p{font-size:13px;color:var(--ink-soft);margin:0}
+  .z .st{margin-top:9px;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block}
+  .z .st.built{background:var(--live-bg);color:var(--live)} .z .st.sim{background:var(--data-bg);color:var(--data)} .z .st.design{background:var(--theory-bg);color:var(--theory)}
+
+  table.dt{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  table.dt th,table.dt td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+  table.dt th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700}
+  table.dt td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  table.dt tr td:first-child{font-weight:640}
+  .scroll{overflow-x:auto}
+
+  .note{margin-top:20px;background:var(--inset);border:1px solid var(--line);border-left:4px solid var(--data);border-radius:11px;padding:15px 17px;font-size:14px;color:var(--ink-soft)}
+  .note b{color:var(--ink)}
+  footer{margin-top:44px;border-top:1px solid var(--line);padding-top:20px;color:var(--ink-faint);font-size:12.5px}
+  footer .mono{font-size:11px}
+  a{color:var(--accent-ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Planetary command · surface war-map · ground truth</div>
+    <h1>A planet, exactly as the game models it</h1>
+    <p class="sub">Every world here is a <b>real Sol body</b> read from the game's data files. <b>Earth, Mars and Luna draw their actual baked surface maps</b> — the same tables the engine samples — so you see real continents, oceans, the Tharsis volcanoes, the lunar maria, and the <b>polar ice caps</b>. Every terrain number is what the <b>ground combat resolver actually applies</b>; every world hazard is what the <b>physics-driven generator actually produces</b>; every <b>resource node</b> is a located mineral deposit the way the engine seeds them — terrain-weighted, never in the sea or the ice, and <b>two-tier</b>: the regional hex flags that ore is <em>present</em>, and clicking in pinpoints the <em>exact</em> mini-hexes that hold it. A whole <b>developed civilization</b> spans Earth, its capital grown into a <b>super-city</b> (an ecumenopolis of stacked arcologies, an entertainment strip, a financial exchange and a metro police force) with four supporting provinces placed on the ground that suits each — mines in the hills, foundry on the plains, farms on the delta, the shield on a ridge. Click a province and each <b>mini-hex is a district</b> — a cluster of real installations whose outputs sum — and scroll below the map for <b>the civilization's books</b>: ~27 M people, and <b>two live gauges</b> built from the real morale coefficients — <b>morale → migration</b> and <b>legitimacy → rebellion</b> — plus <b>commerce income</b>. You can drop a <b>float tag</b> (a name of your choosing) on any hex. Pick a world, click a hex, read the fight and the ground beneath it — each effect graded by whether the code <b>reads it today</b>, only <b>holds the data</b>, or is a <b>design proposal</b>.</p>
+    <div class="gradekey">
+      <span class="gk-live"><b>LIVE</b>the resolver applies this in a fight today</span>
+      <span class="gk-data"><b>DATA</b>the value exists on the body; combat ignores it</span>
+      <span class="gk-theory"><b>THEORY</b>a design proposal — not wired anywhere</span>
+    </div>
+  </header>
+
+  <div class="console">
+    <div class="planetbar" id="planetbar" role="group" aria-label="Choose a world">
+      <span class="lbl">Sol body</span>
+    </div>
+    <div class="cond" id="cond"></div>
+    <div class="stage">
+      <div class="mapwrap">
+        <div class="maphead">
+          <div class="t"><b id="planetName">Earth</b> · <span id="mapsrc">real baked surface map</span> · <span id="griddim"></span></div>
+        </div>
+        <div class="poles" id="poles"><span>N pole</span><span>equator</span><span>S pole</span></div>
+        <div class="mapscroll" id="mapscroll">
+          <div class="regionrow" id="regionrow"></div>
+          <svg class="map" id="map" viewBox="0 0 720 200" role="img" aria-label="Clickable surface hex map"></svg>
+        </div>
+        <div class="maptools">
+          <button class="tbtn" id="hazToggle" aria-pressed="true">☣ Ground hazards</button>
+          <button class="tbtn" id="wxToggle" aria-pressed="true">🌦 Weather</button>
+          <button class="tbtn" id="nightToggle" aria-pressed="true">🌙 Day/night</button>
+          <button class="tbtn" id="resToggle" aria-pressed="true">⛏ Resources</button>
+          <button class="tbtn" id="unitToggle" aria-pressed="true">🪖 Units &amp; trade</button>
+          <button class="tbtn" id="wxRoll">🌀 Roll</button>
+          <button class="tbtn" id="wxAuto" aria-pressed="false">▶ Auto-roll</button>
+        </div>
+        <div class="biglegend" id="biglegend"></div>
+        <div class="scalepanel" id="scalepanel"></div>
+      </div>
+      <aside class="readout" id="readout">
+        <div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>
+      </aside>
+    </div>
+    <div class="civdash" id="civdash"></div>
+  </div>
+
+  <section class="sec">
+    <h2><span class="n">⚓</span> Could New Terra build a Venator here?</h2>
+    <p class="lead">A worked example against the <b>real engine construction model</b> (grounded at file:line), and the <b>proposed upgrade</b> that makes the workforce matter. In the <b>shipped</b> engine 50% and 90% give the <em>identical</em> time — population is only a <b>yes/no crew gate</b>. Under the <b>proposed model</b> (population → workforce → staffs production → build rate) they <b>differ: 50% ≈ 5.8 months vs 90% ≈ 3.3 months</b>. Either way the first blocker is having a <b>shipyard</b> (a factory can't assemble a ship).</p>
+    <div id="venator"></div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="n">↓</span> Four zooms, one surface</h2>
+    <p class="lead">The developer's framing — <b>"4 big slices you can zoom into at high accuracy."</b> This prototype lives at the <b>regional / operational</b> zoom — the one where a battle actually happens and where the environment is decided by the ground you pick.</p>
+    <div class="zoom">
+      <div class="z"><div class="zk">Zoom 1</div><h3>System</h3><p>Planets as points on the orbit map — the strategic board.</p><span class="st built">ENGINE-WIRED</span></div>
+      <div class="z"><div class="zk">Zoom 2</div><h3>Planet globe</h3><p>One wrapping cylinder grid (<span class="mono">SurfaceGrid</span>), banded into 4 regions. The client is fully on this globe.</p><span class="st built">ENGINE-WIRED · G6a</span></div>
+      <div class="z here"><div class="zk">Zoom 3 — you are here</div><h3>Regional / operational</h3><p>Units move, fight, capture on real-distance hexes. Each hex carries a terrain and inherits the world's condition.</p><span class="st built">ENGINE-WIRED · W-track</span></div>
+      <div class="z"><div class="zk">Zoom 4</div><h3>Local / district</h3><p>Each mini-hex (~22 km²) is a district — a cluster of installations. Raze it, capture it, defend it.</p><span class="st sim">C-track follows</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="n">→</span> How the ground becomes the fight — what's real</h2>
+    <p class="lead">You don't pick a battle's environment from a menu — <b>the location picks it for you</b>, and the AI reads the same thing off the same hex. But be exact about what "environment" means to the engine today. The <b>ground</b> resolver reads two things; the <b>space</b> resolver reads nothing about location at all.</p>
+    <div class="scroll"><table class="dt">
+      <thead><tr><th>Layer</th><th>What the ground resolver does with it</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td>Terrain (per hex)</td><td>Cover multiplier on the defender + unit-type affinity (armour/artillery) + march-cost. Real numbers from <span class="mono">GroundTerrain.cs</span>.</td><td><span class="badge LIVE">LIVE</span></td></tr>
+        <tr><td>Condition → surface hazards <span class="mono" style="color:var(--accent-ink)">(per-hex — ruling C)</span></td><td>An <b>attrition</b> — a per-hour health bleed. <b>Whole-planet facts</b> (airless → vacuum, poison sky → toxic) hit <b>every hex</b>; <b>local menaces</b> (fire on volcanic ground, cryo on ice, acid on the lowlands) hit only the <b>hex whose terrain breeds them</b>. A sealed unit is exempt from vacuum/toxic. Real magnitudes from <span class="mono">PlanetEnvironmentFactory.cs</span>; the per-hex split is the developer's Q2 ruling C.</td><td><span class="badge LIVE">LIVE</span></td></tr>
+        <tr><td>Condition → gravity / temperature / radiation / day-length</td><td><b>Nothing.</b> The values exist on the body but no combat code reads them (temperature only matters by deciding which hazard was generated).</td><td><span class="badge DATA">DATA</span></td></tr>
+        <tr><td>Storm hazards (dust / ash / lightning = SensorJam)</td><td><b>Nothing yet.</b> The generator makes them, but the resolver's attrition step skips SensorJam (it isn't a damage effect); ground detection doesn't read it either.</td><td><span class="badge DATA">DATA</span></td></tr>
+        <tr><td>Gravity → movement · weather → sight · condition multipliers</td><td>The richer "environment reshapes the whole fight" model. Proposed in the design docs; <b>not wired</b>.</td><td><span class="badge THEORY">THEORY</span></td></tr>
+        <tr><td>The <b>space</b> auto-resolver</td><td><b>Nothing.</b> <span class="mono">AutoResolve</span> / <span class="mono">CombatEngagement</span> read no terrain, no hazard, no planet — space combat is environment-blind.</td><td><span class="badge DATA">DATA</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">
+      <b>So "wired to the auto-resolver" means the GROUND resolver, and it means two live wires:</b> the terrain triangle and the surface-attrition bleed. Everything else this view shows is either data the game holds but combat ignores, or a design proposal. That honesty is the point of the grades — the panel to the right never blurs the three.
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2><span class="n">⚑</span> Two real findings this surfaced</h2>
+    <div class="note" style="border-left-color:var(--accent)">
+      <b>1 · The sealed suit only stopped vacuum + toxic air — so a fully sealed marine still burned on Venus. <span style="color:var(--live)">✔ NOW FIXED (2026-08-09): the Environmental Hardening component is built.</span></b> The gap: <span class="mono">sealed-systems</span> folds into a unit's <span class="mono">EnvironmentalResistance</span> for <span class="mono">Vacuum</span> + <span class="mono">ToxicAtmosphere</span> only, so on <b>Venus</b> a fully sealed marine still burned from the fire tornadoes and the corrosive superstorm; sealing saved only the toxic bleed. The engine already <em>supported</em> heat/corrosion resistance (the map is keyed by every hazard kind) — the component that <em>writes</em> it was just never built. It is now: <span class="mono">GroundHardeningAtb</span> / the base-mod <span class="mono">environmental-hardening</span> component — one <b>Hardening</b> dial the assembler folds into <span class="mono">EnvironmentalResistance {HeatDamage, CorrosiveDamage}</span>. <b>HeatDamage is the engine's one thermal effect for both fire AND cryo</b>, so one component hardens against fire, cryo, and corrosive — the thermal/corrosive twin of the seal, mounted independently (Venus wants both; an ice moon wants this). Full six-point registration + a gauge (<span class="mono">GroundHardeningComponentTests</span>: a hardened unit outlasts both an unhardened AND a merely-sealed twin on a fire+corrosive world). The "you can't hold this world without the right kit" decision is now in the game. <em>(One rung still on the generator side: a cold-world cryo hazard isn't emitted yet — the component already resists it the moment one is.)</em>
+    </div>
+    <div class="note" style="border-left-color:var(--theory)">
+      <b>2 · Mercury renders as a temperate barren world, not a scorched one.</b> The terrain generator reads <span class="mono">AtmosphereDB.SurfaceTemperature</span> — but Mercury has <em>no</em> atmosphere blob, so the generator falls back to a default <b>15 °C</b> and never sees its real heat. So Mercury's surface comes out barren/desert/highlands (temperate-dry), while its <em>hazard</em> layer correctly reads airless → vacuum. A body's terrain climate and its hazard climate can disagree when it has no atmosphere record. (Luna dodges this because it has a real baked map.)
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Ground truth · design study, 2026-08-10 (rev-T — UNITS ON THE MAP + TRADE THAT STAYS PUT (developer: "now we can start looking into how units will look on the map so that they can be given orders and can trade between places"): the first cut of the units + orders + intra-planet logistics chapter. Toggle 🪖 Units &amp; trade, then open a developed province (jump to Ferrum Basin or the capital): a ground unit is a small DOT on the mini-hexes (garrison filled, hauler hollow — sized to sit inside one mini-hex), whole-or-dead like a ship; click ONE to read its stat card (every number already lives on GroundUnit — the missing bit is select-one/read-one UI, "Failure A"); with a unit picked, click a mini-hex to give a MOVE order (the A* path draws to a 🚩 — the ONE queued verb both seats issue, not the client's bypassing OrderMoveToGlobalHex). Trade shows at two scales: an intra-province ⛏→🏭 ore haul on the mini-grid, and a regional ⛏→⚓ ore-road arrow on the main map (Ferrum Basin → the Naval Yards shipyard). Because a resource STAYS in its mini-hex (the locality ruling), a shipyard can starve next to ore it can't reach, so hauling is a real job — the hauler is a COMPONENT (CargoTransferAtb→CargoStorageDB LIVE); the hex-to-hex haul + per-hex stockpile are NEW. Every new mark badged DESIGN with its LIVE anchor named. Full chapter: docs/ground/UNITS-ON-THE-MAP-DESIGN.md. On rev-R — THE WORKFORCE TIES INTO BUILD RATE (developer's model): population → workforce (½ of pop) → ship crews &amp; leaders come off the top → the rest STAFFS the production facilities → a facility's rate = base × staffing (available workforce ÷ the facilities' crew demand). This is the proposed fix to the shipped engine's static-rate + binary-crew-gate, and it makes the Venator answer DIFFER by population: 50% pop → ~5.8 months (58% staffed) vs 90% pop → ~3.3 months (fully staffed), and sailing a big fleet drains the same pool and slows industry too — one finite workforce that crews, leads AND builds. Shown as a scenario table in the "⚓ Could New Terra build a Venator?" panel. On rev-Q — CAN THIS WORLD BUILD A VENATOR? a worked build-time analysis against the REAL engine construction model (a shipyard added to New Terra + a "⚓ Could New Terra build a Venator?" panel): the headline — 50% and 90% population give the IDENTICAL build time, because population is a BINARY 884-crew gate (met thousands-of-times over at both), never a throttle; the real gates are having a SHIPYARD (a factory can't assemble a ship) and the refined materials. Cost = mass×0.1 = ~2.0M engine points (the design-tool's 28,860 is a mock); ~3.3 months on a maxed shipyard, ~27 years on a stock one. Earth (homeworld) already has all 15 minerals. Grounded by a 4-agent source dig at file:line. On rev-P — THE CAPITAL GROWN INTO A SUPER-CITY + THE METROPOLIS-vs-VILLAGE DIALS, wired at the source. New Terra is now an ecumenopolis (~21 M) with the new civic districts — 🎭 Entertainment, 🏦 Financial, 🚔 Metro Police — inside a ~27 M civilization, and the dashboard reads TWO GAUGES built from the real ColonyMoraleDB coefficients: MORALE (~94/100 → migration +4.4%/mo, a magnet) and LEGITIMACY (75/100 → firmly governed), plus COMMERCE (660 k cr/mo). The city runs at ~86% employment — near full — via the service-employment coefficient as a DENSITY dial (k=0.5; a metropolis employs nearly its whole workforce in services, which is the only lever that moves employment since arcologies add people AND jobs together). WEATHER now affects morale: a NEW transient morale line fed live by the rolling-storm system — roll the weather and morale dips as a storm crosses the city (−6/province), recovering as it passes. The five civic dials were derived from a grounded 15-agent source survey and wired at the SOURCE designer (civicderived.html): Jobs (BUILD-NOW — the dead employment term's first producer), Entertainment→a new uncapped CivicAmenity morale line, Weather→a new transient morale line, Law-enforcement→a new PublicOrder legitimacy input (holds off RebellionDB), Trade→a new ColonyCommerce category on the live Ledger. On rev-O's five-province civilization + source crew recalibration, rev-N's float tags, rev-L's two-tier resources, rev-K's terrain-affinity, rev-I's grid + potato budget, real surface maps, per-hex hazards, weather + day/night).</b> No engine code, no CI. Every per-unit OUTPUT is the real shipped default; the CREW coeffs + the two gauges are grounded proposals tuned at the SOURCE designers (not fudged downstream); district counts are authoring; nothing chased to a target. Sources, all verified at file:line:</p>
+    <p class="mono">Bodies (gravity/temperature/atmosphere/radius) → <span>GameData/basemod/ScenarioFiles/systems/sol/{earth,mars,luna,mercury,venus,jupiter}.json</span> · Real baked surface maps (Earth/Mars/Luna, incl. the ice caps) → <span>GameEngine/Galaxy/{EarthTerrainMap,MarsTerrainMap,LunaTerrainMap}.cs</span> + the shared decoder <span>RealSurfaceMaps.CharToFeature</span> · Op-grid size + sampling (cols = 4·(2·patchR+1), rows = 2·patchR+1, patchR = round(BaseHexRadius·radius/rEarth); lon=Q/Cols, lat=R/(Rows−1), row 0 = N pole) → <span>PlanetHexFactory.HexPatchRadiusFor</span> + <span>PlanetGridFactory.EnsureGridForBody</span> · Hex REAL size = the engine flat-to-flat hexagon pitch √(2·areaPerHex/√3) → <span>GroundMiniHex.CoarseHexPitchKmForBody</span> · Mini/city grid (CityPatchRadius → tiles = 3r²+3r+1) → <span>CityGridFactory.cs</span> · Sliding render window → <span>Pulsar4X.Client/…/PlanetViewWindow.DrawGlobalHexWindow</span> · Procedural terrain for worlds with no baked map → <span>PlanetHexFactory.WorldTerrain.Classify</span> · Terrain combat effect (cover 0.9/1.25/1.5, armour affinity 1.3/0.7/0.75, march ×1/×1.5/×2.5) → <span>GroundTerrain.cs</span> · Hazard generation + magnitudes → <span>PlanetEnvironmentFactory.cs</span> · Attrition application → <span>GroundForcesProcessor.cs:220-238</span> · Sealed-systems exemption → <span>GroundSealAtb.cs</span> · Resource nodes: the 15 real minerals + credit values → <span>GameData/basemod/TemplateFiles/minerals.json</span> · deposit seeding (terrain weights verbatim, one mineral/hex, LocatableFraction 0.6, never ocean/ice) → <span>Industry/HexMinerals.SeedDeposits</span> · located per-hex deposit fields → <span>GroundHex.DepositMineralId / DepositAmount</span> · per-faction assay fog (None→Partial→Full) → <span>GroundHex.DepositAssay (Masked)</span> · build a mine on the exact ore hex → <span>PlaceInstallationOnHexOrder.cs</span> (v1 mining stays body-wide: <span>MineResourcesProcessor</span>) · every district's installations + their per-unit output AND CREW are the real shipped defaults → <span>GameData/basemod/TemplateFiles/installations.json</span> (infrastructure pop 5,000, crew RECAL Support×0.2=1,000 · food-production 3,000/day crew 60 · mine 10/day, crew RECAL 500 · refinery 500/day crew 500 · factory 500 build/day, crew RECAL 2,500 · research-lab 100/day · spaceport · launch-complex · naval-academy · bunker) · one building per tile → <span>CityTile.BuildingInstanceId</span> · production is read PER-COMPONENT-ATTRIBUTE (so affinity rides the COMPONENT, not the building) → <span>ComponentInstancesDBExtensions.GetTotalFoodOutput:52 / GetPopulationSupportValue:85</span> (each already gated per-component by <span>GravityToleranceAtb / PressureToleranceAtb</span> — the environment-modifier precedent) · JOBS = the sum of every installation's <span>CrewReq</span> (the widest morale band, +15/−25, otherwise a dead wire — the civic-designer fix) → <span>ColonyMoraleDB / GetTotalJobs / EmploymentAtbDB</span> · workforce = ½·pop → <span>ColonyManpowerDB.WorkforceFraction = 0.5</span> · food demand = pop × <span>0.00001</span>/day → <span>SustenanceProcessor / ColonySustenanceDB</span> + the scenario <span>uef-devtest.json / umf.json</span> · the steep mine/factory crew RECALIBRATED at source (cut 10×) → <span>docs/Actual HTMLs Of designers/industrialderived.html</span> · infrastructure given SERVICE employment (crew = Support×0.2) → <span>docs/Actual HTMLs Of designers/civicderived.html</span> · colony-wide production efficiency the boost composes with → <span>InfrastructureProcessor.GetEfficiency → InfrastructureDB.Efficiency</span> · the TERRAIN-AFFINITY boost itself is <b>THEORY</b> (ground ruling #13, <span>docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md</span>) — no building OR component terrain-affinity exists in the engine yet (only ground-UNIT type affinity in <span>GroundTerrain.cs</span>). The district COUNTS are authoring (civilization size); every per-unit number is real and untuned. Full write-up: <span>docs/ground/PLANETARY-VIEW-AND-INTERACTION-DESIGN.md</span>.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+(function(){
+  // ══════════════════════════════════════════════════════════════════════════
+  //  GROUND TRUTH — terrain sampled from the game's REAL baked maps + rules.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── The shared letter → RegionFeatureType decoder (RealSurfaceMaps.CharToFeature) ──
+  const CHAR = {'.':"ocean",'c':"coast",'w':"wetland",'f':"forest",'j':"jungle",'p':"plains",
+                'd':"desert",'b':"barren",'h':"highlands",'m':"mountains",'v':"volcanic",'t':"tundra",'i':"ice"};
+
+  // ── The REAL baked equirectangular maps (72×36). Row 0 = NORTH pole, col 0 = 180°W. ──
+  //    Copied verbatim from EarthTerrainMap.cs / MarsTerrainMap.cs / LunaTerrainMap.cs.
+  const MAPS = {
+    earth:[
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiitttttttttttttttttttttttt",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiitttttttttttttttttttttttt",
+      "c.cfffffffffffffffffffffciiiiiii....cffffffffffftttttttttttttttttttttttt",
+      "c.cfffffffffffffffffffffciiiiiii..cccfffffffffffffffffffffffffffffffffff",
+      "c..cccccfffmmfffffffffffc........cffffffffffffffffffffffffffffffffffffff",
+      "c......cfffmmfffffffffffc........cffffffffffccffffffffffffffffffffffffff",
+      "........cccmmfffffffffcc.........cfffmmfffccppppddddddddddppcccccccccccc",
+      "..........cmmfffffffffc..........cpmmpppppppppppddddddddddppcffffc......",
+      "..........cmmfffffffffc..........cppppppppppddddddmmmmddddffcffffc......",
+      "..........cmmfffffffffc.........cdddddddddddddddccmmmmccffffccccc.......",
+      "...........cccpppppccc..........cdddddddddddddddccppppjjjjppc...........",
+      ".............cpppppcc...........cdddddddddddddddccppppjjjjppc...........",
+      ".............cppppjjjc..........cpppppppcccccccc.cppppcjjjccjc..........",
+      "..............ccccjjjccccc......cpppppppcc.......cppppcjjjccjc..........",
+      ".................cjjjjjjjjc......cjjjjjjjjc.......cccccjjjccjccc........",
+      "..................ccmmjjjjc......cjjjjjjjjc...........cjjjjjjjjjc.......",
+      "...................cmmjjjjcc.....cjjjjjjjjcc..........cjjjjjjjjjc.......",
+      "...................cmmjjjjjjc.....ccccppppppc.........cjjjjjjjjjcc......",
+      "...................cmmjjjjjjc........cppppppc..........ccccpppppppc.....",
+      "...................cmmjjjjjjc........cppppppc.............cpppppppc.....",
+      "...................cmmcpppppc.........cddddc...............cddddddc.....",
+      "...................cmmcpppppc.........cddddc...............cddddddc.....",
+      "...................cmmcpppppc.........cddddc................cccppppc.ccc",
+      "c..................cmmpppccc...........cccc...................cppppccfff",
+      "c...................cppppc.....................................cccc.cfff",
+      "....................cppppc...........................................ccc",
+      "....................cppppc..............................................",
+      ".....................cccc...............................................",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
+    ],
+    mars:[
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddvvddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddvdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddvmmmmddd",
+      "dddddddddmmmmmmmmdddddddddddddddddddddddddddddddddddddddddddddddvmmmmddd",
+      "bbbbbbbbbmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbmmmmmbbb",
+      "bbbbbbbbbmmmmmmmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bbbbbbbbbmmmmvvmmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "hhhhhhhhhmmmmvvmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhmmmmvvmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhmmmmmmmmmmmmmmmmmmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhmmmmmmmmmmmmmmmmmmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhmmmmmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbbbhhhhhhhhhhhhhhhhbbbbbbbbhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbbbhhhhhhhhhhhhhhhhbbbbbbbbhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+      "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
+    ],
+    luna:[
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbhhhhhhhhhhmmhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhmmhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbhhhhhhhhhhhhmmhhhhhhhhhhhhhhhhmmhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhbbhhbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhmmhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbhhbbbbbbhhhbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbhhbbbbbhhhbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhbbbbbhhhhhhhhhhbbbhhhhhhbhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhbbbbbhhhhhhhhhhhhhhbhhhbbbhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhbbbbbhhhhhhhhhhhhbbbbhhhbbhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbbhhhhhhbbbhhhbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhbbbhhhhhhhbbbhhhhbbbhhbhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhbhhhhhhhhhhhhhhhhhhhbbbhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhmmhhhhhhhhhhhbbbbbhhhhhhhhhhhhbbbhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhmmhhhhhhhhhhbbbbbbhhhhhhhhhbbhhbhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbhhhhhhhhbbhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhmmhhhhhbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhmmhhhhhhbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "bbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbb",
+      "bbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbb",
+      "bbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbb",
+      "bbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbb",
+      "bbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbb",
+      "bbbbbbbhhhhhhhhhhhhhhhhhhhhhhhmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbb",
+      "bbbbbbhhhhhhhhhhhhhhhhhhhhhhhhmmmmhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbb",
+      "bbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbb",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+      "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
+    ]
+  };
+  function sampleReal(map, lon, lat){
+    const cols=72, rows=36;
+    let lf = lon - Math.floor(lon);
+    let col = Math.floor(lf*cols); if(col<0)col=0; else if(col>=cols)col=cols-1;
+    let row = Math.floor(lat*rows); if(row<0)row=0; else if(row>=rows)row=rows-1;
+    return CHAR[map[row].charAt(col)] || "plains";
+  }
+
+  // ── PROCEDURAL terrain (WorldTerrain.Classify) for worlds with NO baked map ──
+  //    Real land-climate rules; own deterministic phases (the game's exact layout is
+  //    a per-save RNG seed) → representative, not pixel-identical. All Sol non-map
+  //    bodies are DRY (hydro 0) so the ocean branch never fires.
+  function field(lon, lat, seed){
+    // sum-of-sines like WorldTerrain.Field, but with our own phases; contrast tuned so
+    // peaks cross the 0.85 mountain/ice/volcanic threshold (the game's RNG field does too).
+    let v=0;
+    for(let k=0;k<4;k++){ const f=k+1, amp=1/f;
+      const pl=Math.sin(seed*(k*1.7+1.3))*3.14159, pt=Math.cos(seed*(k*2.3+0.7))*3.14159;
+      v += amp*Math.sin(2*Math.PI*f*lon+pl)*Math.cos(Math.PI*f*lat+pt); }
+    let e = 0.5 + 0.62*v;                 // wider dynamic range than the mean-clustered normalize
+    return e<0?0:(e>1?1:e);
+  }
+  function proceduralTerrain(p, lon, lat){
+    const elev=field(lon,lat,p.seedE), moist=field(lon,lat,p.seedM);
+    const T=p.terrainTemp, dry=p.hydroPct<20;
+    if(T<=-10){
+      // DRY cold world (Mars/Luna-like rock): barren/desert lowlands, ice only on peaks.
+      if(dry){ if(elev>0.85) return "ice"; if(elev>0.70) return "highlands"; return moist<0.5?"barren":"desert"; }
+      // ICY cold world (an airless ice moon — frozen water crust, no vegetation): ICE + rocky highland ridges.
+      return elev>0.85 ? "highlands" : "ice";
+    }
+    if(T>=50) return elev>0.85?"volcanic":(moist>0.6?"plains":"desert");
+    const mtn = p.tectonic?0.77:0.85;
+    if(elev>mtn) return "mountains"; if(elev>0.70) return "highlands";
+    // DRY temperate world (no surface water → scorched/dry): desert & barren, no forests.
+    if(dry){ if(moist>0.72) return "plains"; if(moist>0.42) return "desert"; return "barren"; }
+    if(moist>0.66) return T>28?"jungle":"forest"; if(moist>0.48) return "forest";
+    if(moist>0.34) return "plains"; if(moist>0.18) return "desert";
+    return "desert";
+  }
+
+  // ── TERRAIN combat dials — GroundTerrain.cs (Classify buckets + CoverDefenseMult + TerrainAttackMult) ──
+  const TCLASS = {
+    Open:  {cover:0.9,  armor:1.3, arty:1.0,  move:1.0, blurb:"Open ground — armour dominates (×1.3), the defender is exposed (cover ×0.9)."},
+    Cover: {cover:1.25, armor:0.75,arty:0.85, move:1.5, blurb:"Cover — the defender takes ¼ less, armour struggles (×0.75), the advance is slow."},
+    Rough: {cover:1.5,  armor:0.7, arty:1.3,  move:2.5, blurb:"Rough — a fortress edge (defender ×1.5), artillery owns the high ground (×1.3), armour bogs (×0.7)."}
+  };
+  // RegionFeatureType → class (GroundTerrain.Classify, verbatim) + colour + display name.
+  const FEAT = {
+    ocean:{cls:"Open", col:"--t-ocean", name:"Ocean", impassable:true},
+    coast:{cls:"Open", col:"--t-coast", name:"Coast"},
+    wetland:{cls:"Cover", col:"--t-wetland", name:"Wetland"},
+    forest:{cls:"Cover", col:"--t-forest", name:"Forest"},
+    jungle:{cls:"Cover", col:"--t-jungle", name:"Jungle"},
+    plains:{cls:"Open", col:"--t-plains", name:"Plains"},
+    desert:{cls:"Open", col:"--t-desert", name:"Desert"},
+    barren:{cls:"Open", col:"--t-barren", name:"Barren"},
+    highlands:{cls:"Rough", col:"--t-highland", name:"Highlands"},
+    mountains:{cls:"Rough", col:"--t-mount", name:"Mountains"},
+    volcanic:{cls:"Rough", col:"--t-volcanic", name:"Volcanic"},
+    tundra:{cls:"Open", col:"--t-tundra", name:"Tundra"},
+    ice:{cls:"Open", col:"--t-ice", name:"Ice", crossRough:true}
+  };
+
+  // ── RESOURCE NODES — located mineral deposits per hex (Industry/HexMinerals.SeedDeposits) ──
+  //    The engine seeds a body's MineralsDB onto specific surface hexes: terrain-WEIGHTED
+  //    (mountains/volcanic richest, NEVER ocean/ice), ONE mineral per deposit hex (a legible
+  //    map — "iron here, copper there"), each carrying a share of the body's real tonnage
+  //    (LocatableFraction 0.6). Stored on GroundHex.DepositMineralId / DepositAmount; the
+  //    per-faction fog view is GroundHex.DepositAssay (Masked). The 15 minerals + credit values
+  //    are the REAL base-mod set (GameData/basemod/TemplateFiles/minerals.json). Node COUNT here
+  //    is scaled by each mineral's terrestrial ABUNDANCE (iron everywhere; tungsten a lone
+  //    strategic node), and the tonnages are representative (real amounts are a per-save RNG roll).
+  const MINERALS = {
+    iron:                 {name:"Iron",                val:10,   col:"#b06a4f", nodes:6, lo:4e6,  hi:30e6},
+    silicon:              {name:"Silicon",             val:15,   col:"#9aa7b3", nodes:6, lo:4e6,  hi:30e6},
+    regolith:             {name:"Regolith",            val:1,    col:"#c9b184", nodes:6, lo:5e6,  hi:40e6},
+    aluminium:            {name:"Aluminium",           val:15,   col:"#b8c2cc", nodes:5, lo:3e6,  hi:22e6},
+    water:                {name:"Water",               val:5,    col:"#4aa3d8", nodes:5, lo:2e6,  hi:18e6},
+    hydrocarbons:         {name:"Hydrocarbons",        val:5,    col:"#2f2a24", nodes:4, lo:1e6,  hi:12e6},
+    graphite:             {name:"Graphite",            val:25,   col:"#54545e", nodes:3, lo:4e5,  hi:4e6},
+    nickel:               {name:"Nickel",              val:25,   col:"#8fb08a", nodes:3, lo:4e5,  hi:4e6},
+    titanium:             {name:"Titanium",            val:75,   col:"#7f93a8", nodes:3, lo:3e5,  hi:3e6},
+    chromium:             {name:"Chromium",            val:40,   col:"#57c4c9", nodes:2, lo:8e4,  hi:9e5},
+    fissionables:         {name:"Fissionables",        val:500,  col:"#7bd43a", nodes:2, lo:4e4,  hi:5e5},
+    copper:               {name:"Copper",              val:50,   col:"#d67c3b", nodes:2, lo:6e4,  hi:7e5},
+    "rare-earth-elements":{name:"Rare Earth Elements", val:1000, col:"#b559d6", nodes:2, lo:2e4,  hi:3e5},
+    lithium:              {name:"Lithium",             val:100,  col:"#d98fb8", nodes:1, lo:1e4,  hi:1.2e5},
+    tungsten:             {name:"Tungsten",            val:250,  col:"#5b6470", nodes:1, lo:8e3,  hi:9e4}
+  };
+  // Iterate common → rare, so the common minerals grab the richest hexes first (as the engine
+  // iterates minerals.Minerals). Every mineral tries to claim `nodes` hexes; a small world with
+  // little mineable ground simply seeds fewer (the weighted pick runs dry — matching the engine).
+  const MINERAL_ORDER = ["iron","silicon","regolith","aluminium","water","hydrocarbons","graphite",
+                         "nickel","titanium","chromium","fissionables","copper","rare-earth-elements",
+                         "lithium","tungsten"];
+  // Terrain richness — VERBATIM from HexMinerals.TerrainWeight. 0 ⇒ no deposits there (ocean/ice).
+  const TWEIGHT = { mountains:1.0, volcanic:1.0, highlands:0.8, barren:0.7, desert:0.5, plains:0.35,
+                    tundra:0.3, forest:0.3, jungle:0.3, wetland:0.25, coast:0.15, ocean:0.0, ice:0.0 };
+  function fmtT(t){ return t>=1e6 ? (t/1e6).toFixed(1)+" Mt" : t>=1e3 ? Math.round(t/1e3)+" kt" : Math.round(t)+" t"; }
+
+  // ── PRODUCTION COMPONENTS + THE TERRAIN-AFFINITY FEATURE (ground ruling #13) ──────────────────
+  //    THE ANSWER to "the building, or the COMPONENTS on it?" → the COMPONENTS. In Pulsar, production
+  //    is read PER-COMPONENT-ATTRIBUTE, not per building: GetTotalFoodOutput sums each FoodProductionAtbDB
+  //    component's FoodOutput × HealthPercent (ComponentInstancesDBExtensions.cs:52); GetPopulationSupportValue
+  //    sums each PopulationSupportAtbDB (:85) and ALREADY gates each component by the body's environment
+  //    (GravityToleranceAtb/PressureToleranceAtb — "out of tolerance ⇒ contributes nothing"). Terrain-affinity
+  //    is that SAME per-component environment modifier one zoom finer: a multiplier on THAT component's output,
+  //    read off the HEX terrain, multiplied in beside HealthPercent. So it rides the production *Atb (like
+  //    penetration rides GroundWeaponAtb, ruling #2) — NOT the building shell — and a MIXED-use building boosts
+  //    each function by its own affinity. The components + what each produces are REAL (installations.json → LIVE);
+  //    only the multiplier is new (THEORY — no building/component terrain-affinity exists in the engine yet).
+  const COMP = {
+    housing:  {name:"Habitation",  icon:"🏙", makes:"Pop support",         base:12.0, fmt:v=>v.toFixed(1)+" M", real:"PopulationSupportAtbDB → GetPopulationSupportValue",
+               aff:{plains:1.20,coast:1.20,forest:1.10,wetland:1.10,tundra:0.90,desert:0.85,barren:0.85,highlands:0.85,mountains:0.70,volcanic:0.50,ice:0.50}},
+    food:     {name:"Agriculture", icon:"🌾", makes:"Food output",         base:9000, fmt:v=>Math.round(v).toLocaleString()+"/day", real:"FoodProductionAtbDB → GetTotalFoodOutput",
+               aff:{wetland:1.50,plains:1.40,coast:1.25,jungle:1.20,forest:1.15,tundra:0.55,highlands:0.70,mountains:0.50,desert:0.50,barren:0.40,volcanic:0.30,ice:0.10}},
+    mining:   {name:"Extraction",  icon:"⛏", makes:"Mineral extraction",  base:250,  fmt:v=>Math.round(v)+"/day", real:"MineResourcesAtbDB → MineResourcesProcessor",
+               aff:{mountains:1.50,volcanic:1.40,highlands:1.30,barren:1.15,desert:1.00,tundra:0.80,plains:0.70,forest:0.60,jungle:0.60,coast:0.50,wetland:0.40,ocean:0,ice:0}},
+    refine:   {name:"Refining",    icon:"🏭", makes:"Refinery points",     base:300,  fmt:v=>Math.round(v)+"/day", real:"RefineResourcesAtbDB → RefineResourcesProcessor",
+               aff:{barren:1.20,desert:1.15,plains:1.10,highlands:1.05,tundra:1.00,volcanic:0.90,coast:0.90,forest:0.85,wetland:0.80}},
+    build:    {name:"Fabrication", icon:"🏗", makes:"Build points",        base:100,  fmt:v=>Math.round(v)+"/day", real:"ConstructionAtb → IndustryJob2",
+               aff:{plains:1.20,coast:1.15,barren:1.10,desert:1.05,highlands:0.95,forest:0.85,jungle:0.80,mountains:0.70,volcanic:0.70}},
+    research: {name:"Research",    icon:"🔬", makes:"Research points",     base:30,   fmt:v=>v.toFixed(1)+"/day", real:"ResearchPointsAtbDB → ResearchProcessor",
+               aff:{coast:1.15,plains:1.10,forest:1.05,wetland:1.00,barren:0.90,volcanic:0.80,ice:0.80}},
+    logistics:{name:"Logistics",   icon:"🚀", makes:"Off-world throughput", base:50,  fmt:v=>Math.round(v)+"/day", real:"Spaceport → CargoStorage/Logistics",
+               aff:{plains:1.15,coast:1.10,desert:1.00,barren:1.00,forest:0.80,mountains:0.70,jungle:0.70,volcanic:0.70}},
+  };
+  function affMult(ckey, terr){ const c=COMP[ckey]; return (c && c.aff && (terr in c.aff)) ? c.aff[terr] : 1.0; }
+
+  // ── THE CIVILIZATION — real installations → districts → regions, across MULTIPLE regional hexes ──
+  //  THE CHASSIS ANSWER (why 1 building doesn't span 5 km²): a 5 km mini-hex is ~21 km² of ground; a real
+  //  installation is 1 km² (a mine's default Area) up to ~100 km². So ONE mini-hex is not one building —
+  //  it is a DISTRICT: a CLUSTER of real installations whose outputs SUM (an M16 roll-up). A regional hex
+  //  (~245 km at 5 km mini) is a whole PROVINCE holding many districts; the civilization spans several
+  //  provinces, each placed on the ground that suits it (mines in the hills, farms on the delta, foundries
+  //  on the plains). Every per-unit number below is the REAL shipped default from installations.json —
+  //  the district total is just count × per-unit × terrain-affinity (ruling #13, the only THEORY term).
+  const INST = {
+    infra:    {name:"Infrastructure",   icon:"🏢", comp:"housing",   crew:2500,  out:{pop:5000, support:1000},
+               dial:"Support Colonists 5,000 (max); crew = Support×k SERVICE employment, and k is a DENSITY dial — a super-city runs k=0.5 = 2,500 (nearly its whole workforce in services), a frontier town k=0.2; the count of arcologies can't move employment, only k can", real:"infrastructure → PopulationSupportAtbDB (civic recal · density-scaled)"},
+    food:     {name:"Food Production",  icon:"🌾", comp:"food",      crew:60,    out:{food:3000},
+               dial:"Food Output 3,000/day (default); Crew = Output×0.02", real:"food-production → FoodProductionAtbDB"},
+    mine:     {name:"Mine",             icon:"⛏", comp:"mining",    crew:500,   km2:1, out:{minerals:10},
+               dial:"Area 1 km² (default) → 10/day; crew RECALIBRATED area(m²)×0.0005 = 500 (was ×0.005 = 5,000 — the flagged steep coeff, cut 10×)", real:"mine → MineResourcesAtbDB (industrial recal)"},
+    refinery: {name:"Refinery",         icon:"🏭", comp:"refine",    crew:500,   out:{refine:500},
+               dial:"Size 5,000 (default) → 500 pts/day; exactly 1 crew per point (the clean anchor — unchanged)", real:"refinery → IndustryAtb(refining)"},
+    factory:  {name:"Factory",          icon:"🏗", comp:"build",     crew:2500,  out:{build:500},
+               dial:"Size 5,000 (default) → 500 build/day; crew RECALIBRATED Size×0.5 = 2,500 (was ×5 = 25,000 — cut 10×; still ~5 crew/build-point)", real:"factory → IndustryAtb (industrial recal)"},
+    lab:      {name:"Research Lab",     icon:"🔬", comp:"research",  crew:20,    out:{research:100},
+               dial:"Research 100/day (the max — Mass is a constant so the dial is FREE; you always build 100)", real:"research-lab → ResearchPointsAtbDB"},
+    spaceport:{name:"Spaceport",        icon:"🚀", comp:"logistics", crew:50,    out:{cargo:50000},
+               dial:"Warehouse 50,000 (default)", real:"spaceport → CargoStorage/Transfer"},
+    launch:   {name:"Launch Complex",   icon:"🛰", comp:"logistics", crew:50,    out:{pads:1},
+               dial:"1 pad, lifts 100 t (default)", real:"launch-complex → LaunchComplexAtb"},
+    academy:  {name:"Naval Academy",    icon:"🎓", comp:null,        crew:250,   out:{officers:1000},
+               dial:"Class 1,000 / 24 mo (default); Crew = Class×0.25", real:"naval-academy → NavalAcademyAtb"},
+    bunker:   {name:"Bunker",           icon:"🛡", comp:null,        crew:50,    out:{fortify:0.25},
+               dial:"+0.25 local fortify, +0.12 to each neighbour (default)", real:"bunker → GroundDefenseAtb"},
+    // ── THE NEW CIVIC DIALS (wired at the source in civicderived.html this session) — the metropolis-vs-village levers.
+    //    Their OUTPUTS are PROPOSED (each needs one small engine add): amenity → a new MoraleInputs.CivicAmenity line,
+    //    order → a new LegitimacyInputs.PublicOrder input, commerce → a new ColonyCommerce category on the LIVE Ledger.
+    //    Their CREW (jobs) is real — entertainment/police/markets employ SERVICE workers, like the rest of a real city.
+    amenity:  {name:"Entertainment Complex", icon:"🎭", comp:null,    crew:150,   out:{amenity:20},
+               dial:"NEW CivicAmenity morale line (UNCAPPED) — comfort is pegged at +20 and saturated, so this is the clean QoL axis; a big hospitality/retail sector (crew 150)", real:"recreation → NEW MoraleInputs.CivicAmenity"},
+    police:   {name:"Police Precinct",   icon:"🚔", comp:null,        crew:100,   out:{order:20},
+               dial:"NEW PublicOrder input → props LegitimacyDB, holds off RebellionDB (the governability gauge, not happiness)", real:"security → NEW LegitimacyInputs.PublicOrder"},
+    market:   {name:"Trade Hub",         icon:"🏦", comp:"logistics", crew:300,   out:{commerce:5000, amenity:5},
+               dial:"NEW ColonyCommerce income → the LIVE faction Ledger (the pipe tax already uses) + a little amenity morale; a big finance/commerce workforce (crew 300)", real:"market → NEW Ledger category (reuses tax plumbing)"},
+    shipyard:  {name:"Shipyard",         icon:"⚓", comp:null,        crew:10000,  out:{shipAssembly:200},
+               dial:"ship-assembly rate = Crew Size×0.02 = 200/day (stock, Crew 10,000); the ONLY building that can ASSEMBLE a ship — factories can't. Dial Crew up (max 1,000,000 → 20,000/day) to build one hull faster; more yards = more hulls in PARALLEL", real:"shipyard → IndustryAtb(ship-assembly) · ShipDesign.IndustryTypeID"},
+  };
+  // The Venator (from PREMADE-UNIT-COSTS + the engine cost formula). mockBP = the design-tool figure; engineBP =
+  // the REAL engine cost = MassPerUnit_kg × 0.1 (ShipDesign.cs:267) — ~69× bigger, the honest number.
+  const VENATOR = {name:"Venator-class Star Destroyer", massT:19986, crew:884, materialsT:22748, mockBP:28860, engineBP:Math.round(19986*1000*0.1)};
+  // metric display metadata (label · icon · formatter) — how the summed outputs READ
+  function fmtBig(n){ n=+n||0; return n>=1e6?(n/1e6).toFixed(2)+" M":n>=1e3?(n/1e3).toFixed(n>=1e4?0:1)+" k":Math.round(n).toString(); }
+  const METRIC = {
+    pop:      {label:"Population housed",  icon:"🏢", fmt:v=>fmtBig(v)},
+    food:     {label:"Food",               icon:"🌾", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    minerals: {label:"Minerals mined",     icon:"⛏", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    refine:   {label:"Materials refined",  icon:"🏭", fmt:v=>Math.round(v).toLocaleString()+"/day"},
+    build:    {label:"Construction",       icon:"🏗", fmt:v=>Math.round(v).toLocaleString()+" bp/day"},
+    research: {label:"Research",           icon:"🔬", fmt:v=>Math.round(v).toLocaleString()+" RP/day"},
+    cargo:    {label:"Cargo throughput",   icon:"🚀", fmt:v=>fmtBig(v)},
+    pads:     {label:"Launch pads",        icon:"🛰", fmt:v=>Math.round(v)},
+    officers: {label:"Officers trained",   icon:"🎓", fmt:v=>Math.round(v).toLocaleString()+"/24mo"},
+    fortify:  {label:"Fortification",      icon:"🛡", fmt:v=>"+"+Math.round(v*100)+"%"},
+    amenity:  {label:"Amenity (morale)",   icon:"🎭", fmt:v=>fmtBig(v)+" pts"},
+    order:    {label:"Public order",       icon:"🚔", fmt:v=>fmtBig(v)+" pts"},
+    commerce: {label:"Commerce",           icon:"🏦", fmt:v=>fmtBig(v)+" cr/mo"},
+    shipAssembly:{label:"Ship assembly",   icon:"⚓", fmt:v=>Math.round(v).toLocaleString()+" pts/day"},
+    support:  {label:"Support capacity",   icon:"⚙", fmt:v=>fmtBig(v)},
+    crew:     {label:"Jobs (workers)",     icon:"👷", fmt:v=>fmtBig(v)},
+  };
+  const PER_CAPITA_FOOD = 0.00001;   // uef-devtest.json / umf.json — pop × this = food demand/day (verified)
+  const WORKFORCE_FRAC  = 0.5;       // ColonyManpowerDB.WorkforceFraction — half the population is drawable
+  // A REGION is a regional hex (a province). Its DISTRICTS each sit on ONE mini-hex (q,r in the CityGrid
+  // disk) and author their own ground (terr) — a river delta INSIDE a plains province, hills at its edge
+  // (M4 per-tile variation). Each district is a STACK of real installations: [id, count]. want[] = the
+  // ground the province itself prefers (placement finds the nearest such hex to the capital).
+  //  SCALED to a SUPER-CITY (rev-P): New Terra is the ecumenopolis — dense arcologies + the new civic
+  //  districts (Entertainment → amenity morale, Financial → commerce, Metro Police → legitimacy). District
+  //  COUNTS are authoring (how big the city is), transparently — no number chased to a target. The
+  //  supporting provinces are scaled to match. ~26 M people, morale ~89 (a migration magnet), legitimacy
+  //  ~75 (firmly governed), ~600 k cr/mo of commerce.
+  const CIV = [
+    {key:"capital", tag:"New Terra", role:"Super-city — the ecumenopolis capital", icon:"🏙",
+     want:["coast","plains"], blurb:"The super-city: stacked arcologies, an entertainment strip, a financial exchange, a metro police force and the grand campus — cranked to the ceiling and pulling migration from the whole world.",
+     districts:[
+       {q:0,   r:0,   terr:"coast",  name:"Arcology Core",        icon:"🏙", stack:[["infra",1200],["police",40],["academy",2]]},
+       {q:-9,  r:3,   terr:"coast",  name:"Skyward Arcology",     icon:"🏢", stack:[["infra",1000]]},
+       {q:8,   r:-3,  terr:"plains", name:"Highrise Residential", icon:"🏘", stack:[["infra",1000]]},
+       {q:-6,  r:-9,  terr:"coast",  name:"Grand Campus",         icon:"🔬", stack:[["lab",240]]},
+       {q:10,  r:6,   terr:"coast",  name:"Meridian Spaceport",   icon:"🚀", stack:[["spaceport",12],["launch",8]]},
+       {q:4,   r:10,  terr:"coast",  name:"Entertainment District",icon:"🎭", stack:[["amenity",400],["infra",150]]},
+       {q:-11, r:-2,  terr:"coast",  name:"Financial District",   icon:"🏦", stack:[["market",120],["infra",150]]},
+       {q:1,   r:-12, terr:"plains", name:"Metro Police HQ",      icon:"🚔", stack:[["police",90]]},
+       {q:12,  r:-6,  terr:"coast",  name:"Naval Yards",          icon:"⚓", stack:[["shipyard",1]]},
+     ]},
+    {key:"mining", tag:"Ferrum Basin", role:"Mining & primary smelting", icon:"⛏",
+     want:["mountains","highlands","volcanic","barren"], blurb:"In the ore-rich hills: the deep cuts feed the smelters, an arcology houses the miners, and a precinct keeps a hard company town in order.",
+     districts:[
+       {q:0,  r:-2, terr:"mountains", name:"Deep Cut Mine",    icon:"⛏", stack:[["mine",30]]},
+       {q:8,  r:2,  terr:"highlands", name:"East Lode Mine",   icon:"⛏", stack:[["mine",24]]},
+       {q:-8, r:4,  terr:"highlands", name:"Smelter Row",      icon:"🏭", stack:[["refinery",16]]},
+       {q:-3, r:9,  terr:"highlands", name:"Miners' Arcology", icon:"🏘", stack:[["infra",250],["police",15]]},
+     ]},
+    {key:"foundry", tag:"The Foundry", role:"Heavy manufacturing", icon:"🏗",
+     want:["plains","desert","barren"], blurb:"On the open plains beside the ore road: the works turn refined metal into fleets, and a workers' arcology with its own amenities keeps a million hands housed and content.",
+     districts:[
+       {q:-7, r:-4, terr:"plains", name:"North Works",        icon:"🏗", stack:[["factory",12]]},
+       {q:6,  r:-2, terr:"plains", name:"South Works",        icon:"🏗", stack:[["factory",12]]},
+       {q:8,  r:6,  terr:"plains", name:"Foundry Refineries", icon:"🏭", stack:[["refinery",14]]},
+       {q:-6, r:8,  terr:"plains", name:"Workers' Arcology",  icon:"🏙", stack:[["infra",500],["amenity",60]]},
+     ]},
+    {key:"agri", tag:"Verdant Reach", role:"Agriculture — the breadbasket", icon:"🌾",
+     want:["plains","forest","coast"], blurb:"The wet delta and the river plains: the farms feed the whole civilization many times over — because shipped food demand is almost nothing.",
+     districts:[
+       {q:-6, r:-3, terr:"wetland", name:"Delta Farms",   icon:"🌾", stack:[["food",60]]},
+       {q:5,  r:-5, terr:"wetland", name:"River Farms",   icon:"🌾", stack:[["food",60]]},
+       {q:7,  r:4,  terr:"plains",  name:"Plains Farms",  icon:"🌾", stack:[["food",60]]},
+       {q:-7, r:6,  terr:"plains",  name:"Farm Country",  icon:"🏘", stack:[["infra",200]]},
+     ]},
+    {key:"bastion", tag:"Bastion", role:"Frontier defense", icon:"🛡",
+     want:["forest","highlands","coast","jungle"], blurb:"The forward shield: the wall of bunkers, the war college that trains officers, a launch range, and a garrison town held firmly in order.",
+     districts:[
+       {q:0,  r:-3, terr:"highlands", name:"The Wall",         icon:"🛡", stack:[["bunker",30]]},
+       {q:-8, r:2,  terr:"forest",    name:"War College",      icon:"🎓", stack:[["academy",2]]},
+       {q:8,  r:3,  terr:"coast",     name:"Launch Range",     icon:"🛰", stack:[["launch",8]]},
+       {q:-2, r:8,  terr:"plains",    name:"Border Arcology",  icon:"🏘", stack:[["infra",150],["police",20]]},
+     ]},
+  ];
+  const civState = {misplace:false};   // affinity demo: build the breadbasket on barren instead of the delta
+
+  // ═══ UNITS ON THE MAP (rev-T, DESIGN) — the first prototype cut of the units + orders + trade chapter ═══
+  //  A ground unit today is a plain data object in GroundForcesDB.Units on the PLANET BODY, keyed by a stable
+  //  UnitId, drawn from GlobalQ/GlobalR, WHOLE-OR-DEAD like a ship (GroundForcesProcessor.cs:334). Every stat
+  //  below already lives on GroundUnit (Attack/Defense/Health/Range_m/loadout) — the client just never surfaces
+  //  ONE unit (it selects a region+faction+type GROUP). So select-one / read-one here is a UI gap (Failure A),
+  //  not a missing number. Placed on mini-hexes to show the fine (CityGrid) tier the resource ruling lives on.
+  const UNITS = [
+    // Ferrum Basin (the mining province) — a hauler on the mine + a garrison holding the company town
+    {id:"u1", prov:"mining", q:0, r:-2, name:"Ore Convoy", kind:"hauler", icon:"🚛", faction:"you",
+     hp:40, maxhp:40, atk:0, def:2, rngHex:0, load:"1 × Cargo hold",
+     cargo:{good:"iron ore", have:0, cap:500}, haul:{from:[0,-2], to:[-8,4], good:"iron ore"},
+     note:"A pickup truck: its one job is to carry a load from hex to hex. The hold is CargoTransferAtb → CargoStorageDB (LIVE); the hex-to-hex HAUL order is NEW."},
+    {id:"u2", prov:"mining", q:-3, r:9, name:"Basin Guard", kind:"garrison", icon:"🪖", faction:"you",
+     hp:120, maxhp:120, atk:22, def:30, rngHex:2, load:"9 × Clone Trooper (rifles)",
+     note:"An infantry garrison holding the company town. One health pool, alive-or-gone."},
+    // The capital — a mechanized garrison on the Arcology Core
+    {id:"u3", prov:"capital", q:0, r:0, name:"1st Terran Guard", kind:"garrison", icon:"🛡", faction:"you",
+     hp:140, maxhp:140, atk:26, def:34, rngHex:2, load:"Mechanized infantry",
+     note:"The capital garrison, dug into the arcology core."},
+  ];
+  const unitState = {sel:null, moveTo:null};   // sel = UnitId; moveTo = "q,r" a demo MOVE destination on the mini-grid
+  const unitById=(id)=> UNITS.find(u=>u.id===id)||null;
+  const unitsInProv=(key)=> UNITS.filter(u=>u.prov===key);
+
+  // A straight hex line across the mini-grid (cube lerp + round) — the shape a MOVE order's path takes. The engine
+  // pathfinder (HexPathfinder) routes around impassable ground; this demo draws the direct line for legibility.
+  function hexLine(aq,ar,bq,br){
+    const ax=aq, az=ar, ay=-ax-az, bx=bq, bz=br, by=-bx-bz;
+    const N=Math.max(Math.abs(ax-bx),Math.abs(ay-by),Math.abs(az-bz))||1, out=[];
+    for(let i=0;i<=N;i++){ const t=i/N; let x=ax+(bx-ax)*t, y=ay+(by-ay)*t, z=az+(bz-az)*t;
+      let rx=Math.round(x), ry=Math.round(y), rz=Math.round(z);
+      const dx=Math.abs(rx-x), dy=Math.abs(ry-y), dz=Math.abs(rz-z);
+      if(dx>dy&&dx>dz) rx=-ry-rz; else if(dy>dz) ry=-rx-rz; else rz=-rx-ry;
+      out.push({q:rx, r:rz});
+    }
+    return out;
+  }
+
+  // ── AGGREGATION — sum a district / a region / the whole civilization. Every output is count × per-unit
+  //    (the real shipped default) × terrain affinity (ruling #13; ×1 for the parts with no affinity). Crew
+  //    (= JOBS, the employment morale band) and km² never take affinity. `eff` lets the demo override terrain.
+  function distAgg(d){
+    const o={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
+    const base=Object.assign({},o);
+    d.stack.forEach(([k,n])=>{ const I=INST[k]; if(!I) return;
+      const terr = (civState.misplace && (I.comp==="food")) ? "barren" : d.terr;   // demo: farms to barren
+      const m=affMult(I.comp, terr);
+      for(const key in I.out){ o[key]+=I.out[key]*n*m; base[key]+=I.out[key]*n; }
+      o.crew+=I.crew*n; base.crew+=I.crew*n; o.km2+=(I.km2||0)*n; base.km2+=(I.km2||0)*n;
+    });
+    return {o, base};
+  }
+  function regionAgg(region){
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
+    region.districts.forEach(d=>{ const {o}=distAgg(d); for(const k in t) t[k]+=o[k]||0; });
+    return t;
+  }
+  function civAgg(){
+    const t={pop:0,support:0,food:0,minerals:0,refine:0,build:0,research:0,cargo:0,pads:0,officers:0,fortify:0,amenity:0,order:0,commerce:0,shipAssembly:0,crew:0,km2:0};
+    (state.regionHex||[]).forEach((h,i)=>{ if(!h) return; const r=regionAgg(CIV[i]); for(const k in t) t[k]+=r[k]||0; });
+    t.workforce = t.pop*WORKFORCE_FRAC; t.foodDemand = t.pop*PER_CAPITA_FOOD;
+    t.employ = t.workforce>0 ? t.crew/t.workforce : 0;   // jobs / workforce (the morale ratio)
+    // ── THE TWO GAUGES (illustrative, built from the REAL ColonyMoraleDB coefficients + the NEW civic lines) ──
+    //   MORALE = 50 baseline + employment(+15/−25) + comfort(cap +20, saturated on Earth) + food-quality(0 default)
+    //            + the NEW uncapped CivicAmenity line; clamped 0..100 → runs MigrationRate (±5%/mo).
+    //   LEGITIMACY = 50 baseline + the NEW PublicOrder input (proposed cap +30); clamped 0..100 → RebellionDB.
+    const clamp=(x)=>Math.max(0,Math.min(100,x));
+    t.mJobs    = t.employ>=1 ? 15 : Math.max(-25, 15-(1-t.employ)*40);   // ColonyMoraleDB.cs:133-142 (interp. illustrative)
+    t.mComfort = 20;                                                     // Earth base infrastructure pegs MaxComfortBonus
+    t.mAmenity = Math.min(15, t.amenity*0.0015);                        // NEW uncapped line (proposed coeff)
+    // WEATHER → MORALE (developer ask): a NEW transient morale input, fed by the rolling-storm system already
+    //   in this prototype — count the civ's provinces with a storm overhead right now (stormsOver reads the
+    //   showWeather toggle). Earth's mild storms nudge it; a storm-world (Venus) would crush it. Live: it
+    //   updates as the weather rolls (▶ Auto-roll), so you watch morale dip when a storm crosses the city.
+    let stormProv=0; (state.regionHex||[]).forEach(h=>{ if(h && stormsOver(h).length) stormProv++; });
+    t.stormProvinces = stormProv;
+    t.mWeather = -stormProv*6;                                          // NEW WeatherMorale line (proposed coeff)
+    t.morale   = clamp(50 + t.mJobs + t.mComfort + t.mAmenity + t.mWeather);
+    t.migration= (t.morale-50)/50*5;                                    // MaxMigrationRate 0.05/mo
+    t.lOrder   = Math.min(30, t.order*0.0075);                          // NEW PublicOrder → legitimacy (proposed coeff)
+    t.legit    = clamp(50 + t.lOrder);
+    return t;
+  }
+
+  // ── HAZARD effects (PlanetEnvironmentFactory.cs) — Q2 ruling C (2026-08-09) ──
+  //    scope "world" = a whole-planet fact (airlessness / a poison sky) → EVERY hex.
+  //    scope "local" = a menace of the ground itself → only on the terrain that BREEDS it
+  //    (the M11 "hazards per-hex from terrain + geography" intent). onTerrain lists those.
+  const HAZ = {
+    vacuum:   {name:"Vacuum exposure",   effect:"Vacuum",          kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  scope:"world", icon:"◌",
+               blurb:"No air anywhere on this world — an unsealed unit suffocates; a sealed suit negates it."},
+    toxic:    {name:"Toxic atmosphere",  effect:"ToxicAtmosphere", kind:"attrition", mag:3.0,  grade:"LIVE", sealed:true,  scope:"world", icon:"☣",
+               blurb:"A poison/corrosive sky over the whole planet — sealed life-support negates it, anything else bleeds."},
+    fire:     {name:"Fire tornadoes",    effect:"HeatDamage",      kind:"attrition", mag:23.2, grade:"LIVE", sealed:false, scope:"local", onTerrain:["volcanic"], icon:"🔥",
+               blurb:"Lava and heat vents on the VOLCANIC ground (>400 °C). Nothing not heat-hardened survives — and no seal stops it."},
+    cryo:     {name:"Cryostorms",        effect:"HeatDamage",      kind:"attrition", mag:15.0, grade:"LIVE", sealed:false, scope:"local", onTerrain:["ice"], icon:"❄",
+               blurb:"Killing cold over the ICE fields (<−120 °C). A steady thermal bleed the seal doesn't cover."},
+    corrosive:{name:"Corrosive superstorm",effect:"CorrosiveDamage",kind:"attrition",mag:25.0, grade:"LIVE", sealed:false, scope:"local", onTerrain:["plains","desert","barren","coast"], icon:"⚗",
+               blurb:"Acid storms sweep the open LOWLANDS — they eat unprotected kit, and no base-mod component resists it."},
+    ash:      {name:"Ash storm",         effect:"SensorJam",       kind:"sensor",    mag:0.5,  grade:"DATA", sealed:false, scope:"local", onTerrain:["volcanic","mountains"], icon:"🌫",
+               blurb:"Volcanic ash off the peaks. GENERATED but combat ignores SensorJam today."},
+    dust:     {name:"Dust storm",        effect:"SensorJam",       kind:"sensor",    mag:0.4,  grade:"DATA", sealed:false, scope:"local", onTerrain:["desert","barren"], icon:"🌪",
+               blurb:"Dust off the dry DESERT/BARREN ground. Generated but combat-inert (SensorJam unread)."},
+    lightning:{name:"Lightning superstorm",effect:"SensorJam",     mag:0.6, kind:"sensor",     grade:"DATA", sealed:false, scope:"local", onTerrain:["highlands","mountains"], icon:"🌩",
+               blurb:"Storms rake the exposed HIGH ground (thick atmosphere). Generated but combat-inert."}
+  };
+
+  // ── THE REAL SOL BODIES (sol/*.json). terrainTemp = what the terrain generator sees ──
+  //    (AtmosphereDB.SurfaceTemperature, or the 15°C default when there is NO atmosphere blob).
+  //    worldHaz = whole-planet facts (every hex). localHaz = menaces the world's physics
+  //    ENABLES (PlanetEnvironmentFactory triggers), each then placed per-hex on its onTerrain.
+  //    axialTilt (from *.json) → spin sense: >90° = retrograde (storms roll WEST). hasWind =
+  //    the world has air (pressure > 0.05) so weather can move; airless worlds have none.
+  const PLANETS = {
+    earth:{name:"Earth", tag:"temperate", g:"1.00 g", grav:"9.8 m/s²", temp:"14.8 °C", tempKnown:true,
+      pressure:"1.0 atm", atmo:"N₂/O₂ — breathable", rad:"shielded (45 µT)", day:"24 h", axialTilt:23.4, hasWind:true,
+      realMap:"earth", worldHaz:[], localHaz:["ash"]},
+    mars:{name:"Mars", tag:"thin · cold", g:"0.38 g", grav:"3.72 m/s²", temp:"−63 °C", tempKnown:true,
+      pressure:"0.87 atm (game)", atmo:"CO₂ — thin", rad:"exposed", day:"24 h 37 m", axialTilt:0, hasWind:true,
+      realMap:"mars", worldHaz:[], localHaz:["dust","ash"]},
+    luna:{name:"Luna", tag:"airless · low-g", g:"0.17 g", grav:"1.63 m/s²", temp:"≈−20 °C mean*", tempKnown:false,
+      pressure:"0 (vacuum)", atmo:"none", rad:"exposed", day:"27.3 d", axialTilt:0, hasWind:false,
+      realMap:"luna", worldHaz:["vacuum"], localHaz:[]},
+    mercury:{name:"Mercury", tag:"airless · seared", g:"0.38 g", grav:"3.7 m/s²", temp:"≈167 °C mean*", tempKnown:false,
+      pressure:"0 (vacuum)", atmo:"none", rad:"exposed", day:"58.6 d", axialTilt:2.0, hasWind:false,
+      realMap:null, terrainTemp:15, hydroPct:0, tectonic:true, seedE:2.7, seedM:5.1,
+      worldHaz:["vacuum"], localHaz:["ash"]},
+    venus:{name:"Venus", tag:"fire · toxic", g:"0.90 g", grav:"8.87 m/s²", temp:"464 °C", tempKnown:true,
+      pressure:"92 atm", atmo:"CO₂/SO₂ — crushing", rad:"exposed", day:"243 d (retro)", axialTilt:177.4, hasWind:true,
+      realMap:null, terrainTemp:464, hydroPct:0, tectonic:true, seedE:7.3, seedM:3.9,
+      worldHaz:["toxic"], localHaz:["fire","corrosive","lightning","dust","ash"]},
+    ganymede:{name:"Ganymede", tag:"ice moon · vacuum", g:"0.15 g", grav:"1.43 m/s²", temp:"−163 °C", tempKnown:true,
+      pressure:"~0 (vacuum)", atmo:"trace O₂", rad:"exposed", day:"7.15 d", axialTilt:0, hasWind:false,
+      realMap:null, terrainTemp:-163, hydroPct:92, tectonic:false, seedE:4.4, seedM:6.6,   // water-ICE crust (frozen, not dry rock)
+      worldHaz:["vacuum"], localHaz:["cryo"]}
+  };
+
+  // ── STATE + THE GRID-SCALE MODEL (mini-hex anchored; potato-bounded) ─────────
+  //  The developer's rule: the FINEST tile (the mini / "city" hex, where units actually
+  //  fight) is a real tactical size — a few km — and BOUNDED at ≤50 across, so a weak PC
+  //  ("potato") survives; ONE operational / "regional" hex is then exactly (mini × 49) wide,
+  //  and its COUNT scales per planet to hold that size (big world → many, small moon → few).
+  //  Hex real size uses the ENGINE's own flat-to-flat HEXAGON pitch
+  //  (GroundMiniHex.CoarseHexPitchKmForBody, verified): pitch = √(2·areaPerHex/√3) — NOT the
+  //  √(area) square-cell figure — so these km MATCH what the ground resolver actually reads.
+  //  Engine reconciliation: cpr = 2·patchR+1, patchR = round(BaseHexRadius·r/rEarth); to hit
+  //  a ~3 km mini we set BaseHexRadius ≈ 41 (Earth cpr ≈ 83), MaxHexRadius ≈ 43 (the giant
+  //  clamp = potato governor), CityPatchRadius 6 → 24 (mini disk = 49 across).
+  const REGIONS=4, EARTH_R_KM=6371;
+  const RADIUS_KM={earth:6378, venus:6052, mars:3396, mercury:2440, ganymede:2634, luna:1737};   // sol/*.json radii
+  const ENGINE_K = Math.sqrt(2*Math.PI/Math.sqrt(3));   // 1.9046 — engine hexagon pitch: opHexKm = ENGINE_K·r/cpr
+  const MINI_RADIUS = 24;                               // CityPatchRadius: the mini-hex disk radius
+  const MINI_ACROSS = 2*MINI_RADIUS+1;                  // 49  (a hex disk is always ODD across; ≤ the 50 cap)
+  const MINI_TILES  = 3*MINI_RADIUS*MINI_RADIUS + 3*MINI_RADIUS + 1;   // 1801 tiles per DEVELOPED op-hex (lazy)
+  const CPR_MAX = 87, CPR_MIN = 5;                      // potato governor (giant clamp) / tiny-moon floor
+  const WINDOW_COLS = 64, WINDOW_ROWS = 40;             // the FIXED render window — bounded ⇒ potato-safe on ANY world
+  function opTargetKm(){ return state.miniKm * MINI_ACROSS; }                       // one op-hex = mini × 49
+  function cprFor(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM;
+    return Math.max(CPR_MIN, Math.min(CPR_MAX, Math.round(ENGINE_K*r/opTargetKm()))); }
+  function gridDims(pk){ const cpr=cprFor(pk); return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
+  function opHexKm(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, d=gridDims(pk);          // realized op-hex pitch (engine formula)
+    return Math.sqrt(2*(4*Math.PI*r*r/(d.cols*d.rows))/Math.sqrt(3)); }
+  function hexPitchKm(pk){ return Math.round(opHexKm(pk)); }                         // rounded op-hex km, for headers/readouts
+  function miniHexKm(pk){ return opHexKm(pk)/MINI_ACROSS; }                          // realized mini pitch (≈ state.miniKm)
+  function opClamped(pk){ return cprFor(pk) >= CPR_MAX; }                            // a giant hit the governor → coarser
+  // The map is drawn at a COARSER, readable DISPLAY grid (the whole recognizable planet), NOT the
+  // fine op-grid — so Earth still looks like Earth. Each display cell samples the terrain at a real
+  // op-hex location (we just draw one every ~3), and the true op/mini SCALE is reported in the
+  // header, the readout and the Scale panel. (The game pans a fixed WINDOW of the fine grid instead
+  // of downsampling — modelled in the Scale panel; here we favour a legible whole-planet overview.)
+  function displayDims(pk){ const r=RADIUS_KM[pk]||EARTH_R_KM, dp=Math.max(2,Math.min(24,Math.round(12*r/EARTH_R_KM))), cpr=2*dp+1; return {R:cpr, cpr, cols:REGIONS*cpr, rows:cpr}; }
+  const state = {planet:"earth", miniKm:5, showHaz:true, showWeather:true, showNight:true, showRes:true, showUnits:true, sel:null, hexes:[],
+                 cols:0, rows:0, R:0, storms:[], weatherStep:0, dayPhase:9, autoTimer:null, regionHex:[], civ:{}};
+  // state.regionHex[i] = the regional hex CIV[i] was placed on; state.civ["c,r"] = that region's index.
+  const tags={};             // FLOAT TAGS: "c,r" → a free-text name the player drops on any regional hex
+
+  // Night is a rolling effect too (rotation) — a world-wide detection cut on the dark side.
+  HAZ.night = {name:"Night", effect:"SensorJam", kind:"sensor", mag:0.7, grade:"THEORY", scope:"world", icon:"🌙",
+               blurb:"The dark side — detection is cut until the terminator rolls past and the sun comes up."};
+  // Which local kinds are ATMOSPHERIC (can roll on the wind). Cryo is a cold surface, not a
+  // wind-borne storm, so it stays a terrain-fixed baseline; fire/acid/dust/ash/lightning roll.
+  const ATMOSPHERIC = {fire:1, corrosive:1, dust:1, ash:1, lightning:1};
+
+  // ── WEATHER (Q3 ruling A + emergent DRIFT) ───────────────────────────────────
+  //    A storm is not placed — it is BORN over its source terrain (dust off desert,
+  //    ash off a volcano, lightning over high ground) and DRIFTS with the planet's
+  //    rotation across the wrapping cylinder. Direction comes from real data: AxialTilt
+  //    > 90° = retrograde spin → rolls WEST (Venus); else EAST (Earth/Mars). Airless
+  //    worlds have no air → no weather. The SensorJam effect is ruling A (wire it into
+  //    combat); the MOVEMENT is the design answer to "can storms roll?" — graded DESIGN.
+  function windDir(p){ return (p.axialTilt!=null && p.axialTilt>90) ? -1 : 1; }   // −1 = west
+  // Every ATMOSPHERIC menace the world breeds rolls on the wind — fire tornadoes and acid
+  // superstorms included, not just the sight-storms (the developer's "make the other
+  // environments roll too"). Needs air; airless worlds have no rolling weather (but still
+  // rotate → day/night below).
+  function stormKindsFor(p){ return p.hasWind ? (p.localHaz||[]).filter(k=>ATMOSPHERIC[k]) : []; }
+  let _wseed=20260809;
+  function wrnd(){ _wseed=(_wseed*1103515245+12345)&0x7fffffff; return (_wseed>>8)/0x7fffff; }
+  function sourceHexesFor(kind){ const ot=HAZ[kind].onTerrain||[]; return state.hexes.filter(h=>ot.indexOf(h.terr)>=0); }
+  function spawnStorm(kind){
+    const src=sourceHexesFor(kind); if(!src.length) return null;
+    const h=src[Math.floor(wrnd()*src.length)];
+    return {q:h.c, r:h.r, kind, life:6+Math.floor(wrnd()*6)};
+  }
+  function seedStorms(){
+    state.storms=[]; state.weatherStep=0;
+    const p=PLANETS[state.planet]; if(!p.hasWind) return;
+    const kinds=stormKindsFor(p); if(!kinds.length) return;
+    const n=Math.min(3, kinds.length+1);
+    for(let i=0;i<n;i++){ const s=spawnStorm(kinds[i%kinds.length]); if(s) state.storms.push(s); }
+  }
+  function stepWeather(){
+    const p=PLANETS[state.planet];
+    const dir=windDir(p); state.weatherStep++;
+    state.dayPhase = ((state.dayPhase+dir)%state.cols+state.cols)%state.cols;   // the planet rotates → terminator sweeps
+    if(!p.hasWind || !state.storms.length) return;
+    const kinds=stormKindsFor(p);
+    state.storms.forEach(s=>{
+      s.q=((s.q+dir)%state.cols+state.cols)%state.cols;                          // drift longitude, wrap the seam
+      if(wrnd()<0.30) s.r=Math.max(0,Math.min(state.rows-1, s.r+(wrnd()<0.5?-1:1)));   // gentle latitude meander
+      s.life--;
+    });
+    state.storms=state.storms.map(s=> s.life>0 ? s : (spawnStorm(kinds[Math.floor(wrnd()*kinds.length)])||s));
+  }
+  // the storm kinds currently over a hex — a cell covers its eye + immediate ring, wrapping.
+  function stormsOver(hex){
+    if(!state.showWeather) return [];
+    const out=[];
+    for(const s of state.storms){
+      const dc=Math.min(Math.abs(s.q-hex.c), state.cols-Math.abs(s.q-hex.c));
+      if(dc<=1 && Math.abs(s.r-hex.r)<=1 && out.indexOf(s.kind)<0) out.push(s.kind);
+    }
+    return out;
+  }
+  function isStormEye(hex){ return state.showWeather && state.storms.some(s=>s.q===hex.c && s.r===hex.r); }
+  // Day/night: dayPhase = the sub-solar column; the far quarter-wrap is night. Every world rotates.
+  function isNight(hex){
+    if(!state.showNight) return false;
+    const anti=(state.dayPhase + state.cols/2) % state.cols;            // midnight longitude
+    const dc=Math.min(Math.abs(hex.c-anti), state.cols-Math.abs(hex.c-anti));
+    return dc < state.cols/4;                                           // the dark half of the planet
+  }
+
+  // ── build the hex field — terrain SAMPLED FROM THE REAL MAP (or the procedural rules) ──
+  function buildField(){
+    const p=PLANETS[state.planet];
+    const dim=displayDims(state.planet); state.cols=dim.cols; state.rows=dim.rows; state.R=dim.R;   // readable whole-planet display grid
+    const hexes=[];
+    for(let c=0;c<state.cols;c++){
+      const region=Math.floor(c/(state.cols/REGIONS));
+      for(let r=0;r<state.rows;r++){
+        const lon=c/state.cols;           // 0..1, wraps
+        const lat=r/(state.rows-1);       // 0 = N pole → 1 = S pole (PlanetGridFactory)
+        const terr = p.realMap ? sampleReal(MAPS[p.realMap], lon, lat) : proceduralTerrain(p, lon, lat);
+        hexes.push({c,r,region,terr});
+      }
+    }
+    state.hexes=hexes;
+    seedStorms();      // storms are born over their source terrain (Q3)
+    seedDeposits();    // mineral deposits located per-hex, terrain-weighted (HexMinerals)
+    placeCivilization();  // place the developed civilization's provinces on this fresh field (Earth only)
+  }
+
+  // ── RESOURCE NODES: seed located deposits onto hexes (mirrors Industry/HexMinerals.SeedDeposits) ──
+  //    Terrain-WEIGHTED weighted-random pick over mineable land (never ocean/ice), ONE mineral per
+  //    hex, deterministic per world+grid. Representative tonnages (real amounts are a per-save RNG).
+  function seedDeposits(){
+    state.hexes.forEach(h=>{ h.dep=null; });
+    const land = state.hexes.filter(h=> (TWEIGHT[h.terr]||0) > 0);
+    if(!land.length) return;
+    let seed = (state.planet.length*911 + state.cols*7 + state.rows*13 + 4242) & 0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const used=new Set();
+    const wpick=()=>{                                   // weighted by terrain richness, skipping taken hexes
+      let tot=0; for(const h of land) if(!used.has(h)) tot+=TWEIGHT[h.terr];
+      if(tot<=0) return null;
+      let r=rnd()*tot;
+      for(const h of land){ if(used.has(h)) continue; r-=TWEIGHT[h.terr]; if(r<=0) return h; }
+      return null;
+    };
+    MINERAL_ORDER.forEach(id=>{
+      const m=MINERALS[id];
+      for(let i=0;i<m.nodes;i++){
+        const h=wpick(); if(!h) break; used.add(h);
+        h.dep={ m:id, amt: Math.round(m.lo + rnd()*(m.hi-m.lo)) };
+      }
+    });
+  }
+
+  // ── PLACE THE CIVILIZATION across MULTIPLE regional hexes, logically. The capital takes a temperate
+  //   COASTLINE (harbour + hinterland, the classic capital site); the other four provinces are placed on
+  //   the nearest ground that suits them (mines in the hills, foundries on the plains, farms on the delta,
+  //   the shield on a forward ridge) — near the capital, so the whole thing reads as one continent-spanning
+  //   civilization, not scattered dots. Each regional hex carries InstallationIds + a NameDB; its CityGrid
+  //   holds the districts (the M16 roll-up). The float tag on each is the strategic "what is this place".
+  const hexWrapDist=(a,b)=>{ const dc=Math.abs(a.c-b.c); return Math.min(dc, state.cols-dc) + Math.abs(a.r-b.r); };
+  function findCapitalCoast(){
+    const nAt=(c,r)=> (r>=0 && r<state.rows) ? state.hexes.find(h=>h.c===((c%state.cols+state.cols)%state.cols) && h.r===r) : null;
+    const cands=state.hexes.filter(h=>{ const latDeg=90-180*(h.r/(state.rows-1)); return h.terr==="coast" && Math.abs(latDeg)>=25 && Math.abs(latDeg)<=55; });
+    if(!cands.length) return null;
+    const score=h=>{ let water=0,land=0; const latDeg=90-180*(h.r/(state.rows-1));   // a REAL shoreline (harbour + hinterland)…
+      for(let dc=-1;dc<=1;dc++)for(let dr=-1;dr<=1;dr++){ if(!dc&&!dr)continue; const n=nAt(h.c+dc,h.r+dr); if(!n)continue;
+        if(n.terr==="ocean"||n.terr==="coast") water++; else if(TWEIGHT[n.terr]>0) land++; }
+      return (water>0&&land>0?100:0) - Math.abs(Math.abs(latDeg)-40)*0.8 - Math.abs(h.c/state.cols-0.20)*8; };   // …prefer ~40° temperate, a chosen longitude
+    cands.sort((a,b)=>score(b)-score(a));
+    return cands[0];
+  }
+  // nearest hex whose terrain is in `wants` (priority order), near `from`, not already a region hex and
+  // kept `sep` apart from the ones already placed. Relaxes the separation, then the terrain list, so a
+  // province is always found on any real world.
+  function nearestRegionHex(from, wants, sep){
+    const taken=state.regionHex.filter(Boolean);
+    const free=h=> !(FEAT[h.terr]&&FEAT[h.terr].impassable) && !taken.some(t=>t.c===h.c&&t.r===h.r);
+    const farEnough=h=> taken.every(t=>hexWrapDist(h,t)>=sep);
+    for(let wi=1; wi<=wants.length; wi++){          // widen the acceptable terrains, best first
+      const acc=wants.slice(0,wi);
+      for(const s of [sep,2,1,0]){                   // then relax the separation
+        const c=state.hexes.filter(h=>free(h)&&acc.indexOf(h.terr)>=0&&taken.every(t=>hexWrapDist(h,t)>=s));
+        if(c.length){ c.sort((a,b)=>hexWrapDist(a,from)-hexWrapDist(b,from)); return c[0]; }
+      }
+    }
+    return null;
+  }
+  function placeCivilization(){
+    state.regionHex=[]; state.civ={};
+    if(state.planet!=="earth") return;               // the developed civilization lives on Earth
+    const cap=findCapitalCoast(); if(!cap) return;
+    const assign=(i,h)=>{ if(!h) return; state.regionHex[i]=h; state.civ[h.c+","+h.r]=i;
+      h.latDeg=90-180*(h.r/(state.rows-1)); tags[h.c+","+h.r]=CIV[i].tag; };
+    assign(0, cap);
+    for(let i=1;i<CIV.length;i++) assign(i, nearestRegionHex(cap, CIV[i].want, 3));
+  }
+  function regionAt(hex){ if(state.planet!=="earth") return null; const i=state.civ[hex.c+","+hex.r]; return i==null?null:i; }
+  const tagKey=(hex)=> hex.c+","+hex.r;
+
+  // Q2 ruling C (whole-planet facts everywhere; local menaces from the hex's own terrain) +
+  // Q3 (the atmospheric ones ROLL) + day/night. A hex's environment = the world facts, its
+  // terrain-fixed baseline, whatever storm is rolling over it right now, and night.
+  function hazardsAt(hex){
+    const p=PLANETS[state.planet], out=[], seen=new Set();
+    const add=(h)=>{ if(h){ const key=h.effect+"|"+h.name; if(!seen.has(key)){ seen.add(key); out.push(h);} } };
+    p.worldHaz.forEach(k=>add(HAZ[k]));                                                        // whole-planet facts
+    p.localHaz.forEach(k=>{ const h=HAZ[k]; if(h && h.onTerrain && h.onTerrain.indexOf(hex.terr)>=0) add(h); }); // terrain baseline
+    stormsOver(hex).forEach(k=>add(HAZ[k]));                                                    // rolling storms overhead
+    if(isNight(hex)) add(HAZ.night);                                                            // the dark side
+    return out;
+  }
+
+  // ── RENDER: planet bar + condition strip ──
+  function renderPlanetBar(){
+    const bar=document.getElementById("planetbar");
+    bar.querySelectorAll(".pbtn").forEach(b=>b.remove());
+    Object.entries(PLANETS).forEach(([k,p])=>{
+      const b=document.createElement("button"); b.className="pbtn"; b.setAttribute("aria-pressed", k===state.planet);
+      b.innerHTML=`${p.name} <span class="tag">${p.tag}</span>`;
+      b.onclick=()=>{ state.planet=k; state.sel=null; buildField(); renderAll(); };
+      bar.appendChild(b);
+    });
+  }
+  function renderCond(){
+    const p=PLANETS[state.planet];
+    document.getElementById("cond").innerHTML =
+      cell("Gravity",p.g,"DATA","<small>"+p.grav+"</small>") +
+      cell("Surface temp",p.temp,"DATA", p.tempKnown?"":"<small>computed*</small>") +
+      cell("Pressure",p.pressure,"LIVE","") +
+      cell("Atmosphere",p.atmo,"LIVE","") +
+      cell("Radiation",p.rad,"DATA","") +
+      cell("Day length",p.day,"DATA","");
+    document.getElementById("planetName").textContent=p.name;
+    document.getElementById("mapsrc").textContent = p.realMap ? "real baked surface map" : "procedural terrain (real rules · representative)";
+  }
+  const cell=(k,v,badge,extra)=>`<div class="cell"><div class="k"><span>${k}</span><span class="b ${badge}">${badge}</span></div><div class="v">${v} ${extra||""}</div></div>`;
+
+  // ── RENDER: the WHOLE-PLANET operational overview (recognizable) — the true op/mini SCALE is in
+  //   the header, the readout and the Scale panel. The map is drawn at the readable DISPLAY grid so
+  //   Earth still looks like Earth; the fine op-grid is far too big to draw at once (that's the
+  //   potato point — the game pans a fixed window of it; see the Scale panel).
+  function renderMap(){
+    const svg=document.getElementById("map"), pk=state.planet, fd=gridDims(pk);
+    const size=10, w=size*2, h=Math.sqrt(3)*size, hx=w*0.75, ico=(size*1.4).toFixed(1);
+    const W=hx*(state.cols-1)+w+8, H=h*state.rows+h/2+8;
+    svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H.toFixed(1)}`);
+    svg.setAttribute("width", W.toFixed(0));
+    svg.setAttribute("height", H.toFixed(0));
+    let s="";
+    state.hexes.forEach((hex,i)=>{
+      const cx=4+size+hex.c*hx, cy=4+size+hex.r*h+(hex.c%2?h/2:0);
+      const pts=[];
+      for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
+      const f=FEAT[hex.terr]||FEAT.barren;
+      const selc = state.sel===i?' sel':'';
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${f.col})" stroke="var(--line-strong)" stroke-width="0.4" data-i="${i}" class="${selc}"/>`;
+      const hz=hazardsAt(hex);                       // respects the weather/night toggles inside
+      let icon="";
+      if(state.showNight && isNight(hex)) s+=`<polygon points="${pts.join(' ')}" fill="#0a1730" opacity="0.40" pointer-events="none"/>`;
+      if(state.showHaz){
+        const live=hz.filter(z=>z.kind==="attrition");
+        const localLive=live.filter(z=>z.scope==="local"), worldLive=live.filter(z=>z.scope==="world");
+        if(worldLive.length && !localLive.length)
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.09" pointer-events="none"/>`;
+        if(localLive.length){
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--accent)" opacity="0.30" pointer-events="none"/>`;
+          if((hex.c*13+hex.r*7)%12===0) icon=localLive[0].icon;   // SPARSE scattered markers — the strong tint already shows full coverage
+        }
+      }
+      if(state.showWeather){
+        const sight=hz.filter(z=>z.kind==="sensor" && z.name!=="Night");
+        if(sight.length){
+          s+=`<polygon points="${pts.join(' ')}" fill="var(--theory)" opacity="0.24" pointer-events="none"/>`;
+          if(!icon && isStormEye(hex)){ const e=state.storms.find(st=>st.q===hex.c&&st.r===hex.r); if(e) icon=HAZ[e.kind].icon; }
+        }
+      }
+      if(state.showRes && hex.dep){                    // TIER 1 — the REGIONAL hex flags resources PRESENT (general): a RING
+        const m=MINERALS[hex.dep.m], ny=cy-size*0.30;   //   (the mini-hexes below pinpoint the specific ore tiles — filled dots)
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.42).toFixed(1)}" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="0.5" pointer-events="none"/>`;
+        s+=`<circle cx="${cx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(size*0.25).toFixed(1)}" fill="none" stroke="${m.col}" stroke-width="${(size*0.15).toFixed(1)}" pointer-events="none"/>`;
+      }
+      if(regionAt(hex)!=null){                         // a civilization province — a subtle built-up outline (NO icon on the map; the float tag names it)
+        s+=`<polygon points="${pts.join(' ')}" fill="none" stroke="var(--ink-soft)" stroke-width="1.2" stroke-dasharray="2.4 1.6" pointer-events="none"/>`;
+      }
+      if(icon) s+=`<text x="${cx.toFixed(1)}" y="${(cy+size*0.55).toFixed(1)}" font-size="${ico}" text-anchor="middle" pointer-events="none">${icon}</text>`;
+    });
+    // FLOAT TAGS — the free-text names the player has dropped on regional hexes (float above/below the hex)
+    if(state.planet==="earth") Object.keys(tags).forEach(key=>{
+      const [tc,tr]=key.split(",").map(Number);
+      if(!state.hexes.some(h=>h.c===tc&&h.r===tr)) return;
+      const cx=4+size+tc*hx, cy=4+size+tr*h+(tc%2?h/2:0);
+      const name=tags[key], tw=Math.max(30, name.length*6.0+18), up=tr>2;
+      const ty=up?cy-size*1.6:cy+size*1.6, chipY=up?ty-12:ty;
+      s+=`<line x1="${cx.toFixed(1)}" y1="${(up?cy-size*0.7:cy+size*0.7).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${ty.toFixed(1)}" stroke="var(--accent)" stroke-width="0.9" pointer-events="none"/>`;
+      s+=`<rect x="${(cx-tw/2).toFixed(1)}" y="${chipY.toFixed(1)}" width="${tw.toFixed(1)}" height="12.5" rx="3" fill="var(--panel)" stroke="var(--accent)" stroke-width="0.9" pointer-events="none"/>`;
+      s+=`<text x="${cx.toFixed(1)}" y="${(chipY+9).toFixed(1)}" font-size="8.5" text-anchor="middle" fill="var(--accent-ink)" font-weight="700" style="font-family:var(--mono)" pointer-events="none">🏷 ${name}</text>`;
+    });
+    // REGIONAL TRADE ROUTE (rev-T, DESIGN) — the ore road from the mining province to the capital's shipyard.
+    //   Two provinces show on the regional map at once, so the cross-province haul is drawn here (the intra-
+    //   province local haul is on the mini-grid). LIVE: the load/unload verb (CargoTransferOrder). NEW: the route.
+    if(state.planet==="earth" && state.showUnits){
+      const ci=CIV.findIndex(c=>c.key==="capital"), mi=CIV.findIndex(c=>c.key==="mining");
+      const ch=state.regionHex[ci], mh=state.regionHex[mi];
+      if(ch&&mh){
+        const cxOf=(hx)=>4+size+hx.c*(size*2*0.75), cyOf=(hx)=>4+size+hx.r*(Math.sqrt(3)*size)+(hx.c%2?Math.sqrt(3)*size/2:0);
+        const x1=cxOf(mh), y1=cyOf(mh), x2=cxOf(ch), y2=cyOf(ch);
+        const ang=Math.atan2(y2-y1,x2-x1), hl=size*0.9, bx=x2-Math.cos(ang)*size*1.1, by=y2-Math.sin(ang)*size*1.1, ph=Math.PI/7;
+        s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.9" pointer-events="none"/>`;
+        s+=`<polygon points="${bx.toFixed(1)},${by.toFixed(1)} ${(bx-hl*Math.cos(ang-ph)).toFixed(1)},${(by-hl*Math.sin(ang-ph)).toFixed(1)} ${(bx-hl*Math.cos(ang+ph)).toFixed(1)},${(by-hl*Math.sin(ang+ph)).toFixed(1)}" fill="var(--accent)" pointer-events="none"/>`;
+        const mx=(x1+x2)/2, my=(y1+y2)/2;
+        s+=`<rect x="${(mx-26).toFixed(1)}" y="${(my-7).toFixed(1)}" width="52" height="12" rx="3" fill="var(--panel)" stroke="var(--accent)" stroke-width="0.7" pointer-events="none"/>`;
+        s+=`<text x="${mx.toFixed(1)}" y="${(my+2).toFixed(1)}" font-size="7.5" text-anchor="middle" fill="var(--accent-ink)" font-weight="700" style="font-family:var(--mono)" pointer-events="none">🚛 ore→⚓</text>`;
+      }
+    }
+    svg.innerHTML=s;
+    svg.onclick=(e)=>{ const t=e.target; const di=t&&t.getAttribute&&t.getAttribute("data-i");
+      if(di!=null){ state.sel=+di; renderMap(); renderReadout();
+        const ro=document.getElementById("readout"); if(ro && ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
+    const rr=document.getElementById("regionrow"); rr.style.width=W.toFixed(0)+"px";
+    rr.innerHTML = Array.from({length:REGIONS},(_,i)=>`<span>Region ${i+1}</span>`).join("");
+    const pol=document.getElementById("poles"); if(pol){ pol.innerHTML = `<span>N pole</span><span>equator</span><span>S pole</span>`; pol.style.height=(H+24).toFixed(0)+"px"; pol.style.bottom="auto"; }
+    const gd=document.getElementById("griddim");
+    if(gd) gd.textContent = `op-grid ${fd.cols}×${fd.rows} ≈ ${(fd.cols*fd.rows).toLocaleString()} op-hexes (shown at ${state.cols}×${state.rows} for legibility) · 1 op-hex ≈ ${hexPitchKm(pk)} km · 1 mini ≈ ${miniHexKm(pk).toFixed(1)} km${opClamped(pk)?' · ⚠ clamped':''}`;
+    renderLegend();
+  }
+
+  // ── RENDER: the comprehensive legend ──
+  function renderLegend(){
+    const el=document.getElementById("biglegend"); if(!el) return;
+    const p=PLANETS[state.planet];
+    const terrs=[...new Set(state.hexes.map(h=>h.terr))].filter(t=>FEAT[t]);
+    const sw=(c,n)=>`<span class="lg"><i style="background:var(${c})"></i>${n}</span>`;
+    const ic=(g,n)=>`<span class="lg"><b>${g}</b>${n}</span>`;
+    // which live/rolling menaces this world can show
+    const liveKinds=[...new Set([...(p.worldHaz||[]), ...(p.localHaz||[])])].filter(k=>HAZ[k] && HAZ[k].kind==="attrition");
+    const rollKinds=stormKindsFor(p);
+    let html = `<div class="lgrow"><b class="lgh">Terrain</b>${terrs.map(t=>sw(FEAT[t].col, FEAT[t].name)).join("")}</div>`;
+    html += `<div class="lgrow"><b class="lgh">On the ground</b>`;
+    liveKinds.forEach(k=>{ html+=ic(HAZ[k].icon, HAZ[k].name+(HAZ[k].scope==="world"?" (world-wide)":"")); });
+    html += `<span class="lg"><i class="tint amber"></i>attrition zone</span>`;
+    if(state.planet==="earth" && state.regionHex.filter(Boolean).length) html += `<span class="lg"><b>🏷</b>float tag (name any hex)</span><span class="lg"><b>⌂</b>civilization province (districts on its mini-hexes)</span>`;
+    if(state.planet==="earth" && state.showUnits) html += `<span class="lg"><i style="background:var(--live);border-radius:50%;border-color:var(--live)"></i>garrison dot</span><span class="lg"><i style="background:var(--panel);border-radius:50%;border:2px solid var(--live)"></i>hauler dot</span><span class="lg"><b>🚛</b>trade / haul route (click a dot to select &amp; move)</span>`;
+    html += `</div>`;
+    html += `<div class="lgrow"><b class="lgh">Rolling &amp; sky</b>`;
+    if(rollKinds.length) html+=`<span class="lg"><i class="tint blue"></i>🌀 storm (rolls ${windDir(p)<0?'west':'east'})</span>`;
+    else html+=`<span class="lg" style="opacity:.6">— no weather (airless)</span>`;
+    html += `<span class="lg"><i class="tint night"></i>🌙 night (terminator)</span></div>`;
+    // resources present on this world (highest credit-value first), each a mineral-coloured node
+    const mins=[...new Set(state.hexes.filter(h=>h.dep).map(h=>h.dep.m))].sort((a,b)=>MINERALS[b].val-MINERALS[a].val);
+    if(mins.length){
+      html += `<div class="lgrow"><b class="lgh">Resources</b>`;
+      mins.forEach(id=>{ html+=`<span class="lg"><i style="background:${MINERALS[id].col};border-radius:50%"></i>${MINERALS[id].name}</span>`; });
+      html += `<span class="lg"><b class="gr LIVE">LIVE</b>regional ⭘ flags it · mini-hex ● pinpoints it</span></div>`;
+    }
+    html += `<div class="lgrow"><b class="lgh">Read</b><span class="lg"><b class="gr LIVE">LIVE</b>reads it now</span><span class="lg"><b class="gr DATA">DATA</b>exists, ignored</span><span class="lg"><b class="gr THEORY">THEORY</b>proposed</span></div>`;
+    el.innerHTML = html;
+  }
+
+  // ── MICRO-HEXES: zoom into one operational hex → its fine city / mini-hex sub-grid ──
+  //    (the game's CityGrid / mini-hex zoom; v1 inherits the theatre terrain, M4 = per-tile
+  //    variation — the patches here are illustrative of that finer layer.)
+  function microTiles(hex, R){
+    R = R||MINI_RADIUS; const tiles=[]; let seed=(hex.c*131+hex.r*17+state.planet.length*7)&0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const rel={ plains:["plains","plains","forest","coast"], forest:["forest","forest","plains","jungle"],
+      jungle:["jungle","jungle","forest","wetland"], desert:["desert","desert","barren","plains"],
+      barren:["barren","barren","desert","highlands"], mountains:["mountains","mountains","highlands","barren"],
+      highlands:["highlands","highlands","mountains","barren"], volcanic:["volcanic","volcanic","barren","mountains"],
+      ice:["ice","ice","tundra","barren"], tundra:["tundra","tundra","ice","barren"],
+      coast:["coast","coast","plains","ocean"], wetland:["wetland","wetland","jungle","plains"], ocean:["ocean"] };
+    const pal=rel[hex.terr]||[hex.terr];
+    for(let q=-R;q<=R;q++) for(let r=Math.max(-R,-q-R); r<=Math.min(R,-q+R); r++)
+      tiles.push({q,r,terr: rnd()<0.30 ? pal[Math.floor(rnd()*pal.length)] : hex.terr});
+    return tiles;
+  }
+  // TIER 2 — the SPECIFIC deposits, pinpointed to individual mini-hexes inside a regional hex (the developer's
+  //   "the regional hex delineates THAT there are resources; the mini hexes get specific"). Terrain-weighted like
+  //   HexMinerals but one zoom finer, deterministic per regional hex; the tonnage partitions the regional total.
+  function miniDeposits(hex){
+    if(!hex || !hex.dep) return [];
+    const tiles=microTiles(hex, MINI_RADIUS), mineable=tiles.filter(t=>(TWEIGHT[t.terr]||0)>0);
+    if(!mineable.length) return [];
+    let seed=(hex.c*929+hex.r*131+state.planet.length*7+77)&0x7fffffff;
+    const rnd=()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return (seed>>8)/0x7fffff; };
+    const amt=hex.dep.amt, k = amt>1e7?5 : amt>3e6?4 : amt>7e5?3 : amt>1e5?2 : 1;   // richer deposit → more ore tiles
+    const picks=[], used=new Set(); let guard=0;
+    while(picks.length<k && guard++<k*25){
+      let tot=0; for(const t of mineable) if(!used.has(t)) tot+=TWEIGHT[t.terr];
+      if(tot<=0) break; let r=rnd()*tot, pick=null;
+      for(const t of mineable){ if(used.has(t)) continue; r-=TWEIGHT[t.terr]; if(r<=0){pick=t;break;} }
+      if(pick){ used.add(pick); picks.push(pick); }
+    }
+    if(!picks.length) return [];
+    const share=Math.max(1, Math.round(amt/picks.length));
+    return picks.map(t=>({q:t.q,r:t.r,terr:t.terr,m:hex.dep.m,amt:share}));
+  }
+  function renderMicro(hex){
+    const ri=regionAt(hex), region = ri!=null ? CIV[ri] : null;
+    const selU = unitState.sel ? unitById(unitState.sel) : null;              // the selected unit (if any)
+    const selHere = !!(state.showUnits && selU && region && selU.prov===region.key);  // …and it belongs to THIS province
+    const distByQR={}; if(region) region.districts.forEach(d=>{ distByQR[d.q+","+d.r]=d; });
+    const f=FEAT[hex.terr]||FEAT.barren, tiles=microTiles(hex, MINI_RADIUS), sq3=Math.sqrt(3);
+    const size=Math.max(3, 320/(1.5*MINI_ACROSS));   // shrink to fit the panel — the fine texture IS the point
+    let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+    const pos=tiles.map(t=>{ const x=size*1.5*t.q, y=size*sq3*(t.r+t.q/2); minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y); return {t,x,y}; });
+    const pad=size+2, W=(maxx-minx)+pad*2, H=(maxy-miny)+pad*2;
+    let s=""; const posByQR={};
+    pos.forEach(({t,x,y})=>{ const cx=x-minx+pad, cy=y-miny+pad; posByQR[t.q+","+t.r]={cx,cy}; const pts=[];
+      for(let a=0;a<6;a++){ const ang=Math.PI/180*(60*a); pts.push((cx+size*Math.cos(ang)).toFixed(1)+","+(cy+size*Math.sin(ang)).toFixed(1)); }
+      const dist = distByQR[t.q+","+t.r];                                   // a district sits on this mini-hex → show its authored ground
+      const col = (FEAT[dist?dist.terr:t.terr]||FEAT.barren).col;
+      const mt = selHere ? ` data-mtarget="${t.q},${t.r}" style="cursor:pointer"` : "";  // when a unit here is picked, any hex is a MOVE destination
+      s+=`<polygon points="${pts.join(' ')}" fill="var(${col})" stroke="var(--sunk)" stroke-width="0.4"${mt}/>`;
+    });
+    // the SPECIFIC ore tiles — filled mineral nodes on their exact mini-hexes (tier 2)
+    const deps=miniDeposits(hex);
+    deps.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return; const m=MINERALS[d.m];
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.6).toFixed(1)}" fill="none" stroke="var(--panel)" stroke-width="${(size*0.6).toFixed(1)}" opacity="0.85" pointer-events="none"/>`;
+      s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.25).toFixed(1)}" fill="${m.col}" stroke="var(--ink)" stroke-width="0.5" pointer-events="none"/>`;
+    });
+    // DISTRICTS — each a CLUSTER of real installations on ONE mini-hex; ring green if its ground boosts it
+    if(region){
+      region.districts.forEach(d=>{ const p=posByQR[d.q+","+d.r]; if(!p) return;
+        const lead=INST[d.stack[0][0]], m=affMult(lead?lead.comp:null, d.terr), ring=m>1?'var(--live)':(m<1?'var(--accent-ink)':'var(--line-strong)');
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*1.5).toFixed(1)}" fill="var(--panel)" stroke="${ring}" stroke-width="${(size*0.34).toFixed(1)}" pointer-events="none"/>`;
+        s+=`<text x="${p.cx.toFixed(1)}" y="${(p.cy+size*0.6).toFixed(1)}" font-size="${(size*1.7).toFixed(0)}" text-anchor="middle" pointer-events="none">${d.icon}</text>`;
+      });
+    }
+    // ─ UNITS ON THE MAP (rev-T, DESIGN) — tokens on their mini-hex, a MOVE path, a hex-to-hex HAUL route ─
+    if(state.showUnits && region){
+      // a short arrow segment (line + a triangle head) between two pixel points
+      const arrowSeg=(x1,y1,x2,y2,color,w,dash)=>{ const ang=Math.atan2(y2-y1,x2-x1), hl=size*1.5;
+        const bx=x2-Math.cos(ang)*hl, by=y2-Math.sin(ang)*hl, ph=Math.PI/7;
+        const p1=`${(x2-hl*Math.cos(ang-ph)).toFixed(1)},${(y2-hl*Math.sin(ang-ph)).toFixed(1)}`;
+        const p2=`${(x2-hl*Math.cos(ang+ph)).toFixed(1)},${(y2-hl*Math.sin(ang+ph)).toFixed(1)}`;
+        return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${color}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''} pointer-events="none"/>`
+             + `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${p1} ${p2}" fill="${color}" pointer-events="none"/>`; };
+      const units=unitsInProv(region.key);
+      // (a) standing HAUL route — a hauler's mine→smelter ore road across the mini-hexes (the locality ruling's demand)
+      units.filter(u=>u.haul).forEach(u=>{ const a=posByQR[u.haul.from.join(",")], b=posByQR[u.haul.to.join(",")];
+        if(a&&b){ const hot=(selU&&selU.id===u.id); s+=arrowSeg(a.cx,a.cy,b.cx,b.cy, hot?"var(--accent)":"var(--ink-soft)", hot?2.2:1.4, "3 2.2");
+          const mx=(a.cx+b.cx)/2, my=(a.cy+b.cy)/2;
+          s+=`<rect x="${(mx-16).toFixed(1)}" y="${(my-6).toFixed(1)}" width="32" height="11" rx="3" fill="var(--panel)" stroke="var(--ink-soft)" stroke-width="0.5" pointer-events="none"/>`;
+          s+=`<text x="${mx.toFixed(1)}" y="${(my+2.5).toFixed(1)}" font-size="7" text-anchor="middle" fill="var(--ink-soft)" style="font-family:var(--mono)" pointer-events="none">⛏→🏭 ore</text>`; } });
+      // (b) a MOVE order's path — the selected unit → the clicked destination hex, a hex line (LIVE pathfinder + walk)
+      if(selHere && unitState.moveTo){ const u=selU, dst=unitState.moveTo.split(",").map(Number);
+        const line=hexLine(u.q,u.r,dst[0],dst[1]).map(h=>posByQR[h.q+","+h.r]).filter(Boolean);
+        if(line.length>1){ const poly=line.map(p=>`${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+          s+=`<polyline points="${poly}" fill="none" stroke="var(--live)" stroke-width="2" stroke-dasharray="2.5 2.5" pointer-events="none"/>`;
+          const e=line[line.length-1];   // destination — a small ring + centre dot, contained in the hex
+          s+=`<circle cx="${e.cx.toFixed(1)}" cy="${e.cy.toFixed(1)}" r="${(size*0.8).toFixed(1)}" fill="none" stroke="var(--live)" stroke-width="${(size*0.22).toFixed(1)}" pointer-events="none"/>`;
+          s+=`<circle cx="${e.cx.toFixed(1)}" cy="${e.cy.toFixed(1)}" r="${(size*0.26).toFixed(1)}" fill="var(--live)" pointer-events="none"/>`; } }
+      // (c) the unit TOKENS — small DOTS that fit INSIDE one mini-hex (developer's call). Hauler = hollow dot,
+      //     garrison = filled; faction-coloured; a thin selection ring that still hugs inside the hex. Click to select.
+      units.forEach(u=>{ const p=posByQR[u.q+","+u.r]; if(!p) return; const sel=(selU&&selU.id===u.id);
+        const fc = u.faction==="you" ? "var(--live)" : "var(--accent)";
+        const rr=size*0.55, filled=(u.kind!=="hauler");
+        if(sel) s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${(size*0.86).toFixed(1)}" fill="none" stroke="${fc}" stroke-width="${(size*0.2).toFixed(1)}" pointer-events="none"/>`;
+        s+=`<circle cx="${p.cx.toFixed(1)}" cy="${p.cy.toFixed(1)}" r="${rr.toFixed(1)}" fill="${filled?fc:'var(--panel)'}" stroke="${fc}" stroke-width="${(size*0.3).toFixed(1)}" data-unit="${u.id}" style="cursor:pointer"><title>${u.icon} ${u.name}</title></circle>`;
+      });
+    }
+    const mk=miniHexKm(state.planet).toFixed(1);
+    const cityNote = region ? ` · <b style="color:var(--live)">⌂ ${region.districts.length} districts</b>` : '';
+    const depNote = deps.length ? ` · <b style="color:var(--accent-ink)">⛏ ${deps.length} ore</b>` : '';
+    const cityCap = region ? `<b>This is ${tags[tagKey(hex)]||region.tag} — a ${region.role.toLowerCase()}.</b> Each <b>mini-hex is a DISTRICT</b> (~${(0.866*mk*mk).toFixed(0)} km²): a CLUSTER of real installations, not one building. A ring means its ground <b style="color:var(--live)">boosts</b> or <b style="color:var(--accent-ink)">hurts</b> the work (ruling #13). ` : '';
+    const depCap = deps.length ? `The <b>${MINERALS[hex.dep.m].name}</b> here is pinpointed to <b>${deps.length}</b> mini-hex${deps.length>1?'es':''} (the bright nodes). ` : '';
+    return `<div class="micro"><div class="mh"><span>▽ Mini-hex grid — inside this <b>${f.name}</b> province${cityNote}${depNote}</span><span><b>${MINI_TILES.toLocaleString()}</b> tiles · <b>${MINI_ACROSS}</b> across</span></div>
+      <svg class="microsvg" viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Mini-hex grid">${s}</svg>
+      <div class="cap">${cityCap}${depCap}The game's city / mini-hex grid (<span class="mono">CityGrid</span>) — the FINEST tile, each ≈ <b>${mk} km</b> across, built LAZILY only for a developed province.</div></div>`;
+  }
+
+  const affBadge=(m)=> m>1 ? `<span class="boost up">+${Math.round((m-1)*100)}%</span>` : (m<1 ? `<span class="boost dn">×${m.toFixed(2)}</span>` : `<span class="boost flat">×1</span>`);
+
+  // UNITS panel (rev-T, DESIGN) — the roster on this province's mini-hexes + the picked unit's stat card + trade.
+  //  Grades: the map DRAWS units + kills them like ships (LIVE); select-one / read-one is UI wiring (Failure A);
+  //  the MOVE + HAUL orders route through the ONE queue both seats use (the primitive the AI already issues).
+  function unitPanel(ri){
+    if(!state.showUnits) return "";
+    const region=CIV[ri], units=unitsInProv(region.key);
+    if(!units.length) return "";
+    const selU = unitState.sel ? unitById(unitState.sel) : null;
+    const selHere = !!(selU && selU.prov===region.key);
+    const kmPer = miniHexKm(state.planet);
+    let html = `<div class="sect"><div class="sh">🪖 Units on these mini-hexes <span class="badge THEORY">DESIGN · draws + dies LIVE</span></div>`;
+    html += `<div class="scroll"><table class="cty"><thead><tr><th>Unit</th><th>Kind</th><th>Health</th><th></th></tr></thead><tbody>`;
+    units.forEach(u=>{ const on=selHere&&selU.id===u.id;
+      html += `<tr${on?' style="background:var(--live-bg)"':''}><td data-unit="${u.id}" style="cursor:pointer"><span class="bi">${u.icon}</span>${u.name}</td><td>${u.kind}</td><td>${u.hp}/${u.maxhp}</td><td><button class="tbtn" data-unit="${u.id}">${on?'✓ picked':'select'}</button></td></tr>`; });
+    html += `</tbody></table></div>`;
+    if(selHere){
+      const u=selU;
+      html += `<div class="tac" style="border-left-color:var(--live)">
+        <div class="row"><span>${u.icon} <b>${u.name}</b></span><b>${u.kind}</b></div>
+        <div class="row"><span>Health</span><b class="${u.hp/u.maxhp>0.5?'up':'dn'}">${u.hp} / ${u.maxhp}</b></div>
+        <div class="row"><span>Attack · Defense</span><b>${u.atk} · ${u.def}</b></div>
+        <div class="row"><span>Strike range</span><b>${u.rngHex>0?`${u.rngHex} hex ≈ ${Math.round(u.rngHex*kmPer)} km`:'—'}</b></div>
+        <div class="row"><span>Loadout</span><b>${u.load}</b></div>
+        ${u.cargo?`<div class="row"><span>Cargo hold <span class="badge LIVE" style="font-size:8px;padding:1px 4px">LIVE</span></span><b>${u.cargo.good}: ${u.cargo.have} / ${u.cargo.cap} t</b></div>`:''}
+        <div class="row" style="border-bottom:none"><span>Move order</span><b class="${unitState.moveTo?'up':''}">${unitState.moveTo?`→ mini-hex (${unitState.moveTo})`:'click a hex ▽ to order'}</b></div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="tbtn" id="unitClear">✕ Deselect</button>
+          ${unitState.moveTo?`<button class="tbtn" id="moveClear">↩ Cancel move</button>`:''}
+        </div>
+        <div class="cityflag" style="margin-top:8px"><b>Every number here already lives on <span class="mono">GroundUnit</span></b> (Attack/Defense/Health/Range_m/loadout) — this is the missing <b>select-one / read-one</b> UI (<b>Failure A</b>), not a missing datum. A MOVE routes through the <b>one queued order</b> both seats issue (<span class="mono">GroundOrder.MoveHex</span>) — the client's direct <span class="mono">OrderMoveToGlobalHex</span> call (<span class="mono">PlanetViewWindow.cs:581</span>) is the second door the <em>One-Verb-Both-Seats</em> law schedules for deletion. The A* pathfinder + processor-walk under it are <b>LIVE</b>.</div>
+      </div>`;
+    } else {
+      html += `<div class="cityflag">Click a unit to <b>select ONE</b> and read its sheet — then click a mini-hex to give it a <b>MOVE</b>. Today the client selects only a <b>region + faction + type GROUP</b>, never one unit.</div>`;
+    }
+    // TRADE — the two scales of moving goods, both forced by the resource-locality ruling
+    const hauler=units.find(u=>u.haul);
+    html += `<div class="sect" style="margin-top:10px"><div class="sh">🚛 Trade &amp; logistics <span class="badge THEORY">DESIGN · load/unload verb LIVE</span></div>
+      ${hauler?`<div class="row"><span>Local haul (this province)</span><b>${hauler.name}: ⛏ mine → 🏭 smelter</b></div>`:''}
+      <div class="row"><span>Regional route (on the map ▲)</span><b>Ferrum Basin ⛏ → Naval Yards ⚓ (ore → shipyard)</b></div>
+      <div class="row" style="border-bottom:none"><span>Inter-colony freight (for money)</span><b>LogiBaseDB route <span class="badge DATA" style="font-size:8px;padding:1px 4px">DATA · inert</span></b></div>
+      <div class="cityflag" style="margin-top:6px"><b>Because a resource STAYS in its mini-hex</b> (your ruling), a shipyard can starve next to ore it can't reach — so <b>hauling becomes a real job.</b> The load/unload verb (<span class="mono">CargoTransferOrder</span>) is <b>LIVE</b>; what's <b>NEW</b> is a per-hex stockpile to load from and a <b>hex-to-hex HAUL</b> order (it's <span class="mono">CargoTransferOrder</span> twice, bracketed by a MOVE). The inter-colony freight loop (<span class="mono">LogiBaseDB</span>) already exists but sits <b>inert</b> — nothing seeds its <span class="mono">DesiredLevels</span> (<span class="mono">LogisticsProcessor.cs:114</span>). Build order in <span class="mono">docs/ground/UNITS-ON-THE-MAP-DESIGN.md</span>.</div>
+    </div>`;
+    html += `</div>`;
+    return html;
+  }
+
+  // A PROVINCE panel — shown in the readout for a civ regional hex: its district roster + its roll-up.
+  function regionPanel(ri){
+    const region=CIV[ri], R=regionAgg(region);
+    // roster: one row per district — its dominant work, its ground, the terrain boost, and what it puts out
+    let rows="";
+    region.districts.forEach(d=>{ const {o,base}=distAgg(d); const lead=INST[d.stack[0][0]];
+      const terrEff = (civState.misplace && lead && lead.comp==="food") ? "barren" : d.terr;
+      const m=affMult(lead?lead.comp:null, terrEff);
+      const parts=d.stack.map(([k,n])=>`${n}× ${INST[k].name}`).join(" + ");
+      const outs=Object.keys(o).filter(k=>o[k]>0 && METRIC[k] && k!=="crew" && k!=="support").sort((a,b)=>(o[b])-(o[a]));
+      const outTxt=outs.slice(0,2).map(k=>`${METRIC[k].icon} ${METRIC[k].fmt(o[k])}`).join(" · ")||"—";
+      rows+=`<tr><td><span class="bi">${d.icon}</span>${d.name}<small style="display:block;color:var(--ink-faint);font-size:9.5px;font-family:var(--mono)">${parts}</small></td><td>${FEAT[terrEff]?FEAT[terrEff].name:terrEff}${civState.misplace&&lead&&lead.comp==="food"?' ⚠':''}</td><td>${affBadge(m)}</td><td>${outTxt}</td></tr>`; });
+    // the province roll-up chips (the M16 aggregate the strategic map would show)
+    const chips=Object.keys(METRIC).filter(k=>R[k]>0 && k!=="support").map(k=>`<span class="rchip"><i>${METRIC[k].icon}</i>${METRIC[k].fmt(R[k])}<s>${METRIC[k].label}</s></span>`).join("");
+    return `<div class="sect"><div class="sh">${region.icon} ${tags[tagKey(state.hexes[state.sel])]||region.tag} — the province on these mini-hexes <span class="badge LIVE">outputs LIVE · affinity THEORY</span></div>
+      <p class="rblurb">${region.blurb}</p>
+      <div class="scroll"><table class="cty"><thead><tr><th>District (cluster)</th><th>Its ground</th><th>Affinity</th><th>Puts out</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="rchips">${chips}</div>
+      <div class="cityflag">Each <b>district is a cluster of real installations</b>; its output is <b>count × the shipped per-unit rate × terrain affinity</b> (ruling #13). The per-unit rates are real (<span class="mono">installations.json</span>); the terrain multiplier is the proposal (THEORY). Scroll to <b>the civilization's books</b> below the map for the empire-wide roll-up.</div>
+    </div>`;
+  }
+  function fmtNum(n){ return Math.abs(n)>=1000? Math.round(n).toLocaleString() : (Number.isInteger(n)?n:(+n).toFixed(1)); }
+
+  // ── RENDER: the readout panel ──
+  function renderReadout(){
+    const el=document.getElementById("readout");
+    // PRESERVE an in-progress float-tag edit across a re-render (weather auto-roll rebuilds this panel every tick)
+    const _ae=document.activeElement;
+    const _keep=(_ae && _ae.id==="tagInput") ? {v:_ae.value, s:_ae.selectionStart, e:_ae.selectionEnd} : null;
+    const _restore=()=>{ if(_keep){ const i=document.getElementById("tagInput"); if(i){ i.value=_keep.v; try{i.setSelectionRange(_keep.s,_keep.e);}catch(_){} i.focus(); } } };
+    if(state.sel==null){ el.innerHTML=`<div class="empty">◎ click any hex on the map<br>to read the fight the engine opens there</div>`; return; }
+    const hex=state.hexes[state.sel], p=PLANETS[state.planet], f=FEAT[hex.terr]||FEAT.barren;
+    if(f.impassable){
+      el.innerHTML=`<div class="rh">Grid ${coord(hex)}</div><div class="loc">Open ocean</div>
+        <div class="tac" style="border-left-color:var(--t-ocean)">🌊 <b>Impassable to ground forces.</b> Ocean is left out of the movement graph (<span class="mono">HexPathfinder.IsImpassable</span>) — a march routes around it and it can't be ordered onto. Taking this tile needs sealift, not a battle. (Ice is passable, but crossed at the rough march cost.)</div>`;
+      return;
+    }
+    const tc=TCLASS[f.cls];
+    const haz=hazardsAt(hex);
+    const liveHaz=haz.filter(z=>z.kind==="attrition");
+    const dataHaz=haz.filter(z=>z.kind==="sensor");
+    const totalBleed=liveHaz.reduce((a,z)=>a+z.mag,0);
+    const sealedBleed=liveHaz.reduce((a,z)=>a+(z.sealed?0:z.mag),0);
+
+    const rollingNow=stormsOver(hex);            // storm kinds rolling over this hex right now
+    const night=isNight(hex);
+
+    let html =
+      `<div class="rh">Grid ${coord(hex)} · Region ${hex.region+1} · ${night?'🌙 night':'☀ day'}</div>
+       <div class="loc">${f.name} — ${f.cls} terrain</div>
+       <div class="coord">on ${p.name} · ${p.g} · ${p.pressure} · <b style="color:var(--ink)">op-hex ≈ ${hexPitchKm(state.planet)} km · mini ≈ ${miniHexKm(state.planet).toFixed(1)} km</b></div>`;
+
+    // FLOAT TAG — a free-text name the player drops on any regional hex (call it anything)
+    const tg = tags[tagKey(hex)];
+    html += `<div class="sect"><div class="sh">Float tag <span class="badge THEORY">DESIGN</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <input id="tagInput" type="text" maxlength="24" placeholder="name this hex…" value="${tg?String(tg).replace(/"/g,'&quot;'):''}" style="flex:1;min-width:110px;font-family:var(--mono);font-size:12px;padding:5px 8px;border:1px solid var(--line-strong);border-radius:7px;background:var(--inset);color:var(--ink)">
+        <button id="tagSet" class="tbtn">🏷 Tag</button>${tg?`<button id="tagDel" class="tbtn">✕</button>`:''}
+      </div>
+      <div class="row" style="border-bottom:none;padding-top:5px"><span>${tg?`Tagged <b style="color:var(--accent-ink)">"${tg}"</b> — floats on the map above this hex.`:'Drop a free-text name on this regional hex — call it anything (capital, front line, the mine…). It floats on the map.'}</span></div></div>`;
+
+    html += renderMicro(hex);            // ▽ the mini-hex view — the districts of a province live here
+    { const rg=regionAt(hex); if(rg!=null){ html += regionPanel(rg); html += unitPanel(rg); } }   // district roll-up + the units/trade panel
+
+    html += `<div class="sect"><div class="sh">Terrain effect <span class="badge LIVE">LIVE · resolver reads it</span></div>
+      <div class="row"><span>Defender cover</span><b class="${tc.cover>1?'up':'dn'}">÷${tc.cover.toFixed(2)}</b></div>
+      <div class="row"><span>Armour here</span><b class="${tc.armor>1?'up':'dn'}">×${tc.armor.toFixed(2)}</b></div>
+      <div class="row"><span>Artillery here</span><b class="${tc.arty>1?'up':(tc.arty<1?'dn':'')}">×${tc.arty.toFixed(2)}</b></div>
+      <div class="row"><span>Infantry here</span><b>×1.00</b></div>
+      <div class="row"><span>March cost</span><b class="${tc.move>1?'dn':''}">×${tc.move.toFixed(1)}${f.crossRough?' (ice)':''}</b></div>
+      <div class="row"><span>Op-hex span</span><b>≈ ${hexPitchKm(state.planet)} km · ≈ ${Math.round(hexPitchKm(state.planet)*tc.move).toLocaleString()} km-equiv to cross</b></div>
+      <div class="row"><span>Mini-hex (fight tile)</span><b>≈ ${miniHexKm(state.planet).toFixed(1)} km · ${MINI_ACROSS} across (≤50)</b></div>
+      </div>`;
+
+    if(hex.dep){
+      const m=MINERALS[hex.dep.m], val=hex.dep.amt*m.val, deps=miniDeposits(hex);
+      const dot=`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${m.col};border:1px solid var(--line-strong);vertical-align:-2px;margin-right:7px"></span>`;
+      const gb=(g)=>`<span class="badge ${g}" style="font-size:8px;padding:1px 4px">${g}</span>`;
+      html += `<div class="sect"><div class="sh">Resource node <span class="badge LIVE">LIVE · located deposit</span></div>
+        <div class="haz" style="border-color:${m.col}">
+          <div class="hn">${dot}${m.name}<small>${fmtT(hex.dep.amt)} in this REGIONAL hex · ${m.val} cr/unit · on ${f.name.toLowerCase()} (terrain-weighted)</small></div>
+          <div class="hv">⛏ ${(val/1e6).toFixed(1)}M cr</div></div>`;
+      if(deps.length){
+        html += `<div class="row" style="border-bottom:none;padding-bottom:2px"><span>Specific deposits — pinpointed in the mini-hex grid ▽</span><b>${deps.length} ore ${deps.length>1?'tiles':'tile'}</b></div>`;
+        deps.forEach(d=> html += `<div class="row"><span>&nbsp;&nbsp;↳ mini-hex <span class="mono">(${d.q},${d.r})</span> · ${FEAT[d.terr].name}</span><b>${fmtT(d.amt)}</b></div>`);
+      }
+      html += `<div class="row"><span>Regional hex flags presence + type</span><b>space survey · Partial ${gb("DATA")}</b></div>
+        <div class="row"><span>Mini-hex pinpoint + exact tonnes</span><b>ground scout · Full ${gb("DATA")}</b></div>
+        <div class="row"><span>Build a mine on the exact ore tile</span><b>PlaceInstallationOnHexOrder ${gb("LIVE")}</b></div>
+        <div class="flag" style="margin-top:8px"><b>Two tiers (a roll-up, like buildings M16):</b> the <b>regional hex</b> only says <em>there is ${m.name} somewhere in this ~${hexPitchKm(state.planet)} km area</em> — what a <b>space survey</b> reveals (type + presence). The <b>mini-hexes</b> say <em>which exact tiles hold it, and how much</em> — what a <b>ground scout</b> reveals, and where a mine actually sits. Engine today: <span class="mono">GroundHex.DepositMineralId</span> locates on the regional hex (LIVE); pinpointing down to a <span class="mono">CityTile</span> is the same fine-truth / coarse-aggregate roll-up buildings already use (the finer-grain refinement). <b>Per-hex mining (THEORY):</b> v1 still mines the body-wide pool — drawing from the exact ore tile is the follow-up.</div>
+        </div>`;
+    }
+
+    // terrain-affinity feature (ruling #13) — what a COMPONENT would gain (or lose) if built on THIS ground
+    const affList = Object.keys(COMP).map(k=>({k,m:affMult(k,hex.terr)})).filter(o=>o.m!==1).sort((a,b)=>b.m-a.m);
+    if(affList.length){
+      const chips = affList.slice(0,3).map(o=>`${COMP[o.k].icon} ${COMP[o.k].name} ${affBadge(o.m)}`).join(" ");
+      const worst = affList[affList.length-1];
+      html += `<div class="sect"><div class="sh">Terrain affinity <span class="badge THEORY">THEORY · ruling #13</span></div>
+        <div class="tac" style="border-left-color:var(--theory)"><b>A component built here would get:</b> ${chips}${worst.m<1?` &nbsp;—&nbsp; but ${COMP[worst.k].name} would suffer ${affBadge(worst.m)}`:""}. The boost rides the <b>component</b> (its production <span class="mono">*Atb</span>), not the building shell — so <b>${FEAT[hex.terr].name}</b> is prime ${COMP[affList[0].k].makes.toLowerCase()} ground. See the self-sufficient city below. <em>(Components + production are real; the terrain multiplier is the proposal — not wired.)</em></div></div>`;
+    }
+
+    if(liveHaz.length){
+      html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE · bleeds units/hr</span></div>`;
+      liveHaz.forEach(z=>{
+        const baseline = z.onTerrain ? z.onTerrain.indexOf(hex.terr)>=0 : (z.scope==="world");
+        const rolling = !baseline && rollingNow.some(k=>HAZ[k]===z);
+        const where = z.scope==="world" ? "world-wide" : (rolling ? "🌀 rolled in" : "this hex ("+f.name.toLowerCase()+")");
+        html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · ${where}${z.sealed?" · sealed exempt":" · no counter built"}</small></div><div class="hv">−${z.mag}/hr</div></div>`;
+      });
+      html += `<div class="bleed"><span class="bl">Unsealed unit loses</span><span class="bv">−${totalBleed.toFixed(1)} HP/hr</span></div>`;
+      if(sealedBleed!==totalBleed)
+        html += `<div class="bleed" style="background:var(--live-bg);border-color:var(--live)"><span class="bl" style="color:var(--live)">Sealed unit loses</span><span class="bv">−${sealedBleed.toFixed(1)} HP/hr</span></div>`;
+      html += `</div>`;
+    } else {
+      html += `<div class="sect"><div class="sh">Surface attrition <span class="badge LIVE">LIVE</span></div><div class="row"><span>No damaging hazard here</span><b class="up">survivable</b></div></div>`;
+    }
+
+    // rolling weather (sight storms) + the day/night terminator
+    const sensorHaz=haz.filter(z=>z.kind==="sensor");
+    const nightOn=sensorHaz.some(z=>z.name==="Night");
+    const rollSensor=sensorHaz.filter(z=> z.name!=="Night" && rollingNow.some(k=>HAZ[k]===z));
+    const staticSensor=sensorHaz.filter(z=> z.name!=="Night" && !rollingNow.some(k=>HAZ[k]===z));
+    if(rollSensor.length || nightOn){
+      html += `<div class="sect"><div class="sh">Rolling over now <span class="badge THEORY">DESIGN · Q3</span></div>`;
+      rollSensor.forEach(z=>{ html += `<div class="haz" style="border-color:var(--theory)"><div class="hn">${z.icon} ${z.name} <span style="opacity:.7">🌀</span><small>${z.effect} · drifting ${windDir(p)<0?"west ◄":"east ►"} · cuts detection</small></div><div class="hv" style="color:var(--theory)">×${z.mag} sight</div></div>`; });
+      if(nightOn) html += `<div class="haz" style="border-color:var(--theory)"><div class="hn">🌙 Night<small>SensorJam · the terminator is over this hex · cuts detection</small></div><div class="hv" style="color:var(--theory)">×0.7 sight</div></div>`;
+      html += `<div class="tac" style="border-left-color:var(--theory);margin-top:8px"><b>It's moving.</b> Storms are born over their source terrain and roll with ${p.name}'s spin; night sweeps as it rotates. Both pass — with Q1 (per-tick), they change a fight live, then clear.</div></div>`;
+    }
+    if(staticSensor.length){
+      html += `<div class="sect"><div class="sh">Storm SOURCE terrain here <span class="badge DATA">DATA</span></div>`;
+      staticSensor.forEach(z=>{ html += `<div class="haz"><div class="hn">${z.icon} ${z.name}<small>${z.effect} · this terrain breeds it (spawns storms) — resolver skips SensorJam today</small></div><div class="hv" style="color:var(--data)">×${z.mag}</div></div>`; });
+      html += `</div>`;
+    }
+
+    html += `<div class="tac"><b>The fight the engine opens here:</b> ${tacRead(f,tc,liveHaz,totalBleed,sealedBleed)}</div>`;
+    html += `<div class="flag"><b>Design proposal (THEORY):</b> ${p.g} would slow/speed the close and the storms would cut sight — but the resolver reads <b>none</b> of that today. It reads the terrain block and the attrition bleed above. Wiring gravity→movement and weather→detection is the open design call.</div>`;
+    html += `<button class="resolve" onclick="alert('In the full client this opens the ground Auto-Resolver on this hex — pre-loaded with the ${f.cls} terrain block and the surface attrition shown. You then set doctrine (stance + target priority) and watch it resolve. The space resolver stays environment-blind.');">⚔ Resolve a battle here</button>`;
+
+    el.innerHTML = html;
+    _restore();   // keep the tag input alive if the user was mid-type when this re-rendered
+  }
+
+  function tacRead(f,tc,liveHaz,total,sealed){
+    let s = tc.cover>=1.5 ? "This is a fortress — the defender soaks half again, so an attacker pays dearly to take it; bring artillery, not armour. "
+          : tc.cover>=1.25 ? "Cover favours whoever holds it; armour is off its game and the advance is slow. "
+          : "Open ground — armour rules and the defender has nowhere to hide. ";
+    if(!liveHaz.length){ s += "Nothing on the surface is killing anyone — the units alone decide it."; return s; }
+    const hasLocal = liveHaz.some(z=>z.scope==="local");
+    if(sealed===0){ s += `Airless/toxic only: a <b>sealed</b> garrison is fine here, an unsealed one bleeds ${total}/hr and loses a war of patience. Sealing is the price of admission.`; }
+    else if(sealed>=15){ s += `The ground itself is lethal — even a <b>sealed</b> unit loses ${sealed}/hr, because no buildable component stops the fire/cryo/corrosive on <b>this</b> hex.`; }
+    else { s += `Unsealed units bleed ${total}/hr; sealing cuts it to ${sealed}/hr.`; }
+    if(hasLocal) s += ` <b>This is a per-hex menace</b> — it's the ${f.name.toLowerCase()} ground itself, so a neighbouring hex of a different terrain would spare you it. <b>Where you land is the decision.</b>`;
+    return s;
+  }
+
+  const coord=(h)=>`Q${String(h.c).padStart(2,'0')} R${h.r}`;
+
+  // ── RENDER: the grid-scale + potato-budget panel (the heart of the mini-anchored model) ──
+  function renderScalePanel(){
+    const el=document.getElementById("scalepanel"); if(!el) return;
+    const pk=state.planet, p=PLANETS[pk], d=gridDims(pk), r=RADIUS_KM[pk]||EARTH_R_KM;
+    const op=opHexKm(pk), total=d.cols*d.rows, mini=miniHexKm(pk), circ=2*Math.PI*r;
+    const dialBtn=(km)=>`<button data-mini="${km}" aria-pressed="${state.miniKm===km}">${km} km</button>`;
+    let html = `<div class="sph">
+        <div class="tt">Grid scale — the mini-hex is the anchor; the <b>op-hex count scales per planet</b></div>
+        <div class="dial">mini-hex size: ${dialBtn(3)}${dialBtn(5)}</div>
+      </div>`;
+    html += `<div class="ladder">
+      <div class="rung"><div class="rk">Region (¼ planet)</div><div class="rv">${Math.round(circ/4).toLocaleString()} km</div><div class="rs">4 longitude bands · the strategic glance</div></div>
+      <div class="rung"><div class="rk">Operational hex</div><div class="rv">≈ ${Math.round(op)} km</div><div class="rs">${total.toLocaleString()} on ${p.name} · where a battle happens${opClamped(pk)?' · ⚠ clamped':''}</div></div>
+      <div class="rung hi"><div class="rk">Mini hex (fight tile)</div><div class="rv">≈ ${mini.toFixed(1)} km</div><div class="rs">${MINI_ACROSS} across (≤50) · ${MINI_TILES.toLocaleString()} tiles · the anchor</div></div>
+    </div>`;
+    html += `<div class="scroll"><table class="pt"><thead><tr><th>World</th><th>radius</th><th>op-hex</th><th>op grid</th><th>op-hexes</th><th>mini</th></tr></thead><tbody>`;
+    Object.entries(PLANETS).forEach(([k,pp])=>{
+      const dd=gridDims(k), t=dd.cols*dd.rows, o=opHexKm(k), m=miniHexKm(k);
+      html += `<tr class="${k===pk?'cur':''}"><td>${pp.name}</td><td>${(RADIUS_KM[k]||0).toLocaleString()} km</td><td>${Math.round(o)} km</td><td>${dd.cols}×${dd.rows}</td><td>${t.toLocaleString()}${opClamped(k)?' ⚠':''}</td><td>${m.toFixed(1)} km</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    const saveMB=(total*300/1e6);
+    html += `<div class="budget">
+      <div class="bcard"><div class="bk">Render / frame</div><div class="bvv">${(WINDOW_COLS*WINDOW_ROWS).toLocaleString()} hexes — FIXED</div><div class="bd">A ${WINDOW_COLS}×${WINDOW_ROWS} window — the same on Earth or a gas giant. Never grows with the planet.</div></div>
+      <div class="bcard"><div class="bk">Mini per fight</div><div class="bvv">${MINI_TILES.toLocaleString()} tiles — CAPPED</div><div class="bd">The ≤50-across ceiling, built LAZILY only for an op-hex actually being fought in.</div></div>
+      <div class="bcard"><div class="bk">Op-hexes stored · ${p.name}</div><div class="bvv">${total.toLocaleString()} — lazy DATA</div><div class="bd">Cheap terrain bytes, O(1) lookup, generated only where there's action — not a per-frame cost.</div></div>
+      <div class="bcard warn"><div class="bk">Save size (rough)</div><div class="bvv">≈ ${saveMB.toFixed(1)} MB / body</div><div class="bd">Needs the per-hex trim guard (③) or the disk path near-doubles it.</div></div>
+    </div>`;
+    html += `<div class="guards"><b>To ship this potato-safe (verified against source), three engine guards ride WITH the constant change:</b>
+      <span class="g">①</span> the client render window must be a FIXED span (modelled here), not "2 region bands" — else it balloons ~9×;
+      <span class="g">②</span> retire the redundant per-region DISK grid (else Earth stores ~39k hexes, not ~${Math.round(total/1000)}k);
+      <span class="g">③</span> trim the heavy per-hex <span class="mono">GroundHex</span> fields + build the grid on develop/survey, not on merely opening the view.
+      The distance, movement, region-band and combat-range math all AUTO-recompute (they read radius + grid dims) — no change needed. The rescale is <b>new-game-only</b> (a saved hex (Q,R) would address a different spot after a regrid).</div>`;
+    el.innerHTML = html;
+  }
+
+  // ── RENDER: THE CIVILIZATION'S BOOKS — the empire-wide roll-up across all five provinces ──
+  function renderCiv(){
+    const el=document.getElementById("civdash"); if(!el) return;
+    const placed=(state.regionHex||[]).filter(Boolean).length;
+    if(state.planet!=="earth" || !placed){
+      el.innerHTML=`<div class="civnote">The developed civilization is on <b>Earth</b>. Switch back to Earth to read its books — ${PLANETS[state.planet].name} carries no colony in this study.</div>`;
+      return;
+    }
+    const C=civAgg();
+    const km2=C.km2;
+    // jobs by installation TYPE (not by region) — the honest services-vs-industry split
+    const jobsByInst={};
+    CIV.forEach((r,i)=>{ if(!state.regionHex[i]) return; r.districts.forEach(d=>d.stack.forEach(([k,n])=>{ jobsByInst[k]=(jobsByInst[k]||0)+INST[k].crew*n; })); });
+    const svcJobs=jobsByInst.infra||0, heavyJobs=(jobsByInst.mine||0)+(jobsByInst.factory||0);
+    const svcShare=C.crew>0?svcJobs/C.crew:0, heavyShare=C.crew>0?heavyJobs/C.crew:0;
+    // headline cards — the numbers a player actually reads
+    const card=(icon,val,label,sub,cls)=>`<div class="bigm ${cls||''}"><i>${icon}</i><b>${val}</b><u>${label}</u>${sub?`<s>${sub}</s>`:''}</div>`;
+    const employPct=Math.round(C.employ*100);
+    const employCls = C.employ<0.7?'':(C.employ<=1.1?'good':'warn');
+    let head =
+      card("🏢", fmtBig(C.pop), "People housed", `${(km2).toFixed(0)} km² built · ${state.regionHex.filter(Boolean).length} provinces`) +
+      card("👷", fmtBig(C.crew), "Jobs", `of ${fmtBig(C.workforce)} workforce (½ of pop)`, employCls) +
+      card("🌾", METRIC.food.fmt(C.food), "Food/day", `eats just ${C.foodDemand.toFixed(0)}/day`) +
+      card("⛏", METRIC.minerals.fmt(C.minerals), "Minerals/day", "terrain-boosted in the hills") +
+      card("🏭", METRIC.refine.fmt(C.refine), "Materials/day", "smelters + foundry lines") +
+      card("🏗", METRIC.build.fmt(C.build), "Construction/day", "the foundry's whole output") +
+      card("🔬", METRIC.research.fmt(C.research), "Research/day", "the grand campus") +
+      card("🎓", METRIC.officers.fmt(C.officers), "Officers/24mo", "capital + war college") +
+      card("🛡", METRIC.fortify.fmt(C.fortify), "Fortification", "the wall of bunkers") +
+      card("🚀", METRIC.cargo.fmt(C.cargo)+" · "+Math.round(C.pads)+" pads", "Off-world", "spaceport + launch ranges");
+    // the two honest reality-checks — employment and food
+    const empVerdict = C.employ<0.7
+      ? `<b>${employPct}% employed — a growing economy.</b> Jobs fill ${employPct}% of the workforce; the rest is headroom the city grows into. Not a fudged number and not an artifact.`
+      : C.employ<=1.1
+      ? `<b>${employPct}% employed — near full, a mature service economy.</b> A dense metropolis runs its service coefficient high (<b>k≈0.5</b> — nearly its whole working-age workforce in utilities/transit/healthcare/education/admin/retail/finance), so the +15 employment morale bonus is nearly maxed. That's the density lever, set at the SOURCE; the count of arcologies can't move employment — each adds people AND jobs in fixed proportion — <b>only the coefficient can</b>, which is why "fewer housing blocks" never reaches full and the service dial is the real answer.`
+      : `<b>Labour-bound</b> — <b>${employPct}%</b>: more jobs than workers, so industry runs understaffed until the population grows or automates.`;
+    // per-province cards
+    const rcard=(i)=>{ const region=CIV[i], h=state.regionHex[i]; if(!h) return ""; const R=regionAgg(region);
+      const head=Object.keys(METRIC).filter(k=>R[k]>0 && k!=="support" && k!=="crew").sort((a,b)=>{
+        const order={pop:0,amenity:0.5,commerce:0.8,minerals:1,build:2,food:3,order:3.5,research:4,refine:5,officers:6,fortify:7,cargo:8,pads:9}; return (order[a]??9)-(order[b]??9); }).slice(0,3);
+      const chips=head.map(k=>`<span>${METRIC[k].icon} ${METRIC[k].fmt(R[k])}</span>`).join("");
+      return `<div class="pcard"><div class="pch"><b>${region.icon} ${tags[tagKey(h)]||region.tag}</b><button class="pjump" data-jump="${i}">open ▸</button></div>
+        <div class="pcr">${region.role} · hex ${coord(h)} · ${region.districts.length} districts</div>
+        <div class="pcm">${chips}</div>
+        <div class="pcj">👷 ${fmtBig(R.crew)} jobs · 🏢 ${fmtBig(R.pop)} housed</div></div>`; };
+    const sgn=(x)=>(x>=0?'+':'−')+Math.round(Math.abs(x));
+    const governed = C.legit>=60?'firmly governed':(C.legit>=45?'restive':'⚠ rebellion risk');
+    const markets = (jobsByInst.market||0)/INST.market.crew;
+    el.innerHTML =
+      `<div class="civhead"><div><h3>The super-city on this map — <b>one metropolis, five provinces</b></h3>
+        <p>New Terra is the <b>ecumenopolis</b>: stacked arcologies plus the new civic districts — <b>🎭 entertainment</b>, <b>🏦 a financial exchange</b>, <b>🚔 a metro police force</b> — cranked to the ceiling and pulling migration from the whole world. Every production number is the <b>real shipped output</b> (<span class="mono">installations.json</span>), summed. The two <b>gauges</b> below are built from the <b>real <span class="mono">ColonyMoraleDB</span> coefficients</b> plus the new civic lines wired at the source in <span class="mono">civicderived.html</span>.</p></div></div>
+      <div class="bigms">${head}</div>
+      <div class="gauges">
+        <div class="gauge"><div class="gh">😊 Morale — <span>are they happy</span> <b class="gnew">→ migration</b></div>
+          <div class="gbar"><span style="width:${C.morale.toFixed(0)}%"></span></div>
+          <div class="gv"><b>${Math.round(C.morale)}</b>/100 → migration <b class="up">${C.migration>=0?'+':''}${C.migration.toFixed(1)}%/mo</b> ${C.stormProvinces>0?`<span class="gtag storm">⛈ ${C.stormProvinces} storm${C.stormProvinces===1?'':'s'} over the city</span>`:(C.migration>2?'<span class="gtag">a magnet — it snowballs</span>':'')}</div>
+          <div class="gbreak">50 base &nbsp;${sgn(C.mJobs)} jobs &nbsp;${sgn(C.mComfort)} comfort <span class="gsub">(cap +20, pegged)</span> &nbsp;${sgn(C.mAmenity)} amenity <span class="gsub gnewi">(NEW)</span> &nbsp;${sgn(C.mWeather)} weather <span class="gsub gnewi">(NEW · roll ▶ to watch it dip)</span></div></div>
+        <div class="gauge"><div class="gh">🏛 Legitimacy — <span>are they governable</span> <b class="gnew">→ rebellion</b></div>
+          <div class="gbar leg"><span style="width:${C.legit.toFixed(0)}%"></span></div>
+          <div class="gv"><b>${Math.round(C.legit)}</b>/100 → <b>${governed}</b></div>
+          <div class="gbreak">50 base &nbsp;${sgn(C.lOrder)} public order <span class="gsub gnewi">(NEW · props LegitimacyDB → holds off RebellionDB)</span></div></div>
+        <div class="gauge"><div class="gh">🏦 Commerce — <span>the trade income</span> <b class="gnew">NEW</b></div>
+          <div class="gbar com"><span style="width:${Math.min(100,C.commerce/8000).toFixed(0)}%"></span></div>
+          <div class="gv"><b>${METRIC.commerce.fmt(C.commerce)}</b> into the faction Ledger</div>
+          <div class="gbreak">${Math.round(markets)} trade hubs · a new ColonyCommerce faucet on the LIVE tax pipe, atop population tax</div></div>
+      </div>
+      <div class="civreality">
+        <div class="crx"><span class="crh">👷 Employment</span> ${empVerdict} <span class="crn"><b>Services ${Math.round(svcShare*100)}%</b> of all jobs · heavy industry <b>${Math.round(heavyShare*100)}%</b> · the rest farms/labs/ports/garrison. That realistic mix is a SOURCE recalibration made this session (not a downstream fudge): mine &amp; factory crew cut 10× in <span class="mono">industrialderived.html</span>, and infrastructure given service employment (crew = Support×<b>k</b>, the DENSITY dial — a super-city runs <b>k=0.5</b>) in <span class="mono">civicderived.html</span> — so housing is the main employer, as in a real country, instead of two buildings eating the workforce.</span></div>
+        <div class="crx"><span class="crh">🌾 Food</span> The farms make <b>${METRIC.food.fmt(C.food)}</b>; the whole civilization eats <b>${C.foodDemand.toFixed(0)}/day</b> (pop × the shipped <span class="mono">0.00001</span> per-capita demand). <b>One agri-complex feeds 300 M.</b> Food scarcity is a calibration dial, not a structural gap — surface it honestly. <button id="misplaceBtn" class="mbtn" aria-pressed="${civState.misplace}">${civState.misplace?"↩ farms back to the delta":"⚠ build the breadbasket on barren"}</button> ${civState.misplace?`<span class="crwarn">→ on barren (×0.40) the farms make just ${METRIC.food.fmt(C.food)} — still a surplus, because demand is almost nothing.</span>`:''}</div>
+      </div>
+      <div class="pcards">${CIV.map((_,i)=>rcard(i)).join("")}</div>
+      <div class="civfoot"><b class="gr LIVE">LIVE</b> the per-unit OUTPUTS and the food/workforce math are the real engine (installations.json · <span class="mono">ColonyManpowerDB</span> · <span class="mono">SustenanceProcessor</span>); jobs = each installation's <span class="mono">CrewReq</span> (the civic audit's one-line fix — the +15/−25 band is otherwise a dead wire). &nbsp;<b class="gr THEORY">RECAL</b> three CREW coeffs were tuned at the SOURCE designers this session — mine ×0.005→×0.0005, factory ×5→×0.5 (<span class="mono">industrialderived.html</span>), infrastructure 10→Support×0.2 (<span class="mono">civicderived.html</span>). &nbsp;<b class="gr THEORY">NEW</b> the two GAUGES are illustrative — built from the real <span class="mono">ColonyMoraleDB</span> coefficients composed with the new civic lines wired this session: amenity morale (uncapped) + public-order legitimacy, each a one-time engine add; commerce is a new <span class="mono">ColonyCommerce</span> category on the LIVE Ledger. &nbsp;<b class="gr THEORY">THEORY</b> the terrain-affinity multiplier (ruling #13) and per-hex mining. District COUNTS are authoring (a super-city is big on purpose); no number chased to a target.</div>`;
+  }
+
+  // ── RENDER: could this world build a Venator? — the REAL engine construction model, worked + honest ──
+  function renderVenator(){
+    const el=document.getElementById("venator"); if(!el) return;
+    if(state.planet!=="earth"){ el.innerHTML=`<div class="civnote" style="border:1px solid var(--line);border-radius:12px">The civilization and its shipyard are on Earth — switch to Earth.</div>`; return; }
+    const C=civAgg(), V=VENATOR;
+    const yardRate=C.shipAssembly||0, stockRate=200, maxRate=1000000*0.02;
+    const daysFor=(cost,rate)=> rate>0 ? cost/rate : Infinity;
+    const dur=(d)=> !isFinite(d)?'∞ — no shipyard': d>=365?(d/365).toFixed(1)+' yr' : d>=30?(d/30).toFixed(1)+' mo' : Math.round(d)+' d';
+    const rateRow=(label,rate,note)=>`<tr><td>${label}${note?` <span style="color:var(--ink-faint);font-size:10px">${note}</span>`:''}</td><td>${Math.round(rate).toLocaleString()}/day</td><td><b>${dur(daysFor(V.engineBP,rate))}</b></td><td>${dur(daysFor(V.mockBP,rate))}</td></tr>`;
+    // THE PROPOSED MODEL (developer's): the workforce is one finite pool — ship crews + leaders come off the top,
+    // the rest STAFFS the production facilities, and a facility's rate scales with how well it's manned.
+    // staffing = available workforce ÷ the crew all the city's facilities need to run (C.crew = the "jobs").
+    const jobs=C.crew;
+    const proposed=(popPct,committedM)=>{ const wf=C.workforce*popPct, committed=committedM*1e6, avail=Math.max(0,wf-committed), staffing=jobs>0?Math.min(1,avail/jobs):1; return {wf,committed,avail,staffing,rate:maxRate*staffing}; };
+    const pRow=(label,popPct,committedM)=>{ const s=proposed(popPct,committedM);
+      return `<tr><td>${label}</td><td>${fmtBig(s.wf)}</td><td>${committedM?fmtBig(s.committed):'—'}</td><td><b class="${s.staffing>=0.99?'vpass':'vfail'}">${Math.round(s.staffing*100)}%</b></td><td><b>${dur(daysFor(V.engineBP,s.rate))}</b></td></tr>`; };
+    el.innerHTML = `
+      <div class="vgrid">
+        <div class="vcard"><div class="vh">⚓ The Venator <span>Star Destroyer</span></div>
+          <div class="vrow"><span>Mass</span><b>${V.massT.toLocaleString()} t</b></div>
+          <div class="vrow"><span>Crew — the gate</span><b>${V.crew}</b></div>
+          <div class="vrow"><span>Refined materials</span><b>${V.materialsT.toLocaleString()} t</b></div>
+          <div class="vrow"><span>Cost · engine <span class="mono" style="font-size:10px">mass×0.1</span></span><b>${V.engineBP.toLocaleString()} pts</b></div>
+          <div class="vrow"><span>Cost · design-tool</span><b>${V.mockBP.toLocaleString()} pts</b></div>
+        </div>
+        <div class="vcard vwide">
+          <div class="vh">Build time = cost ÷ (shipyard rate × infra eff)</div>
+          <div class="vscroll"><table class="vtab"><thead><tr><th>Shipyard</th><th>Rate</th><th>Engine cost</th><th>Tool cost</th></tr></thead><tbody>
+            ${rateRow("New Terra's Naval Yards", yardRate, "stock, Crew 10k")}
+            ${rateRow("A maxed shipyard", maxRate, "Crew 1,000,000")}
+          </tbody></table></div>
+          <div class="vnote">Rate = <b>Crew Size × 0.02</b>. A <b>factory can't build a ship</b> (wrong industry type) — so the world's yard sets the pace. More yards = more hulls in <b>parallel</b>, not one hull faster. Slower is realistic: this is <b>months per hull, not days</b>.</div>
+        </div>
+      </div>
+      <div class="vcard vwide" style="margin-top:11px;border-left:3px solid var(--theory)"><div class="vh">👷 Population → workforce → build rate <b class="gnew" style="margin-left:6px">PROPOSED · your model</b></div>
+        <div class="vnote" style="margin-bottom:8px">In the <b>shipped</b> engine population is only a <b>binary crew gate</b> (need the 884 crew free — trivially met at any population here), so 50% and 90% build at the <em>same</em> rate. <b>The proposed model ties the workforce INTO the build rate:</b> population splits into a workforce (½ of pop); ship crews &amp; leaders come off the top; <b>the rest STAFFS the production facilities</b>, and a facility's rate = its base × how well it is manned. Staffing = available workforce ÷ the <b>${fmtBig(jobs)}</b> crew the city's facilities need to run. <b>Now population &amp; fleet-commitment change the build time.</b></div>
+        <div class="vscroll"><table class="vtab"><thead><tr><th>Scenario</th><th>Workforce</th><th>Off to fleet / leaders</th><th>Staffing</th><th>Venator · maxed yard</th></tr></thead><tbody>
+          ${pRow("90% pop · peacetime", 0.9, 0)}
+          ${pRow("50% pop · peacetime", 0.5, 0)}
+          ${pRow("100% pop · big fleet at sea", 1.0, 3)}
+          ${pRow("50% pop · fleet at sea", 0.5, 2)}
+        </tbody></table></div>
+        <div class="vnote">At <b>90%</b> the workforce (${fmtBig(C.workforce*0.9)}) just covers the ${fmtBig(jobs)} jobs → full staffing → fastest build. At <b>50%</b> (${fmtBig(C.workforce*0.5)}) it can't → the shipyard runs part-staffed and the hull takes longer. Sail a big fleet (its crew off the pool) and industry slows too — <b>the workforce is one finite pool that crews, leads, AND builds</b>. <em>(The shipped engine keeps a static rate + a binary gate; wiring staffing into the rate is the change you're describing — a proposed engine model: rate = base × workforce-staffing × infra-efficiency.)</em></div>
+      </div>
+      <div class="vcard" style="margin-top:11px"><div class="vh">🪨 Resources</div>
+        <div class="vnote" style="margin-top:6px">This world is <b>Earth, the homeworld</b> → all <b>15 minerals</b> guaranteed (<span class="mono">randomHW</span>) + a million of each in stock. Just add a <b>refinery</b> for the ${V.materialsT.toLocaleString()} t of materials. A <b>captured</b> world lacks the rare metals; a <b>missing material hard-stalls</b> the build.</div>
+      </div>
+      <div class="vbottom"><b>Bottom line:</b> build a <b>shipyard</b> first (factories can't). Then — <b>shipped engine:</b> ~<b>${dur(daysFor(V.engineBP,maxRate))}</b> (maxed yard) regardless of population, because population is only a binary crew gate. <b>Your proposed model:</b> the workforce staffs production, so <b>50% pop → ~${dur(daysFor(V.engineBP,proposed(0.5,0).rate))}</b> vs <b>90% pop → ~${dur(daysFor(V.engineBP,proposed(0.9,0).rate))}</b> — population (and every crew you sail away) now genuinely matters.</div>`;
+  }
+
+  function renderAll(){ renderPlanetBar(); renderCond(); renderMap(); renderReadout(); renderScalePanel(); renderCiv(); renderVenator(); }
+
+  document.getElementById("hazToggle").addEventListener("click",e=>{ state.showHaz=!state.showHaz; e.target.setAttribute("aria-pressed",state.showHaz); e.target.textContent = state.showHaz?"☣ Ground hazards":"☣ Hazards off"; renderMap(); });
+  document.getElementById("wxToggle").addEventListener("click",e=>{ state.showWeather=!state.showWeather; e.target.setAttribute("aria-pressed",state.showWeather); e.target.textContent = state.showWeather?"🌦 Weather":"🌦 Weather off"; renderMap(); renderReadout(); });
+  document.getElementById("nightToggle").addEventListener("click",e=>{ state.showNight=!state.showNight; e.target.setAttribute("aria-pressed",state.showNight); e.target.textContent = state.showNight?"🌙 Day/night":"🌙 Day/night off"; renderMap(); renderReadout(); });
+  document.getElementById("resToggle").addEventListener("click",e=>{ state.showRes=!state.showRes; e.target.setAttribute("aria-pressed",state.showRes); e.target.textContent = state.showRes?"⛏ Resources":"⛏ Resources off"; renderMap(); });
+  document.getElementById("unitToggle").addEventListener("click",e=>{ state.showUnits=!state.showUnits; e.target.setAttribute("aria-pressed",state.showUnits); e.target.textContent = state.showUnits?"🪖 Units & trade":"🪖 Units off"; if(!state.showUnits){ unitState.sel=null; unitState.moveTo=null; } renderMap(); renderReadout(); });
+  const tagEditing=()=>{ const a=document.activeElement; return a && a.id==="tagInput"; };   // don't churn the readout while naming a hex
+  document.getElementById("wxRoll").addEventListener("click",()=>{ stepWeather(); renderMap(); renderCiv(); if(!tagEditing()) renderReadout(); });
+  document.getElementById("wxAuto").addEventListener("click",e=>{
+    if(state.autoTimer){ clearInterval(state.autoTimer); state.autoTimer=null; e.target.setAttribute("aria-pressed","false"); e.target.textContent="▶ Auto-roll"; }
+    else if(typeof setInterval!=="undefined"){ state.autoTimer=setInterval(()=>{ stepWeather(); renderMap(); renderCiv(); if(!tagEditing()) renderReadout(); }, 950); e.target.setAttribute("aria-pressed","true"); e.target.textContent="⏸ Stop"; }
+  });
+  // mini-hex size dial → rescales the whole grid (op-hex count changes to hold the mini size)
+  document.getElementById("scalepanel").addEventListener("click",e=>{
+    const t=e.target, mk=t&&t.getAttribute&&t.getAttribute("data-mini");
+    if(mk!=null){ state.miniKm=+mk; state.sel=null; buildField(); renderAll(); }
+  });
+  // the readout — FLOAT TAG editing + the colony's misplace demo (delegated; the readout re-renders each time)
+  const setTag=(v)=>{ if(state.sel==null) return; const h=state.hexes[state.sel]; const k=tagKey(h);
+    if(v) tags[k]=v; else delete tags[k]; renderMap(); renderReadout(); };
+  document.getElementById("readout").addEventListener("click",e=>{
+    const id=e.target && e.target.id;
+    if(id==="tagSet"){ const inp=document.getElementById("tagInput"); setTag(inp?inp.value.trim():""); return; }
+    if(id==="tagDel"){ setTag(""); return; }
+    if(id==="unitClear"){ unitState.sel=null; unitState.moveTo=null; renderReadout(); return; }
+    if(id==="moveClear"){ unitState.moveTo=null; renderReadout(); return; }
+    // pick ONE unit (roster row, button, or its map token) — toggles selection, clears any pending move
+    const ue = e.target.closest ? e.target.closest("[data-unit]") : null;
+    const uid = ue ? ue.getAttribute("data-unit") : (e.target.getAttribute && e.target.getAttribute("data-unit"));
+    if(uid){ unitState.sel = (unitState.sel===uid ? null : uid); unitState.moveTo=null; renderReadout(); return; }
+    // click a mini-hex while a unit is picked → give it a MOVE order (draw the path)
+    const mt = e.target.getAttribute && e.target.getAttribute("data-mtarget");
+    if(mt && unitState.sel){ unitState.moveTo = mt; renderReadout(); return; }
+  });
+  document.getElementById("readout").addEventListener("keydown",e=>{
+    if(e.target && e.target.id==="tagInput" && e.key==="Enter"){ e.preventDefault(); setTag(e.target.value.trim()); }
+  });
+  // the civilization dashboard's own controls (the affinity demo + jump-to-region)
+  const civEl=document.getElementById("civdash");
+  if(civEl) civEl.addEventListener("click",e=>{
+    const t=e.target.closest("[data-jump],#misplaceBtn"); if(!t) return;
+    if(t.id==="misplaceBtn"){ civState.misplace=!civState.misplace; renderCiv(); renderReadout(); return; }
+    const ji=t.getAttribute("data-jump");
+    if(ji!=null){ const h=state.regionHex[+ji]; if(h){ state.sel=state.hexes.indexOf(h); renderMap(); renderReadout();
+      const ro=document.getElementById("readout"); if(ro&&ro.scrollIntoView) ro.scrollIntoView({behavior:"smooth",block:"nearest"}); } }
+  });
+
+  buildField();   // builds the field AND places the civilization's provinces (Earth only)
+  renderAll();
+})();
+</script>

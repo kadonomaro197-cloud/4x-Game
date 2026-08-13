@@ -75,6 +75,17 @@ a way to decide which side a given number belongs on. **This is that test.**
 but costs mass → fine, that's the price. **Writes none and costs nothing → it is a bug in the design.** That is
 `CONVENTIONS §16` and "never ship a dead knob," made checkable in one step.
 
+> **🔨 PLANNED — the per-component RUN-COST vector (marked 2026-08-06).** Every component carries a *build* cost the
+> assembler already sums. It should also carry a *run* cost — **power draw · jobs · food · upkeep** — the ongoing
+> twin. These are real dials that must pass the test above: today most **write nothing** (the exact "writes none and
+> costs nothing" bug) — generic component power draw is unread (C12), employment has no producer, per-capita food is
+> 0, off-ground upkeep isn't billed. So they are **marked to be built**, each to the one shape that already works —
+> the infrastructure grid: *dial → colony Σ → a reader that bites*. The assembler shows the bill today (a run-cost
+> surface, each line badged live/pending); the engine work is `docs/assembler/ENGINE-WIRING-BACKLOG-2026-08-06.md`
+> **TIER 2.5**; the derivation is `docs/economy/CAPITOL-WORLD-INFRASTRUCTURE-2026-08-06.md §8`. (Several individual
+> holes are already flagged in the output map below — colony-power §row 7, free `Lifetime`, `Scan Time` — this names
+> them as ONE planned vector.)
+
 **The corollary that kills doors:** if two "types" differ in no variable, they are **one type at two slider
 positions** — not two entries on a menu.
 
@@ -388,8 +399,8 @@ Family and setting checked against what `ShipCombatValueDB` and the base-mod gro
 | **Exotic's non-damage effects** | Mind control, jump inhibition, conversion **write none of the ten**. They are not weapons. Calling them a weapon door hid that they need an effects system that does not exist. |
 | **Four of the six delivery values** | Beam · Bolt · Slug · Cloud · Guided · Blast — the engine asks them one question: *can point-defence shoot this down?* Bolt, Slug and Cloud all answer no, identically. Three names for one row. |
 
-**Superseded documents:** `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` §2 (the five Weapons doors) and
-`docs/economy/COMPONENT-DESIGNER-DIALS.md` §1 (all of Weapons, 41 dial groups). Their *content* is preserved — every
+**Superseded documents:** `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` §2 (the five Weapons doors) and
+`docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` §1 (all of Weapons, 41 dial groups). Their *content* is preserved — every
 option is captured in the live reference above — but the **five-door structure is superseded by this derivation.**
 
 ---
@@ -816,7 +827,7 @@ combat multiplier (`LocomotionTerrainMult`).
 
 **Yes — and the design already says group them. The code never did.**
 
-`docs/economy/COMPONENT-DESIGNER-CATEGORIES.md:36` already lists **ground-locomotion under Propulsion**, and `:60`
+`docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md:36` already lists **ground-locomotion under Propulsion**, and `:60`
 already rules the parallel ground `*Atb`s are *"absorbed into the universal doors … resolved by deletion not merger."*
 **But the engine carries two unrelated implementations of one verb:**
 

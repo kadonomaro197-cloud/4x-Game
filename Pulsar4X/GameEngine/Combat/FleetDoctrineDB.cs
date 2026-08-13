@@ -38,6 +38,18 @@ namespace Pulsar4X.Combat
         /// here in Phase 5.</summary>
         [JsonProperty] public EngagementPosture Posture { get; internal set; } = EngagementPosture.WeaponsFree;
 
+        /// <summary>WHO this fleet shoots first — the target-selection half of its doctrine (Phase 5 ROE, wired
+        /// 2026-08-04). Default <see cref="TargetPriority.Balanced"/> = the legacy spread-fire-by-health behaviour, so
+        /// a fleet with no authored priority fights EXACTLY as before. Copied from the catalog by
+        /// <see cref="FleetDoctrine.TrySetDoctrine"/> and read by the resolver's casualty step
+        /// (<c>CombatEngagement.ApplyCasualties</c>). In the current whole-or-dead aggregate model only
+        /// <see cref="TargetPriority.Heaviest"/> (sort by toughness) and <see cref="TargetPriority.BiggestThreat"/>
+        /// (sort by firepower) change behaviour; <see cref="TargetPriority.FinishWounded"/> (needs per-ship health,
+        /// i.e. the parked degrade-on-damage model) and <see cref="TargetPriority.Closest"/> /
+        /// <see cref="TargetPriority.Backfield"/> (need per-target position) fall back to Balanced until those models
+        /// land — flagged, not faked.</summary>
+        [JsonProperty] public TargetPriority Targeting { get; internal set; } = TargetPriority.Balanced;
+
         /// <summary>Game time at/after which this fleet may switch posture again (the switch cooldown clock).</summary>
         [JsonProperty] public DateTime SwitchableAfter { get; internal set; } = DateTime.MinValue;
 
@@ -52,6 +64,7 @@ namespace Pulsar4X.Combat
             SpeedMult = db.SpeedMult;
             IsRetreat = db.IsRetreat;
             Posture = db.Posture;
+            Targeting = db.Targeting;
             SwitchableAfter = db.SwitchableAfter;
         }
 

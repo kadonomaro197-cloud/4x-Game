@@ -1,0 +1,744 @@
+<meta charset="utf-8">
+<title>Command, re-derived - one seat built twice, and the 26-leader grid it should be</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark].chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary.n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch - ";color:var(--ink3)}
+@media(min-width:700px){
+.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+.ten{grid-template-columns:1fr 1fr}
+.tenq{border-left:1px solid var(--rule2)}
+.tenq:nth-child(odd){border-left:0}
+.nums{grid-template-columns:repeat(5,1fr)}
+.opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+.oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)}.t b.a{color:var(--warn)}.t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)}.num.sh.a b{color:var(--warn)}.num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)}.mt.a b{color:var(--warn)}.mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)}.num.a b{color:var(--warn)}.num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+
+/* -- added for the remaining six doors (same idiom) ---------------------- */
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.amph{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink2);margin-top:4px}
+.amph b{color:var(--ink)}
+.bars{display:grid;gap:7px;margin:11px 0 0}
+.bar{display:grid;grid-template-columns:118px 1fr auto;gap:9px;align-items:center;font-size:12px}
+.bar i{font-style:normal;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink2)}
+.bar u{text-decoration:none;height:16px;border-radius:2px;background:var(--rule2);position:relative;overflow:hidden}
+.bar u s{position:absolute;left:0;top:0;bottom:0;text-decoration:none;background:var(--ac);display:block}
+.bar u s.a{background:var(--warn)}.bar u s.r{background:var(--flag)}
+.bar b{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+
+/* -- section nav ------------------------------------------------------------- */
+.jump{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:1px solid var(--rule);
+ box-shadow:var(--sh);padding:8px 0;font-size:12.5px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.jump.w{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.jump b{color:var(--ink3);font-weight:600;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;font-size:10.5px}
+.jump a{color:var(--ink2);text-decoration:none;padding:4px 9px;border:1px solid var(--rule);border-radius:999px;white-space:nowrap}
+.jump a:hover{color:var(--ink);border-color:var(--ac);background:var(--card2)}
+.jump a.new{color:var(--ac2);border-color:var(--ac)}
+/* -- control help ------------------------------------------------------------ */
+.chelp{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.5}
+.chelp b{color:var(--ink2);font-weight:600}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.65;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}
+.legend dd{margin:0}
+/* -- which-builder banner: the two panels must never be mistaken for each other -- */
+.whichb{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 12px;padding:10px 13px;
+ border-radius:9px;border:1px solid var(--rule);background:var(--card2)}
+.whichb u{font-style:normal;font-size:9.5px;letter-spacing:.08em;font-weight:800;text-transform:uppercase;
+ padding:3px 8px;border-radius:5px;white-space:nowrap}
+.whichb.now u{background:var(--flag);color:#fff}
+.whichb.prop u{background:var(--ac);color:#fff}
+.whichb b{font-size:13px;color:var(--ink)}
+.whichb span{font-size:12.5px;color:var(--ink2);line-height:1.55}
+/* -- output markers ---------------------------------------------------------- */
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.dead{border-color:var(--flag);color:var(--flag)}
+.mk.chk{border-color:var(--warn);color:var(--warn)}
+.num i,.mt i{display:block}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X - component designer - door 5 of the remaining eight - <b>updated 2026-07-31 - the leader grid</b></p>
+<h1>Two attributes, and they are the same component built twice - thirteen months apart.</h1>
+<p class="lead">A bridge, an administrative complex, a command berth. Read what each one actually gives the simulation and it is always <b>a seat</b>: something that says <em>what this post commands</em>, <em>how well</em>, and <em>whether the person in it survives the job</em>. The old attribute (<code>AdminSpaceAtb</code>) has the first of those three. The new one (<code>CommandBerthAtb</code>) has all three plus a hazard roll that can kill the occupant.</p>
+<p class="lead" style="margin-top:10px"><b>And the engine says so itself.</b> <code>CommandBerthDB.cs:16</code> describes the berth's <code>Span</code> dial as <em>"the force size the berth can command - <b>the old ConsoleSpace idea with teeth</b>."</em> That is a comment in the source admitting the newer component is a rebuild of the older one. <b>So the door does not need designing. It needs the two halves merged, with the newer shape winning.</b></p>
+<p class="lead" style="margin-top:10px"><b>Four dials cost nothing, and one of them switches off this door's own grave rung.</b> A berth's <code>Survivability</code> buys the seated leader's death-risk down to zero, and it appears in no cost formula at all - so <b>the one component in the designer that can kill a named character comes with free immunity.</b></p>
+</div></div>
+<nav class="jump" aria-label="Section navigation"><div class="w">
+<b>Jump to</b><a href="#c-door">The door</a><a href="#c-bugs">The defects</a>
+<a href="#c-prop" class="new"> The proposal</a><a href="#c-pbuild" class="new"> Build one</a><a href="#c-proof">The 26 roles</a>
+</div></nav>
+
+<section class="band"><div class="w">
+<h2 id="c-door">The whole door, as three questions</h2>
+<p class="sub">What a command component gives the simulation. The right-hand column is what actually reads it.</p>
+<div class="ten">
+<div class="tenq"><h4>What does the seat command?</h4><div class="vars"><span class="tag">Admin Level</span><span class="tag">Site Role</span><span class="tag">Span</span></div><p><code>AdminLevel</code> is an 11-value ladder from <b>Ship</b> to <b>Empire</b>. <code>SiteRole</code> says which kind of field site a berth can work. <b>Only the Role actually gates anything</b> - see below.</p></div>
+<div class="tenq"><h4>How well does it work?</h4><div class="vars"><span class="tag">Grade</span><span class="tag">Support</span><span class="tag">Office Space</span></div><p><code>SiteWorkProcessor</code>: <code>Grade x (1 + leaderSkill + Support/100)</code>. <code>Office Space</code> sizes a colony's buildable hex map: <code>radius = (office / 100)</code>.</p></div>
+<div class="tenq"><h4>Does the occupant survive it?</h4><div class="vars"><span class="tag">Survivability</span></div><p><code>SiteHazard</code> rolls an incident on the seated leader per work step; <b>Survivability buys it down, and 100 zeroes it.</b> This is the only component in the designer that can destroy a named person.</p></div>
+<div class="tenq"><h4>And what the seat holds</h4><div class="vars"><span class="tag">One seat per component</span></div><p><code>AdminSpaceProcessor.ReconcileSeats</code> makes <b>exactly one seat per installed admin component</b>, matched by component <em>name</em>. Not by size, not by level. That single fact is where this door's biggest leak comes from.</p></div>
+</div>
+<div class="okbox"> <b>So the collapse is: one seat - <code>what it commands - how well - support - survivability</code></b> (the proposal below cuts <code>span</code>, a fifth dial that turned out to be the second half of <code>how well</code>).<b></b> The berth already has that exact shape. The bridge and the admin complex are the same component with three of the five missing, and one of the two they do have is unread. <b>Merging them removes an attribute, a template pattern and a whole class of confusion, and adds nothing.</b></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>First, the part that is right - and it is the law for the third time</h2>
+<p class="big">An administrative complex sizes a colony's buildable hex map. Two formulas, one in the template and one in the engine:</p>
+<div class="okbox" style="margin:0 0 11px;border-left-color:var(--ac)"><code>Mass = Office Space x 100</code>   -   <code>hexMapDB.UpdateMaxRadius: radius = ceil((officeSpace / 100))</code><br><b style="color:var(--ac)">=> radius mass, so hex AREA mass.</b> <span style="color:var(--ink3)">You pay linearly in tonnes for linearly more buildable ground.</span></div>
+<div class="scroll"><table class="t">
+<tr><th>Office Space</th><th>Mass</th><th>Hex radius</th><th>Hexes you can build on</th><th>Hexes per tonne</th></tr>
+<tr><td>100 <s>the shipped complex</s></td><td>10 t</td><td>1</td><td>7</td><td>0.70</td></tr>
+<tr><td>1,000</td><td>100 t</td><td>4</td><td>61</td><td>0.61</td></tr>
+<tr><td>10,000 <s>the ceiling</s></td><td>1,000 t</td><td>10</td><td>331</td><td>0.33</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>Hexes per tonne FALLS as you scale - so there is no dominant setting.</b> That is the 34.7a ladder test passed on a scale dial: you decide how much colony you want, and a bigger one is not free. It is the same square-root relation as the ship hull's mass budget and the same family as <code>T - v = 2P</code>. <b>Nobody wrote it down as a law; it is what these two formulas happen to be when you put them side by side.</b></p>
+<div class="warnbox"> <b>One real hazard sitting under it, and it is a known landmine.</b> The door's only output is <code>ColonyHexMapDB</code>, and that blob has <b>zero <code>Clone</code> references</b> - it is the live example named in the root <code>CLAUDE.md</code> landmine index (L12). <code>BaseDataBlob.Clone</code> is <b>virtual with a garbage default</b> (<code>return new object</code>, with a <code>// FIXME: this seems bad</code> in its own source), so a blob that forgets to override it silently becomes a bare <code>System.Object</code> whenever its entity is cloned. <b>So the one thing this door produces does not survive being moved between managers.</b> It has not bitten yet because colonies do not change system - but the Site Engine's located-site work is heading straight at it.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2 id="c-bugs"><code>Console Space</code> costs mass x100 and, on a ship, is read by nothing</h2>
+<p class="big">The same <code>AdminSpaceAtb</code> serves two templates. Its <code>ConsoleSpace</code> field has exactly one reader in the engine:</p>
+<div class="warnbox" style="margin-top:0"><code>ColonyHexMapProcessor.ProcessEntity: if (!entity.HasDataBlob&lt;ColonyInfoDB&gt; ||!entity.HasDataBlob&lt;AdminSpaceDB&gt;) return;</code><br><span style="color:var(--ink3)">The only consumer of <code>ConsoleSpace</code> is gated on <b><code>ColonyInfoDB</code></b> - which a ship does not have.</span></div>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Template</th><th>Its dial</th><th>Range</th><th>What it costs</th><th>What reads it</th></tr>
+<tr><td><b>admin-complex</b></td><td><code>Office Space</code></td><td>10 -> 10,000</td><td>Mass x100 - crew x0.25 - research x0.5</td><td><b class="g">the colony hex map</b></td></tr>
+<tr><td><b>ship-command</b> <s>the bridge</s></td><td><code>Console Space</code></td><td>1 -> 20</td><td>Mass x100 - crew x0.25 - research x0.5</td><td><b class="r">nothing at all</b></td></tr>
+</table></div>
+<div class="warnbox"><b>And the seat count does not depend on it either.</b> <code>AdminSpaceProcessor.ReconcileSeats</code> creates <b>exactly one seat per installed component</b>, keyed by the component's <em>name</em>: <code>current.Add((atb.AdminLevel, adminSpace.Name))</code>. Console space is never consulted. So a <b>1-console bridge and a 20-console bridge both provide one seat</b> - and the 1-console version weighs <b>100 kg instead of 2,000 kg</b>, needs a quarter the crew, and costs a twentieth the research. <b>The minimum is strictly dominant, and the dial's whole visible promise - a bigger bridge commands more - is not implemented.</b></div>
+<p class="sub" style="margin-top:11px"><b>Same shape as the fire-control pair from the Sensors door, mirrored.</b> There, two dials cost mass and wrote nothing, so the <em>minimum</em> was a free 16x saving. Here one dial costs mass and writes nothing on one of its two templates, so the minimum is a free 20x saving. <b>The rule that catches both: name the simulation variable the dial writes. If you cannot, and it costs something, the cheapest setting wins and the dial is a tax on players who do not know.</b></p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>A berth can buy total immunity for its leader, for free</h2>
+<p class="big">The Command Berth is the best-built new component in the designer - and two of its five dials appear in no cost formula. One of them is the one that matters most.</p>
+<div class="scroll"><table class="t">
+<tr><th>Berth dial</th><th>Range</th><th>What reads it</th><th>What it does</th><th>Does it cost?</th></tr>
+<tr><td><code>Role</code></td><td>5 site roles</td><td><code>CommandBerthDB.GetWorkingBerth</code></td><td>gates which kind of site the berth can work</td><td><b class="g">n/a - a choice, not a scale</b></td></tr>
+<tr><td><code>Grade</code></td><td>1 -> 10</td><td><code>SiteWorkProcessor:279</code></td><td>a straight <b>x10</b> multiplier on site work rate</td><td><b class="g">Mass x200 - crew x2 - research x10</b></td></tr>
+<tr><td><code>Support</code></td><td>0 -> 50</td><td><code>SiteWorkProcessor:280</code></td><td><b>+50%</b> work rate at the top: <code>Grade x (1 + skill + Support/100)</code></td><td><b class="r">NO</b></td></tr>
+<tr><td><code>Survivability</code></td><td>0 -> 100</td><td><code>SiteHazard</code></td><td>buys down the leader's incident roll - <b>100 zeroes it</b></td><td><b class="r">NO</b></td></tr>
+<tr><td><code>Span</code></td><td>1 -> 10</td><td><b class="r">nothing</b></td><td>documented as <em>"the force size the berth can command (SE-3+)"</em></td><td><b class="r">NO</b></td></tr>
+</table></div>
+<div class="warnbox"><b><code>Survivability</code> is the serious one, because it deletes the door's own grave rung.</b> <code>SiteHazard</code> is a genuinely good mechanic: a dangerous posting rolls, on the seeded system RNG, against the leader seated in the berth - and on a hit <b>the commander is destroyed</b>, the seat is vacated and the standard crew-loss event fires. It is one of very few places in the game where a named character can die from a decision you made. And <code>Survivability</code>, which <em>"meets or exceeds 100 zeroes the risk"</em>, is <b>absent from <code>Mass</code>, <code>Volume</code>, <code>CrewReq</code>, <code>ResearchCost</code>, <code>CreditCost</code>, <code>BuildPointCost</code> and <code>ResourceCost</code>.</b> Every berth anyone ever designs will be set to 100.</div>
+<div class="okbox"> <b>And look at what <code>Grade</code> does right, because it is the answer for the other three.</b> Grade multiplies work rate x10 across its span, and costs mass x10, crew x10 and research x10 across the same span - so <b>benefit / cost is flat</b>. There is no dominant setting and no free win: Grade is purely <em>how much berth do you want</em>. <b>Put <code>Support</code> and <code>Survivability</code> into the same formula Grade is already in and the whole component is honest</b> - armour and life support for a command post are exactly the kind of thing that should weigh something.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2><code>Admin Level</code> names the seat, and nothing else</h2>
+<p class="big">An 11-value ladder - <b>Ship - TaskUnit - TaskGroup - TaskForce - Fleet - Colony - Planet - SOI - System - Sector - Empire</b> - carried on every admin component, stored on every seat, and consulted by no rule anywhere.</p>
+<div class="scroll"><table class="t">
+<tr><th>Where it appears</th><th>What it does there</th></tr>
+<tr><td><code>AdminSpaceAtb.AdminLevel</code></td><td>set from the template's <code>Admin Level</code> dial</td></tr>
+<tr><td><code>AdminSpaceProcessor.ReconcileSeats</code></td><td>copied into the new seat's <code>SeatType</code></td></tr>
+<tr><td><code>AssignAdministratorOrder</code> - <code>UnassignAdministratorOrder</code></td><td>iterate the seats - <b class="r">and never look at the level</b></td></tr>
+<tr><td><code>AdminWindow.cs:172</code></td><td><b class="a">printed as the seat's label</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px"><b>So any commander can be seated in any post.</b> A Ship-level bridge seat will take the officer you meant to run the Empire from, and an Empire-level complex will take an ensign. The dial is <b>free</b> (it is not in any cost formula - only <code>Console Space</code> is), which at least means it is not a tax; but it is a <b>promise the UI displays and the rules do not keep.</b> The template even shapes the ladder sensibly - a bridge is capped at Colony (<code>min 0 max 5</code>), a complex starts there and its ceiling rises with <code>tech-administration-level</code>. <b>Everything about it is right except that nothing reads it.</b></p>
+<div class="okbox"> <b>And this is exactly the hole the berth's <code>Role</code> already fills properly.</b> A berth's Role <em>gates</em> which sites it can work - <code>GetWorkingBerth</code> refuses a mismatched role - so the same idea, one door over, is enforced. <b>Level should gate the same way Role does:</b> a seat accepts a commander whose rank reaches it, and a fleet needs a seat at Fleet level or above to have a commander at all. That is the connection the Governance design (<code>docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md</code>) is waiting on, and it is a comparison, not a system.</div>
+</div></section>
+
+
+
+
+
+
+
+
+
+<section class="band"><div class="w">
+<h2 id="c-prop">THE PROPOSAL - 26 leaders, as two questions</h2>
+<p class="lead">Everything above is what the door <b>is</b>. This is what it should <b>be</b>, and it is not invented - it is the
+governance design's own organising rule, which the code already half-implements without knowing it.</p>
+
+<p class="sub" style="margin-top:10px"><code>docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md</code> locks <b>the two-axis
+rule</b>: <em>"Every seat has exactly TWO lines: an ADMIN line - vertical, who you belong to - and a DOMAIN-DIRECTION
+line - horizontal, what your specialty does."</em> It then lays every leader role on a <b>scope x domain</b> grid and
+proves no two share a cell.</p>
+
+<div class="big"><b>That grid is a designer door.</b> Scope is one question, Domain is the other, and every leader role in
+the game is a <b>cell</b> - which means a <b>design you make</b>, not a class somebody hardcodes.</div>
+
+<h2>The two axes are already in the code - in two components that cannot see each other</h2>
+<div class="scroll"><table class="t">
+<tr><th>Component</th><th>Carries</th><th>Missing</th></tr>
+<tr><td><code>AdminSpaceAtb</code> <s>People/AdminSpaceAtb.cs:22</s></td><td><b>SCOPE</b> - <code>AdminLevel</code>, 11 values</td><td><b class="r">no domain</b> - so a Colony seat cannot tell a Governor from a General</td></tr>
+<tr><td><code>CommandBerthAtb</code> <s>Sites/CommandBerthAtb.cs</s></td><td><b>DOMAIN</b> - <code>SiteRole</code>, 5 values</td><td><b class="r">no scope</b> - <code>Span</code> was meant to be it, and has <b>zero readers</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px"><b>They are the two halves of one grid, built separately.</b> One knows how big a seat
+is and not what it does; the other knows what it does and not how big. And <code>Span</code> - whose own header calls it
+<em>"the force size the berth can command... the old ConsoleSpace idea with teeth"</em> - <b>is the missing scope axis, sitting
+there unread.</b></p>
+
+<div class="okbox" style="margin-top:12px"><b>And the resolution is already locked, in a different doc.</b>
+<code>docs/explore/SITE-ENGINE-DESIGN.md</code> 5: <em>"Every site is worked through <b>one component</b>: the Command Berth...
+the universal socket that plugs any leader into any site - <b>and into fleets/battalions/colonies too - it IS the delegate
+seat</b>."</em> Its build list (line 157) gives the instruction outright: <em>"fold the three parallel 'assign' slots
+toward the one seat."</em></div>
+
+<h2>It said three. There are five.</h2>
+<div class="scroll"><table class="t">
+<tr><th>#</th><th>Slot that stores "a person assigned to a thing"</th><th>Set by</th></tr>
+<tr><td>1</td><td><code>AdminSpaceAbilityState.CommanderID</code></td><td><code>AssignAdministratorOrder.cs:79</code></td></tr>
+<tr><td>2</td><td><code>CommandBerth.CommanderID</code></td><td><code>BerthOps.cs:41</code></td></tr>
+<tr><td>3</td><td><code>ShipInfoDB.CommanderID</code></td><td><b class="r">a bare field write, 4 sites, NO ORDER AT ALL</b></td></tr>
+<tr><td>4</td><td><code>FleetDB.FlagShipID</code></td><td>points at a <b>ship</b>, not a person</td></tr>
+<tr><td>5</td><td><code>ResearcherDB.ScientistId</code></td><td>the lab scientist</td></tr>
+</table></div>
+<div class="kill">
+<h4>And #2 is the one that was written to prevent exactly this</h4>
+<p><code>CommandBerthDB.cs</code>'s own header says occupancy <em>"is deliberately NOT here - that is the seat mechanism's
+job, <b>reusing the existing admin-seat plumbing rather than a parallel one</b>."</em> Then the class carries
+<code>CommanderID</code> and <code>BerthOps</code> sets it. <b>It became the parallel mechanism it was written to avoid.</b>
+A grep for <code>AdminSpaceDB</code> across <code>Sites/</code> returns nothing - there is no bridge.</p>
+<p style="margin-top:7px"><b>And #3 is worse than a duplicate.</b> A ship's captain is a bare <code>int</code> on
+<code>ShipInfoDB</code>, written by hand in <code>DefaultStartFactory</code> and friends. No component, no seat, <b>no
+order</b> - so under <em>One Verb, Both Seats</em>, <b>the AI cannot appoint a ship's captain at all.</b></p>
+</div>
+
+<h2 id="c-pbuild">Build one - the proposed seat</h2>
+<div class="whichb prop"><u>the proposal</u><b>This is what we intend the door to become.</b>
+<span>Not three templates - <b>one</b>, with the grid as its two doors. Pick a scope and a domain and it names the leader
+role you just built, the decision that role owns, and what it costs. It reproduces <b>all 26 roles</b>.
+<b>None of this exists in the engine yet</b> - it is drawn on the shipped berth's own arithmetic, so the numbers are honest.</span></div>
+<p class="sub">Two questions and four sliders. <b>Every role in the game becomes a design you make</b>, rather than a class somebody hardcodes.</p>
+
+<div class="build">
+<div class="bsec"><p class="blab">SCOPE - what altitude does this seat command?</p>
+<p class="chelp">The <b>admin line</b>: who you belong to. It sets the seat's reach, and it multiplies what the seat costs -
+an empire HQ is not a field post. <b>This collapses <code>AdminLevel</code>'s eleven rungs to four</b>, which the governance
+doc already ruled: <em>"Task Force / Task Group / Task Unit were cut because they didn't own a decision the System Admiral
+or Fleet Commander didn't already own. Rungs for rungs' sake."</em></p>
+<div class="chips">
+<button class="chip pscope" type="button" data-s="field" aria-pressed="true" title="One fleet, one battalion, one lab, one site. The working end.">Field - one of a thing</button>
+<button class="chip pscope" type="button" data-s="planet" aria-pressed="false" title="One world. Its economy, its governance, its surface campaign.">Planet</button>
+<button class="chip pscope" type="button" data-s="system" aria-pressed="false" title="One star system and every world in it.">System</button>
+<button class="chip pscope" type="button" data-s="empire" aria-pressed="false" title="The whole empire. The effort-allocator seats.">Empire</button>
+</div><p class="sub" id="p_scopenote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">DOMAIN - what specialty does it direct?</p>
+<p class="chelp">The <b>direction line</b>: what your specialty does. It decides which pillar the seat steers and which
+leader type may sit in it. <b>This widens <code>SiteRole</code>'s five to the roster's eight.</b></p>
+<div class="chips">
+<button class="chip pdom" type="button" data-d="spacemil" aria-pressed="true" title="Fleets and the space war.">Space military</button>
+<button class="chip pdom" type="button" data-d="planetarymil" aria-pressed="false" title="Battalions and the surface war - everything that happens on a world rather than in space.">Planetary military</button>
+<button class="chip pdom" type="button" data-d="economics" aria-pressed="false" title="Development, industry, build priorities - where the effort and the money go.">Economics</button>
+<button class="chip pdom" type="button" data-d="science" aria-pressed="false" title="Research direction and the local science loop.">Science</button>
+<button class="chip pdom" type="button" data-d="diplo" aria-pressed="false" title="External posture and negotiation.">Diplomacy</button>
+<button class="chip pdom" type="button" data-d="espionage" aria-pressed="false" title="Covert operations and counter-intelligence.">Espionage</button>
+<button class="chip pdom" type="button" data-d="commerce" aria-pressed="false" title="Routes, tariffs, import and export.">Commerce</button>
+<button class="chip pdom" type="button" data-d="governor" aria-pressed="false" title="Stability, blocs, and the regime itself - the seat that governs rather than administers.">Governor</button>
+</div><p class="sub" id="p_domnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<p class="blab">The sliders - how much seat</p>
+<div class="sl"><div class="slh"><span>Grade - the rank tier it supports</span><span id="p_s1"></span></div>
+<input type="range" id="p_grade" min="1" max="10" value="4" aria-label="Grade">
+<div class="ends"><span>1 - a junior post</span><span>10 - flag grade</span></div>
+<p class="chelp"><b>The dial the shipped berth already prices honestly:</b> x10 capability for x10 mass, crew and research, so benefit / cost stays flat and neither end dominates. <b>Kept exactly as-is</b> - it is the model for the other three.</p></div>
+
+<div class="sl"><div class="slh"><span>Support - staff, tools, war room</span><span id="p_s2"></span></div>
+<input type="range" id="p_sup" min="0" max="50" value="10" aria-label="Support">
+<div class="ends"><span>0 - the officer alone</span><span>50 - a full staff</span></div>
+<p class="chelp">Spend mass to make the seated officer better - a flat competence boost folded into the same <code>BonusesDB</code> path research already uses. <b>Now costs mass</b>; today it is in no cost formula at all.</p></div>
+
+<div class="sl"><div class="slh"><span>Survivability - how hard the officer is to kill</span><span id="p_s3"></span></div>
+<input type="range" id="p_surv" min="0" max="95" value="20" aria-label="Survivability">
+<div class="ends"><span>0 - exposed</span><span>95 - hardened</span></div>
+<p class="chelp"><b>Two changes.</b> It now <b>costs mass</b>, and it is <b>capped at 95</b> - because at 100 the shipped formula zeroes the leader-death roll entirely, and a free immortality switch deletes the door's own grave rung. <b>You can buy your officer very safe; you can never buy them safe.</b></p></div>
+</div>
+
+<div class="out">
+<p class="dname" id="p_name">-</p><p class="dnsub" id="p_cell"></p>
+<p class="oname" id="p_role">-</p><p class="odesc" id="p_decision"></p>
+<div class="nums">
+<div class="num set"><i>Scope</i><u class="mk set">you set it</u><b id="p_v_scope"></b></div>
+<div class="num set"><i>Domain</i><u class="mk set">you set it</u><b id="p_v_dom"></b></div>
+<div class="num set"><i>Commands</i><u class="mk calc">set by scope</u><b id="p_v_extent"></b></div>
+<div class="num fixed"><i>Mass</i><u class="mk calc">computed</u><b id="p_v_mass"></b></div>
+<div class="num fixed"><i>Crew</i><u class="mk calc">computed</u><b id="p_v_crew"></b></div>
+<div class="num fixed"><i>Cost</i><u class="mk calc">computed</u><b id="p_v_cost"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What this seat actually decides</p>
+<p class="muN">Against the roster in <code>GOVERNANCE-AND-DELEGATION-DESIGN.md</code> - every cell names the decision it owns and nothing else owns.</p>
+<div class="mus">
+<div class="mt"><i>Build state today</i><u class="mk" id="p_k_state">-</u><b id="p_m_state"></b><s id="p_s_state"></s></div>
+<div class="mt"><i>Leader at risk?</i><u class="mk sim" id="p_k_risk">reaches the sim</u><b id="p_m_risk"></b><s id="p_s_risk"></s></div>
+<div class="mt"><i>Replaces</i><u class="mk calc">design intent</u><b id="p_m_repl"></b><s id="p_s_repl"></s></div>
+<div class="mt"><i>Capability per tonne</i><u class="mk calc">comparison only</u><b id="p_m_per"></b><s>the ladder check - flat is honest</s></div>
+</div>
+</div>
+<p class="sub" id="p_verdict" style="margin-top:10px"></p>
+</div>
+</div>
+
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk set">you set it</u></dt><dd>You chose it with a control above.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it.</dd>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>Under this proposal, a real running-game number.</dd>
+<dt><u class="mk dead">an empty cell</u></dt><dd>A scope x domain pair the roster leaves blank <b>on purpose</b> - and the panel says why.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>Try this.</b> Walk the four scopes with <b>Space military</b> selected: Fleet Commander -> <i>(blank - ships don't hold worlds)</i> -> System Admiral -> Grand Admiral. <b>That is the whole naval chain of command, built out of one component.</b></p>
+</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2 id="c-proof">Does it reproduce the roster?</h2>
+<p class="sub">Every leader role, each as one cell. <b>32 cells, 27 filled, 5 justified blanks</b> - and every single cell
+now carries either <b>a post title with the decision it owns</b>, or <b>a written justification for why no seat lives
+there</b>. <b>26 roster roles plus the Head of State = 27 seats.</b></p>
+
+<div class="okbox" style="margin-bottom:12px"><b>EVERY CELL IS ANSWERED - that was the missing discipline.</b> A blank
+that says <em>"commerce is empire-outward"</em> is a hand-wave, not a justification, and it looked especially thin next to a
+Commerce column that <b>does</b> have a field seat. Working each blank properly turned <b>three of them into real posts</b>:
+<b>Port Authority</b> (System x Commerce), <b>Security Chief</b> (Planet x Espionage) and <b>System Prefect</b>
+(System x Governor). The remaining five each name the seat or the mechanic that <b>already</b> owns that decision.
+<b>The Prefect is the one my own justification got wrong</b> - I argued unrest is per-province so no system seat could own
+it, and missed that <b>a STATION is a province too</b>: <code>StationFactory</code> gives it its own legitimacy, morale and
+rebellion state, and the Interior Minister only covers planets. <b>Station stability had no owner in the entire grid.</b></div>
+
+<div class="okbox" style="margin-bottom:12px"><b>THE FIELD ROW IS NOW COMPLETE - every domain has a working end</b>
+(developer: <em>"all domains should have a field version"</em>). The governance doc's own grid left three Field cells blank
+while filling Diplomacy and Espionage at that scope - an <b>asymmetry, not a rule</b>. Each of the three is grounded in
+substrate that already exists:
+<b>Yard Master</b> (<code>IndustryAbilityDB.ProductionLines</code> is a job queue <b>per industrial component</b>, so one
+yard already has its own sequence to run) - <b>Convoy Master</b> (<code>SetLogisticsOrder</code> + <code>LogiBaseDB</code>
+/ <code>LogiShipDB</code> - and the governance doc explicitly promises <em>"the player CAN take direct control of a
+specific hauler/convoy/route and hand-fly it while the rest stays on auto"</em>) - <b>Magistrate</b>
+(<code>PlanetRegionsDB</code> + <code>CityGrid</code> give a world real regions; per-region unrest is the missing half).</div>
+
+<p class="sub" style="margin-bottom:12px"><b>And filling the Field row exposes the real shape of the eight remaining
+blanks - they are not arbitrary, they are three different vertical patterns:</b></p>
+<div class="scroll"><table class="t" style="margin-bottom:12px">
+<tr><th>Pattern</th><th>Domains</th><th>Fills</th><th>Why</th></tr>
+<tr><td><b>Territorial</b></td><td>Space military - Planetary military - Economics - Science</td><td><b class="g">every scope</b></td><td>they act on <b>places</b>, and a place exists at every altitude - empire, system, world, one-of</td></tr>
+<tr><td><b>Outward</b></td><td>Diplomacy - Espionage - Commerce</td><td>empire + field only</td><td>they act on a <b>relationship or a route</b>, which has no system or planet altitude - you do not have "diplomacy with Sirius", you have diplomacy with a <i>faction</i>, worked by an operative</td></tr>
+<tr><td><b>Governing</b></td><td>Governor</td><td><b class="g">every scope</b></td><td>unrest is local, but a system holds <b>several</b> provinces - and stations are provinces the Interior Minister cannot reach, because they are not worlds</td></tr>
+</table></div>
+<p class="sub" style="margin-bottom:12px">Every remaining blank passes the roster's own test - <em>"a distinct leader seat is
+justified only if it owns a decision the player would otherwise make by hand, and that neither the leader above nor below it
+already owns."</em> A System-scope Ambassador would own nothing the empire's Foreign Minister or the field Ambassador does
+not; a Planet-scope trade seat would own nothing the Convoy Master or the Planetary Governor's stockpile lever does not.</p>
+<div class="scroll"><table class="t" id="p_grid"></table></div>
+<p class="sub" style="margin-top:10px"><b>The no-dead-weight proof is structural, not editorial.</b> Because every seat sits
+at a unique (scope x domain) intersection, <b>no two can own the same decision</b> - the thing the governance doc demands of
+every role (<em>"A distinct leader seat is justified only if it owns a decision the player would otherwise make by hand, and
+that neither the leader above nor below it already owns."</em>) is enforced by the shape of the door itself.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>What this kills</h2>
+<div class="scroll"><table class="t">
+<tr><th>Goes away</th><th>Why</th></tr>
+<tr><td><code>AdminSpaceAtb</code> as its own component</td><td>folded in - it was the scope axis of this same grid</td></tr>
+<tr><td>Seven of eleven <code>AdminLevel</code> rungs</td><td>the governance doc already cut TaskUnit/TaskGroup/TaskForce as <em>"rungs for rungs' sake"</em>; the enum never got the memo</td></tr>
+<tr><td>Four of the five parallel seat slots</td><td>one seat record, one assign order, one place a leader can be lost from</td></tr>
+<tr><td>The free-immunity switch</td><td>Survivability costs mass and caps at 95</td></tr>
+<tr><td><code>Span</code> - <b>deleted, not revived</b></td><td>Scope already states the extent, and Span was Grade factored in two (and cheaper per point, so it dominated). <b>Span-of-control is the NUMBER of seats you built, which the engine already enforces</b> - one component, one seat.</td></tr>
+<tr><td>The bridge's unread <code>Console Space</code></td><td>replaced by <b>Scope</b>, which is read at every altitude</td></tr>
+</table></div>
+
+<h2>Cradle to grave - the whole chain, on one component</h2>
+<p class="sub">This is the test that matters, and the proposal passes it end to end:</p>
+<div class="big">a <b>command component</b> is researched -> <b>built</b> from materials -> <b>installed</b>, opening a <b>seat</b> at
+some scope x domain -> an academy-trained <b>officer</b> is <b>seated</b> in it -> the player sets its <b>stance and
+funding</b> -> the delegate <b>runs that scope</b> at a competence cost -> the player <b>drops in</b> whenever they like ->
+the officer is <b>lost</b> - killed at a dangerous posting, turned by a rival, or the <b>HQ is destroyed and the whole
+delegation collapses</b>.</div>
+<p class="sub" style="margin-top:10px"><b>That last rung is why this is worth doing.</b> Blow up an enemy's sector capital
+and their delegated command of that region <b>falls apart</b> - they revert to hand-flying or go rudderless. <b>Command
+infrastructure becomes a target</b>, and "who is holding this together?" becomes a question with teeth.</p>
+
+<h2>Build order</h2>
+<div class="scroll"><table class="t">
+<tr><th>#</th><th>Slice</th><th>What proves it</th></tr>
+<tr><td><b>L1</b></td><td><b>Fold the five slots into one seat.</b> No new dials - just make <code>BerthOps</code> and <code>AssignAdministratorOrder</code> write the same record.</td><td>seat an officer by either path and read them back by both; a killed officer clears every reference</td></tr>
+<tr><td><b>L2</b></td><td><b>Add the Scope door</b>, collapse <code>AdminLevel</code> 11 -> 4.</td><td>all 26 roster roles expressible; no two designs in one cell</td></tr>
+<tr><td><b>L3</b></td><td><b>Widen Domain</b> 5 -> 8, add the type-vs-role check.</td><td>a Navy officer cannot be seated in a Science berth</td></tr>
+<tr><td><b>L4</b></td><td><b>Price Support and Survivability; delete <code>Span</code>.</b></td><td>every remaining dial appears in a cost formula; no two dials buy the same capability</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px"><b>L1 is the load-bearing one.</b> The governance doc calls seat durability
+<em>"the load-bearing prerequisite under all of it"</em> - if a seat cannot hold its officer through a combat tick, nothing
+above it survives either.</p>
+
+<div class="warnbox" style="margin-top:13px"><b>Three rulings owed before any of this is written.</b>
+<b>Does a ship's captain become a seat?</b> Cleanest, but it makes a bridge component mandatory to have a captain - a real
+change to every existing ship design.
+<b>Ambassador and Envoy - RULED: merged.</b> <s>The roster called them "tight but distinct."</s> The developer's
+call: <em>"they're just different stages of the same thing."</em> Both sat at Field x Diplomacy, and once <code>Span</code>
+was cut there was nothing left to separate them. <b>And the stage is already a dial:</b> a low-<b>Grade</b> posting is an
+envoy sent for one negotiation; a high-Grade one is a standing ambassador at a rival's court. <b>Same seat, bought bigger</b>
+- which is exactly the reason Span had to go, applied one row further down. <b>That took the doc roster from 21 to 20</b> (before the three new Field seats below took it to 23).
+<b>Is <code>AdminLevel</code> safe to collapse?</b> It is a <code>[JsonProperty]</code> enum, so <b>saved values are
+ordinal</b> - dropping the middle three shifts every value above them and breaks existing saves (landmine L3). It needs
+explicit numbering or a converter. <b>Decide this one before anybody writes code.</b></div>
+</div></section>
+
+
+
+<script>
+// ------------------------------------------------------------------------------------------
+// THE PROPOSED SEAT - scope x domain. Independent of the as-built builder above (p_ ids),
+// so nothing here can disturb that panel. Data is the leader roster from
+// docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md, verbatim.
+// ------------------------------------------------------------------------------------------
+const P_SCOPE = {
+ field: {name:'Field', label:'one of a thing', mult:1, holds:'one of a thing', note:'The working end. What "one of a thing" IS depends on the specialty - a fleet, a battalion, a production line, a laboratory, a hauler, a settlement - which is why this is the only scope whose extent is read off the domain.'},
+ planet: {name:'Planet', label:'one world', mult:2, holds:'the whole world', note:'One world: its economy, its governance, its surface campaign. Three different seats share this scope, which is exactly why scope alone was never enough.'},
+ system: {name:'System', label:'one star system',mult:4, holds:'every world and fleet in it',note:'One system and everything in it. AdminLevel.System exists today and nothing is seated in it.'},
+ empire: {name:'Empire', label:'the whole thing',mult:8, holds:'every system you hold', note:'The effort-allocator seats - they decide where the empire\'s war, planetary push, development and research go.'}
+};
+const P_DOM = {
+ spacemil: {name:'Space military', who:'Navy', risk:'combat'},
+ planetarymil:{name:'Planetary military', who:'Ground', risk:'combat'}, // who: CommanderTypes.Ground - the ENGINE\'s enum name, left verbatim
+ economics:{name:'Economics', who:'Civilian', risk:'low'}, // who: CommanderTypes.Civilian - the ENGINE\'s enum name, left verbatim
+ science: {name:'Science', who:'Scientist', risk:'field'},
+ diplo: {name:'Diplomacy', who:'Civilian', risk:'field'},
+ espionage:{name:'Espionage', who:'Intelligence', risk:'high'},
+ commerce: {name:'Commerce', who:'Civilian', risk:'low'},
+ governor: {name:'Governor', who:'Civilian', risk:'low'}
+};
+// [role name, the decision it owns, build status, what engine slot it replaces]
+const P_ROLES = {
+ // [ post title, the decision it owns, build status, what engine slot it replaces,
+ // WHY IT EARNS ITS PLACE - what it owns that neither the seat above nor below owns ]
+ 'empire|spacemil': ['Grand Admiral','Which systems get the war effort','STUB','commander entity exists, unwired',
+ 'The System Admiral decides where fleets go INSIDE one system. Choosing which system deserves the war is a comparison ACROSS systems, and only this seat sees them all.'],
+ 'empire|planetarymil':['Field Marshal','Which worlds and theatres get the empire\'s planetary effort','NEW','nothing',
+ 'Split from the Grand Admiral (2026-07-10) precisely because "which fleet" and "which world" are different comparisons. A ground push commits transports, troops and months that a naval move does not.'],
+ 'empire|economics':['Chancellor','Which systems get the empire\'s development effort','NEW','nothing',
+ 'The civil twin of the Grand Admiral. The System Governor allocates WITHIN one system; choosing which system gets the investment is a comparison across systems.'],
+ 'empire|science': ['Chief Scientist','Research direction, and the empire\'s design-goal targets','EXISTS','AdministratorDB - the one built delegate',
+ 'Research is inherently empire-wide: a tech unlocks for everyone at once. It also owns design-goal targeting - "we are reaching for the Defiant" - which no local scientist can set.'],
+ 'empire|diplo': ['Foreign Minister','Overall external posture, and policy toward each rival','NEW','nothing',
+ 'A relationship is held empire-wide. An Ambassador executes it at one court; there is no territorial altitude in between, because you have relations with a FACTION, not with a place.'],
+ 'empire|espionage':['Spymaster','Which covert operations, against which rivals, and how hard to defend','NEW','nothing',
+ 'Choosing the target set is empire-wide; an Agent runs one job. The defensive half is now delegated down to the Security Chief, so this seat sets doctrine rather than standing every watch.'],
+ 'empire|commerce': ['Trade Minister','Routes, tariffs, import and export policy','NEW','nothing',
+ 'Tariff and route POLICY applies across the whole network. The Port Authority picks one system\'s depot; the Convoy Master runs one hauler. Three altitudes, three different questions.'],
+ 'empire|governor': ['Head of State','The regime itself - destination, budget, and who sits where','NEW','held directly; no minister',
+ 'The one seat no minister can hold, because it is what appoints the ministers. It also owns the budget split and the HR match of officer to post.'],
+
+ 'system|spacemil': ['System Admiral','Where fleets move and what they engage in-system','NEW','AdminLevel.System seat (empty today)',
+ 'The middle of the naval chain: the Grand Admiral says which system matters, the Fleet Commander fights one battle, and this seat decides the SHAPE of the campaign here.'],
+ 'system|planetarymil':['System General','Which worlds to reinforce, hold or invade','NEW','nothing',
+ 'A comparison ACROSS the worlds of one system - which neither the Field Marshal (which theatre) nor the Planetary General (this surface) ever makes.'],
+ 'system|economics':['System Governor','Where the system\'s economic effort flows across its worlds','NEW','AdminLevel.System seat (empty today)',
+ 'The Chancellor compares systems; the Planetary Governor runs one world. This seat is the only one that can starve one colony to finish another. Not to be confused with the <b>System Prefect</b> next door in Governor: this one moves PRODUCTION between provinces, that one manages their STANDING.'],
+ 'system|science': ['System Scientist','The system\'s science loop: discover -> build -> staff -> upgrade','WIRE','all four orders built; only the delegate is new',
+ 'Turns map discoveries into standing research infrastructure with no player input. Survey, station build, scientist assignment and upgrade are all built orders - nobody runs them as a loop.'],
+ 'system|governor': ['System Prefect','The standing of every PROVINCE in the system - planets AND stations','NEW','LegitimacyDB + RebellionDB, which stations already carry',
+ ' <b>Stations had no owner at all.</b> StationFactory gives a station its OWN LegitimacyDB - the source calls it "the fragile frontier node" - plus morale and a RebellionDB, so <b>a station can break away on its own</b>. But the Interior Minister is PLANET scope, and a station is not a planet. This seat holds every province in the system, compares them, and decides which one gets the attention before it goes.'],
+ 'system|commerce': ['Port Authority','Which world in this system is the depot, and what moves between them','NEW','LogiBaseDB per colony + the built freight market',
+ ' The hub choice. A system with jump points is exactly where a depot naturally forms, and neither the Trade Minister (empire tariffs) nor the Convoy Master (one hauler) picks which world it is.'],
+
+ 'planet|planetarymil':['Planetary General','The surface campaign - where battalions push or hold','NEW','over the built formation layer',
+ 'The System General says which world; this seat fights it. Below, the Battalion Commander runs one formation and the units act on their own.'],
+ 'planet|economics':['Planetary Governor','Build priorities, tax, stockpile, growth-versus-military','STUB','LegitimacyDB.GovernorCompetence (never fed)',
+ 'One world\'s economy, end to end. It also owns imports, because a colony\'s stockpile reserve IS its import policy - which is why there is no separate planet-scope commerce seat.'],
+ 'planet|science': ['Planetary Scientist','The world\'s science loop, cradle to grave','WIRE','as the System Scientist',
+ 'The same discover->build->staff->upgrade loop, run at one world - for the deposits, anomalies and sites that only exist on a surface.'],
+ 'planet|governor': ['Interior Minister','How to answer a world\'s bloc demands - stability versus tax versus military','NEW','GovernmentDB substrate, partial',
+ 'Legitimacy and unrest are per-province BY DESIGN, so this decision exists ONLY at the world. The regime above sets the rules; this seat answers the people living under them.'],
+ 'planet|espionage':['Security Chief','This world\'s counter-intelligence posture','NEW','IntelDirectorateDB.CounterIntelRating - a COLONY installation',
+ ' Defence against espionage is already LOCATED and had no owner: IntelDirectorateAtb installs on a colony, and its rating is documented as "defensive strength against enemy agents on its soil." Offence targets a faction; defence protects a place.'],
+
+ 'field|spacemil': ['Fleet Commander','One fleet\'s combat doctrine and posture','STUB','FleetDB.FlagShipID - a SHIP, not a person',
+ 'The System Admiral says where the fleet goes; this seat says how it fights when it gets there. Below it, ships pick targets by the weapon triangle with nobody micromanaging.'],
+ 'field|planetarymil':['Battalion Commander','One battalion\'s doctrine and posture','WIRE','GroundFormationDoctrine built; the person is new',
+ 'One formation\'s posture. Below it the units act on their own - no per-unit control, ever, which is the same rule the space side already follows.'],
+ 'field|economics': ['Yard Master','What this one production line builds, and in what order','WIRE','IndustryAbilityDB.ProductionLines - a job queue PER industrial component',
+ ' A single yard ALREADY has its own queue - ProductionLines is keyed per industrial component - and nobody ran it. Same relationship as System Admiral to Fleet Commander, one domain over.'],
+ 'field|science': ['Lab Scientist','Runs the research at one institution','EXISTS','ResearcherDB.ScientistId - fully wired',
+ 'The one delegate in the entire game that works end to end today, and therefore the pattern every other seat copies.'],
+ 'field|diplo': ['Ambassador','Which rival gets a standing presence, and the terms when you negotiate','NEW','Ambassador and Envoy MERGED here; Grade is the stage',
+ 'One rival\'s court. A low-Grade posting is an envoy sent for a single negotiation; a high-Grade one is a permanent embassy - same seat, bought bigger.'],
+ 'field|espionage': ['Agent / Operative','Which operation, against which target','NEW','nothing - the espionage engine is unbuilt',
+ 'The Spymaster picks the rival; this seat runs the job, and is the one that can be caught, killed or turned. That risk is the whole reason it is a person and not a number.'],
+ 'field|commerce': ['Convoy Master','What this one hauler carries and where it runs','WIRE','SetLogisticsOrder + LogiBaseDB / LogiShipDB',
+ ' The governance doc explicitly promises the player "CAN take direct control of a specific hauler, convoy or route and hand-fly it while the rest stays on auto." That promise had no seat until now.'],
+ 'field|governor': ['Magistrate','Order and stability in one settlement or region','NEW','PlanetRegionsDB + CityGrid exist; per-region unrest does not',
+ ' A world is not one place - it has real regions. Unrest that can only be measured world-wide cannot be fought district by district, which is what this seat exists to do.']
+};
+// the intentional blanks, each with the roster\'s own reason
+const P_BLANK = {
+ 'planet|spacemil':'<b>Ships do not hold worlds - and the engine goes further than that.</b> There is NO ground-to-orbit fire at all: <code>ApplyGroundBombardment</code> runs orbit->ground only, and <code>SpaceWeaponGround</code> mounts ship guns for fighting ON THE GROUND, not for shooting back at orbit. So a world has literally nothing to decide about its own orbit. <b>This is the one blank that would OPEN if anti-orbital defence is ever built</b> - and 52c already flags that orbital fire ignores cover and fortification, so the gap is known.',
+ 'system|diplo':'<b>You negotiate with a faction, not with a place.</b> A relationship has an empire-wide posture (the Foreign Minister) and a court where it is worked (the Ambassador). There is no system-shaped diplomatic decision in between - a border system does not have its own foreign policy, the rival on the other side of it does.',
+ 'system|espionage':'<b>Both halves of espionage are located somewhere else.</b> Offence targets a FACTION (Spymaster picks, Agent executes). Defence is per-COLONY - <code>IntelDirectorateAtb</code> installs on a colony, so the Security Chief holds it at the world. Nothing is left at system scope.',
+ 'planet|diplo':'<b>Contact with a world\'s natives is a SITE, not a post.</b> The Site Engine already models a pre-warp world as a field site with a Diplomatic role - so it is worked by an Ambassador standing on it, not by a resident planetary diplomat. The seat exists; it is one row down.',
+ 'planet|commerce':'<b>A world\'s imports and exports ARE its stockpile policy.</b> <code>LogiBaseDB.DesiredLevels</code> - "keep N of mineral X, auto-import the shortfall" - is the lever, and the roster already assigns it to the <b>Planetary Governor</b> through <code>SetColonyPolicyOrder</code>. A second planet-scope trade seat would own nothing the Governor does not already hold.'
+};
+
+// Field is the one scope whose extent comes from the DOMAIN: "one of a thing" is a
+// different thing per specialty. Every other scope IS a place, so its own phrase holds.
+const P_FIELD_EXTENT = {
+ spacemil:'one fleet', planetarymil:'one battalion',
+ economics:'one production line', science:'one laboratory',
+ diplo:'one rival\'s court', espionage:'one operation',
+ commerce:'one hauler or route', governor:'one settlement'
+};
+
+let p_scope='field', p_dom='spacemil';
+const P = id => document.getElementById(id);
+function p_set(id,v){ const e=P(id); if(e) e.textContent=v; }
+function p_mk(id,kind,text){ const e=P(id); if(!e) return; e.className='mk '+kind; e.textContent=text; }
+function p_fmt(v){ const a=Math.abs(v); return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(a<10?1:0); }
+function p_kg(v){ return Math.abs(v)>=1000? (v/1000).toFixed(1)+' t': v.toFixed(0)+' kg'; }
+
+// compositional naming - generic vocabulary, built from the dials (no franchise IP)
+const P_GRADE_WORD = ['','Junior','','Senior','','Staff','','Flag','','High'];
+function p_name(grade){
+ let sc = P_SCOPE[p_scope].name;
+ const dm = P_DOM[p_dom].name.split(' ')[0];
+ // Planet scope + Planetary domain would read "Planet Planetary Post". When the two words
+ // share a stem, the scope word is redundant - drop it rather than stutter.
+ if (sc.slice(0,6).toLowerCase() === dm.slice(0,6).toLowerCase()) sc = '';
+ const g = P_GRADE_WORD[Math.min(9, grade-1)] || '';
+ const wide = grade >= 9? 'Grand ': '';
+ return (wide + (g? g+' ': '') + (sc? sc+' ': '') + dm + ' Post').replace(/\s+/g,' ').trim();
+}
+
+function p_render(){
+ const grade=+P('p_grade').value, sup=+P('p_sup').value, surv=+P('p_surv').value;
+ const S=P_SCOPE[p_scope], D=P_DOM[p_dom], key=p_scope+'|'+p_dom;
+ const role=P_ROLES[key], blank=P_BLANK[key];
+
+ p_set('p_s1', grade+' of 10');
+ p_set('p_s2', sup+' of 50');
+ p_set('p_s3', surv+' of 95');
+ p_set('p_scopenote', S.note);
+ p_set('p_domnote', 'A '+D.who+' officer seats here. The type-vs-role check is what stops you putting an admiral in a laboratory.');
+
+ // -- cost: the shipped berth\'s honest Grade law, extended to the other three dials --
+ // no span term: capability was grade x span, which made them one dial and let span
+ // buy the same capability for less than half the mass. Grade is the only magnitude dial.
+ const mass = grade*200*S.mult + sup*40 + surv*25;
+ const crew = grade*2*S.mult + sup*0.5;
+ const rp = grade*10*S.mult;
+ const cr = mass*0.75, bp = mass*3;
+
+ p_set('p_v_scope', S.name+' - '+S.label);
+ p_set('p_v_dom', D.name);
+ p_set('p_v_extent', p_scope==='field'? (P_FIELD_EXTENT[p_dom] || S.holds): S.holds);
+ p_set('p_v_mass', p_kg(mass));
+ p_set('p_v_crew', p_fmt(crew));
+ p_set('p_v_cost', p_fmt(cr)+' cr - '+p_fmt(rp)+' RP - '+p_fmt(bp)+' BP');
+ p_set('p_name', p_name(grade));
+ p_set('p_cell', 'scope x domain -> '+p_scope+' x '+p_dom+' - grade '+grade);
+
+ if(!role){
+ p_set('p_role', 'No seat here - and that is on purpose');
+ P('p_decision').innerHTML = '<b>Why there is no seat here:</b> '+blank
+ + '<span style="display:block;margin-top:7px;color:var(--ink3)">An empty cell is not a gap in the grid - it is the grid telling you no decision lives at this intersection.</span>';
+ // a seat that does not exist has no weight, no crew and no price - showing numbers for it
+ // would be exactly the kind of incoherence this whole campaign exists to remove.
+ p_set('p_name','-'); p_set('p_v_mass','-'); p_set('p_v_crew','-'); p_set('p_v_cost','-');
+ p_set('p_v_extent','-');
+ p_mk('p_k_state','dead','an empty cell');
+ p_set('p_m_state','-'); p_set('p_s_state','no role occupies this intersection');
+ p_mk('p_k_risk','calc','not applicable'); p_set('p_m_risk','-'); p_set('p_s_risk','no seat, no officer');
+ p_set('p_m_repl','-'); p_set('p_s_repl','nothing to replace');
+ p_set('p_m_per','-');
+ P('p_verdict').innerHTML = ' <b>Eleven of the thirty-two cells are blank, and every one has a stated reason.</b> '
+ + 'That is what makes this a derivation rather than a spreadsheet: the shape of the door decides where seats can exist.';
+ return;
+ }
+
+ const [rname, decision, status, replaces, why] = role;
+ p_set('p_role', rname);
+ P('p_decision').innerHTML = '<b>The decision it owns:</b> '+decision+'.'
+ + '<br><span style="display:block;margin-top:7px;color:var(--ink2)"><b>Why this seat earns its place:</b> '+why+'</span>';
+
+ const stateKind = status==='EXISTS'? 'sim': status==='NEW'? 'dead': 'chk';
+ const stateWord = status==='EXISTS'? 'built today': status==='NEW'? 'not built': 'partly built';
+ p_mk('p_k_state', stateKind, stateWord);
+ p_set('p_m_state', status);
+ p_set('p_s_state', status==='EXISTS'? 'a real data home and live wiring'
+: status==='STUB'? 'a hook exists but nothing feeds it'
+: status==='WIRE'? 'the mechanic is built; only the officer-in-the-seat is missing'
+: 'net-new - the seat and its mechanic both');
+
+ // leader risk - the grave rung, and the reason Survivability must never reach 100
+ const base = D.risk==='high'? 3.0: D.risk==='combat'? 2.0: D.risk==='field'? 1.0: 0.2;
+ const risk = base * (1 - surv/100);
+ p_set('p_m_risk', risk<=0.001? 'IMMUNE': risk.toFixed(2)+'% a step');
+ p_set('p_s_risk', surv>=95? 'hardened as far as the cap allows - still killable'
+: 'a '+D.risk+'-risk posting; Survivability buys it down, never to zero');
+ p_mk('p_k_risk', risk<=0.001? 'dead': 'sim', risk<=0.001? 'immortality - capped out': 'reaches the sim');
+
+ p_set('p_m_repl', replaces==='nothing'? 'nothing - net new': replaces.split('(')[0].trim());
+ p_set('p_s_repl', replaces==='nothing'? 'no engine slot exists for this seat today': replaces);
+
+ const cap = grade * (1 + sup/100);
+ p_set('p_m_per', (cap/(mass/1000)).toFixed(2));
+
+ P('p_verdict').innerHTML = status==='EXISTS'
+? ' <b>This one already works</b> - it is the single built delegate (<code>AdministratorDB</code> + the research funding dial), and it is the pattern the rest copy.'
+: status==='WIRE'
+? ' <b>The mechanic underneath is built</b> - every order this seat would issue already exists. What is missing is only the officer sitting in the chair, which is precisely what this component provides.'
+: status==='STUB'
+? ' <b>A hook exists and nothing feeds it.</b> The seat would give it something to feed.'
+: ' <b>Net-new.</b> Seat and mechanic both - this cell is owned on paper and empty in the engine.';
+}
+
+// -- the leader proof grid ----------------------------------------------------------------
+(function buildGrid(){
+ const t=P('p_grid'); if(!t) return;
+ const scopes=['empire','system','planet','field'], doms=Object.keys(P_DOM);
+ let html='<tr><th>Scope</th>'+doms.map(d=>'<th>'+P_DOM[d].name.replace(' / ','/')+'</th>').join('')+'</tr>';
+ let filled=0, blanks=0;
+ for(const sc of scopes){
+ html+='<tr><td><b>'+P_SCOPE[sc].name+'</b></td>';
+ for(const d of doms){
+ const r=P_ROLES[sc+'|'+d];
+ if(r){ filled++; html+='<td><b>'+r[0]+'</b><br><s>'+r[2]+'</s></td>'; }
+ else { blanks++; html+='<td><s>-</s></td>'; }
+ }
+ html+='</tr>';
+ }
+ html+='<tr><td colspan="9"><b>'+filled+' seats - '+blanks+' deliberate blanks - '+(filled+blanks)+' cells.</b> '
+ + 'Hover any cell in the builder above to read why a blank is blank.</td></tr>';
+ t.innerHTML=html;
+})();
+
+document.querySelectorAll('.pscope').forEach(c=>c.addEventListener('click',()=>{
+ p_scope=c.dataset.s;
+ document.querySelectorAll('.pscope').forEach(x=>x.setAttribute('aria-pressed', x===c));
+ p_render();
+}));
+document.querySelectorAll('.pdom').forEach(c=>c.addEventListener('click',()=>{
+ p_dom=c.dataset.d;
+ document.querySelectorAll('.pdom').forEach(x=>x.setAttribute('aria-pressed', x===c));
+ p_render();
+}));
+['p_grade','p_sup','p_surv'].forEach(i=>P(i).addEventListener('input',p_render));
+p_render();
+</script>

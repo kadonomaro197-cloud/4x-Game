@@ -1,3 +1,7 @@
+> # 🗄 ARCHIVED 2026-08-03 — SUPERSEDED DESIGNER DIAL SPEC
+>
+> **The DESIGN model here — the old "11 categories / 37 doors" dial-by-dial spec — is SUPERSEDED.** The canonical component designers are the **12 door HTMLs** (`docs/Actual HTMLs Of designers/`) + **`docs/economy/DESIGNER-NORTH-STAR.md`**, which COLLAPSES the 37 doors / 41 dial-groups down to a few choices + sliders per category (worked end-to-end for Weapons: 5 doors + 41 dials → 2 choices + 4 sliders). Do NOT design from the 37-door model here. Locked developer decisions live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.
+
 # Component-Designer DIAL AUDIT — every dial of every door (2026-07-23)
 
 **What this is.** The developer's call: the Component Designer + Entity Assembler is ONE universal tool

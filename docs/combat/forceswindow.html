@@ -1,0 +1,986 @@
+<title>Force Management — the order of battle, every unit you own</title>
+<style>
+  /* ============ TOKENS — light "command readout" is the bare :root ============ */
+  :root{
+    --ground:#e7ecf1; --panel:#ffffff; --panel-2:#f1f5f8; --inset:#eaf0f4; --sunk:#dfe7ed; --titlebar:#e3ebf1;
+    --ink:#12202b; --ink-soft:#48606f; --ink-faint:#7c94a3;
+    --line:#cdd9e1; --line-strong:#b0c1cc;
+    --accent:#d5741f; --accent-soft:#f6e6d3; --accent-ink:#9a4e0c;
+    --live:#1c9160; --live-bg:#dcefe6;
+    --data:#b07d16; --data-bg:#f5ecd4;
+    --build:#3f6bb0; --build-bg:#e0e8f4;
+    --mil:#b23b3b; --mil-bg:#f5dede;          /* military — a muted steel-crimson */
+    --civ:#2f7d8a; --civ-bg:#d8ecef;          /* civilian — a calm teal */
+    --space:#5a63b0; --ground-t:#5f8a52;      /* domain tints */
+    --sel:#fbf1e3;
+    --shadow:0 1px 2px rgba(18,32,43,.07), 0 10px 30px rgba(18,32,43,.08);
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12; --titlebar:#0c161f;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --build:#6ba0e0; --build-bg:#132339;
+    --mil:#e07070; --mil-bg:#2c1414;
+    --civ:#4fb3c2; --civ-bg:#0c262b;
+    --space:#9098e0; --ground-t:#8fb87f;
+    --sel:#241a0d;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.36);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#080d13; --panel:#0f1822; --panel-2:#0c141d; --inset:#0b131b; --sunk:#070c12; --titlebar:#0c161f;
+    --ink:#e4edf3; --ink-soft:#9fb4c2; --ink-faint:#647889;
+    --line:#1e2a36; --line-strong:#2c3d4c;
+    --accent:#e8933f; --accent-soft:#2a1c0d; --accent-ink:#f2ad63;
+    --live:#37c489; --live-bg:#0c2a20;
+    --data:#e0a63a; --data-bg:#2c2410;
+    --build:#6ba0e0; --build-bg:#132339;
+    --mil:#e07070; --mil-bg:#2c1414;
+    --civ:#4fb3c2; --civ-bg:#0c262b;
+    --space:#9098e0; --ground-t:#8fb87f;
+    --sel:#241a0d;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.36);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(14px,3vw,30px) 72px}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  .mono{font-family:var(--mono)}
+  .cite{font-family:var(--mono);font-size:.72em;color:var(--ink-faint);word-break:break-word}
+
+  header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:700;display:flex;gap:9px;align-items:center}
+  header .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  h1{font-size:clamp(24px,4vw,38px);font-weight:820;letter-spacing:-.02em;line-height:1.05;margin:12px 0 0}
+  .sub{margin:12px 0 0;color:var(--ink-soft);max-width:80ch;font-size:15px}
+  .sub b{color:var(--ink);font-weight:680}
+
+  .gradekey{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .gradekey span{display:inline-flex;gap:6px;align-items:baseline}
+  .gr{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px}
+  .gr.LIVE{background:var(--live-bg);color:var(--live)} .gr.DATA{background:var(--data-bg);color:var(--data)} .gr.BUILD{background:var(--build-bg);color:var(--build)}
+
+  /* ============ the in-game WINDOW chrome ============ */
+  .window{margin-top:22px;background:var(--panel);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+  .titlebar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--titlebar);border-bottom:1px solid var(--line)}
+  .titlebar .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+  .titlebar .tt{font-weight:750;font-size:14.5px;letter-spacing:.01em}
+  .titlebar .cls{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  .titlebar .fac{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);display:flex;gap:6px;align-items:center}
+  .titlebar .fac b{color:var(--ink)}
+  .titlebar .win{margin-left:8px;color:var(--ink-faint);font-family:var(--mono);font-size:12px}
+
+  /* top tab bar */
+  .tabs{display:flex;gap:2px;padding:0 10px;background:var(--panel-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{font-family:var(--sans);font-size:13px;font-weight:640;color:var(--ink-soft);background:none;border:none;border-bottom:2.5px solid transparent;padding:11px 14px 9px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+  .tab .tg{font-family:var(--mono);font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px}
+  .tab .tg.LIVE{background:var(--live-bg);color:var(--live)} .tab .tg.BUILD{background:var(--build-bg);color:var(--build)}
+
+  /* force-summary strip (summary before detail) */
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+  .scell{background:var(--panel);padding:9px 13px}
+  .scell .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
+  .scell .v{font-weight:800;font-size:19px;margin-top:1px;font-variant-numeric:tabular-nums}
+  .scell .v small{font-weight:500;color:var(--ink-soft);font-size:11px}
+  .scell.mil .v{color:var(--mil)} .scell.civ .v{color:var(--civ)}
+
+  /* filter bar */
+  .filterbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:11px 14px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .fgroup{display:flex;gap:5px;align-items:center}
+  .fgroup .fl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-right:3px}
+  .chip{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer}
+  .chip:hover{border-color:var(--line-strong);color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.mil[aria-pressed="true"]{background:var(--mil);border-color:var(--mil)}
+  .chip.civ[aria-pressed="true"]{background:var(--civ);border-color:var(--civ)}
+  select.fsel{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;cursor:pointer}
+  input.fq{font-family:var(--sans);font-size:12.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 10px;min-width:130px}
+  input.fq::placeholder{color:var(--ink-faint)}
+  .fcount{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
+  .fcount b{color:var(--ink)}
+
+  /* the two-pane body: roster + detail */
+  .body{display:grid;grid-template-columns:1fr 384px;gap:0;background:var(--line)}
+  @media(max-width:940px){.body{grid-template-columns:1fr}}
+  .rosterwrap{background:var(--panel);min-width:0;overflow-x:auto}
+  table.roster{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px}
+  table.roster thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;text-align:left;padding:8px 9px;border-bottom:1.5px solid var(--line-strong);cursor:pointer;white-space:nowrap;user-select:none}
+  table.roster thead th .cg{font-size:7.5px;font-weight:800;padding:1px 3px;border-radius:3px;margin-left:4px;vertical-align:1px}
+  .cg.LIVE{background:var(--live-bg);color:var(--live)} .cg.DATA{background:var(--data-bg);color:var(--data)} .cg.BUILD{background:var(--build-bg);color:var(--build)}
+  table.roster thead th.num,table.roster tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+  table.roster thead th .ar{color:var(--accent);font-size:9px}
+  table.roster tbody td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.roster tbody tr{cursor:pointer}
+  table.roster tbody tr:hover td{background:var(--inset)}
+  table.roster tbody tr.sel td{background:var(--sel)}
+  table.roster tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+  table.roster tbody tr.child td{background:var(--sunk)}
+  table.roster tbody tr.child:hover td{background:var(--inset)}
+  .nm{display:flex;align-items:center;gap:7px}
+  .nm .chev{width:14px;text-align:center;color:var(--ink-faint);font-size:10px;cursor:pointer;flex:none}
+  .nm .ic{font-size:14px;flex:none;width:18px;text-align:center}
+  .nm .txt{min-width:0}
+  .nm .txt b{font-weight:680;font-size:12.5px}
+  .nm .txt s{text-decoration:none;display:block;font-family:var(--mono);font-size:9.5px;color:var(--ink-faint)}
+  .nm.ind{padding-left:20px}
+  .dm{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.03em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+  .dm.space{background:color-mix(in srgb,var(--space) 16%,transparent);color:var(--space)}
+  .dm.ground{background:color-mix(in srgb,var(--ground-t) 18%,transparent);color:var(--ground-t)}
+  .dm.holding{background:var(--data-bg);color:var(--data)}
+  .pill{font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.03em;padding:2px 6px;border-radius:5px}
+  .pill.Mil{background:var(--mil-bg);color:var(--mil)} .pill.Civ{background:var(--civ-bg);color:var(--civ)}
+  .cls{font-weight:640;font-size:12px}
+  .hbar{display:flex;align-items:center;gap:6px;min-width:78px}
+  .hbar .track{flex:1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+  .hbar .track span{display:block;height:100%;border-radius:3px;background:var(--live)}
+  .hbar .track span.warn{background:var(--data)} .hbar .track span.crit{background:var(--mil)}
+  .hbar .pct{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);width:30px;text-align:right}
+  .ord{font-size:11.5px;color:var(--ink-soft)} .ord.idle{color:var(--ink-faint)}
+  .cmdr{font-size:11px;color:var(--ink-soft)} .cmdr.none{color:var(--ink-faint);font-style:italic}
+
+  /* detail / order panel */
+  .detail{background:var(--panel-2);padding:15px 16px;min-width:0}
+  .detail .dempty{color:var(--ink-faint);font-size:13.5px;font-family:var(--mono);text-align:center;padding:44px 8px;line-height:1.7}
+  .dhead{display:flex;gap:10px;align-items:flex-start}
+  .dhead .dic{font-size:26px;line-height:1}
+  .dhead .dh1{font-weight:800;font-size:17px;letter-spacing:-.01em}
+  .dhead .dh2{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  /* the classification derivation card — the load-bearing "why" */
+  .derive{margin-top:12px;background:var(--build-bg);border:1px solid var(--build);border-radius:9px;padding:9px 11px}
+  .derive .dl{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--build);font-weight:800;display:flex;justify-content:space-between;gap:8px}
+  .derive .dv{font-size:12.5px;color:var(--ink);margin-top:4px;line-height:1.45}
+  .derive .dv code{font-family:var(--mono);font-size:11px;background:var(--panel);padding:1px 4px;border-radius:4px;color:var(--build)}
+  .derive .dn{font-size:11px;color:var(--ink-soft);margin-top:5px}
+  .dsect{margin-top:14px}
+  .dsect .sh{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .drow{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);padding:4px 0;border-bottom:1px dotted var(--line-strong)}
+  .drow b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .comp{display:grid;grid-template-columns:1fr auto auto;gap:2px 10px;font-family:var(--mono);font-size:11.5px;padding:3px 0;border-bottom:1px dotted var(--line-strong)}
+  .comp .cn{color:var(--ink)} .comp .cc{color:var(--ink-soft);text-align:right}
+  .mani{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);line-height:1.7}
+  .mani b{color:var(--ink)}
+  .orders{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .orders .oh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+  .orders .oh b{color:var(--ink)} .ocount{text-transform:none;letter-spacing:0} .ocount i{font-style:normal;font-weight:700} .ocount .dL{color:var(--live)} .ocount .dD{color:var(--data)} .ocount .dB{color:var(--build)}
+  .oview{display:inline-flex;gap:3px} .oview button{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;text-transform:none}
+  .oview button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .oscan{margin:2px 0 11px;font-size:11.5px;color:var(--ink-soft);background:var(--build-bg);border:1px solid var(--build);border-radius:8px;padding:8px 10px;line-height:1.5}
+  .oscan b{color:var(--ink)} .oscan.oscang{background:var(--inset);border-color:var(--line-strong);border-style:dashed}
+  .achip{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--build);background:var(--panel);border:1px solid var(--build);border-radius:6px;padding:1px 6px;white-space:nowrap}
+  .achip i{font-style:normal;font-size:11px} .anone{font-style:italic;color:var(--ink-faint)}
+  .ounavail{margin-top:11px}
+  .unbtn{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-soft);background:var(--inset);border:1px dashed var(--line-strong);border-radius:7px;padding:5px 10px;cursor:pointer}
+  .unbtn[aria-pressed="true"]{color:var(--accent-ink);border-color:var(--accent)}
+  .obdim{margin-top:8px;opacity:.92}
+  .ob.dim{background:var(--inset);color:var(--ink-faint);border-color:var(--line);cursor:help;opacity:.85}
+  .ob.dim:hover{border-color:var(--line-strong);color:var(--ink-soft)}
+  .ob .oneed{font-family:var(--mono);font-size:8px;font-weight:700;color:var(--ink-faint);background:var(--sunk);padding:1px 4px;border-radius:3px}
+  .otoast .treq{color:var(--build);font-weight:700}
+  .opalette{display:flex;flex-direction:column;gap:11px}
+  .ocat .ocath{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:5px;display:flex;align-items:baseline;gap:5px}
+  .ocat .ocath s{text-decoration:none;color:var(--ink-faint);opacity:.7;font-size:9px}
+  .obtns{display:flex;gap:5px;flex-wrap:wrap}
+  .ob{font-family:var(--sans);font-size:11.5px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 8px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;line-height:1.2}
+  .ob:hover{border-color:var(--accent);color:var(--accent-ink)}
+  .ob.g-LIVE{border-left:2.5px solid var(--live)} .ob.g-DATA{border-left:2.5px solid var(--data)} .ob.g-BUILD{border-left:2.5px solid var(--build)}
+  .ob .og{font-family:var(--mono);font-size:7px;font-weight:800;padding:1px 3px;border-radius:3px}
+  .ob .og.LIVE{background:var(--live-bg);color:var(--live)} .ob .og.DATA{background:var(--data-bg);color:var(--data)} .ob .og.BUILD{background:var(--build-bg);color:var(--build)}
+  .onote{margin-top:11px;font-size:11px;color:var(--ink-soft);background:var(--inset);border:1px dashed var(--line-strong);border-radius:8px;padding:8px 10px;line-height:1.5}
+  .onote b{color:var(--ink)} .onote .mono{font-size:10.5px}
+  .otoast{margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--inset);border:1px solid var(--line);border-left:3px solid var(--live);border-radius:7px;padding:8px 10px;display:none;line-height:1.5}
+  .otoast.show{display:block}
+  .otoast.g-DATA{border-left-color:var(--data)} .otoast.g-BUILD{border-left-color:var(--build)}
+  .otoast .tg-LIVE{color:var(--live);font-weight:800} .otoast .tg-DATA{color:var(--data);font-weight:800} .otoast .tg-BUILD{color:var(--build);font-weight:800}
+  .otoast .tdoes{color:var(--ink-soft)} .otoast .tcite{color:var(--ink-faint);font-size:10px}
+  .memberhint{margin-top:10px;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);line-height:1.5}
+  /* window footer: classification legend + grave-rung */
+  .winfoot{padding:11px 14px;background:var(--panel-2);border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);line-height:1.6;display:grid;gap:6px}
+  .winfoot b{color:var(--ink)} .winfoot .lg{color:var(--build);font-weight:700}
+  .winfoot .grave{color:var(--accent-ink);font-weight:600}
+
+  /* ============ design sections below ============ */
+  .sec{margin-top:44px}
+  .sec h2{font-size:clamp(18px,2.4vw,23px);font-weight:770;letter-spacing:-.01em;display:flex;gap:11px;align-items:baseline}
+  .sec h2 .n{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink);font-weight:700}
+  .sec p.lead{color:var(--ink-soft);max-width:82ch;margin:8px 0 18px;font-size:14.5px}
+  .verdict{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--mil);border-radius:11px;padding:15px 17px;box-shadow:var(--shadow)}
+  .verdict h3{font-size:15.5px;font-weight:740;margin-bottom:6px}
+  .verdict p{font-size:13.5px;color:var(--ink-soft);margin:0 0 9px;line-height:1.55} .verdict p:last-child{margin-bottom:0}
+  .verdict b{color:var(--ink)} .verdict code{font-family:var(--mono);font-size:12px;background:var(--inset);padding:1px 5px;border-radius:4px;color:var(--accent-ink)}
+  .verdict .dead{color:var(--mil);font-weight:700}
+  .ocounts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:4px}
+  @media(max-width:820px){.ocounts{grid-template-columns:1fr}}
+  .occard{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;box-shadow:var(--shadow)}
+  .occard.live{border-top:3px solid var(--live)} .occard.data{border-top:3px solid var(--data)} .occard.build{border-top:3px solid var(--build)}
+  .occard b{font-size:30px;font-weight:840;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .occard.live b{color:var(--live)} .occard.data b{color:var(--data)} .occard.build b{color:var(--build)}
+  .occard s{text-decoration:none;display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin:4px 0 6px}
+  .occard em{font-style:normal;font-size:12px;color:var(--ink-soft);line-height:1.45} .occard em b{font-size:inherit;color:var(--ink);letter-spacing:0}
+  .emc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:820px){.emc{grid-template-columns:1fr}}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 15px;box-shadow:var(--shadow)}
+  .col.exists{border-top:3px solid var(--live)} .col.change{border-top:3px solid var(--data)} .col.missing{border-top:3px solid var(--build)}
+  .col h3{font-size:14px;font-weight:740;display:flex;gap:8px;align-items:center;margin-bottom:9px}
+  .col h3 .gr{font-size:9px}
+  .col ul{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+  .col li{font-size:12.5px;color:var(--ink-soft);line-height:1.45;padding-left:15px;position:relative}
+  .col li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:800}
+  .col li b{color:var(--ink);font-weight:660} .col li .cite{display:block;margin-top:1px}
+
+  table.build{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+  table.build th,table.build td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.build th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700}
+  table.build td.s{font-family:var(--mono);font-weight:700;color:var(--accent-ink);white-space:nowrap}
+  table.build td b{color:var(--ink)}
+  table.build .gr{font-size:8.5px}
+  .scroll{overflow-x:auto}
+
+  .note{margin-top:20px;background:var(--inset);border:1px solid var(--line);border-left:4px solid var(--data);border-radius:11px;padding:14px 16px;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .note b{color:var(--ink)}
+  footer{margin-top:44px;border-top:1px solid var(--line);padding-top:20px;color:var(--ink-faint);font-size:12.5px;line-height:1.6}
+  footer .mono{font-size:11px}
+  a{color:var(--accent-ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Client · command &amp; control · order of battle</div>
+    <h1>Force Management — every unit you own, in one order of battle</h1>
+    <p class="sub">This is the <b>Force Management</b> window (the class is still <span class="mono">FleetWindow</span> — renaming it would break every save) grown into what you asked for: <b>one place that lists, details, and controls every unit you own</b> — <b>military and civilian</b>, on the <b>space side</b> (ships and fleets) and the <b>planet side</b> (battalions and their individual units) — plus your <b>holdings</b> (colonies, stations). About <b>70% of this is already built</b>: the window exists with a Fleets tree and a cross-body Battalions table sharing one order path. The missing 30% is the <b>single unified roster</b>, a <b>working military-vs-civilian tag</b>, and <b>per-individual ground-unit rows</b>. The one thing to understand first: <b>the engine cannot tell a warship from a freighter today</b> — the intended flag is dead code — so this window <b>derives</b> the answer from what's bolted on the hull, and that derivation must live engine-side so the AI reads the identical value. Every column, cell, and order below is graded by whether the code <b>does it today</b>, only <b>holds the data</b>, or is <b>work to build</b>. <b>Select any unit and its command card fills with a deep order menu</b> — a grounded catalog of <b>123 orders</b> (a warship shows 39, a colony 30), grouped by category and graded the same way.</p>
+    <div class="gradekey">
+      <span><span class="gr LIVE">LIVE</span> Force Management does this today</span>
+      <span><span class="gr DATA">DATA</span> the value/helper exists in the engine — just not in this roster</span>
+      <span><span class="gr BUILD">BUILD</span> genuinely new: a helper, a render, or a gauge to build</span>
+    </div>
+  </header>
+
+  <!-- ============ THE WINDOW ============ -->
+  <div class="window">
+    <div class="titlebar">
+      <span class="dot"></span>
+      <span class="tt">Force Management</span>
+      <span class="cls">class FleetWindow · FleetWindow.cs:186</span>
+      <span class="fac">Faction <b>New Terra Republic</b> · <span id="facFilter">PlayerFaction</span></span>
+      <span class="win">▢ ✕</span>
+    </div>
+
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="summary" id="summary"></div>
+    <div class="filterbar" id="filterbar"></div>
+
+    <div class="body">
+      <div class="rosterwrap">
+        <table class="roster" id="roster"><thead id="rhead"></thead><tbody id="rbody"></tbody></table>
+      </div>
+      <aside class="detail" id="detail">
+        <div class="dempty">◎ select any unit on the left<br>to read its details and give it orders<br><br>every unit is one row — ships, battalions,<br>freighters, colonies — filter by domain and role</div>
+      </aside>
+    </div>
+
+    <div class="winfoot">
+      <div><b>How Class &amp; Mil/Civ are derived</b> (no stored field — <span class="lg">the engine must compute this, so the AI reads the same value</span>): a ship is a <b>Warship</b> if its combat firepower &gt; 0; otherwise it's the civilian role its components imply — <b>Freighter</b> (logistics module), <b>Survey</b> (survey sensor), <b>Tender</b> (cargo-transfer, unarmed), <b>Transport</b> (troop bay). A ground unit is <b>combat</b> unless its attack ≤ 0 (then <b>Support</b>).</div>
+      <div class="grave">⚠ Grave rung — capture &amp; loss: a colony/station registry isn't cleared when a world is taken, so the window must verify each asset's live owner before showing it, or you'll see lost worlds as still-yours (SYSTEM-CONNECTION-MAP.md:155).</div>
+    </div>
+  </div>
+
+  <!-- ============ THE ORDER CATALOG ============ -->
+  <section class="sec">
+    <h2><span class="n">⌘</span> Every unit gets a deep order menu — 123 orders, honestly graded</h2>
+    <p class="lead">Select any unit above and its command card fills with <b>every order that unit can take</b>, grouped by category. A grounded survey of the engine found <b>123 distinct orders</b> — click one on the card to see what it does and its source line. The good news: <b>most already work</b> — a deep menu is largely <b>routing existing commands into one place</b>, not new engine code. The honesty: each order is graded, because a handful look real and aren't.</p>
+    <div class="ocounts">
+      <div class="occard live"><b>71</b><s>LIVE — issuable today</s><em>An order exists and there's a real way to give it. Half are only reachable from other windows right now; the Forces window gathers them.</em></div>
+      <div class="occard data"><b>23</b><s>DATA — button-only away</s><em>The engine method/capability exists; just no button. The <b>cheapest depth wins</b> — carrier dock/undock, formation nest/detach, queue-a-stance. ⚠ four (fleet refuel/resupply/survey-anomaly/logistics) are empty <b>stubs</b> that must be finished before they're shown.</em></div>
+      <div class="occard build"><b>29</b><s>BUILD — genuinely new</s><em>What a 4X player expects but the engine lacks: ship <b>Refit / Scrap / Mothball</b>, explicit <b>Retreat</b> &amp; attack-a-specific-target, <b>Hold / Patrol / Picket / Blockade</b> (blocked because moves target bodies, never a free point in space), ground <b>Dig-in</b>, single-verb <b>Merge / Split</b>.</em></div>
+    </div>
+    <div class="scroll"><table class="build" style="margin-top:14px">
+      <thead><tr><th>Unit kind</th><th>Orders shown</th><th>The shape of its menu</th></tr></thead>
+      <tbody>
+        <tr><td><b>Warship</b></td><td class="s">39</td><td>The deepest surface — fire control (assign weapons, set target, open fire, load ordnance), Newtonian + warp movement, jump, cargo &amp; troop drop.</td></tr>
+        <tr><td><b>Fleet</b></td><td class="s">42</td><td>Owns the combat levers (doctrine / EMCON / engagement / attack-nearest — these stay issuable mid-battle) + automation + fleet organization. <em>(Shown in the Fleets tab.)</em></td></tr>
+        <tr><td><b>Civilian ship</b></td><td class="s">36</td><td>Movement, cargo, logistics/trade routes, survey, colonize, deploy-a-station — but almost no combat verbs.</td></tr>
+        <tr><td><b>Ground formation</b></td><td class="s">41</td><td>A real sequential <b>waypoint queue</b> (move → hold → set-stance → move), stance/ROE, raze/capture, merge/split, embark.</td></tr>
+        <tr><td><b>Ground unit</b></td><td class="s">20</td><td>The individual company — march, dig-in, resupply, attach/detach. <em>(Expand a battalion and click a company.)</em></td></tr>
+        <tr><td><b>Colony / Station</b></td><td class="s">30 / 21</td><td>Production &amp; construction queue, install/refit, cargo &amp; stockpile targets, research, governor &amp; funding. ~90% shared — a station just lacks the planet-surface verbs.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><b>Two order systems under one menu.</b> Space orders are queued commands on a ship's order list (<span class="mono">OrderableDB → HandleOrder</span>); ground orders are a separate queue on the formation (<span class="mono">GroundFormation.Orders</span>) — they share no plumbing, so the window bridges them. And three of the levers you'd expect to queue — <b>doctrine, EMCON, engagement posture, stance</b> — are deliberately <b>direct calls</b> so they still work while a fleet is locked in a fight; the menu keeps that path. Only the ground side tags an order with who issued it (player vs AI) — a marker any new two-seat order should copy so the window and the AI drive the same verb.</div>
+  </section>
+
+  <!-- ============ THE MILITARY / CIVILIAN VERDICT ============ -->
+  <section class="sec">
+    <h2><span class="n">⚑</span> The one thing the engine can't tell you: military vs civilian</h2>
+    <p class="lead">You asked for "units both military and non-military." Here's the honest ground truth, and why the fix is an <b>engine</b> job before it's a <b>window</b> job.</p>
+    <div class="verdict">
+      <h3>The intended flag is dead code.</h3>
+      <p><span class="dead">There is a <code>ShipInfoDB.IsMilitary</code> field</span> (ShipInfoDB.cs:38) — and siblings <code>Tanker</code>, <code>Collier</code>, <code>SupplyShip</code>, <code>Conscript</code>. They're declared and copied when a ship is cloned, but <b>never set and never read anywhere in the whole solution.</b> Ship designs carry no role or category. Fleets carry no classification. On the ground, unit types are Infantry / Armour / Artillery only — all combat — and the design is <b>deliberately locked</b> against adding "civilian" unit types (a unit's role must emerge from what it carries, not a label).</p>
+      <p><b>So the window must derive the classification from components — never read a stored field.</b> A ship with a weapon is a warship; strip its weapons and it stops being one. A ship with a logistics module is a freighter; a survey sensor makes it a survey ship; a troop bay makes it a transport. A ground unit with attack ≤ 0 is support.</p>
+      <p><b>And the derivation belongs in the engine, not the window</b> — the studio law is <em>one verb, both seats</em>: if the AI can't read the same "is this a warship?" answer the player sees, you've built two truths. The recommendation from the survey: one small, tested engine helper — <code>ShipRoleTools.ClassifyRole(ship)</code> — that both the Force Management window and the faction AI call. The ground side already has one (<code>GroundRoleComposer.ClassifyRole</code>, GroundRoleComposer.cs:45) — it's just never shown to the player.</p>
+    </div>
+  </section>
+
+  <!-- ============ EXISTS / CHANGE / MISSING ============ -->
+  <section class="sec">
+    <h2><span class="n">▤</span> 70% is already built — here's the split</h2>
+    <p class="lead">The survey read the real client and engine (each line cited). The window's job is mostly to <b>connect what exists</b>, generalize a few things, and build a short list of genuinely-new pieces.</p>
+    <div class="emc">
+      <div class="col exists">
+        <h3><span class="gr LIVE">LIVE</span> Exists — reuse</h3>
+        <ul>
+          <li>The <b>host window</b> with a two-tab bar: Fleets + Battalions.<span class="cite">FleetWindow.cs:186, :188/:1149</span></li>
+          <li>The space roster source — the faction's <b>fleet tree</b> (fleets + loose ships).<span class="cite">FleetWindow.cs:128, :1930</span></li>
+          <li>The <b>cross-body Battalions table</b> — 8 columns, filters, full order surface.<span class="cite">FleetWindow.cs:1149-1269</span></li>
+          <li>One <b>generic order path</b> every unit shares.<span class="cite">OrderableDB.cs:9 → StandAloneOrderHandler.cs:18</span></li>
+          <li>The universal <b>ownership key</b> on every entity.<span class="cite">Entity.cs:35 (FactionOwnerID)</span></li>
+          <li>A built <b>cross-body helper</b> — its doc names this window.<span class="cite">GroundForcesDB.cs:1147 (AllFormationsFor)</span></li>
+          <li>Reusable <b>detail panels</b>: per-ship combat sheet, installed-components table, formation panel.<span class="cite">FleetWindow.cs:971 · ComponentInstancesDBDisplay.cs:13 · PlanetViewWindow.cs:1297</span></li>
+        </ul>
+      </div>
+      <div class="col change">
+        <h3><span class="gr DATA">DATA</span> Needs-change — generalize</h3>
+        <ul>
+          <li>Scope from <code>uiState.Faction</code> to <b>PlayerFaction</b> (so SM mode doesn't blank your OOB).<span class="cite">FleetWindow.cs:127</span></li>
+          <li><b>Unify the two selection states</b> (selected fleet vs selected battalion) into one "selected unit".<span class="cite">FleetWindow.cs:46 vs :1138</span></li>
+          <li>Extract the per-ship combat row into a <b>reusable roster row</b>.<span class="cite">FleetWindow.cs:971-1098</span></li>
+          <li>Switch the Battalions gather to the <b>built helper</b> AllFormationsFor.<span class="cite">FleetWindow.cs:1157 → GroundForcesDB.cs:1147</span></li>
+          <li>Promote the logistics detail body to take a <b>passed-in ship</b>, not the last click.<span class="cite">LogisticsWindow.cs:74-173</span></li>
+          <li>Surface <code>GroundRoleComposer.ClassifyRole</code> as a <b>roster readout</b> (today only the AI reads it).<span class="cite">GroundRoleComposer.cs:45</span></li>
+        </ul>
+      </div>
+      <div class="col missing">
+        <h3><span class="gr BUILD">BUILD</span> Missing — new</h3>
+        <ul>
+          <li>The <b>single unified roster</b>: ships + formations (+ holdings) in one filterable, sortable table with one selection.</li>
+          <li>The <b>military-vs-civilian classifier</b> — a tested engine helper both window and AI read.</li>
+          <li><b>Per-individual ground-unit rows</b> — the data's all on the unit; only the render is missing.</li>
+          <li>A galaxy-wide <b>"all my units everywhere" enumerator</b> (ownership is fragmented across three homes).</li>
+          <li>Aggregate <b>ship Health &amp; Fuel</b> accessors — none exist today (only per-component / per-thruster).</li>
+          <li><b>Stations &amp; colonies</b> as roster rows, with a live-owner cross-check.</li>
+          <li>A UI to <b>assign a commander</b> to a fleet flagship or a formation.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BUILD ORDER ============ -->
+  <section class="sec">
+    <h2><span class="n">↓</span> Build order — cheapest reuse first, genuinely-new last</h2>
+    <p class="lead">Each slice is one CI-gated step. The early ones are pure wiring of things that already exist; the classifier (S2) is the load-bearing engine piece because everything downstream — and the AI — reads it.</p>
+    <div class="scroll"><table class="build">
+      <thead><tr><th>Slice</th><th>What</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td class="s">S1</td><td><b>Point the Battalions tab at the built helper</b> AllFormationsFor, and scope to PlayerFaction. Pure reuse.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S2</td><td><b>The engine classifier</b> <code>ShipRoleTools.ClassifyRole</code> (+ a test) reusing the emergent predicates that already exist; expose the ground one. The Mil/Civ + Class column, read by window <em>and</em> AI.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S3</td><td><b>Make the two existing table rows reusable</b> — extract the ship combat row; confirm the battalion row is callable.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S4</td><td><b>One "selected unit" abstraction</b> unifying the fleet + battalion selection. The load-bearing refactor everything below rides on.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S5</td><td><b>The new "All Forces" flat roster tab</b> — one table over S2/S3/S4, with Domain / Mil-Civ / Class / Location filters and a detail panel that swaps by unit kind.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S6</td><td><b>Per-individual ground-unit rows</b> + the engine sibling AllUnitsFor (includes unformed units). Closes "list <em>every</em> unit".</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S7</td><td><b>Civilian-ship detail panel</b> — promote the logistics manifest/routes/dV into the roster.</td><td><span class="gr DATA">DATA</span></td></tr>
+        <tr><td class="s">S8</td><td><b>Aggregate Health + Fuel gauges</b> — build the missing engine accessors so those columns become real numbers.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S9</td><td><b>Stations + colonies as rows</b> (with a live-owner cross-check) + assign-commander UI. Scope-gated, last.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><b>Open decisions for you</b> (I picked sensible defaults for this prototype, say the word to change them): <b>(1) Scope</b> — I included holdings (colonies/stations) so it's a true order of battle, not just mobile forces. <b>(2) Ground granularity</b> — formations are rows, individual units expand underneath. <b>(3) Classification home</b> — a derived engine helper, not the dead flag. <b>(4) Capture-stale registries</b> — a cheap window-side owner check now, the deeper engine fix later.</div>
+  </section>
+
+  <footer>
+    <div><b>Force Management — unified order of battle.</b> A design prototype for the Pulsar4X fork. Grounded on a 6-agent survey of the real client + engine, each claim cited at file:line. <b>Nothing here is wired into the engine yet</b> — this is the design and the build order.</div>
+    <div class="mono" style="margin-top:8px">Seed window: FleetWindow.cs (title "Force Management") · order path: OrderableDB → StandAloneOrderHandler · classify: proposed ShipRoleTools.ClassifyRole + live GroundRoleComposer.ClassifyRole · dead flag: ShipInfoDB.IsMilitary:38 · design doc: docs/combat/FORCES-WINDOW-DESIGN.md</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ── the full engine order catalog (123 orders, 71 LIVE / 23 DATA / 29 BUILD) — grounded by survey, each cited ──
+  const ORDER_CATS=["Movement", "Combat", "Survey", "Logistics-Cargo", "Fleet-ops", "Formation-ops", "Construction-Industry", "Special", "Standing-Conditional"];
+  const CAT_ICON={"Movement": "🧭", "Combat": "⚔️", "Survey": "🔭", "Logistics-Cargo": "📦", "Fleet-ops": "⚓", "Formation-ops": "🎖️", "Construction-Industry": "🏭", "Special": "✦", "Standing-Conditional": "♺"};
+  const ORDERS=[
+    {n:"Move to Body",c:"Movement",k:["fleet"],g:"LIVE",d:"Warp the whole fleet to a chosen star-system body, slowest ship setting the pace so they arrive together.",f:"GameEngine/Movement/MoveToSystemBodyOrder.cs:146"},
+    {n:"Warp to New Orbit",c:"Movement",k:["warship", "civilian-ship"],g:"LIVE",d:"Order one ship to warp to a target and insert into a low circular orbit; the per-ship primitive under fleet moves.",f:"GameEngine/Movement/WarpMove/WarpMoveCommand.cs:74"},
+    {n:"Move Fleet Toward Target",c:"Movement",k:["fleet"],g:"LIVE",d:"Warp a fleet toward a target entity (the get-there-first leg for survey/refuel orders).",f:"GameEngine/Movement/WarpMove/WarpMoveCommand.cs:320"},
+    {n:"Change Orbit / Thrust Burn",c:"Movement",k:["warship", "civilian-ship"],g:"LIVE",d:"Apply a Newtonian delta-V burn at a scheduled time to raise/lower/change the ship's orbit.",f:"GameEngine/Movement/NewtonMove/NewtonThrustCommand.cs:15"},
+    {n:"Newton Simple Orbit Maneuver",c:"Movement",k:["warship", "civilian-ship"],g:"LIVE",d:"Simplified thrust command that sets up a target orbit; the maneuver-planner's execution primitive.",f:"GameEngine/Movement/NewtonMove/NewtonSimpleCommand.cs:11"},
+    {n:"Nav Sequence (Maneuver Plan)",c:"Movement",k:["warship", "civilian-ship"],g:"LIVE",d:"Append/replace an ordered list of delta-V maneuver nodes from the orbital planner as one plan.",f:"GameEngine/Movement/NavSequence/NavSequenceCommand.cs:10"},
+    {n:"Jump Through Gate",c:"Movement",k:["fleet", "warship"],g:"LIVE",d:"Warp the fleet to a discovered jump gate and transit every ship to the destination system.",f:"GameEngine/JumpPoints/JumpOrder.cs:16"},
+    {n:"March Unit to Region",c:"Movement",k:["ground-unit"],g:"LIVE",d:"Send one individual unit one adjacent-region ring-hop (coarse crossing-time move).",f:"GroundForcesDB.cs:755"},
+    {n:"Move Formation to Region",c:"Movement",k:["ground-formation"],g:"LIVE",d:"March a whole formation one adjacent-region hop at the slowest member's pace so they arrive together.",f:"GroundForcesDB.cs:1030"},
+    {n:"March to Planetary Hex",c:"Movement",k:["ground-unit", "ground-formation"],g:"LIVE",d:"Path a unit across the one continuous global cylinder grid to a clicked hex, crossing region borders seamlessly.",f:"GroundForcesDB.cs:823"},
+    {n:"Intercept / Ram Target",c:"Movement",k:["warship"],g:"DATA",d:"Newtonian thrust-to-intercept pursuit onto a moving target; today only missile guidance issues it, no player button.",f:"GameEngine/Movement/NewtonMove/NewtonThrustCommand.cs:252"},
+    {n:"Move Unit to Hex within Region",c:"Movement",k:["ground-unit"],g:"DATA",d:"A* march to a hex inside the unit's own region; engine method exists but no client caller (region layer scheduled for deletion).",f:"GroundForcesDB.cs:785"},
+    {n:"Move Formation to Region-Hex",c:"Movement",k:["ground-formation"],g:"DATA",d:"Block-march a formation to a per-region hex at shared pace; engine method exists, no UI issues it.",f:"GroundForcesDB.cs:864"},
+    {n:"Hold Position / Station-Keep",c:"Movement",k:["fleet", "warship"],g:"BUILD",d:"Explicitly stop and hold a fixed point (not a body orbit); move orders only target bodies today, so free-point holding has no order.",f:"n/a - MoveToSystemBodyOrder targets bodies only"},
+    {n:"Fleet Waypoint Chain",c:"Movement",k:["fleet", "warship", "civilian-ship"],g:"BUILD",d:"A move A-then-B-then-C waypoint list for ships; formations chain waypoints but fleets serialize single orders instead.",f:"n/a - only ground GroundOrder queue chains waypo"},
+    {n:"Retreat to Nearest Friendly",c:"Movement",k:["ground-formation"],g:"BUILD",d:"One-click fighting withdrawal toward the nearest friendly region; exists only as an AI brain intent, no player order.",f:"GroundTactics.cs:13"},
+    {n:"Assign Weapons to Fire Control",c:"Combat",k:["warship"],g:"LIVE",d:"Link chosen weapons to a fire-control director so they fire together.",f:"GameEngine/Weapons/SetFireControlOrder.cs:13"},
+    {n:"Set Fire-Control Target",c:"Combat",k:["warship"],g:"LIVE",d:"Point a fire control at a detected enemy contact (resolves the sensor clone to the real entity).",f:"GameEngine/Weapons/SetFireControlOrder.cs:113"},
+    {n:"Open Fire / Cease Fire",c:"Combat",k:["warship"],g:"LIVE",d:"Toggle a fire control between engaging (weapons fire each tick) and holding fire.",f:"GameEngine/Weapons/SetFireControlOrder.cs:213"},
+    {n:"Assign Ordnance to Weapon",c:"Combat",k:["warship"],g:"LIVE",d:"Load a chosen missile/ordnance design into a launcher weapon.",f:"GameEngine/Weapons/SetFireControlOrder.cs:328"},
+    {n:"Set Fleet Doctrine",c:"Combat",k:["fleet"],g:"LIVE",d:"Pick the fleet's combat posture (firepower/toughness/speed multipliers); direct call, works mid-battle, cooldown-gated.",f:"GameEngine/Combat/FleetDoctrine.cs:52"},
+    {n:"Set EMCON Posture",c:"Combat",k:["fleet"],g:"LIVE",d:"Run Full/Cruise/Silent - scales every ship's emitted signature (how far off you can be detected). Direct call.",f:"GameEngine/Sensors/Emcon/FleetEmcon.cs:55"},
+    {n:"Set Engagement Posture (ROE)",c:"Combat",k:["fleet"],g:"LIVE",d:"Weapons Free / Hold Fire / Return Fire - whether the fleet opens a fight. Direct call, works mid-battle.",f:"GameEngine/Combat/FleetDoctrine.cs:39"},
+    {n:"Attack Nearest Hostile",c:"Combat",k:["fleet"],g:"LIVE",d:"Force this fleet to engage the nearest hostile now - clears retreat, sets Weapons Free, closes to weapons range.",f:"FleetWindow.cs:661"},
+    {n:"Land Troops (Invasion Drop)",c:"Combat",k:["warship", "civilian-ship"],g:"LIVE",d:"Drop loaded ground units from orbit onto a chosen region; blocked unless the ship holds orbital control (win the space first).",f:"GameEngine/GroundCombat/LandTroopsOrder.cs:22"},
+    {n:"Set Combat Stance (Ground)",c:"Combat",k:["ground-formation"],g:"LIVE",d:"Switch the formation's doctrine stance from the moddable catalog (+/-25% attack/damage-taken trade), cooldown-gated.",f:"GroundFormationDoctrine.cs:43"},
+    {n:"Set Rules of Engagement (Ground)",c:"Combat",k:["ground-formation"],g:"LIVE",d:"Set the maneuver intent each tick - stand and fight, close the gap (brawler), or kite at range (auto-back-away).",f:"GroundForcesDB.cs:275"},
+    {n:"Raze Infrastructure",c:"Combat",k:["ground-formation"],g:"LIVE",d:"Order a formation to bombard/raze the building(s) on a held or contested hex (Attack-scaled, staged drain).",f:"GroundForcesDB.cs:347"},
+    {n:"Capture Infrastructure",c:"Combat",k:["ground-formation"],g:"LIVE",d:"Seize a hex - flips the hex owner so its buildings stop fortifying the defender (instant in v1).",f:"GroundForcesDB.cs:348"},
+    {n:"Set Target Priority",c:"Combat",k:["fleet"],g:"DATA",d:"Heaviest / BiggestThreat / Balanced targeting steers the casualty step, but is set only via a whole-doctrine swap, no standalone control.",f:"GameEngine/Combat/FleetDoctrine.cs:33"},
+    {n:"Dig In / Entrench",c:"Combat",k:["ground-unit", "ground-formation"],g:"BUILD",d:"A stationary unit digs in for a defensive multiplier over time; no such order exists - HoldFor only pauses, only buildings fortify.",f:"GroundForcesDB.cs:344"},
+    {n:"Set Ambush",c:"Combat",k:["ground-formation"],g:"BUILD",d:"Go hidden/hold-fire in cover and strike an enemy that enters range; no ambush order or hidden-posture exists.",f:"n/a - no ambush order"},
+    {n:"Call Orbital Bombardment",c:"Combat",k:["ground-formation", "ground-unit"],g:"BUILD",d:"A ground formation calls in orbital fire on an enemy hex; space-to-ground weapons exist but no ground-side call-for-fire order.",f:"n/a - SpaceWeaponGround.cs exists ship-side"},
+    {n:"Blockade",c:"Combat",k:["fleet"],g:"BUILD",d:"Deny an enemy body's orbit or a jump point to hostile traffic; no blockade concept/order.",f:"n/a - orbital-dominance check noted missing in F"},
+    {n:"Retreat / Withdraw (Explicit)",c:"Combat",k:["fleet"],g:"BUILD",d:"A first-class break-off-and-run order issuable mid-engagement; today withdrawal is only a doctrine flag, not a standalone order.",f:"GameEngine/Engine/Orders/EntityCommand.cs:39"},
+    {n:"Attack Specific Target",c:"Combat",k:["fleet"],g:"BUILD",d:"Pick a specific enemy fleet by map-click to engage; only attack-nearest-hostile exists today.",f:"FleetWindow.cs:652"},
+    {n:"Geological Survey",c:"Survey",k:["fleet", "civilian-ship"],g:"LIVE",d:"Survey a body over game-time to reveal its minerals (fleet must carry a geo-survey component).",f:"GameEngine/GeoSurveys/GeoSurveyOrder.cs:8"},
+    {n:"Jump-Point (Grav) Survey",c:"Survey",k:["fleet", "civilian-ship"],g:"LIVE",d:"Survey a survey-point to discover/reveal a jump point (fleet must carry a JP-survey component).",f:"GameEngine/JumpPoints/JPSurveyOrder.cs:11"},
+    {n:"Survey Anomaly",c:"Survey",k:["fleet"],g:"DATA",d:"Investigate a located anomaly; class exists but Execute/IsValid/Clone all throw NotImplementedException.",f:"GameEngine/Fleets/ServeyAnomalyAction.cs:19"},
+    {n:"Transfer Cargo",c:"Logistics-Cargo",k:["warship", "civilian-ship", "colony", "station", "any"],g:"LIVE",d:"Move any cargo item (minerals, refined goods, components, fuel, ordnance) between ship and colony/station/other-ship by drag-drop.",f:"GameEngine/Storage/CargoTransferOrder.cs:17"},
+    {n:"Refuel Fleet at Base",c:"Logistics-Cargo",k:["fleet", "warship", "civilian-ship"],g:"LIVE",d:"Warp a fleet to a friendly colony/station and top every ship's fuel tank from that base's stores.",f:"GameEngine/Storage/CargoTransferOrder.cs:136"},
+    {n:"Enable/Disable Trade Ship",c:"Logistics-Cargo",k:["civilian-ship"],g:"LIVE",d:"Add or remove a LogiShipperDB so the ship joins or leaves the automated freight bidding market.",f:"GameEngine/Logistics/SetLogisticsOrder.cs:58"},
+    {n:"Set Trade Ship Cargo Allocation",c:"Logistics-Cargo",k:["civilian-ship"],g:"LIVE",d:"Choose how much per-cargo-type volume the trade ship dedicates to freight and its max trade mass (shapes which runs it bids on).",f:"GameEngine/Logistics/SetLogisticsOrder.cs:95"},
+    {n:"Set Base Imports & Exports",c:"Logistics-Cargo",k:["colony", "station"],g:"LIVE",d:"Mark goods this base wants imported or has surplus to export - the demand signal the trade-ship bidding market reads.",f:"GameEngine/Logistics/SetLogisticsOrder.cs:70"},
+    {n:"Enable/Disable Trade Hub",c:"Logistics-Cargo",k:["colony", "station"],g:"LIVE",d:"Remove the LogiBaseDB so a base stops acting as a logistics trade hub (created by installing a LogiBaseAtb component).",f:"ColonyLogisticsDisplay.cs:349"},
+    {n:"Embark / Load Troops",c:"Logistics-Cargo",k:["warship", "civilian-ship"],g:"LIVE",d:"Load the ground units standing on the orbited body into a troop/vehicle bay ship (capacity-gated).",f:"GameEngine/GroundCombat/LoadTroopsOrder.cs:21"},
+    {n:"Move Component To/From Cargo",c:"Logistics-Cargo",k:["any", "colony", "station", "warship", "civilian-ship"],g:"LIVE",d:"Stow an uninstalled component into the cargo hold, or pull one out ready to install.",f:"GameEngine/Storage/AddComponentToStorageOrder.cs:30"},
+    {n:"Refuel (Fleet Self-Action)",c:"Logistics-Cargo",k:["fleet"],g:"DATA",d:"Standing/issued fleet refuel-in-place action; registered and selectable but Execute() is an EMPTY stub - transfers no fuel.",f:"GameEngine/Fleets/RefuelAction.cs:26"},
+    {n:"Resupply (Fleet Self-Action)",c:"Logistics-Cargo",k:["fleet"],g:"DATA",d:"Standing fleet resupply action; selectable but Execute() is an empty stub - moves no ordnance/supply.",f:"GameEngine/Fleets/ResupplyAction.cs:25"},
+    {n:"Set Stockpile Min/Max Target",c:"Logistics-Cargo",k:["colony", "station"],g:"DATA",d:"Define a per-good min/max the base should auto-maintain; the LogiBaseDB.DesiredLevels field exists but no UI or processor writes/reads it.",f:"GameEngine/Logistics/LogiBaseDB.cs:17"},
+    {n:"Ship Logistics State (Start/Abort Job)",c:"Logistics-Cargo",k:["civilian-ship"],g:"DATA",d:"Per-ship logistics lifecycle order; Execute() is an empty stub - the ship state machine past Bidding is undriven.",f:"GameEngine/Logistics/ShipLogisticsOrders.cs:7"},
+    {n:"Resupply / Rearm Unit (Manual)",c:"Logistics-Cargo",k:["ground-unit"],g:"DATA",d:"Top a unit's ammo pool to full when it sits on friendly-held ground; the processor auto-resupplies but no manual player button.",f:"GroundForcesDB.cs:670"},
+    {n:"Reload / Rearm Ordnance at Magazine",c:"Logistics-Cargo",k:["warship", "fleet", "civilian-ship"],g:"DATA",d:"A one-click rearm-from-base for missile ships (the fleet analog of Refuel); ordnance moves via generic Transfer Cargo but no dedicated reload order.",f:"ordnance moves via CargoTransferOrder.cs"},
+    {n:"Set Trade Route / Auto-haul A to B",c:"Logistics-Cargo",k:["civilian-ship", "colony", "station"],g:"BUILD",d:"A directed, explicit haul-between-two-named-bases route; doesn't exist - logistics is emergent bid-based, no pinned A->B loop.",f:"n/a - emergent path GameEngine/Logistics/Logisti"},
+    {n:"Ferry Population / Load Colonists",c:"Logistics-Cargo",k:["civilian-ship", "colony"],g:"BUILD",d:"Load colonists into a ship and move population between worlds; no colonist cargo type - population is not ICargoable.",f:"n/a - population in ColonyInfoDB.Population, not"},
+    {n:"Create Fleet",c:"Fleet-ops",k:["fleet"],g:"LIVE",d:"Create a new named empty fleet under the faction root.",f:"GameEngine/Fleets/FleetOrder.cs:55"},
+    {n:"Disband Fleet",c:"Fleet-ops",k:["fleet"],g:"LIVE",d:"Dissolve a fleet, re-homing its ships to the faction root and sub-fleets to the parent.",f:"GameEngine/Fleets/FleetOrder.cs:67"},
+    {n:"Assign Ship to Fleet",c:"Fleet-ops",k:["fleet", "warship", "civilian-ship"],g:"LIVE",d:"Add a ship to a fleet (first ship becomes the flagship).",f:"GameEngine/Fleets/FleetOrder.cs:88"},
+    {n:"Unassign Ship from Fleet",c:"Fleet-ops",k:["fleet", "warship", "civilian-ship"],g:"LIVE",d:"Remove a ship from a fleet (detaches to root; clears flagship if it was the flag).",f:"GameEngine/Fleets/FleetOrder.cs:99"},
+    {n:"Set Flagship",c:"Fleet-ops",k:["fleet", "warship"],g:"LIVE",d:"Make a chosen ship the fleet's flagship (its map icon + representative).",f:"GameEngine/Fleets/FleetOrder.cs:110"},
+    {n:"Toggle Inherit Orders",c:"Fleet-ops",k:["fleet"],g:"DATA",d:"Flip whether a sub-fleet follows its parent's orders; order class + field are live but the client checkbox is commented out.",f:"GameEngine/Fleets/FleetOrder.cs:121"},
+    {n:"Dock / Undock Vessel (Carrier Berthing)",c:"Fleet-ops",k:["warship", "civilian-ship"],g:"DATA",d:"Berth a whole vessel inside a carrier's dock bay (re-parents so it travels with the carrier); full capability + gates exist but NO order/UI is wired.",f:"GameEngine/Docking/DockTools.cs:148"},
+    {n:"Reparent / Reorganize Fleet",c:"Formation-ops",k:["fleet"],g:"LIVE",d:"Move a fleet or ship under another fleet in the command tree (drag-drop), with a cycle guard.",f:"GameEngine/Fleets/FleetOrder.cs:77"},
+    {n:"Create Formation",c:"Formation-ops",k:["ground-formation"],g:"LIVE",d:"Create a named empty formation on a body (the ground echo of forming a fleet); first unit assigned becomes the leader.",f:"GroundForcesDB.cs:917"},
+    {n:"Assign Unit to Formation",c:"Formation-ops",k:["ground-unit", "ground-formation"],g:"LIVE",d:"Add a same-faction unit to a formation (ground echo of AssignShip); first in becomes leader.",f:"GroundForcesDB.cs:978"},
+    {n:"Disband Formation",c:"Formation-ops",k:["ground-formation"],g:"LIVE",d:"Dissolve a formation - its members become unformed and the record is removed; the units survive.",f:"GroundForcesDB.cs:1018"},
+    {n:"Nest Sub-Formation",c:"Formation-ops",k:["ground-formation"],g:"DATA",d:"Re-parent one formation under another to build a battle-group tree (cycle-guarded); engine only, no UI wired.",f:"GroundForcesDB.cs:938"},
+    {n:"Detach Unit from Formation",c:"Formation-ops",k:["ground-unit", "ground-formation"],g:"DATA",d:"Remove a unit from its formation; leadership passes to a survivor. Engine method exists, no client button.",f:"GroundForcesDB.cs:989"},
+    {n:"Set Formation Leader",c:"Formation-ops",k:["ground-formation"],g:"DATA",d:"Designate a member unit as the formation's leader/flagship; engine method exists, no UI.",f:"GroundForcesDB.cs:999"},
+    {n:"Move Formation Tree",c:"Formation-ops",k:["ground-formation"],g:"DATA",d:"March a formation AND every nested sub-formation under it with one order (command-hierarchy payoff); engine only, no UI.",f:"GroundForcesDB.cs:966"},
+    {n:"Merge Formations",c:"Formation-ops",k:["ground-formation"],g:"BUILD",d:"Absorb one formation's units into another as a single verb; only nesting and per-unit reassignment exist, no true merge.",f:"GroundForcesDB.cs:938"},
+    {n:"Split Formation",c:"Formation-ops",k:["ground-formation"],g:"BUILD",d:"Detach a subset of units into a new named formation in one action; today needs Unassign-each + Create + Assign.",f:"n/a - no split verb"},
+    {n:"Escort / Guard Unit",c:"Formation-ops",k:["fleet", "warship", "ground-formation"],g:"BUILD",d:"Station-keep on and shadow another friendly unit, interposing against threats; only an AI-internal helper exists, no player order.",f:"n/a - GameEngine/Fleets/FleetAssembly.cs FindEsc"},
+    {n:"Screen (Interpose Escorts)",c:"Formation-ops",k:["fleet"],g:"BUILD",d:"Order a sub-fleet to screen the main body; FleetRole.Screen exists as an auto-composition role but is not an issuable order.",f:"n/a - FleetRole.Screen (GameEngine/Fleets/FleetR"},
+    {n:"Deploy Station Here",c:"Construction-Industry",k:["warship", "civilian-ship"],g:"LIVE",d:"A construction ship anchors a bare station platform at its current location, paying frame materials from its own + fleet-mates' holds.",f:"GameEngine/Stations/DeployStationOrder.cs:43"},
+    {n:"Construct Station Here (from Parts)",c:"Construction-Industry",k:["civilian-ship"],g:"LIVE",d:"A constructor ship assembles a designed station on-site from the actual components it and its fleet hauled, installing each module.",f:"GameEngine/Construction/OnSiteConstructionOrder.cs:46"},
+    {n:"Colonize Body",c:"Construction-Industry",k:["civilian-ship", "colony", "any"],g:"LIVE",d:"Found a new colony on a surveyed, colonizeable body for a species.",f:"GameEngine/Colonies/CreateColonyOrder.cs:9"},
+    {n:"Launch Ship from Pad",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Launch a completed ship off a colony's launch pad / shipyard into space.",f:"GameEngine/Ships/LaunchShipCommand.cs:7"},
+    {n:"Queue Production Job",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Add a job to a production line to refine materials, build components, build ships, or build ground units - with batch count, repeat, auto-install.",f:"GameEngine/Industry/IndustryOrder.cs:55"},
+    {n:"Cancel Production Job",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Remove a queued/in-progress job from a production line.",f:"GameEngine/Industry/IndustryOrder.cs:71"},
+    {n:"Change Production Job Priority",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Move a job up or down in a production line's queue.",f:"GameEngine/Industry/IndustryOrder.cs:83"},
+    {n:"Add to Local Construction Queue",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Queue a design on the second, on-site LocalConstructionDB build path (points-per-day queue that installs the component on completion).",f:"GameEngine/Industry/Orders/AddToConstructionQueueOrder.cs:8"},
+    {n:"Remove/Reorder Local Construction Queue",c:"Construction-Industry",k:["colony", "station"],g:"LIVE",d:"Remove a job from, or move it up/down within, the LocalConstructionDB build queue.",f:"ConstructionDisplay.cs:183"},
+    {n:"Install Facility from Stockpile",c:"Construction-Industry",k:["colony", "station", "any"],g:"LIVE",d:"Install a component held in a cargo hold onto a target entity, consuming it from storage and recalculating abilities.",f:"GameEngine/Storage/CargoInstallOrder.cs:52"},
+    {n:"Install Component Instance",c:"Construction-Industry",k:["any", "colony", "station", "warship", "civilian-ship"],g:"LIVE",d:"Move a component from a cargo hold into an installed slot on the entity (closest thing to a manual refit-one-module step).",f:"GameEngine/Engine/Components/InstallComponentInstanceOrder.cs:26"},
+    {n:"Uninstall Component Instance",c:"Construction-Industry",k:["any", "colony", "station", "warship", "civilian-ship"],g:"LIVE",d:"Remove an installed component from an entity (module removal; pairs with Add-to-storage for a manual swap).",f:"GameEngine/Engine/Components/UninstallComponentInstanceOrder.cs:27"},
+    {n:"Place Installation in Region",c:"Construction-Industry",k:["colony"],g:"LIVE",d:"Place a PlanetInstallation design at a surface region of the colony's world (draws as a building on the tactical map).",f:"GameEngine/Galaxy/PlaceInstallationInRegionOrder.cs:30"},
+    {n:"Build Mine on Deposit Hex",c:"Construction-Industry",k:["colony"],g:"LIVE",d:"Place a mine installation on a specific surface hex that holds a scanned mineral deposit.",f:"GameEngine/Galaxy/PlaceInstallationOnHexOrder.cs:31"},
+    {n:"Build / Raise Ground Unit",c:"Construction-Industry",k:["colony", "ground-unit"],g:"LIVE",d:"Build a ground unit through normal industry (a component carrying GroundUnitAtb; on install it raises the unit). DevTools can raise directly.",f:"GroundForcesDB.cs:589"},
+    {n:"Edit Production Job",c:"Construction-Industry",k:["colony", "station"],g:"DATA",d:"Change an existing job's quantity/repeat/auto-install; the order type exists but the client sets those at queue-time instead, so no wired caller.",f:"GameEngine/Industry/IndustryOrder.cs:97"},
+    {n:"Reinforce / Rebuild Formation",c:"Construction-Industry",k:["ground-formation", "colony"],g:"BUILD",d:"Queue production of replacement units to bring an under-strength garrison back to target; the AI helper exists but no player order.",f:"n/a - GroundReinforcement.cs is an AI-read helpe"},
+    {n:"Refit Ship at Yard",c:"Construction-Industry",k:["warship", "civilian-ship"],g:"BUILD",d:"Retool a built ship to a different design at a shipyard; no refit order exists, only piecemeal Install/Uninstall of component instances.",f:"n/a - grep refit in GameEngine returns only Even"},
+    {n:"Scrap / Decommission Ship",c:"Construction-Industry",k:["warship", "civilian-ship"],g:"BUILD",d:"Break a ship for material recovery at a colony/yard; no order exists, ShipFactory.DestroyShip has no client caller and no reclaim path.",f:"n/a - DestroyShip not reachable from client"},
+    {n:"Mothball / Reactivate",c:"Construction-Industry",k:["warship", "civilian-ship"],g:"BUILD",d:"Lay a ship up in reserve (reduced upkeep, cannot fight) and later reactivate it; no such order.",f:"n/a - no mothball order in GameEngine"},
+    {n:"Rename Entity",c:"Special",k:["warship", "civilian-ship", "fleet", "colony", "station", "any"],g:"LIVE",d:"Rename any owned entity (ship, fleet, colony, station) that has a NameDB.",f:"GameEngine/Names/RenameCommand.cs:7"},
+    {n:"Rename Formation",c:"Special",k:["ground-formation"],g:"LIVE",d:"Rename a formation (a data object, so it uses this setter instead of the entity-only RenameWindow).",f:"GroundForcesDB.cs:1009"},
+    {n:"Assign/Unassign Governor",c:"Special",k:["colony", "station"],g:"LIVE",d:"Seat or remove a commander in an administration post on a colony/station (governance delegate).",f:"GameEngine/People/Orders/AssignAdministratorOrder.cs:10"},
+    {n:"Set Post Funding",c:"Special",k:["colony", "station"],g:"LIVE",d:"Set the funding level of an admin/research post (drives its output rate).",f:"GameEngine/Tech/Orders/FundingChangedOrder.cs:8"},
+    {n:"Research: Queue Tech / Assign Scientist",c:"Special",k:["colony", "station"],g:"LIVE",d:"Add or remove a tech in a research lab's queue and assign/unassign a scientist to lead it.",f:"ResearchWindow.cs:468"},
+    {n:"Set Colony Tax Rate",c:"Special",k:["colony", "station"],g:"DATA",d:"Player sets the tax rate (drives monthly income scaled by morale); TaxRate has a public setter but NO order class - a direct field write.",f:"GameEngine/Colonies/ColonyEconomyDB.cs (TaxRate"},
+    {n:"Salvage / Recover Wreck",c:"Special",k:["warship", "civilian-ship"],g:"BUILD",d:"Recover materials/components from a destroyed hull or debris; no salvage order or wreck entity.",f:"n/a - no salvage order"},
+    {n:"Self-Destruct / Scuttle",c:"Special",k:["warship", "civilian-ship"],g:"BUILD",d:"Destroy your own ship (deny capture / clear a wreck); no such order.",f:"n/a - no scuttle order"},
+    {n:"Rename / Disband Individual Unit",c:"Special",k:["ground-unit"],g:"BUILD",d:"Rename a single unit or scrap/disband it to recover crew/cost; only formations can be renamed/disbanded, units have no such verb.",f:"GroundForcesDB.cs:1009"},
+    {n:"Set Capital / Abandon Colony",c:"Special",k:["colony"],g:"BUILD",d:"Designate a capital colony, or abandon/disestablish one; neither exists - only CreateColonyOrder, no set-capital and no abandon order.",f:"n/a - no set-capital or abandon order"},
+    {n:"Set Readiness / Crew Condition",c:"Special",k:["warship", "fleet", "ground-unit"],g:"BUILD",d:"A readiness/condition state (Green/Yellow/Red, shore-leave, refit-state) to display and toggle on a command card; entirely new.",f:"n/a - no readiness concept on ships or units"},
+    {n:"Cancel / Reorder Live Queued Order",c:"Special",k:["fleet", "warship", "civilian-ship", "any"],g:"BUILD",d:"Cancel or re-sequence orders already in the live ActionList; today the Orders table only DISPLAYS the queue, no cancel or drag-reorder.",f:"FleetWindow.cs:1823"},
+    {n:"Move to Nearest Colony",c:"Standing-Conditional",k:["fleet"],g:"LIVE",d:"Auto-move the fleet to the closest friendly colony; selectable as a standing-order action.",f:"OrderRegistry.cs:13"},
+    {n:"Move to Nearest Geo-Survey Target",c:"Standing-Conditional",k:["fleet"],g:"LIVE",d:"Auto-move the fleet to the closest un-surveyed body; standing-order action.",f:"OrderRegistry.cs:14"},
+    {n:"Move to Nearest Anomaly",c:"Standing-Conditional",k:["fleet"],g:"LIVE",d:"Auto-move the fleet to the closest anomaly; standing-order action.",f:"OrderRegistry.cs:15"},
+    {n:"Create Standing / Conditional Order",c:"Standing-Conditional",k:["fleet"],g:"LIVE",d:"Build an if-condition-then-actions rule on a fleet (e.g. fuel < 30% -> move to nearest colony), evaluated hourly.",f:"GameEngine/Engine/Orders/ConditionalOrder.cs:6"},
+    {n:"Condition: Fleet Fuel",c:"Standing-Conditional",k:["fleet"],g:"LIVE",d:"The only wired standing-order condition - fires when fleet average fuel crosses a comparison threshold (framework supports AND/OR of more).",f:"GameEngine/Engine/Orders/Conditions/FuelCondition.cs:13"},
+    {n:"Queue Waypoint: Move to Region",c:"Standing-Conditional",k:["ground-formation"],g:"LIVE",d:"Append a then-move-to-region-N step to the formation's sequential order queue (a real then-waypoint chain).",f:"GroundForcesDB.cs:343"},
+    {n:"Queue Waypoint: Hold / Pause",c:"Standing-Conditional",k:["ground-formation"],g:"LIVE",d:"Queue a timed wait (default 6h) at the current position before the next queued order runs.",f:"GroundForcesDB.cs:344"},
+    {n:"Queue Waypoint: Set ROE",c:"Standing-Conditional",k:["ground-formation"],g:"LIVE",d:"Queue an ROE switch (Stand-off / Close) as a step in the order chain, applied when that waypoint executes.",f:"GroundForcesDB.cs:346"},
+    {n:"Clear Plan (Cancel Queue)",c:"Standing-Conditional",k:["ground-formation"],g:"LIVE",d:"Empty a formation's queued waypoint chain; in-transit units finish their current march but no further orders run.",f:"GroundForcesDB.cs:1069"},
+    {n:"Queue Waypoint: Move to Planetary Hex",c:"Standing-Conditional",k:["ground-formation"],g:"DATA",d:"Queue a formation march to a GLOBAL cylinder hex as a waypoint; order type + handler exist but no client button queues it.",f:"GroundForcesDB.cs:342"},
+    {n:"Queue Waypoint: Set Stance",c:"Standing-Conditional",k:["ground-formation"],g:"DATA",d:"Queue a doctrine-stance switch as a sequenced order step; order type + handler exist but the client sets stance directly, never queues it.",f:"GroundForcesDB.cs:345"},
+    {n:"Set Formation Order (Replace Queue)",c:"Standing-Conditional",k:["ground-formation"],g:"DATA",d:"Replace a formation's entire queue with a single do-this-now order; engine method exists, client uses Queue+Clear instead.",f:"GroundForcesDB.cs:1060"},
+    {n:"Pause-on-Action (Auto-Halt)",c:"Standing-Conditional",k:["fleet", "warship", "civilian-ship", "any"],g:"DATA",d:"An order with PauseOnAction=true stops the clock when it fires so the player is notified; the field + event exist but no UI sets the flag.",f:"GameEngine/Engine/Orders/EntityCommand.cs:90"},
+    {n:"Patrol / Loiter Area",c:"Standing-Conditional",k:["fleet", "warship", "ground-formation"],g:"BUILD",d:"Sweep or hold a designated area/route and auto-engage intruders; no such order exists anywhere.",f:"n/a - no Patrol order in GameEngine (would exten"},
+    {n:"Picket / Sentry",c:"Standing-Conditional",k:["fleet", "warship"],g:"BUILD",d:"Hold a chokepoint/jump-point and report contacts, alerting on intrusion; no such order.",f:"n/a - no picket order"},
+    {n:"Repeat / Loop Order",c:"Standing-Conditional",k:["fleet", "civilian-ship", "ground-formation"],g:"BUILD",d:"A cyclic order that re-runs forever (patrol loop, repeating cargo run, cycle-these-waypoints); no cyclic primitive - orders run once and are removed.",f:"n/a - RemoveAll(IsFinished) drops completed orde"},
+    {n:"Richer Standing-Order Conditions",c:"Standing-Conditional",k:["fleet"],g:"BUILD",d:"New triggers - hull-damage %, cargo-full, enemy-detected, at-location, ammo-low, arrived; the CompoundCondition AND/OR framework supports them, none authored.",f:"Conditions/CompoundCondition.cs:21"},
+  ];
+
+  // ── THE COMPONENT SCAN — an order needs a part; the window scans what's installed and only offers what's applicable ──
+  // This mirrors the engine's real gate: HasGeoSurveyAbility = entity.HasDataBlob<GeoSurveyAbilityDB>() (EntityExtensions.cs:199),
+  // recursing across a fleet's ships. NEEDS maps an order → the ability tag its component grants. No entry = no part needed.
+  const NEEDS = {
+    'Assign Weapons to Fire Control':'weapon','Set Fire-Control Target':'weapon','Open Fire / Cease Fire':'weapon','Assign Ordnance to Weapon':'weapon','Reload / Rearm Ordnance at Magazine':'weapon',
+    'Jump Through Gate':'jumpdrive',
+    'Geological Survey':'geosurvey',
+    'Jump-Point (Grav) Survey':'jpsurvey','Survey Anomaly':'jpsurvey',
+    'Embark / Load Troops':'troopbay','Land Troops (Invasion Drop)':'troopbay',
+    'Transfer Cargo':'cargo','Move Component To/From Cargo':'cargo',
+    'Refuel Fleet at Base':'cargo','Refuel (Fleet Self-Action)':'cargotransfer','Resupply (Fleet Self-Action)':'cargotransfer',
+    'Enable/Disable Trade Ship':'logistics','Set Trade Ship Cargo Allocation':'logistics','Ship Logistics State (Start/Abort Job)':'logistics','Set Trade Route / Auto-haul A to B':'logistics',
+    'Colonize Body':'colonymod',
+    'Dock / Undock Vessel (Carrier Berthing)':'dockbay',
+    'Launch Ship from Pad':'shipyard',
+  };
+  const ABIL = {
+    weapon:{i:'⚔',l:'weapon'}, jumpdrive:{i:'⤢',l:'jump drive'}, geosurvey:{i:'🔬',l:'geo-survey sensor'},
+    jpsurvey:{i:'📡',l:'grav-survey sensor'}, troopbay:{i:'🪖',l:'troop bay'}, cargo:{i:'📦',l:'cargo hold'},
+    cargotransfer:{i:'⛽',l:'transfer gear'}, logistics:{i:'🔄',l:'logistics module'}, colonymod:{i:'🏗',l:'colony module'},
+    dockbay:{i:'🛬',l:'dock bay'}, shipyard:{i:'🏭',l:'shipyard'},
+  };
+  // scan a unit's installed parts → the set of ability tags it grants (fleet/formation would union across members)
+  function abilitiesOf(u){
+    const s=new Set(); if(!u) return s;
+    const c=u.comp;
+    if(c){
+      if(c.fire>0)s.add('weapon'); if(c.jump)s.add('jumpdrive');
+      if(c.geoSurvey)s.add('geosurvey'); if(c.jpSurvey)s.add('jpsurvey');
+      if(c.troopBay){s.add('troopbay');s.add('cargo');}
+      if(c.cargoTransfer){s.add('cargotransfer');s.add('cargo');}
+      if(c.logiShipper){s.add('logistics');s.add('cargo');}
+      if(c.cargo>0)s.add('cargo');
+    }
+    if(u.installs){ if(/shipyard|naval yard/i.test(u.installs))s.add('shipyard'); s.add('cargo'); s.add('dockbay'); }
+    return s;
+  }
+
+  // ── the classifier — mirrors the proposed engine ShipRoleTools.ClassifyRole (reads components, not a flag) ──
+  function classifyShip(c){
+    if(c.fire>0)        return {cls:'Warship',   milciv:'Mil', why:`Firepower <code>${c.fire} GJ/s &gt; 0</code> → Warship`, note:'A weapon on the hull is the only thing that makes a ship military.'};
+    if(c.geoSurvey)     return {cls:'Survey',    milciv:'Civ', why:`<code>GeoSurveyAbility</code>, unarmed → Survey`, note:'Reads the same ability gate the Issue-Orders tab uses.'};
+    if(c.jpSurvey)      return {cls:'Survey',    milciv:'Civ', why:`<code>JPSurveyAbility</code>, unarmed → Survey`, note:''};
+    if(c.logiShipper)   return {cls:'Freighter', milciv:'Civ', why:`<code>LogiShipperDB</code>, unarmed → Freighter`, note:'The logistics module carries its own trade state + routes.'};
+    if(c.troopBay)      return {cls:'Transport', milciv:'Civ', why:`<code>GroundBay</code> + cargo, unarmed → Transport`, note:'Civilian hull, military cargo — an open edge case (see the note).'};
+    if(c.cargoTransfer) return {cls:'Tender',    milciv:'Civ', why:`unarmed + <code>CargoTransferAtb</code> → Tender`, note:'A support hull — refuels/rearms the fleet.'};
+    if(c.cargo>0)       return {cls:'Hauler',    milciv:'Civ', why:`<code>CargoStorageDB</code>, unarmed → Hauler`, note:''};
+    return {cls:'Utility', milciv:'Civ', why:'no weapon or role components → Utility', note:''};
+  }
+  function classifyGround(atk,type){
+    if(atk<=0) return {cls:'Support', milciv:'Civ', why:`GroundUnit, <code>Attack ${atk} ≤ 0</code> → Support (non-combat)`, note:'The only civilian-ground signal the engine has — and it is derived, not a type.'};
+    return {cls:type, milciv:'Mil', why:`GroundUnit, <code>Attack ${atk} &gt; 0</code> → ${type}`, note:'All ground-unit TYPES are combat; the design forbids civilian unit types.'};
+  }
+
+  // ── the New Terra Republic — a fixture spread across every filter ──
+  // ships carry a `comp` bag so the classifier runs live, exactly as the engine helper would.
+  const SHIPS = [
+    {id:'meridian', name:'TNS Meridian', ic:'🛡️', fleet:'Home Fleet', flag:true,
+      comp:{fire:5.2, jump:true}, hp:100, fuel:88, loc:'Sol · Earth orbit', cmdr:'Cmdr. V. Okoye · Commodore',
+      order:'Hold station · Earth orbit', tough:1.9, evade:0.18, beam:42000,
+      components:[['2× Med. Beam Turret','beam','wpn'],['Ablative Armour','shield','def'],['Fusion Reactor','','pwr'],['Ion Drive ×2','','prop']]},
+    {id:'kestrel', name:'TNS Kestrel', ic:'🚀', fleet:'Home Fleet', flag:false,
+      comp:{fire:3.1, jump:true}, hp:92, fuel:74, loc:'Sol · Earth orbit', cmdr:'Cmdr. J. Adeyemi',
+      order:'Patrol · Earth orbit', tough:1.2, evade:0.24, beam:0,
+      components:[['Box Launcher ×8','','wpn'],['Magazine (48)','','ord'],['Composite Armour','shield','def'],['Ion Drive','','prop']]},
+    {id:'warden', name:'TNS Warden', ic:'🛰️', fleet:null, flag:false,
+      comp:{fire:1.4}, hp:78, fuel:55, loc:'Sol · Luna orbit', cmdr:null,
+      order:'—', tough:0.6, evade:0.31, beam:28000,
+      components:[['Light Railgun','','wpn'],['Light Armour','shield','def'],['Ion Drive','','prop']]},
+    {id:'compass', name:'TNS Compass', ic:'🔭', fleet:'Survey Division', flag:true,
+      comp:{fire:0, geoSurvey:true}, hp:100, fuel:41, loc:'Sol · en route Mars', cmdr:'Lt. R. Salk',
+      order:'Geo survey · Mars', survey:{target:'Mars',pct:34},
+      components:[['Geo Survey Sensor','','sen'],['Deep-space Antenna','','sen'],['Ion Drive','','prop']]},
+    {id:'draysheet', name:'CSV Draysheet', ic:'📦', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, logiShipper:true, cargo:25000}, hp:100, fuel:63, loc:'Sol · en route Luna', cmdr:null,
+      order:'Haul duranium · Earth → Luna', manifest:{from:'New Terra (Earth)',to:'Luna Depot',item:'Duranium',count:'4,200 t',state:'En route · 61%',space:'25,000 m³'},
+      components:[['Cargo Hold ×5','','crg'],['Logistics Module','','log'],['Commercial Drive','','prop']]},
+    {id:'ballast', name:'CSV Ballast', ic:'⛽', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, cargoTransfer:true, cargo:8000}, hp:100, fuel:70, loc:'Sol · Earth orbit', cmdr:null,
+      order:'Refuel · Home Fleet', manifest:{from:'New Terra (Earth)',to:'Home Fleet',item:'Fuel + ordnance',count:'—',state:'Transferring',space:'8,000 m³'},
+      components:[['Fuel Bunker ×3','','crg'],['Cargo-Transfer Gear','','log'],['Commercial Drive','','prop']]},
+    {id:'tunlade', name:'CSV Tunlade', ic:'🚚', fleet:'Logistics Command', flag:false,
+      comp:{fire:0, troopBay:true, cargo:12000}, hp:100, fuel:59, loc:'Sol · Earth orbit', cmdr:null,
+      order:'Idle · Earth orbit', carries:'2 battalions embarked', manifest:{from:'—',to:'—',item:'Troop bay',count:'2 battalions',state:'Loaded · idle',space:'12,000 m³'},
+      components:[['Troop Bay ×2','','bay'],['Cargo Hold','','crg'],['Commercial Drive','','prop']]},
+  ];
+
+  // ground formations, each with member units (the per-unit rows are the missing render)
+  const FORMATIONS = [
+    {id:'guard1', name:'1st Terra Guard', ic:'🪖', type:'Infantry', loc:'Earth · Meridian region',
+      strength:4200, hp:4800, hpmax:5000, stance:'Defend', roe:'Return-fire', cmdr:'Col. A. Reyes',
+      order:'Hold · Meridian',
+      units:[
+        {name:'Rifle Company A', type:'Infantry', atk:900, hp:1200, hpmax:1250},
+        {name:'Rifle Company B', type:'Infantry', atk:900, hp:1180, hpmax:1250},
+        {name:'AT Platoon',      type:'Infantry', atk:700, hp:640,  hpmax:700},
+        {name:'HQ Section',      type:'Infantry', atk:0,   hp:780,  hpmax:800},
+      ]},
+    {id:'arm2', name:'2nd Armored Bn', ic:'🛞', type:'Armor', loc:'Earth · Ferrum region',
+      strength:6100, hp:3400, hpmax:3600, stance:'Advance', roe:'Free-fire', cmdr:'Maj. T. Vale',
+      order:'Advance · Ferrum ridge',
+      units:[
+        {name:'Tank Company 1', type:'Armor', atk:3100, hp:1800, hpmax:1900},
+        {name:'Tank Company 2', type:'Armor', atk:3000, hp:1600, hpmax:1700},
+      ]},
+    {id:'arty7', name:'7th Field Artillery', ic:'💥', type:'Artillery', loc:'Earth · Meridian region',
+      strength:5200, hp:1900, hpmax:2000, stance:'Support', roe:'Hold', cmdr:null,
+      order:'Support · Meridian line',
+      units:[
+        {name:'Gun Battery', type:'Artillery', atk:5200, hp:1900, hpmax:2000},
+      ]},
+    {id:'eng4', name:'4th Engineer Corps', ic:'🔧', type:'Support', loc:'Earth · Delta region',
+      strength:0, hp:900, hpmax:900, stance:'Fortify', roe:'Hold', cmdr:null,
+      order:'Fortify · Delta',
+      units:[
+        {name:'Sapper Company', type:'Support', atk:0, hp:900, hpmax:900},
+      ]},
+  ];
+
+  const HOLDINGS = [
+    {id:'newterra', name:'New Terra', ic:'🏙️', kind:'Colony', loc:'Sol · Earth', pop:'27.4 M',
+      installs:'Shipyard · Commerce Hub · Industry · Research', order:'Producing · shipyard queue'},
+    {id:'anchor', name:'High Anchor', ic:'🛰️', kind:'Station', loc:'Sol · Earth orbit', pop:'—',
+      installs:'Naval Yard · Commerce · Sensor Array', order:'Building · TNS hull #3'},
+  ];
+
+  // ── flatten into unified roster rows ──
+  function shipRow(s){
+    const k=classifyShip(s.comp);
+    return {kind:'Ship', domain:'space', id:s.id, name:s.name, ic:s.ic, group:s.fleet||'Unattached',
+      cls:k.cls, milciv:k.milciv, why:k.why, clsnote:k.note, loc:s.loc,
+      strength: s.comp.fire>0 ? s.comp.fire : 0, strengthTxt: s.comp.fire>0? s.comp.fire+' GJ/s' : '—',
+      hp:s.hp, order:s.order, cmdr:s.cmdr, raw:s, isShip:true};
+  }
+  function formRow(f){
+    const k=classifyGround(f.type==='Support'?0:f.strength>0?f.strength:1, f.type);
+    return {kind:'Formation', domain:'ground', id:f.id, name:f.name, ic:f.ic, group:'—',
+      cls:k.cls, milciv:k.milciv, why:k.why, clsnote:k.note, loc:f.loc,
+      strength:f.strength, strengthTxt:f.strength>0? f.strength.toLocaleString() : '—',
+      hp:Math.round(f.hp/f.hpmax*100), order:f.order, cmdr:f.cmdr, raw:f, isForm:true, expandable:true};
+  }
+  function holdRow(h){
+    return {kind:h.kind, domain:'holding', id:h.id, name:h.name, ic:h.ic, group:'—',
+      cls:h.kind, milciv:'Civ', why:'an owned holding, not a unit → civilian infrastructure', clsnote:'',
+      loc:h.loc, strength:0, strengthTxt:'—', hp:100, order:h.order, cmdr:null, raw:h, isHold:true};
+  }
+  const ROWS = [...SHIPS.map(shipRow), ...FORMATIONS.map(formRow), ...HOLDINGS.map(holdRow)];
+
+  // ── state ──
+  const TABS = [
+    {id:'all',    label:'All Forces', grade:'BUILD', preset:{}},
+    {id:'fleets', label:'Fleets',     grade:'LIVE',  preset:{domain:'space'}},
+    {id:'batt',   label:'Battalions', grade:'LIVE',  preset:{domain:'ground'}},
+    {id:'logi',   label:'Logistics',  grade:'BUILD', preset:{role:'civ', domain:'space'}},
+    {id:'hold',   label:'Holdings',   grade:'BUILD', preset:{kinds:['Colony','Station']}},
+  ];
+  const state = {tab:'all', domain:'all', role:'all', cls:'all', q:'', sortKey:'default', sortDir:1, sel:null, orderView:'all', showUnavail:false, expanded:new Set(['guard1'])};
+
+  function applyTab(id){
+    const t=TABS.find(x=>x.id===id); state.tab=id;
+    state.domain=t.preset.domain||'all'; state.role=t.preset.role||'all'; state.cls='all'; state.q='';
+    state.kinds=t.preset.kinds||null;
+    render();
+  }
+
+  function passes(r){
+    if(state.kinds && !state.kinds.includes(r.kind)) return false;
+    if(state.domain!=='all' && r.domain!==state.domain) return false;
+    if(state.role!=='all' && r.milciv!==(state.role==='mil'?'Mil':'Civ')) return false;
+    if(state.cls!=='all' && r.cls!==state.cls) return false;
+    if(state.q && !(r.name.toLowerCase().includes(state.q) || r.cls.toLowerCase().includes(state.q) || (r.group||'').toLowerCase().includes(state.q))) return false;
+    return true;
+  }
+
+  const SORTS = {
+    default:(a,b)=>0,
+    name:(a,b)=>a.name.localeCompare(b.name),
+    domain:(a,b)=>a.domain.localeCompare(b.domain)||a.name.localeCompare(b.name),
+    kind:(a,b)=>a.kind.localeCompare(b.kind)||a.name.localeCompare(b.name),
+    cls:(a,b)=>a.cls.localeCompare(b.cls),
+    milciv:(a,b)=>a.milciv.localeCompare(b.milciv)||a.name.localeCompare(b.name),
+    loc:(a,b)=>a.loc.localeCompare(b.loc),
+    strength:(a,b)=>a.strength-b.strength,
+    hp:(a,b)=>a.hp-b.hp,
+  };
+
+  // ── render ──
+  const el=id=>document.getElementById(id);
+
+  function renderTabs(){
+    el('tabs').innerHTML = TABS.map(t=>
+      `<button class="tab" role="tab" aria-selected="${state.tab===t.id}" data-tab="${t.id}">${t.label}<span class="tg ${t.grade}">${t.grade==='LIVE'?'HAS':'NEW'}</span></button>`).join('');
+  }
+
+  function renderSummary(){
+    const owned=ROWS; // all rows are owned
+    const mil=owned.filter(r=>r.milciv==='Mil').length, civ=owned.filter(r=>r.milciv==='Civ').length;
+    const space=owned.filter(r=>r.domain==='space').length, ground=owned.filter(r=>r.domain==='ground').length;
+    const hold=owned.filter(r=>r.domain==='holding').length;
+    const cells=[
+      ['Elements', owned.length-hold, ''],
+      ['Military', mil, 'mil'],
+      ['Civilian', civ, 'civ'],
+      ['Space', space, ''],
+      ['Ground', ground, ''],
+      ['Holdings', hold, ''],
+    ];
+    el('summary').innerHTML = cells.map(([k,v,c])=>
+      `<div class="scell ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  }
+
+  function renderFilters(){
+    const clsList=[...new Set(ROWS.map(r=>r.cls))].sort();
+    const seg=(label,key,opts)=>`<div class="fgroup"><span class="fl">${label}</span>`+
+      opts.map(([v,lab,extra])=>`<button class="chip ${extra||''}" data-fkey="${key}" data-fval="${v}" aria-pressed="${state[key]===v}">${lab}</button>`).join('')+`</div>`;
+    el('filterbar').innerHTML =
+      seg('Domain','domain',[['all','All'],['space','Space'],['ground','Ground'],['holding','Holdings']])+
+      seg('Role','role',[['all','All'],['mil','Military','mil'],['civ','Civilian','civ']])+
+      `<div class="fgroup"><span class="fl">Class</span><select class="fsel" id="clsSel"><option value="all">All classes</option>`+
+        clsList.map(c=>`<option value="${c}" ${state.cls===c?'selected':''}>${c}</option>`).join('')+`</select></div>`+
+      `<div class="fgroup"><input class="fq" id="qbox" placeholder="Search units…" value="${state.q}"></div>`+
+      `<div class="fcount" id="fcount"></div>`;
+  }
+
+  const COLS=[
+    ['name','Unit', 'LIVE', false],
+    ['domain','Domain','LIVE', false],
+    ['kind','Kind','LIVE', false],
+    ['cls','Class','BUILD', false],
+    ['milciv','Mil / Civ','BUILD', false],
+    ['loc','Location','LIVE', false],
+    ['strength','Strength','LIVE', true],
+    ['hp','Health','MIX', true],
+    ['order','Order','LIVE', false],
+    ['cmdr','Cmdr','DATA', false],
+  ];
+  function renderHead(){
+    el('rhead').innerHTML='<tr>'+COLS.map(([k,lab,grade,num])=>{
+      const g = grade==='MIX' ? 'BUILD' : grade;
+      const arrow = state.sortKey===k ? `<span class="ar">${state.sortDir>0?'▲':'▼'}</span>` : '';
+      const gl = grade==='MIX' ? 'BUILD*' : grade;
+      return `<th class="${num?'num':''}" data-sort="${k}">${lab}<span class="cg ${g}">${gl}</span>${arrow}</th>`;
+    }).join('')+'</tr>';
+  }
+
+  function hbar(pct){
+    const cl = pct>=60?'':pct>=30?'warn':'crit';
+    return `<div class="hbar"><div class="track"><span class="${cl}" style="width:${pct}%"></span></div><span class="pct">${pct}%</span></div>`;
+  }
+  function rowCells(r, child){
+    if(child){
+      const pct=Math.round(r.hp/r.hpmax*100);
+      const k=classifyGround(r.atk,r.type);
+      return `<td><div class="nm ind"><span class="ic">${r.type==='Armor'?'🛞':r.type==='Artillery'?'💥':r.type==='Support'?'🔧':'👣'}</span><div class="txt"><b>${r.name}</b><s>ground unit · ${r.type}</s></div></div></td>`+
+        `<td><span class="dm ground">Ground</span></td>`+
+        `<td>Unit</td>`+
+        `<td><span class="cls">${k.cls}</span></td>`+
+        `<td><span class="pill ${k.milciv}">${k.milciv==='Mil'?'MIL':'CIV'}</span></td>`+
+        `<td class="mono" style="font-size:11px;color:var(--ink-faint)">— in formation —</td>`+
+        `<td class="num">${r.atk>0?r.atk.toLocaleString():'—'}</td>`+
+        `<td class="num">${hbar(pct)}</td>`+
+        `<td class="ord idle">follows formation</td>`+
+        `<td class="cmdr none">—</td>`;
+    }
+    const chev = r.expandable ? `<span class="chev" data-exp="${r.id}">${state.expanded.has(r.id)?'▼':'▶'}</span>` : `<span class="chev"></span>`;
+    const grp = r.group && r.group!=='—' ? `<s>${r.isShip?'fleet: ':''}${r.group}</s>` : (r.isForm?`<s>battalion · ${r.raw.units.length} units</s>`:(r.isHold?`<s>holding</s>`:''));
+    return `<td><div class="nm">${chev}<span class="ic">${r.ic}</span><div class="txt"><b>${r.name}${r.raw&&r.raw.flag?' <span style="color:var(--accent-ink);font-family:var(--mono);font-size:9px">◆FLAG</span>':''}</b>${grp}</div></div></td>`+
+      `<td><span class="dm ${r.domain}">${r.domain==='space'?'Space':r.domain==='ground'?'Ground':'Holding'}</span></td>`+
+      `<td>${r.kind}</td>`+
+      `<td><span class="cls">${r.cls}</span></td>`+
+      `<td><span class="pill ${r.milciv}">${r.milciv==='Mil'?'MIL':'CIV'}</span></td>`+
+      `<td>${r.loc}</td>`+
+      `<td class="num">${r.strengthTxt}</td>`+
+      `<td class="num">${r.domain==='holding'?'—':hbar(r.hp)}</td>`+
+      `<td class="ord ${r.order==='—'?'idle':''}">${r.order}</td>`+
+      `<td class="cmdr ${r.cmdr?'':'none'}">${r.cmdr?r.cmdr.split('·')[0].trim():'—'}</td>`;
+  }
+
+  function render(){
+    renderTabs(); renderSummary(); renderFilters(); renderHead();
+    let rows=ROWS.filter(passes);
+    if(state.sortKey!=='default'){ rows=rows.slice().sort((a,b)=>SORTS[state.sortKey](a,b)*state.sortDir); }
+    const body=el('rbody'); body.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.className = state.sel===r.id ? 'sel':'';
+      tr.dataset.row=r.id;
+      tr.innerHTML=rowCells(r,false);
+      body.appendChild(tr);
+      if(r.isForm && state.expanded.has(r.id)){
+        r.raw.units.forEach((u,i)=>{
+          // role filter also hides support children when Military selected
+          const k=classifyGround(u.atk,u.type);
+          if(state.role!=='all' && k.milciv!==(state.role==='mil'?'Mil':'Civ')) return;
+          const cid=r.id+'#'+i;
+          const ctr=document.createElement('tr'); ctr.className='child'+(state.sel===cid?' sel':''); ctr.dataset.row=cid;
+          ctr.innerHTML=rowCells(u,true); body.appendChild(ctr);
+        });
+      }
+    });
+    el('fcount').innerHTML = `showing <b>${rows.length}</b> of <b>${ROWS.length}</b> owned`;
+    renderDetail();
+  }
+
+  // ── detail panel ──
+  function gbadge(g){return `<span class="gr ${g}">${g}</span>`;}
+  function renderDetail(){
+    const d=el('detail');
+    // a ground UNIT (child row) — id like "guard1#2"
+    if(state.sel && state.sel.indexOf('#')>=0){
+      const [fid,ix]=state.sel.split('#'); const f=FORMATIONS.find(x=>x.id===fid); const u=f&&f.units[+ix];
+      if(u){ const k=classifyGround(u.atk,u.type); const pct=Math.round(u.hp/u.hpmax*100);
+        const ico=u.type==='Armor'?'🛞':u.type==='Artillery'?'💥':u.type==='Support'?'🔧':'👣';
+        let h=`<div class="dhead"><div class="dic">${ico}</div><div><div class="dh1">${u.name}</div>`+
+          `<div class="dh2"><span class="dm ground">Ground</span> <span class="cls">${k.cls}</span> <span class="pill ${k.milciv}">${k.milciv==='Mil'?'MILITARY':'CIVILIAN'}</span> <span class="mono" style="color:var(--ink-faint)">in ${f.name}</span></div></div></div>`;
+        h+=`<div class="derive"><div class="dl"><span>Why this class?</span>${gbadge('DATA')}</div><div class="dv">${k.why}</div>${k.note?`<div class="dn">${k.note}</div>`:''}</div>`;
+        h+=`<div class="dsect"><div class="sh">Individual unit ${gbadge('BUILD')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— every field lives on GroundUnit; the per-unit row+card is the new render</span></div>`+
+          `<div class="drow"><span>Type</span><b>${u.type}</b></div>`+
+          `<div class="drow"><span>Attack</span><b>${u.atk.toLocaleString()}</b></div>`+
+          `<div class="drow"><span>Health</span><b>${u.hp.toLocaleString()} / ${u.hpmax.toLocaleString()} (${pct}%)</b></div>`+
+          `<div class="drow"><span>Parent formation ${gbadge('LIVE')}</span><b>${f.name}</b></div>`+
+          `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${f.loc}</b></div></div>`;
+        h+=orderSurface('ground-unit', u);
+        d.innerHTML=h; return;
+      }
+    }
+    const r=ROWS.find(x=>x.id===state.sel);
+    if(!r){ d.innerHTML='<div class="dempty">◎ select any unit on the left<br>to read its details and give it orders<br><br>every unit is one row — ships, battalions,<br>freighters, colonies — filter by domain and role<br><br>expand a battalion, then click a company for its own orders</div>'; return; }
+    let html = `<div class="dhead"><div class="dic">${r.ic}</div><div><div class="dh1">${r.name}</div>`+
+      `<div class="dh2"><span class="dm ${r.domain}">${r.domain==='space'?'Space':r.domain==='ground'?'Ground':'Holding'}</span> <span class="cls">${r.cls}</span> <span class="pill ${r.milciv}">${r.milciv==='Mil'?'MILITARY':'CIVILIAN'}</span></div></div></div>`;
+
+    // the derivation card (the teaching moment)
+    html += `<div class="derive"><div class="dl"><span>Why this class?</span>${gbadge('BUILD')}</div><div class="dv">${r.why}</div>${r.clsnote?`<div class="dn">${r.clsnote}</div>`:''}</div>`;
+
+    if(r.isShip){
+      const s=r.raw;
+      if(r.cls==='Warship'){
+        html+=`<div class="dsect"><div class="sh">Combat sheet ${gbadge('LIVE')}</div>`+
+          `<div class="drow"><span>Firepower</span><b>${s.comp.fire} GJ/s</b></div>`+
+          `<div class="drow"><span>Toughness</span><b>${s.tough} GJ</b></div>`+
+          `<div class="drow"><span>Evasion</span><b>${s.evade}</b></div>`+
+          `<div class="drow"><span>Beam reach</span><b>${s.beam? (s.beam/1000).toLocaleString()+' km':'—'}</b></div></div>`;
+      } else {
+        const m=s.manifest;
+        html+=`<div class="dsect"><div class="sh">Civilian manifest ${gbadge('DATA')}</div><div class="mani">`+
+          (s.survey? `Surveying <b>${s.survey.target}</b> — <b>${s.survey.pct}%</b> complete` :
+           `<b>${m.item}</b> · ${m.count}<br>${m.from} → <b>${m.to}</b><br>State: <b>${m.state}</b>${m.space?` · hold ${m.space}`:''}`)+
+          (s.carries?`<br><span style="color:var(--accent-ink)">↳ ${s.carries}</span>`:'')+`</div></div>`;
+      }
+      html+=`<div class="dsect"><div class="sh">Installed components ${gbadge('LIVE')}</div>`+
+        s.components.map(([n,,t])=>`<div class="comp"><span class="cn">${n}</span><span class="cc">${t}</span></div>`).join('')+`</div>`;
+      html+=`<div class="dsect"><div class="sh">Status</div>`+
+        `<div class="drow"><span>Health ${gbadge('BUILD')}</span><b>${s.hp}%</b></div>`+
+        `<div class="drow"><span>Fuel ${gbadge('BUILD')}</span><b>${s.fuel}%</b></div>`+
+        `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${r.loc}</b></div>`+
+        `<div class="drow"><span>Commander ${gbadge('DATA')}</span><b>${s.cmdr||'— unassigned —'}</b></div>`+
+        `<div class="drow"><span>Order ${gbadge('LIVE')}</span><b>${s.order}</b></div></div>`;
+      html+=orderSurface(r.cls==='Warship'?'warship':'civilian-ship', s);
+    }
+    else if(r.isForm){
+      const f=r.raw;
+      html+=`<div class="dsect"><div class="sh">Formation ${gbadge('LIVE')}</div>`+
+        `<div class="drow"><span>Strength (Σ attack)</span><b>${f.strength.toLocaleString()}</b></div>`+
+        `<div class="drow"><span>Health</span><b>${f.hp.toLocaleString()} / ${f.hpmax.toLocaleString()}</b></div>`+
+        `<div class="drow"><span>Stance</span><b>${f.stance}</b></div>`+
+        `<div class="drow"><span>Rules of engagement</span><b>${f.roe}</b></div>`+
+        `<div class="drow"><span>Location ${gbadge('LIVE')}</span><b>${f.loc}</b></div>`+
+        `<div class="drow"><span>Commander ${gbadge('DATA')}</span><b>${f.cmdr||'— unassigned —'}</b></div></div>`;
+      html+=`<div class="dsect"><div class="sh">Member units ${gbadge('BUILD')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— data exists, per-unit row is the new render</span></div>`+
+        f.units.map(u=>{const k=classifyGround(u.atk,u.type);return `<div class="comp"><span class="cn">${u.name}</span><span class="cc">${k.cls}</span><span class="cc">${Math.round(u.hp/u.hpmax*100)}%</span></div>`;}).join('')+
+        `<div class="memberhint">Expand this battalion in the roster to control each unit as its own row.</div></div>`;
+      html+=orderSurface('ground-formation', f);
+    }
+    else if(r.isHold){
+      const h=r.raw;
+      html+=`<div class="dsect"><div class="sh">Holding ${gbadge('DATA')} <span style="color:var(--ink-faint);font-weight:400;text-transform:none;letter-spacing:0">— live-owner cross-check first</span></div>`+
+        `<div class="drow"><span>Type</span><b>${h.kind}</b></div>`+
+        `<div class="drow"><span>Location</span><b>${h.loc}</b></div>`+
+        (h.pop!=='—'?`<div class="drow"><span>Population</span><b>${h.pop}</b></div>`:'')+
+        `<div class="drow"><span>Installations</span><b style="text-align:right;max-width:210px">${h.installs}</b></div>`+
+        `<div class="drow"><span>Order</span><b>${h.order}</b></div></div>`;
+      html+=orderSurface(r.kind==='Colony'?'colony':'station', h);
+    }
+    d.innerHTML=html;
+  }
+  // deep categorized order palette, filtered by unit kind (+ the 'any' wildcard), grouped by category, each graded
+  const ORDER_BY_NAME = {}; ORDERS.forEach(o=>ORDER_BY_NAME[o.n]=o);
+  function ordersForKind(kind){ return ORDERS.filter(o=>o.k.indexOf(kind)>=0 || o.k.indexOf('any')>=0); }
+  function orderSurface(kind, unit){
+    const abil = abilitiesOf(unit);                       // ← scan this unit's installed components
+    let list = ordersForKind(kind);
+    const nLive=list.filter(o=>o.g==='LIVE').length, nData=list.filter(o=>o.g==='DATA').length, nBuild=list.filter(o=>o.g==='BUILD').length;
+    if(state.orderView==='live') list=list.filter(o=>o.g==='LIVE');
+    // partition: an order is offered only if it needs no part, or the scanned abilities include the part
+    const avail  = list.filter(o=>!NEEDS[o.n] || abil.has(NEEDS[o.n]));
+    const unavail= list.filter(o=>NEEDS[o.n] && !abil.has(NEEDS[o.n]));
+    // the scanned-abilities readout — the answer to "how does it know which orders apply"
+    let scan='';
+    if(unit && unit.comp || (unit && unit.installs)){
+      const chips=[...abil].map(t=>`<span class="achip"><i>${ABIL[t].i}</i>${ABIL[t].l}</span>`).join(' ');
+      scan=`<div class="oscan"><b>🔎 Scanned this unit's components</b> → grants ${chips||'<span class="anone">no order-granting parts</span>'}. Orders are offered only if the part is aboard${unavail.length?` — <b>${unavail.length}</b> hidden (missing the part)`:''}.</div>`;
+    } else if(kind==='ground-formation' || kind==='ground-unit'){
+      scan=`<div class="oscan oscang">🔎 Same scan one level down: a ground unit's orders gate on its <b>mounted components</b> (e.g. a bombardment order needs an artillery piece) — the ability rides the component, ground ruling #2.</div>`;
+    }
+    // group AVAILABLE orders by category
+    let groups='';
+    ORDER_CATS.forEach(cat=>{
+      const inCat=avail.filter(o=>o.c===cat); if(!inCat.length) return;
+      groups+=`<div class="ocat"><div class="ocath">${CAT_ICON[cat]||'•'} ${cat} <s>${inCat.length}</s></div><div class="obtns">`+
+        inCat.map(o=>`<button class="ob g-${o.g}" data-order="${o.n.replace(/"/g,'&quot;')}">${o.n}<span class="og ${o.g}">${o.g}</span></button>`).join('')+`</div></div>`;
+    });
+    // UNAVAILABLE (missing the component) — revealed on demand, greyed, each showing the part it needs
+    let un='';
+    if(unavail.length){
+      un=`<div class="ounavail"><button class="unbtn" data-unavail="1" aria-pressed="${state.showUnavail}">⊘ ${unavail.length} order${unavail.length>1?'s':''} need a component this unit lacks ${state.showUnavail?'— hide':'— show'}</button>`;
+      if(state.showUnavail){ un+=`<div class="obtns obdim">`+unavail.map(o=>{const a=ABIL[NEEDS[o.n]];return `<button class="ob dim g-${o.g}" data-order="${o.n.replace(/"/g,'&quot;')}" title="needs ${a.l}">${o.n}<span class="oneed">needs ${a.i} ${a.l}</span></button>`;}).join('')+`</div>`; }
+      un+=`</div>`;
+    }
+    return `<div class="orders"><div class="oh">`+
+      `<span>Orders &amp; control — <b>${nLive+nData+nBuild}</b> for this kind <span class="ocount"><i class="dL">${nLive} live</i> · <i class="dD">${nData} data</i> · <i class="dB">${nBuild} build</i></span> · <b>${avail.length}</b> offered</span>`+
+      `<span class="oview"><button data-oview="all" aria-pressed="${state.orderView==='all'}">All</button><button data-oview="live" aria-pressed="${state.orderView==='live'}">Live only</button></span>`+
+      `</div>`+
+      scan+
+      `<div class="opalette">${groups}</div>`+
+      un+
+      `<div class="onote">Routed through the one shared order path (space: <span class="mono">OrderableDB → HandleOrder</span>; ground: <span class="mono">GroundFormation.Orders</span>). The offer list is gated by <b>what's installed</b> — the same scan the engine already does (<span class="mono">HasGeoSurveyAbility = HasDataBlob&lt;GeoSurveyAbilityDB&gt;</span>, recursing across a fleet's ships). Mid-battle levers (doctrine / EMCON / ROE / stance) stay issuable while engagement-locked. ⚠ four fleet self-actions (refuel / resupply / survey-anomaly / logistics) are engine <b>stubs</b> today — graded DATA.</div>`+
+      `<div class="otoast" id="otoast"></div></div>`;
+  }
+
+  // ── events (delegated) ──
+  el('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]'); if(b) applyTab(b.dataset.tab);});
+  el('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-fkey]'); if(!b)return; state[b.dataset.fkey]=b.dataset.fval; render();});
+  el('filterbar').addEventListener('change',e=>{if(e.target.id==='clsSel'){state.cls=e.target.value; render();}});
+  el('filterbar').addEventListener('input',e=>{if(e.target.id==='qbox'){state.q=e.target.value.toLowerCase(); render();}});
+  el('rhead').addEventListener('click',e=>{const th=e.target.closest('[data-sort]'); if(!th)return; const k=th.dataset.sort;
+    if(state.sortKey===k) state.sortDir*=-1; else {state.sortKey=k; state.sortDir=1;} render();});
+  el('rbody').addEventListener('click',e=>{
+    const exp=e.target.closest('[data-exp]');
+    if(exp){ const id=exp.dataset.exp; if(state.expanded.has(id))state.expanded.delete(id); else state.expanded.add(id); render(); e.stopPropagation(); return; }
+    const tr=e.target.closest('[data-row]'); if(tr){ state.sel = state.sel===tr.dataset.row?null:tr.dataset.row; render(); }
+  });
+  el('detail').addEventListener('click',e=>{
+    const ov=e.target.closest('[data-oview]'); if(ov){ state.orderView=ov.dataset.oview; renderDetail(); return; }
+    const uv=e.target.closest('[data-unavail]'); if(uv){ state.showUnavail=!state.showUnavail; renderDetail(); return; }
+    const b=e.target.closest('[data-order]'); if(!b)return;
+    const t=el('otoast'); if(!t)return; const o=ORDER_BY_NAME[b.dataset.order]||{g:'',d:'',f:''};
+    const icon = o.g==='LIVE'?'✓':o.g==='DATA'?'◐':'✎';
+    const verb = o.g==='LIVE'?'issuable today — queued through the real order path':o.g==='DATA'?'capability exists in the engine; no button/order wired yet':'proposed — no order exists today';
+    const need=NEEDS[b.dataset.order];
+    t.className='otoast show g-'+o.g;
+    t.innerHTML=`${icon} <b>${b.dataset.order}</b> · <span class="tg-${o.g}">${o.g}</span> — ${verb}.`+
+      (need?` <span class="treq">requires ${ABIL[need].i} ${ABIL[need].l}</span>`:'')+
+      `<br><span class="tdoes">${o.d||''}</span>${o.f?` <span class="tcite">${o.f}</span>`:''}`;
+  });
+
+  render();
+})();
+</script>

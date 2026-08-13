@@ -1,5 +1,7 @@
 # LANE GROUND — pending dashboard rows, cross-lane requests, developer decisions
 
+> **🔒 CANON OVERRIDE 2026-08-09 — the ground order/capture notes here are superseded by `docs/ground/GROUND-GAMEPLAY-DECISIONS-2026-07-24.md` M8/M16/M18.** Ground orders are fixed at MOVE · RAZE · SET DOCTRINE (+ load/land); capture is per-mini-hex with majority roll-up; the `CaptureInfrastructure` order is design-deleted (M18) though **still in code** (needs a follow-up). Treat the older order/capture lines below as historical.
+
 This is the GROUND lane's conflict-free notes file (CAMPAIGN-PLAN.md §2.4). Lanes do NOT edit the shared
 dashboards (`docs/DOCS-INDEX.md`, `docs/TESTING-TRACKER.md`, `docs/SYSTEM-CONNECTION-MAP.md`) or a
 collision-prone subsystem `CLAUDE.md` mid-flight; each pending row lands here and the integration phase (P8.2)

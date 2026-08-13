@@ -1,5 +1,13 @@
 # Combat System Design
 
+> **⚠ STALE SECTIONS — corrected by the 2026-08-09 contradiction ledger (`docs/DOCS-CONTRADICTIONS-2026-08-09.md`), current truth = `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`.** This doc predates the built auto-resolver; seven "as-built" claims below are now wrong. Read the ground-truth, not these:
+> - **System 9 — combat value is NOT "recalculated on damage."** It is **cached at build and never recomputed** — a damaged-but-alive ship still rates at full value. That IS whole-or-dead (recalc-on-damage is unbuilt).
+> - **System 1 / v1-boundary — weapons do NOT "fire regardless of distance."** `WeaponProfile.Range_m` is a built per-weapon finite range; the gate is in `BuildFireMix`, and under LD-30 the longest range sizes the arena.
+> - **System 9 algorithm — no `variance_roll`.** The resolve is **deterministic** (locked rule LD-7: no RNG, no clock read). fast-forward == watch.
+> - **v1-boundary / System 9 — IFF is not "everyone sees everyone; a different faction is hostile."** `AreHostile` reads `DiplomacyDB` (pacts/war-latch/stances) and a detection gate can be required to engage.
+> - **System 8 — do NOT build a new `EnvironmentalZoneDB` with a pre-baked modifier table.** The built + canon system is **`SpaceHazardDB`** — a data-driven typed `HazardEffect` list (`docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md`); and nebulae/belts are **not** readable generator objects to attach to (a nebula is JSON-authored; a belt-region object is the one genuine unbuilt piece).
+> - **"What Already Exists" preamble — do NOT treat `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` as the source of truth.** It was RETIRED 2026-07-27; use `Combat/CLAUDE.md` + the live dashboards (`SYSTEM-CONNECTION-MAP` / `TESTING-TRACKER` / `DOCS-INDEX`).
+>
 > **→ The range/closing build plan lives in `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4`.** That doc is the phased
 > blueprint for the next big evolution: turning this instant strength-compare into a **closing fight** where range,
 > speed, detection, and doctrine decide who can hit whom — fleet capability aggregation, per-sub-fleet ranges, the
@@ -580,7 +588,7 @@ Systems 7 and 8 can be built in parallel with Systems 4–6 because they are mod
 
 ## What Already Exists
 
-> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md` — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those two as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
+> **This table was ~3 weeks stale (it still said the v1 spine was "Not started" after it shipped). Updated below against live source. The authoritative, always-current build ledger is `GameEngine/Combat/CLAUDE.md` + the live dashboards (`docs/SYSTEM-CONNECTION-MAP.md` / `docs/TESTING-TRACKER.md` / `docs/DOCS-INDEX.md`; the `SYSTEMS-STATUS-AND-TEST-PLAN` this used to name was RETIRED 2026-07-27) — a hand-maintained status table inside a design doc rots, so treat this as a snapshot and those as the source of truth. Three build states are kept distinct on purpose: NOT built · built-but-gated-off/unwired-to-the-player · built-and-wired (runtime behavior only the developer's local build can confirm — CI cannot run the client).**
 
 | Component | Status | Notes |
 |-----------|--------|-------|

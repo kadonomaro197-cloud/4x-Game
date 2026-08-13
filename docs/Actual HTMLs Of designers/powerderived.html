@@ -1,0 +1,533 @@
+<title>Power, re-derived — the trade was already in the codebase</title>
+<style>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+/* the ten */
+.ten{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--card)}
+.tenq{border-top:1px solid var(--rule2);padding:11px 13px}
+.tenq:first-child{border-top:0}
+.tenq h4{margin:0 0 6px;font-size:12px;letter-spacing:.02em;color:var(--ac2)}
+.vars{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;padding:3px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);color:var(--ink)}
+.tenq p{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+/* builder */
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+/* generic tables */
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}
+.kill b{color:var(--ink)}
+
+/* remaining spec */
+.oc-cat{margin-bottom:16px}
+.oc-cat h3{margin:0 0 7px;font-size:14px;display:flex;gap:9px;align-items:baseline}
+.oc-cat h3 span{font:10.5px ui-monospace,Menlo,monospace;color:var(--ink3);margin-left:auto}
+details.door{background:var(--card);border:1px solid var(--rule);border-radius:4px;margin-bottom:6px}
+summary{cursor:pointer;padding:9px 11px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--ac);width:10px}
+details[open] summary::before{content:"\2212"}
+.id{font-size:11px;color:var(--ac2)}.dn{font-size:13.5px;font-weight:660}
+summary .n{margin-left:auto;font-size:10px;color:var(--ink3)}
+.body{padding:0 11px 11px;border-top:1px solid var(--rule2)}
+.desc{margin:10px 0 0;font-size:12.5px;color:var(--ink2)}
+.grp{margin-top:13px}.grp h4{margin:0 0 5px;font-size:11.5px;color:var(--ink)}
+.opt{display:grid;grid-template-columns:1fr;gap:2px;padding:7px 0;border-top:1px solid var(--rule2);font-size:12px;line-height:1.4}
+.on{font-size:12px;font-weight:600}.ow{color:var(--ink2)}.oc{color:var(--warn)}.oc i{color:var(--ink3)}
+.oc::before{content:"catch — ";color:var(--ink3)}
+@media(min-width:700px){
+ .w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}
+ .ten{grid-template-columns:1fr 1fr}
+ .tenq{border-left:1px solid var(--rule2)}
+ .tenq:nth-child(odd){border-left:0}
+ .nums{grid-template-columns:repeat(5,1fr)}
+ .opt{grid-template-columns:minmax(120px,1fr) 1.4fr 1.4fr;gap:12px}
+ .oc::before{content:""}
+}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+.num.sh.g b{color:var(--ac2)} .num.sh.a b{color:var(--warn)} .num.sh.r b{color:var(--flag)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+</style>
+
+/* power additions, same idiom */
+.lay{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.lay h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+.num.g b{color:var(--ac2)} .num.a b{color:var(--warn)} .num.r b{color:var(--flag)}
+.big{font-size:15px;color:var(--ink2);margin:0 0 12px}.big b{color:var(--ink)}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 2 of the remaining eight</p>
+<h1>The trade this door needs was already in the codebase — and two of the three generators were options nobody would ever pick.</h1>
+<p class="lead">Smallest door on the list: three attributes, five templates. Work out the arithmetic and they are <b>not three variations on one law</b> — the RTG already trades output against endurance, the reactor is bare <code>50 × Mass</code>, and the turbine's one dial was named after a trade it never had. So the law this door needs is <b>copied, not invented.</b></p>
+<p class="lead" style="margin-top:10px">✅ <b>And then the harder question — why would anyone pick a given one?</b> Measured on the axes the sim actually reads, <b>two of the five power sources were beaten on every single one.</b> The reactor asked for <b>crew equal to its kilograms</b> (1,500 crew for a 1,500 kg plant), which made the densest generator in the game unusable; the RTG was ~22,000× worse per kilogram than a turbine to save <b>two crew</b>. Both fixed, and the rule is now a test that fails if it ever happens again.</p>
+<p class="lead" style="margin-top:10px">✅ <b>FIXED — fuel is real now.</b> No power source used to need fuel to <em>run</em>: all three burn-generators were charged fissile fuel to build, carried a load, and burned it down every tick, but <code>LocalFuel</code> was never read as a gate anywhere, so it ran negative and every reactor ran forever on nothing. <b>The gate is wired</b> — and &ldquo;make lifetime longer&rdquo; turned out to be a <b>unit bug</b>: the reactor's real endurance was <b>2.43 hours</b> and the RTG's was <b>5 seconds</b>. <b>And the burn rate is a dial now.</b></p>
+<p class="lead" style="margin-top:10px">🔴 <b>And a colony cannot build a power plant at all</b> — not one of the five templates mounts on a colony, while the code that reads a colony's power supply is already written and waiting.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>The three generators, side by side</h2>
+<p class="sub">Every formula below is verbatim from <code>energy.json</code>. This is the whole finding.</p>
+<div class="okbox" style="margin:0 0 13px;border-left-color:var(--ac)">
+<b>RTG</b> &nbsp;<code>Fuel = Mass × 0.5</code> · <code>Fuel Consumption = 0.001 ÷ Lifetime</code> · <code>Power = Fuel × Efficiency × Fuel Consumption</code><br>
+<b style="color:var(--ac)">⇒ POWER × LIFETIME = const × MASS</b> &nbsp;<span style="color:var(--ink3)">— the zero-sum, already built and shipping</span></div>
+<div class="warnbox" style="margin:0 0 9px">
+<b>Reactor</b> &nbsp;<code>Power Output = 50 × Mass</code><br>
+<span style="color:var(--ink3)">Strictly linear — a bigger reactor is better per kilogram, full stop. <b>That part is still open (slice P1).</b> ✅ But its <code>Lifetime</code> now reaches the attribute in SECONDS (it was being read as 2.43 hours), its max runs to 100 years, and <b>its burn rate is a dial</b>.</span></div>
+<div class="okbox" style="margin:0;border-left-color:var(--ac)">
+<b>Steam turbine</b> &nbsp;<s>was</s> <code>Output vs Efficency</code> &nbsp;→&nbsp; <b>RULED + RENAMED</b> <code>Core vs Generator</code><br>
+<span style="color:var(--ink3)"><code>FuelDuration = FuelMass × 40e9 ÷ (FuelMass × 100)</code> = <b>4×10⁸ s = 12.7 years — at every setting and every mass.</b> <b style="color:var(--ac)">Your call: that fixed duration IS the turbine</b> — a plant you fuel once a decade. So only the NAME was wrong. The dial is a real trade all along, in the <code>ResourceCost</code> block: it splits mass between <b>core</b> and <b>generator</b>, and core-heavy eats <b>graphite</b> while generator-heavy eats <b>tungsten</b>. Renamed, not re-purposed.</span></div>
+<p class="sub" style="margin-top:12px">🔒 <b>So the one remaining fix is a copy, not a design</b> — and it is the reactor's alone. <code>output × endurance = const × size</code> — <b>run hot and refuel often, or sip and run for years.</b> Same <code>T·v = 2P</code> shape as thrust ↔ exhaust velocity, the gearbox, the warp bubble, the jump range, the gate cycle and the solar panel's bandwidth. <b>Seven places now, one law.</b></p>
+<p class="sub" style="margin-top:8px">And it is a real decision because the two ends serve different fleets: <b>a warship wants peak output</b> for its warp bubble and beam batteries; <b>a picket or an outpost wants to sit still for a decade</b> without a tanker coming out to meet it.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>🔴 No power source needs fuel to RUN — the counter is there, the consequence is not</h2>
+<p class="big">Every rung of the fuel chain is built except the last one. Traced end to end:</p>
+<div class="scroll"><table class="t">
+<tr><th>Rung</th><th>Where</th><th>State</th></tr>
+<tr><td>The fuel is a real material</td><td><code>fissile-fuels</code> — refined from <b>fissionables + hydrocarbons</b>, 50,000 credits a unit</td><td><b class="g">✅ built</b></td></tr>
+<tr><td>Charged at BUILD time</td><td>reactor <code>Fuel Consumption × 3600 × Lifetime</code> · RTG <code>Mass × 0.5</code> · turbine <code>FuelMass</code></td><td><b class="g">✅ built</b></td></tr>
+<tr><td>A generator carries a load</td><td><code>EnergyGenerationAtb.cs:60</code> — <code>LocalFuel = maxUse × Lifetime</code></td><td><b class="g">✅ built</b></td></tr>
+<tr><td>It BURNS that load</td><td><code>EnergyGenProcessor.cs:52</code> — <code>LocalFuel -= fueluse × dt</code></td><td><b class="g">✅ built</b></td></tr>
+<tr><td><b>Running out has a consequence</b></td><td><code>EnergyGenProcessor.EnableFuelExhaustion</code></td><td>✅ <b class="g">BUILT</b> <s>flag default off — the client arms it</s></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">Grepped the whole repository for <code>LocalFuel</code>. <b>Five hits, and not one is a condition:</b> the setter, the decrement, the field declaration, a <code>SensorScan</code> line that <em>overwrites</em> it for solar arrays, and <b>a text label in the debug window.</b> And the reactor's own description reads <b>&ldquo;A non refuelable reactor&rdquo;</b> — the design <em>intended</em> it to run out.</p>
+<div class="okbox"><b>✅ The consequence was the only rung missing, and it was cheap because everything downstream already handled zero power.</b> A dry generator now produces nothing, with no change at all downstream: the warp departure gate refuses (<code>WarpMoveCommand:258</code>), the ground energy-weapon supply gate refuses (<code>WeaponSupply</code>), and the AI stops planning attacks it cannot power (<code>MilitaryReach:156</code>). <code>LocalFuel</code> floors at zero instead of running negative, and <code>IsFuelStarved</code> is a computed read — <b>no save-format change</b>. Solar is never starved: nothing to run out of.</div>
+
+<h2 style="margin-top:26px">🔴 &ldquo;Make lifetime longer&rdquo; was a UNIT BUG, not a balance call</h2>
+<p class="big">The attribute consumes <code>Lifetime</code> in <b>seconds</b> — <code>LocalFuel[kg] = maxUse[kg/s] × Lifetime</code>, drained by <code>fueluse × t.TotalSeconds</code>. Two of the three templates were handing it something else entirely.</p>
+<div class="scroll"><table class="t">
+<tr><th>Template</th><th>Authored as</th><th>Handed to the attribute as</th><th>Real endurance</th></tr>
+<tr><td><b>reactor</b></td><td>8760 <b>hours</b></td><td>8760 seconds</td><td>🔴 <b class="r">2.43 hours</b></td></tr>
+<tr><td><b>rtg</b></td><td>5 <b>years</b></td><td>5 seconds</td><td>🔴 <b class="r">5 seconds</b></td></tr>
+<tr><td>steam turbine</td><td><code>FuelMass ÷ BurnRate</code> = seconds</td><td>seconds</td><td><b class="g">✅ 12.7 years</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>Only the turbine was dimensionally correct — and it is the only one of the three with a shipped design, which is exactly why nobody had ever noticed.</b> Both others now convert explicitly, which makes the reactor's life <b>3600× longer without changing a single authored number</b>. Its max also rises 87,600 → 876,000 h so you can build a century plant and watch the fissile bill scale honestly. And the <code>ResourceCost</code> was right all along — it already multiplied by 3600, so only the attribute argument was ever wrong.</p>
+<p class="sub" style="margin-top:11px">🔑 <b>One more consequence:</b> solar's &ldquo;no fuel ever&rdquo; advantage is <b>smaller than it looks</b>, because a fuelled generator needs no resupply either. What solar actually saves is the <b>fissile-fuels build cost</b> — and it does honestly attenuate with distance from the star (<code>AttenuatedForDistanceList(starProfile, distance, 0.1)</code>), so an outer-system panel is genuinely worse. <b>Solar is the cheap option, not the convenient one</b>, and nothing in the game says so.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>✅ And yes — you can set the burn rate now</h2>
+<p class="big"><code>Fuel Consumption</code> was a fixed <code>Power Output × 1e-7</code>: every reactor in the game burned the same fuel per kilowatt, and there was nothing to decide. It is a dial.</p>
+<div class="okbox" style="margin:0 0 11px"><b>Output vs Economy</b> &nbsp;<s>0.5 – 2.0, default 1.0</s><br>
+<code>Power Output = 50 × Mass × OvE</code> &nbsp;·&nbsp; <code>Fuel Consumption = Power Output × k × OvE</code><br>
+<b style="color:var(--ac)">⇒ fuel per KILOWATT scales with the dial, so 2× the power costs 4× the fuel for the same endurance.</b></div>
+<p class="sub" style="margin-top:0">🔑 <b>That is what makes it a trade and not a free win.</b> Driving a core harder costs more fuel <em>for every kilowatt it makes</em> — benefit rises, cost rises faster. Byte-identical at 1.0.</p>
+<div class="scroll" style="margin-top:12px"><table class="t">
+<tr><th>Design</th><th>Output</th><th>Fuel for a year</th><th>Fuel per kilowatt</th></tr>
+<tr><td><b>Fission Reactor</b> <s>OvE 1.0 · shipped</s></td><td>75,000 kW</td><td>73.9 kg</td><td>3.12e-11 kg/s</td></tr>
+<tr><td><b>De-rated Fission Reactor</b> <s>OvE 0.5 · shipped</s></td><td>37,500 kW</td><td><b class="g">18.5 kg</b></td><td><b class="g">1.56e-11 kg/s</b></td></tr>
+<tr><td><s>the same reactor at</s> OvE 2.0</td><td>150,000 kW</td><td><b class="a">295.7 kg</b></td><td><b class="a">6.25e-11 kg/s</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">The first two are <b>buildable base-mod designs</b>, so the dial is cradle-to-grave rather than a formula. Half the power for a <b>quarter</b> of the fuel — <b>twice as economical per kilowatt</b>, which is exactly the outpost-versus-warship decision this door was missing.</p>
+<div class="warnbox">⚠ <b>One calibration judgement, flagged because it is a judgement.</b> The reactor's specific fuel rate was <code>Power × 1e-7</code> — about <b>3200× the steam turbine's</b> measured 3.125e-11 kg/s per kW, which would have made a year of fuel weigh <b>236 tonnes</b> for a 1500 kg reactor. It is now anchored on the turbine's rate, the only <em>calibrated</em> fuelled generator in the game (being the only one with a shipped design). <b>Nothing in the game moved</b> — no design used the reactor template before this slice. The gauge asserts the anchor as a <b>ratio</b>, so a future turbine re-tune fails loudly instead of drifting.</div>
+<p class="sub" style="margin-top:11px"><b>Still yours to call:</b> whether to <b>arm the flag</b> (a one-line client change), and whether a reactor should be <b>refuelable</b> — its own description reads <em>&ldquo;A non refuelable reactor&rdquo;</em>, so right now <code>Lifetime</code> is a genuine service life and a dead reactor is a dead ship. Good mechanic; it wants to be a deliberate one.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>✅ Every power type now wins one axis outright — and that win is its reason to exist</h2>
+<p class="big">Your rule: <b>each type has to have a justification over the others.</b> Stated as a test, that is <b>&ldquo;no power source may be beaten on every axis the simulation reads.&rdquo;</b> An option a player would never pick is not an option, it is clutter. So I measured all five on the axes the sim actually consumes — <b>per kilogram</b> (the chassis budget), <b>per cubic metre</b> (volume), <b>crew</b> (a real scarce pool), <b>signature</b> (detection decides who shoots first), and the <b>fuel bill</b>. <b>Two of the five were beaten on everything.</b></p>
+<div class="scroll"><table class="t">
+<tr><th>Type <s>at its shipped design</s></th><th>Output</th><th>kW per kg</th><th>kW per m³</th><th>Crew</th><th>Signature</th><th>Fissile to build</th><th>Its justification</th></tr>
+<tr><td><b>Reactor</b> <s>1,500 kg</s></td><td>75,000 kW</td><td><b class="g">50 ◄ wins</b></td><td>50</td><td>3</td><td><b class="r">1.13×10⁷</b> <s>loudest thing in the game</s></td><td>74 kg</td><td><b>Power per KILOGRAM</b> — the warship core</td></tr>
+<tr><td><b>Steam turbine</b> <s>2,000 kg</s></td><td>48,000 kW</td><td>24</td><td><b class="g">24,000 ◄ wins, 480×</b></td><td>3</td><td>60,000</td><td>600 kg</td><td><b>Power per CUBIC METRE</b> — the station and colony plant</td></tr>
+<tr><td><b>RTG</b> <s>1,000 kg · template only</s></td><td>1.1 kW</td><td>0.0011</td><td>0.0011</td><td><b class="g">0 ◄ wins</b></td><td>110</td><td>500 kg</td><td><b>Unattended endurance</b> — nobody aboard, decades, works with no star</td></tr>
+<tr><td><b>Solar array</b> <s>100 m² · 200 kg</s></td><td>27 kW at 1 AU</td><td>0.14</td><td>272</td><td><b class="g">0</b></td><td><b class="g">none ◄ the ONLY silent one</b></td><td><b class="g">0</b></td><td><b>Silence, and no logistics at all</b> — but it needs a star</td></tr>
+<tr><td><b>Battery bank</b></td><td><s>generates nothing</s></td><td>—</td><td>—</td><td>0</td><td>none</td><td>0</td><td><b>A different JOB</b> — holds the lump a warp departure wants at once</td></tr>
+</table></div>
+<div class="warnbox" style="margin-top:13px"><b>🔴 Finding 1 — the reactor demanded crew equal to its KILOGRAMS.</b> <code>CrewReq: "[Mass]"</code>. A 1,500 kg reactor asked for <b>1,500 crew</b>, and component crew sums into a ship's crew requirement and into a colony's infrastructure demand. <b>So the highest-power-density generator in the game was unusable in practice</b> — its justification existed and was unreachable behind a units bug. Now <code>Max(2, [Mass] / 500)</code>: <b>three operators</b> at the stock size, and a fission plant is still never unmanned.</div>
+<div class="warnbox" style="margin-top:9px"><b>🔴 Finding 2 — the RTG won nothing at all.</b> ~22,000× worse per kilogram than a turbine, in exchange for saving <b>two crew</b>. Strictly dominated: there was no ship and no outpost where you would choose it. Its crew is now <b>0</b>, which makes it the only <em>fuelled</em> generator that needs nobody aboard — the probe, the deep-space beacon, the unmanned outpost, <b>and the only generator that works where there is no star.</b> ⚠ Its power-density gap is <b>flagged, not silently tuned</b>: closing it is a calibration call for you, not a thing to slip into a bug fix.</div>
+<div class="okbox" style="margin-top:9px"><b>✅ And the one that needed no fix: solar is the only silent power source in the game.</b> All three fuel-burners carry a 1700 K <code>SensorSignatureAtb</code> — the reactor is <b>a hundred and eighty times louder than the turbine and a hundred thousand times louder than an RTG</b>. A panel emits nothing. <b>Your generator choice is a stealth choice</b>, that was already fully wired, and nothing in the game said so. <b>Solar's mount flags are fixed too</b> — it can now go on a colony and a station, which is where a silent, fuel-free, crew-free plant belongs.</div>
+<p class="sub" style="margin-top:12px">🔒 <b>The rule is now a gauge, not a note.</b> <code>PowerJustificationTests.NoPowerType_IsDominatedOnEveryAxis</code> walks one representative per type and fails if any of them loses on kilograms, volume, crew <em>and</em> silence. <b>It is the test that catches the next dead recipe</b> — including one added years from now by somebody who never read this page. 🔑 <b>And the standing lesson: a justification can be completely real and completely unreachable</b> — the reactor's was, behind a crew formula; the deferred one is the solar array's, behind a mount flag.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Build one</h2>
+<p class="sub">One choice, and the sliders change with it. Every number is the real shipped formula — and each job <b>opens on its real shipped component.</b></p>
+<div class="build">
+<div class="bsec"><p class="blab">Where does the energy come from</p><div class="chips">
+<button class="chip" type="button" data-v="burn" aria-pressed="true">Generate — burn something</button>
+<button class="chip" type="button" data-v="collect" aria-pressed="false">Collect — starlight</button>
+<button class="chip" type="button" data-v="store" aria-pressed="false">Store — hold it</button></div>
+<p class="sub" id="jobnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="fuelsec"><p class="blab">What kind of generator</p><div class="chips">
+<button class="gchip" type="button" data-g="reactor" aria-pressed="true">Reactor 🔴</button>
+<button class="gchip" type="button" data-g="rtg" aria-pressed="false">RTG ✅</button>
+<button class="gchip" type="button" data-g="turbine" aria-pressed="false">Steam turbine 🔴</button></div>
+<p class="sub" id="gnote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec">
+<div class="sl" id="w1"><div class="slh"><span id="n1">Mass</span><span id="s1"></span></div><input type="range" id="d1" min="0" max="100" value="2" aria-label="dial one"><div class="ends"><span id="e1a"></span><span id="e1b"></span></div></div>
+<div class="sl" id="w2"><div class="slh"><span id="n2">Output ↔ endurance</span><span id="s2"></span></div><input type="range" id="d2" min="0" max="100" value="9" aria-label="dial two"><div class="ends"><span id="e2a"></span><span id="e2b"></span></div></div>
+<div class="sl" id="w3"><div class="slh"><span id="n3">Bandwidth</span><span id="s3"></span></div><input type="range" id="d3" min="0" max="100" value="33" aria-label="dial three"><div class="ends"><span id="e3a"></span><span id="e3b"></span></div></div>
+<label class="amph" id="fixwrap"><input type="checkbox" id="fix"> <span>Apply the RTG's law to this generator <b>(still proposed — slice P1)</b></span></label>
+</div>
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><b id="v_a2"></b></div>
+<div class="num fixed"><i id="l_a3"></i><b id="v_a3"></b></div>
+<div class="num fixed"><i id="l_a4"></i><b id="v_a4"></b></div>
+<div class="num fixed" id="sigbox"><i id="l_sig">Signature</i><b id="v_sig"></b></div>
+<div class="num fixed"><i>Mass</i><b id="v_mass"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What this power actually buys</p>
+<p class="muN">The four live consumers, from the real call sites. <b>Warp</b> figures are against the engine default warp drive (1.25 GJ to open the bubble, 2.5 MW to hold).</p>
+<div class="mus">
+<div class="mt"><i>Can it leave?</i><b id="m_leave"></b><s>stored ≥ bubble creation</s></div>
+<div class="mt"><i>Warp endurance</i><b id="m_warp"></b><s>sustain charged per second</s></div>
+<div class="mt"><i>Ground lasers powered</i><b id="m_laser"></b><s>the supply gate</s></div>
+<div class="mt"><i>Seen from</i><b id="m_seen"></b><s>vs a stock reactor</s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<p class="sub" style="margin-top:11px"><b>Teal</b> = you set it. <b>Grey</b> = the formula decided it. <b>The slider set changes with the generator, because the three plants are not three flavours of one plant</b> — the reactor has three live dials (size · fuel load · burn rate), the RTG two, the turbine two. Tick the box on the reactor to see the one law it is still missing; the RTG already runs it and the turbine is ruled as-is. <b>91 distinct part names are reachable</b>, and no two settings ever produce the same one.</p>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔴 A colony cannot build a power plant — and the code that needs one is already written</h2>
+<p class="big">Mount types, straight from <code>energy.json</code>. Read the right-hand column and then the row underneath it.</p>
+<div class="scroll"><table class="t">
+<tr><th>Template</th><th>Where it can be installed</th><th>On a colony?</th></tr>
+<tr><td>Reactor</td><td>Ship · Cargo · Fighter · GroundUnit · Station</td><td><b class="r">no</b></td></tr>
+<tr><td>RTG · Steam turbine</td><td>Ship · Cargo · Fighter · GroundUnit</td><td><b class="r">no</b></td></tr>
+<tr><td>Battery bank</td><td>Ship · Cargo · Fighter</td><td><b class="r">no</b></td></tr>
+<tr><td>Solar array</td><td>✅ <code>ShipComponent, ShipCargo, PlanetInstallation, Station</code> <s>was a raw <code>1</code></s></td><td><b class="g">YES — fixed</b></td></tr>
+</table></div>
+<div class="warnbox"><b>And yet <code>SustenanceProcessor:51</code> already reads it:</b><br>
+<code>double powerSupply = province.TryGetDataBlob&lt;EnergyGenAbilityDB&gt;(out var egen) ? egen.TotalOutputMax : 0.0;</code><br>
+That figure feeds the colony power-shortage term that drives morale. <b>The consumer is built. The producer is unbuildable.</b> It does not bite today only because colony power demand is still calibrated to zero — the moment M5b's demand is switched on, <b>there is no power plant a player can build to answer it.</b></div>
+<p class="sub" style="margin-top:11px">✅ <b>FIXED — and it was the solar array, exactly as expected:</b> the one generator that needs no fuel supply chain, and the first thing any player would try on a new colony. It also had the worst-authored mount in the file — <b>a raw <code>MountType: 1</code> that worked only by numeric coincidence</b> with <code>ComponentMountType.ShipComponent</code>, where every other template names its mounts. It now names them, and includes <code>PlanetInstallation</code> and <code>Station</code>. <b>A colony can build a power plant.</b> 🔴 <b>Still open for the other four</b>, and that is deliberate: whether a colony should be able to build a <em>fission</em> plant is a design call about what a planet is allowed to be, not a typo.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>What this kills</h2>
+<div class="kill"><h4>⚠️ <code>Lifetime</code> — CORRECTED. It costs fuel; it just costs no <em>mass</em>.</h4><p>I checked the <code>Mass</code> formula and stopped there. <b>A template prices a dial through seven independent channels</b> — Mass · Volume · CrewReq · ResearchCost · CreditCost · BuildPointCost · <b>ResourceCost</b> — and the reactor's ResourceCost charges it directly: <code>fissile-fuels = Fuel Consumption × 3600 × Lifetime</code>. A ten-year reactor costs <b>ten times the fissile fuel</b> to build. The dial is paid for.<br><br><b>What is still wrong is narrower and still real:</b> it adds <b>no mass</b>. A reactor carrying ten years of fuel weighs exactly what a one-hour reactor weighs — <b>fuel with no weight</b> — and mass is the currency the Chassis door gates on, so <b>the free side of the dial is the side that matters for ship design.</b> The RTG gets this right by construction (<code>Fuel = Mass × 0.5</code>); the reactor and the turbine do not. 🔒 <b>The rule: the question is not &ldquo;is it in the mass formula&rdquo; but &ldquo;which of the seven channels does it appear in, and is that the one the player is actually constrained by?&rdquo;</b></p></div>
+<div class="kill" style="border-left-color:var(--ac)"><h4>⚠️ <code>Output vs Efficency</code> — RULED. Only the NAME was wrong. Renamed <code>Core vs Generator</code>.</h4><p>Two corrections in a row on this one dial, and the second was yours. <b>First correction — <code>GennyMass</code>:</b> I said it was computed and never read. It <em>is</em> read, in the <b>ResourceCost block</b>, heavily — <code>stainless-steel</code>, <code>copper</code>, <code>aluminium</code>, <code>nickel</code> and <b><code>tungsten</code></b> all scale with it. So the split decides <b>your bill of materials</b>: generator-heavy eats tungsten and nickel, core-heavy eats graphite and fissile fuel. <b>Second correction — the fixed duration:</b> I called 12.7-years-whatever-you-set a defect. <b>Your ruling: it is the point.</b> A plant you fuel once a decade is the turbine's whole character, and re-purposing the dial into an output↔endurance split would have thrown that away to satisfy a naming complaint.<br><br><b>So the fix was one word, not one mechanic.</b> The dial is now called what it does. 🔒 <b>Two standing rules out of it:</b> a dial's NAME is not evidence that a trade exists — <em>and</em> a wrong name is not evidence that the mechanic is wrong. <b>Rename before you re-purpose.</b></p></div>
+<div class="kill"><h4>🔴 A reactor is silently also a battery, and the units do not match</h4><p><code>EnergyGenerationAtb.cs:65,70</code> — <code>genDB.EnergyStoreMax[type] += PowerOutputMax</code>. <code>PowerOutputMax</code> is <b>kW</b>; <code>EnergyStoreMax</code> is <b>kJ</b>. So installing a reactor adds storage equal to <b>exactly one second of its own output</b>, by dimensional accident. Two consequences: the battery bank is partly redundant, and any future balance pass on storage will be fighting a hidden term. <b>Make it deliberate (a stated buffer, <code>output × someSeconds</code>) or remove it.</b></p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>🔑 The solar array runs on the SENSOR code — so one ruling now touches three doors</h2>
+<p class="big"><code>solarArray</code> builds an <code>EnergySolarGenerationAtb</code> whose constructor is the same waveform + best/worst-efficiency shape as <code>SensorReceiverAtb</code> — which itself carries an <code>IsEnergyGen</code> flag and a dedicated overload. <b>Absorption is band-matched exactly the way detection is.</b></p>
+<div class="okbox" style="margin:0 0 11px"><code>Best Efficiency = tech-panel-efficiency × (tech-panel-bandwidth × 0.5 ÷ Bandwidth)</code><br><span style="color:var(--ink3)">Narrower band, better panel — <b>the same coverage ↔ efficiency zero-sum as the sensor's bandwidth dial.</b> The seventh place one law turns up.</span></div>
+<div class="warnbox">⚠ <b>Which means the Sensors ruling reaches into Power.</b> Correcting the sensor's band-overlap test and adding an infrared receiver <b>changes solar output too</b> — panels and sensors read the spectrum through the same code. <b>One decision now touches Sensors, Power, and the deferred FTL band.</b> Worth knowing before it is made, not after.</div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The proof</h2>
+<p class="sub">All five power components fall out of the one choice, with <b>nothing invented and nothing deleted</b> — two of the three generators simply adopt a law the third already runs.</p>
+<div class="scroll"><table class="t">
+<tr><th>Component today</th><th>Answer</th><th>Under the derived door</th></tr>
+<tr><td>Reactor</td><td><b>Generate</b></td><td>size + <b>fuel load</b> + <b>output ↔ economy</b> <s>three live dials; still wants the RTG law on mass</s></td></tr>
+<tr><td>RTG</td><td><b>Generate</b></td><td><b class="g">already exactly this</b> — the reference implementation</td></tr>
+<tr><td>Steam turbine</td><td><b>Generate</b></td><td>size + <b>core ↔ generator</b> — <b class="g">unchanged, renamed</b> <s>fixed 12.7-yr run is the design</s></td></tr>
+<tr><td>Battery bank</td><td><b>Store</b></td><td>size — unchanged</td></tr>
+<tr><td>Solar array</td><td><b>Collect</b></td><td>area + band centre + bandwidth — <b class="g">unchanged, and honest</b></td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>And the lesson from the last door held on its first test.</b> Sensors ended with <em>"look hardest at the OLDEST attribute, not the newest."</em> <code>EnergyGenerationAtb</code> and <code>EnergyStoreAtb</code> are original, un-annotated, convention-free files — and they hold three of the six findings. <b>The newest thing in this door, the solar/sensor band sharing, is the only part that was already honest.</b></p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>One question — where does the energy come from, and how long do you want it to last?</b> Three answers, exclusive per part: <b>Generate</b> (burn) · <b>Collect</b> (starlight) · <b>Store</b>. It reproduces all five existing templates exactly.</p>
+<p>🔑 <b>The headline is that the fix was already written.</b> The RTG carries <code>power × lifetime = const × mass</code>; the reactor still does not, so it needs that law <b>copied</b>. The turbine turned out not to need it at all — <b>your ruling that its fixed 12.7-year run IS the design</b> means only its dial's NAME was wrong. Nothing in this door needed inventing.</p>
+<p>✅ <b>BUILT since this page was first written:</b> the <b>fuel gate</b> (a dry generator produces nothing — flag default off, the client arms it) · the <b>seconds</b> unit fix, which made the reactor's life <b>3600× longer</b> without changing an authored number · and <b>Output vs Economy</b>, the burn-rate dial, where 2× the power costs 4× the fuel. Two buildable reactor designs ship it cradle-to-grave. Gauge <code>PowerFuelGateTests</code>.</p>
+<p>✅ <b>ALSO BUILT since:</b> the <b>reactor's crew bill</b> (kilograms → <code>Max(2, [Mass]/500)</code> = three operators) · the <b>RTG's zero crew</b>, which is the only axis it wins · the turbine's dial <b>renamed</b> <code>Core vs Generator</code> per your ruling, with nothing re-purposed · and the <b>solar array's mount flags</b>, so a colony can finally build a power plant. Gauge <code>PowerJustificationTests</code> — six tests, including the one that fails if any future power type is beaten on every axis.</p>
+<p>🔴 <b>Nine findings, three still open:</b> the reactor is <b>strictly linear in mass</b> (slice P1, the RTG law) · <code>Lifetime</code> adds <b>no mass</b>, so a decade of fuel weighs nothing on a chassis that gates on kilograms · a reactor silently <b>adds kW into a kJ store</b> · the <b>RTG's power-density gap</b> is flagged for your calibration call, not tuned · and the solar array shares the sensor's band code, so <b>the Sensors ruling reaches this door.</b> The other four are fixed and gauged.</p>
+<p><b>And the biggest unstated coupling in the game is here:</b> the reactor's signature is <code>output × 0.1 × mass</code> at 1700 K, making it <b>the loudest thing on a ship</b> — a hundred times a thruster plume. <b>Your generator sizing is your stealth</b>, and neither door says so.</p>
+<p><b>Nothing here is blocked on a ruling except the two calibration calls</b> — the RTG's power density, and whether a colony should be allowed a <em>fission</em> plant rather than just panels. The slice I would build next is giving the <b>reactor</b> the RTG's law, because it prices <code>Lifetime</code>'s missing mass in the same change and is the last thing standing between this door and a real decision on every part.</p>
+</div></footer>
+
+<script>
+
+// ── the shipped arithmetic, verbatim from energy.json + techs.json ─────────────────────────────────────────
+//  reactor   Power = 50 x Mass                      Lifetime is a separate FREE dial (LocalFuel = maxUse x Lifetime)
+//  rtg       Fuel = Mass x 0.5 · FuelCons = 0.001 / Lifetime · Power = Fuel x Eff x FuelCons
+//            => Power x Lifetime = const x Mass     <- the zero-sum, already built
+//  turbine   CoreMass = Mass x OvE x 0.01 · FuelMass = CoreMass x 0.6 · CoreOutput = FuelMass x 100
+//            GeneratorOutput = CoreOutput x 0.8 · FuelDuration = FuelMass x 40e9 / CoreOutput = 4e8 s CONSTANT
+//  all three signature = (1700 K, output x 0.1 x mass)  except the turbine which uses CoreOutput
+//  battery   Energy Storage = Mass x 500 x tech-battery-capacity
+//  solar     Best Efficiency = tech-panel-efficiency x (tech-panel-bandwidth x 0.5 / Bandwidth)
+const T_COND=1, T_BATT=1, T_PANEL_EFF=0.2, T_PANEL_BW=600;   // level-0 tech
+const WARP_CREATE=1250000, WARP_SUSTAIN=2500;                // engine default warp drive: 1.25 GJ to open the bubble, 2.5 MW to hold (kJ, kW)
+const GROUND_LASER_W=250000;                                 // one ground laser's draw, illustrative
+const BASE_SIG=1.125e7;                                      // the stock reactor's signature magnitude
+let job='burn', gen='reactor';
+const $=id=>document.getElementById(id);
+function set(i,v){$(i).textContent=v;}
+function show(id,on){$(id).style.display=on?'':'none';}
+function fmt(v){return v>=1e9?(v/1e9).toFixed(2)+'G':v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(v<10?2:0);}
+function hrs(h){return h>=8760?(h/8760).toFixed(1)+' yr':h>=24?(h/24).toFixed(0)+' d':h.toFixed(0)+' h';}
+
+const SCALE=['Compact','Light','','Heavy','Capital'];
+function bucket(v,n){return Math.min(n-1,Math.floor(v/100*n));}
+const NOUN={reactor:['Fission Pile','Fission Reactor','Fission Plant'],
+            rtg:['Isotope Cell','Isotope Generator','Isotope Bank'],
+            turbine:['Steam Set','Steam Turbine','Turbine Hall'],
+            collect:['Panel Wing','Solar Array','Solar Farm'],
+            store:['Cell Stack','Battery Bank','Accumulator Hall']};
+const TEMPER={burn:['Hot-Running','','Long-Life'], collect:['Broadband','','Tuned'], store:['','','']};
+const BURN_TEMPER={reactor:['Economical','','Hot-Running'], rtg:['High-Output','','Long-Life'], turbine:['Generator-Heavy','','Core-Heavy']};
+function compose(parts){const out=[],seen=new Set();
+ for(const p of parts){ if(!p) continue; for(const w of String(p).split(' ')){
+   const k=w.toLowerCase(); if(seen.has(k)) continue; seen.add(k); out.push(w);} }
+ return out.join(' ');}
+function partName(d1,d2,d3){
+ const key = job==='burn'?gen:job;
+ let scale=SCALE[bucket(d1,5)], noun=NOUN[key][bucket(d1,3)];
+ // ONE temper axis per part, so the 5-word cap can never fire and merge two designs together.
+ // the reactor buckets on its DERIVED OvE value, so the shipped 1.0 reads as the neutral middle
+ const ove = Math.round((0.5+d3*0.015)*10)/10;
+ let temper = job==='burn'
+   ? (gen==='reactor' ? (ove<1?'Economical':ove>1.2?'Hot-Running':'') : BURN_TEMPER[gen][bucket(d2,3)])
+   : TEMPER[job][bucket(job==='collect'?100-d3:d2,3)];
+ if(SCALE.some(w=>w&&noun.includes(w))) scale='';
+ return compose([scale,temper,noun]);
+}
+
+// Each job/generator OPENS ON ITS REAL SHIPPED TEMPLATE, back-solved to slider positions.
+const STOCK={reactor:{d1:0,d2:50,d3:33}, rtg:{d1:0,d2:50}, turbine:{d1:0,d2:50},
+             collect:{d1:50,d3:0}, store:{d1:0}};
+
+function render(){
+ const d1=+$('d1').value, d2=+$('d2').value, d3=+$('d3').value, fixed=$('fix').checked;
+ show('fuelsec', job==='burn');
+ show('w2', job==='burn');
+ show('w3', job==='collect' || (job==='burn' && gen==='reactor'));
+ show('fixwrap', job==='burn' && gen==='reactor');
+ show('sigbox', job==='burn');
+ set('v_name', partName(d1,d2,d3));
+
+ if(job==='burn'){
+   let mass, out, lifeH, sig, note, verdict, invLabel, invVal, cls='', xL, xV, xC;
+   if(gen==='reactor'){
+     // THREE real dials, every one of them shipping: mass -> output, lifetime -> fuel load, OvE -> burn rate.
+     mass  = 1500 + d1*235;                          // the real 1000..25000 dial, opening on the shipped 1500
+     lifeH = 8760*Math.pow(10,(d2-50)/50);           // log-mapped across the real 1..876,000 h dial
+     const ove = Math.round((0.5+d3*0.015)*10)/10;   // the real 0.5..2.0 dial, step 0.1
+     out = 50*mass*ove;                              // Power Output = 50 x Mass x OvE
+     const kgPerSec = out*3.125e-11*ove;             // Fuel Consumption = Power Output x k x OvE
+     const fuelKg   = kgPerSec*lifeH*3600;           // fissile-fuels = Fuel Consumption x Fuel Load Seconds
+     if(fixed){
+       // THE PROPOSAL (slice P1) - the RTG's law. Anchored on the shipped 8760 h, so stock is byte-identical.
+       out = 50*mass*ove*(8760/lifeH);
+       invLabel='Output x lifetime — FIXED'; invVal=fmt(out*lifeH)+' kW·h';
+     } else {
+       invLabel='Output x lifetime'; invVal=fmt(out*lifeH)+' kW·h  ▲ climbs'; cls='r';
+     }
+     sig = out*0.1*mass;
+     set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','1,500 — the shipped reactor'); set('e1b','25,000 kg');
+     set('n2', fixed?'Output ↔ endurance':'Fuel load — lifetime  ✅ now in seconds'); set('s2', hrs(lifeH));
+     set('e2a', fixed?'1 h — all output':'1 h'); set('e2b', fixed?'100 yr — all endurance':'100 yr  ◄ was this ÷ 3600');
+     set('n3','Output ↔ economy  ✅ NEW'); set('s3', ove.toFixed(1)+'×  ·  '+(kgPerSec*3.6e6).toFixed(2)+' g/kW·h');
+     set('e3a','0.5 — sip it'); set('e3b','2.0 — run it hot');
+     xL='Fissile fuel to build'; xV=fuelKg.toFixed(1)+' kg'; xC=(fuelKg>500?'a':'g');
+     note = fixed
+       ? 'With the RTG’s law applied a long life now costs OUTPUT as well as fuel — and all three dials stay live. Nothing was taken away to get the trade.'
+       : '⚠ Power = 50 × Mass × OvE — still strictly linear in mass, which is the part still open (slice P1). ✅ <code>Lifetime</code> now reaches the attribute in SECONDS (it was read as 2.43 hours) and buys real fuel, and <b>the burn rate is its own dial</b>: 2× the power costs 4× the fuel, because <code>Output vs Economy</code> prices every kilowatt as well as making more of them.';
+     verdict = fixed
+       ? '✅ <b>Three live dials and every kilogram has a job.</b> Run hot for a warship’s bubble and beam batteries, or sip and sit on station for a decade — and the fissile bill tracks both.'
+       : '⚠ <b>Output is still linear in mass</b> — slice P1, the RTG law. ✅ But endurance is real, the fuel is charged, and a de-rated core makes half the power on a <b>quarter</b> of the fuel. <b>Its justification over the other two: the highest power per kilogram in the game</b> — the warship core.';
+   } else if(gen==='rtg'){
+     mass=1000+d1*240;                               // 1000 (the SHIPPED RTG) .. 25000
+     const lifeY=5*Math.pow(5,(d2-50)/50);           // log-mapped: 1 yr .. 5 (SHIPPED, mid) .. 25
+     lifeH=lifeY*8760;
+     const fuel=mass*0.5, eff=T_COND+10, fc=0.001/lifeY;
+     out=fuel*eff*fc;
+     sig=out*0.1*mass;
+     set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','1,000 — the shipped RTG'); set('e1b','25,000 kg');
+     set('n2','Output ↔ endurance  ✅ built'); set('s2',lifeY.toFixed(1)+' yr');
+     set('e2a','1 yr — all output'); set('e2b','25 yr — all endurance');
+     invLabel='Output × lifetime — INVARIANT'; invVal=fmt(out*lifeY)+'  (÷ mass: '+(out*lifeY/mass).toFixed(3)+')';
+     xL='Crew it needs'; xV='0  ✅ nobody'; xC='g';
+     note='✅ The reference implementation. Power = (Mass × 0.5) × Efficiency × (0.001 ÷ Lifetime), so output and endurance are one budget split two ways. ✅ <b>And it now needs no crew</b> — it was authored as 1, which is the one thing a sealed block of isotopes with no moving parts should never need.';
+     verdict='✅ <b>Drag the endurance dial and watch the invariant hold</b> — output × lifetime ÷ mass never moves. <b>Its justification over the other two: unattended endurance</b> — zero crew, decades, no moving parts, no fissile refuel. The probe, the beacon, the dark outpost.';
+   } else {
+     mass=2000+d1*4980;                              // the real 2,000..500,000 dial
+     const cvg=30+Math.round(d2*0.04)*10;            // the real 30..70 dial, step 10
+     const coreMass=mass*cvg*0.01, genny=mass-coreMass, fuelMass=coreMass*0.6;
+     const coreOut=fuelMass*100*1.0;
+     out=coreOut*0.8;
+     lifeH=4e8/3600;                                 // FuelMass x 40e9 / CoreOutput = 4e8 s at EVERY setting
+     sig=coreOut;
+     const graphite=coreMass*0.15, tungsten=genny*0.05;
+     set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','2,000 — the shipped set'); set('e1b','500,000 kg');
+     set('n2','Core ↔ generator  ✅ RULED'); set('s2', cvg+'% core');
+     set('e2a','30 — generator-heavy'); set('e2b','70 — core-heavy');
+     invLabel='Fuel duration — FIXED BY DESIGN'; invVal=hrs(lifeH)+'  ◄ at every setting';
+     xL='Tungsten ↔ graphite'; xV=tungsten.toFixed(0)+' kg W  ·  '+graphite.toFixed(0)+' kg C'; xC='g';
+     note='✅ <b>Ruled: the fixed duration is the design, not a defect.</b> <code>FuelMass ÷ BurnRate</code> = 4×10⁸ s = <b>12.7 years at every setting and every mass</b> — a plant you fuel once a decade. The dial is a real trade, just never the one it was named after: it splits mass between <b>core</b> and <b>generator</b>, and the <code>ResourceCost</code> block charges each side differently — core-heavy eats <b>graphite</b> and fissile fuel, generator-heavy eats <b>tungsten</b> and nickel. Renamed <code>Core vs Generator</code>; nothing re-purposed.';
+     verdict='✅ <b>Output and your bill of materials, against a fixed 12.7-year run.</b> <b>Its justification over the other two: VOLUME</b> — <code>Volume = Mass ÷ 1000</code>, so ~480× the power per cubic metre of a reactor of the same mass, on three crew. The station and colony plant, where kilograms are cheap and cubic metres are not.';
+   }
+   const storedKJ = out;                             // EnergyStoreMax += PowerOutputMax  (kW into a kJ store)
+   set('l_a1','Sustained output — emergent'); set('v_a1',fmt(out)+' kW');
+   set('l_a2','Endurance — set');             set('v_a2',hrs(lifeH));
+   set('l_a3',invLabel);                      set('v_a3',invVal);
+   $('l_a3').parentElement.className='num '+(cls?cls:'g');
+   set('l_a4',xL);                            set('v_a4',xV);
+   $('l_a4').parentElement.className='num '+xC;
+   set('l_sig','Signature — 1700 K'); set('v_sig',fmt(sig));
+   set('v_mass',fmt(mass)+' kg');
+   set('m_leave', storedKJ>=WARP_CREATE ? 'yes' : 'no — needs '+fmt(WARP_CREATE)+' kJ');
+   set('m_warp', out>WARP_SUSTAIN ? 'indefinite' : 'cannot hold a bubble');
+   set('m_laser', Math.floor(out*1000/GROUND_LASER_W)+'');
+   set('m_seen', Math.sqrt(sig/BASE_SIG).toFixed(2)+'×');
+   set('oname', fmt(out)+' kW for '+hrs(lifeH));
+   $('odesc').innerHTML=note;
+   $('gnote').textContent = gen==='reactor'
+     ? 'Power per KILOGRAM. Three dials, and the one thing still open is that output is linear in mass.'
+     : gen==='rtg' ? 'Power with NOBODY WATCHING. Low output, decades of it, zero crew — the reference law.'
+     : 'Power per CUBIC METRE. A fixed 12.7-year run, and a dial that decides your bill of materials.';
+   $('verdict').innerHTML=verdict;
+   $('jobnote').textContent='Burn something. Three templates that are not three flavours of one plant — each wins a different axis outright.';
+
+ } else if(job==='collect'){
+   const area=100*Math.pow(100,(d1-50)/50);         // log-mapped: 1 m² .. 100 (SHIPPED, mid) .. 10,000
+   const bw=T_PANEL_BW*0.5 + d3*(T_PANEL_BW*0.5/100);   // 300 (SHIPPED) .. 600
+   const bestEff=T_PANEL_EFF*((T_PANEL_BW*0.5)/bw);
+   const out=area*bestEff*1.361;                     // solar constant kW/m^2 at 1 AU, illustrative
+   const mass=area*2.0;
+   set('n1','Panel area'); set('s1',area.toFixed(0)+' m²'); set('e1a','1 m²'); set('e1b','10,000 m²  ·  shipped = 100');
+   set('n3','Bandwidth'); set('s3',bw.toFixed(0)+' nm'); set('e3a','300 — tuned'); set('e3b','600 — broadband');
+   set('l_a1','Output at 1 AU — emergent'); set('v_a1',fmt(out)+' kW');
+   set('l_a2','Best efficiency — emergent'); set('v_a2',(bestEff*100).toFixed(1)+'%');
+   set('l_a3','Coverage × efficiency — fixed'); set('v_a3',(bw*bestEff).toFixed(1));
+   $('l_a3').parentElement.className='num g';
+   set('l_a4','Can it go on a colony?'); set('v_a4','🔴 NO — MountType 1');
+   $('l_a4').parentElement.className='num r';
+   set('v_mass',fmt(mass)+' kg');
+   set('m_leave', out>0?'only in daylight':'no');
+   set('m_warp', out>WARP_SUSTAIN?'indefinite':'not on its own');
+   set('m_laser', Math.floor(out*1000/GROUND_LASER_W)+'');
+   set('m_seen','0.00×  — silent');
+   set('oname', fmt(out)+' kW, and no fuel ever');
+   $('odesc').innerHTML='<b>the same coverage ↔ efficiency zero-sum as a sensor’s bandwidth dial</b> — because it literally runs on the sensor receiver code.';
+   $('verdict').innerHTML='✅ <b>Honest, and silent.</b> No fuel chain, no signature. 🔴 <b>And it cannot be built on a colony</b> — the one generator a player would obviously want there.';
+   $('jobnote').textContent='Collect starlight. Band-matched absorption, sharing its code with detection — so the Sensors band ruling changes this number too.';
+ } else {
+   const mass=1500+d1*235;                           // 1500 (the SHIPPED bank, = engine default 750,000 kJ) .. 25000
+   const store=mass*500*T_BATT;
+   set('n1','Mass'); set('s1',fmt(mass)+' kg'); set('e1a','1,500 — the shipped bank (750 MJ)'); set('e1b','25,000 kg');
+   set('l_a1','Energy storage — emergent'); set('v_a1',fmt(store)+' kJ');
+   set('l_a2','Per kg — fixed');            set('v_a2','500 kJ');
+   set('l_a3','Warp departures it holds');  set('v_a3',(store/WARP_CREATE).toFixed(2)+'');
+   $('l_a3').parentElement.className='num g';
+   set('l_a4','A reactor already gives you'); set('v_a4','its kW, as kJ');
+   $('l_a4').parentElement.className='num a';
+   set('v_mass',fmt(mass)+' kg');
+   set('m_leave', store>=WARP_CREATE?'yes':'no — needs '+fmt(WARP_CREATE)+' kJ');
+   set('m_warp','stored only — no generation');
+   set('m_laser','0  — a battery generates nothing');
+   set('m_seen','0.00×  — silent');
+   set('oname', fmt(store)+' kJ — '+(store/WARP_CREATE).toFixed(1)+' departures');
+   $('odesc').innerHTML='one dial, strictly linear: <b>500 kJ per kilogram, always.</b> A scale dial with no interior optimum — which is fine for storage, but it means there is nothing to decide beyond how much you want.';
+   $('verdict').innerHTML='⚠ <b>And it is partly redundant.</b> Installing a reactor already adds storage equal to its own output in kW — a dimensional accident (kW into a kJ store) that hands you a free one-second buffer.';
+   $('jobnote').textContent='Hold it. The simplest part in the door — and the one whose number a reactor quietly pre-loads.';
+ }
+ set('v_namesub', job==='burn' ? 'scale ← mass · temper ← the endurance dial · noun ← which generator'
+   : job==='collect' ? 'scale ← area · temper ← how tuned the band is · noun ← the job'
+   : 'scale ← mass · noun ← the job');
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+ job=c.dataset.v; document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ const k = job==='burn'?gen:job;
+ for(const [kk,v] of Object.entries(STOCK[k]||{})) $(kk).value=v;
+ render();}));
+document.querySelectorAll('.gchip').forEach(c=>c.addEventListener('click',()=>{
+ gen=c.dataset.g; document.querySelectorAll('.gchip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ for(const [kk,v] of Object.entries(STOCK[gen]||{})) $(kk).value=v;
+ render();}));
+['d1','d2','d3'].forEach(i=>$(i).addEventListener('input',render));
+$('fix').addEventListener('change',render);
+render();
+
+</script>

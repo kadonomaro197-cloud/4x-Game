@@ -86,6 +86,6 @@ The point that makes this *not* a pivot: the aspects map onto systems Pulsar **a
 
 ## How to use this doc
 
-Read it when you need to remember *why*. When you're deciding *what next*, this doc is the horizon; `docs/MVP.md`, `docs/archive/SYSTEMS-STATUS-AND-TEST-PLAN.md`, and `docs/REALISM-VS-GAMEPLAY-AUDIT.md` are the map, the firewall, and the bar. Build one earned, connected system at a time — and check, now and then, that the stack of them is bending toward *this*.
+Read it when you need to remember *why*. When you're deciding *what next*, this doc is the horizon; `docs/MVP.md`, `docs/SYSTEM-CONNECTION-MAP.md`, and `docs/REALISM-VS-GAMEPLAY-AUDIT.md` are the firewall, the map, and the bar (the old `SYSTEMS-STATUS-AND-TEST-PLAN` was RETIRED 2026-07-27). Build one earned, connected system at a time — and check, now and then, that the stack of them is bending toward *this*.
 
 *This is a capture. The next action on it is never "build the vision" — it's "pick the next system, name the decision it creates and the aspect it unlocks, and build it cradle-to-grave."*

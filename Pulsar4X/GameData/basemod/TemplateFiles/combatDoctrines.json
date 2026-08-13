@@ -78,6 +78,44 @@
   {
     "Type": "CombatDoctrine",
     "Payload": {
+      "UniqueID": "focus-fire",
+      "DisplayName": "Focus Fire",
+      "Family": "Offensive",
+      "Domain": "Space",
+      "FirepowerMult": 1.1,
+      "ToughnessMult": 0.95,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "BiggestThreat",
+      "RetreatCasualtyThreshold": 0.6,
+      "BreakAwaySeconds": 5400,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
+      "UniqueID": "armour-breaker",
+      "DisplayName": "Armour Breaker",
+      "Family": "Offensive",
+      "Domain": "Space",
+      "FirepowerMult": 1.0,
+      "ToughnessMult": 1.0,
+      "SpeedMult": 1.0,
+      "CooldownSeconds": 300,
+      "IsRetreat": false,
+      "EngagementPosture": "WeaponsFree",
+      "TargetPriority": "Heaviest",
+      "RetreatCasualtyThreshold": 0.6,
+      "BreakAwaySeconds": 5400,
+      "Pursues": true
+    }
+  },
+  {
+    "Type": "CombatDoctrine",
+    "Payload": {
       "UniqueID": "ground-balanced",
       "DisplayName": "Balanced",
       "Family": "Balanced",

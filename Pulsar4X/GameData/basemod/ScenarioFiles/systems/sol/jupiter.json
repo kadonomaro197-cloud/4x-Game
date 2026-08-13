@@ -24,7 +24,7 @@
       "Atmosphere": {
         "Pressure": 1.97384653,
         "Hydrosphere": false,
-        "HyrdoExtent": 0,
+        "HydroExtent": 0,
         "GreenhouseFactor": 0,
         "GreenhousePressure": 0,
         "SurfaceTemperature": -108,
@@ -67,7 +67,7 @@
       "Atmosphere": {
         "Pressure": 1.9738E-08,
         "Hydrosphere": false,
-        "HyrdoExtent": 0,
+        "HydroExtent": 0,
         "GreenhouseFactor": 0,
         "GreenhousePressure": 0,
         "SurfaceTemperature": -108,
@@ -130,7 +130,7 @@
       "Atmosphere": {
         "Pressure": 1.18E-11,
         "Hydrosphere": false,
-        "HyrdoExtent": 0,
+        "HydroExtent": 0,
         "GreenhouseFactor": 0,
         "GreenhousePressure": 0,
         "SurfaceTemperature": -163,
@@ -167,7 +167,7 @@
       "Atmosphere": {
         "Pressure": 7.4E-12,
         "Hydrosphere": false,
-        "HyrdoExtent": 0,
+        "HydroExtent": 0,
         "GreenhouseFactor": 0,
         "GreenhousePressure": 0,
         "SurfaceTemperature": -139.15,

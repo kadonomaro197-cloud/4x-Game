@@ -772,10 +772,16 @@ namespace Pulsar4X.Combat
                 state.DamageTakenPool += dmgThisSalvo;
                 string attackerLabel = FleetLabel(live[attackersOf[i][0]])
                     + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
+                // TARGET PRIORITY (Phase 5): WHO in this defender fleet dies first is decided by the doctrine of the
+                // attacker firing on it. Fire is combined across attackers, so v1 uses the REPRESENTATIVE attacker's
+                // priority (attackersOf[i][0] — the same fleet already used for OpponentFleetId / attackerLabel);
+                // per-attacker weighting is the follow-up. Balanced (the default + every base doctrine's effective
+                // value) leaves the casualty order byte-identical.
+                var priority = FleetDoctrine.TargetingOf(live[attackersOf[i][0]]);
                 // Pass the defender's gap so ballistic fire loses accuracy at range (the range term in HitFraction).
                 // SeparationOf is 0 when closing is off, so this is inert for the pre-closing resolve. dmgThisSalvo +
                 // attackerLabel feed the per-salvo play-by-play (which weapon / hit-rate / damage / which ship).
-                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i]), dmgThisSalvo, attackerLabel); // prunes the dead
+                ApplyCasualties(ships[i], state, incoming, SeparationOf(live[i]), dmgThisSalvo, attackerLabel, priority); // prunes the dead
             }
 
             // --- CLOSING phase (Phase 1): the gap moves toward the faster side's preferred range, AFTER this step's
@@ -875,7 +881,7 @@ namespace Pulsar4X.Combat
         // no new code here (docs/combat/WEAPONS-DESIGN.md "aggregate force condition"). Behaviour matches the
         // old per-ship loop: buckets are killed combatants-first then most-hittable-first, and the pool stops at
         // the first bucket it can't finish.
-        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null)
+        private static void ApplyCasualties(List<CombatShip> ships, FleetCombatStateDB state, List<WeaponProfile> incomingFire, double separation_m = 0, double damageThisSalvo = 0, string attackerLabel = null, TargetPriority priority = TargetPriority.Balanced)
         {
             if (ships.Count == 0) return;
 
@@ -894,6 +900,8 @@ namespace Pulsar4X.Combat
                         RoleWeight = cv.RoleWeight,
                         Landed = landed,
                         EffToughness = cv.Toughness * cs.ToughnessMult / landed,
+                        Toughness = cv.Toughness * cs.ToughnessMult,   // for the Heaviest target priority
+                        Firepower = cv.Firepower,                       // for the BiggestThreat target priority
                         Ships = new List<Entity>(),
                     };
                     buckets[key] = b;
@@ -906,11 +914,24 @@ namespace Pulsar4X.Combat
             foreach (var b in buckets.Values) { landedSum += b.Landed * b.Ships.Count; shipCount += b.Ships.Count; }
             double avgLanded = shipCount > 0 ? landedSum / shipCount : 0;
 
+            // Casualty ORDER = combatants-before-utility (always), THEN the attacker doctrine's TARGET PRIORITY, THEN
+            // most-hittable-first (the legacy secondary + a deterministic tie-break). With priority == Balanced the
+            // priority key is inert, so this reduces to the exact old "role desc, then landed desc" order — byte-
+            // identical for every un-doctrined / Balanced fight (i.e. the whole existing suite + the default game).
+            // Only Heaviest / BiggestThreat re-order; FinishWounded / Closest / Backfield are not expressible in the
+            // whole-or-dead aggregate model (no per-ship health, no per-target range) and fall through to Balanced.
             var ordered = new List<CasualtyBucket>(buckets.Values);
             ordered.Sort((x, y) =>
             {
-                int byRole = y.RoleWeight.CompareTo(x.RoleWeight);          // combatants before utility
-                return byRole != 0 ? byRole : y.Landed.CompareTo(x.Landed); // then most-hittable first
+                int byRole = y.RoleWeight.CompareTo(x.RoleWeight);          // combatants before utility (always first)
+                if (byRole != 0) return byRole;
+                int byPriority = priority switch
+                {
+                    TargetPriority.Heaviest => y.Toughness.CompareTo(x.Toughness),   // focus the toughest (armour-breaker)
+                    TargetPriority.BiggestThreat => y.Firepower.CompareTo(x.Firepower), // focus the highest firepower
+                    _ => 0,                                                          // Balanced + not-yet-expressible modes
+                };
+                return byPriority != 0 ? byPriority : y.Landed.CompareTo(x.Landed); // most-hittable first (+ tie-break)
             });
 
             int totalKilled = 0;
@@ -977,6 +998,12 @@ namespace Pulsar4X.Combat
             public double RoleWeight;
             public double Landed;
             public double EffToughness;
+            // Raw combat-value fields the TARGET-PRIORITY sort reads (Phase 5): Toughness for Heaviest, Firepower for
+            // BiggestThreat. Not in the bucket KEY (so bucketing — and the Balanced casualty order — is byte-identical);
+            // a representative value for the bucket (ships sharing (toughMult,evasion,toughness,role) normally share
+            // firepower too). See ApplyCasualties' sort.
+            public double Toughness;
+            public double Firepower;
             public List<Entity> Ships;
         }
 

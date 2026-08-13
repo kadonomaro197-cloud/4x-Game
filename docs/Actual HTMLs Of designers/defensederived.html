@@ -1,0 +1,465 @@
+<meta charset="utf-8">
+<title>Defense, re-derived — the four layers a shot meets, in order</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}.kill b{color:var(--ink)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+.lay{border:1px solid var(--rule);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:8px}
+.lay.door{border-left:3px solid var(--ac)} .lay.read{border-left:3px solid var(--warn)}
+.lay h4{margin:0 0 4px;font-size:14px;font-family:inherit;display:flex;gap:9px;align-items:baseline}
+.lay h4 em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-left:auto}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+
+.tun{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden;margin-top:4px}
+.tv{background:var(--card);padding:6px 7px;text-align:center}
+.tv i{display:block;font-style:normal;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.tv b{font-family:ui-monospace,Menlo,monospace;font-size:14px;font-variant-numeric:tabular-nums}
+.tv.up b{color:var(--ac2)} .tv.dn b{color:var(--flag)} .tv.eq b{color:var(--ink2)}
+.chip.tn{min-width:0;padding:6px 9px;font-size:11.5px}
+
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.read{border-color:var(--warn);color:var(--warn)}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.6;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}.legend dd{margin:0}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(min-width:700px){.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}.nums{grid-template-columns:repeat(5,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · door 2 of 11</p>
+<h1>Defense is an onion, and the resolver already peels it in the same order every time.</h1>
+<p class="lead">A shot meets four layers, in this order: <b>Evasion → Shield → Armour → Structure</b>. Four different mechanics, four different counters — and the Defense door builds <b>only the middle two</b>. The outer skin (evasion) and the core (structure) are set somewhere else, and this door can only <em>read</em> them. So the whole door is really <b>one forced choice — shield or plate — and the dials that shape it.</b></p>
+<p class="lead" style="margin-top:10px">🔑 <b>The load-bearing thing this door proves is an ASYMMETRY.</b> A shield's strength against a hit is decided by <b>the attacker</b> — the nature of the weapon fixes the soak fraction (Kinetic 100% / Energy 50% / Explosive 75% / Exotic 0%), identical on every target in the galaxy, and <b>you the defender get no say.</b> Armour is the mirror: its four nature-resists are <b>entirely the defender's choice</b>, and there is never a single published "energy-vs-armour" number, because the plate carries its own. <b>Against shields the attacker decides; against armour the defender decides; against hull nobody does.</b></p>
+<p class="lead" style="margin-top:10px"><b>effective health = Health × evasion-mult × armour-mult</b>, with the shield the one depleting pool laid on top. Evasion is the strongest term of the three — an effective-health multiplier up to <b>×20</b>, where armour reaches <b>×10</b> — which is exactly why it is <em>not</em> sold here: you buy it with a smaller chassis or a bigger drive, not a Defense component.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>The four layers, in the order the shot meets them</h2>
+<p class="sub">Derived from what the shared combat kernel reads off a defended target (<code>Combat/CombatKernel.cs</code>). Two are this door's to build; two are read from elsewhere.</p>
+<div class="lay read"><h4>1 &nbsp;Evasion<em>read — chassis + propulsion</em></h4><p>Is a shot even <b>rolled</b> at all. An effective-health multiplier up to <b>×20</b>, beaten by shot speed, tracking, or sheer volume of fire. <b>Does not care about shot size.</b> It comes from <b>hull volume</b> (a smaller chassis is harder to hit) and <b>thrust-to-mass</b> (a livelier drive dodges) — so the Defense door reads it and cannot sell it.</p></div>
+<div class="lay door"><h4>2 &nbsp;Shield<em>DOOR — Capacity + Regen</em></h4><p>A depleting pool taken <b>before</b> HP. It soaks a <b>fraction</b> of what arrives — and that fraction is set by the <b>attacker's</b> weapon nature, not by you. Beaten by sustained fire and by Exotic (which it cannot touch at all). The only layer that comes back on its own. Ignores shot size completely.</p></div>
+<div class="lay door"><h4>3 &nbsp;Armour<em>DOOR — Thickness + 4 zero-sum resists</em></h4><p>A <b>flat</b> subtraction from <b>every single shot</b> (<code>ArmourSoakPerPoint 1.5</code>, floored so at least 10% always lands). Never recharges. <b>Shot size is everything</b> — a spray of small volleys is bounced; one big alpha punches through. The plate carries its <b>own</b> four nature-resists, so ablative laminate shrugs energy and goes thin vs slugs.</p></div>
+<div class="lay read"><h4>4 &nbsp;Structure<em>read — chassis</em></h4><p>Raw hit points. No cleverness — it absorbs until it runs out, beaten by nothing in particular. It comes from the <b>Chassis</b> door's frame size, so the Defense door reads it too.</p></div>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The designer — build one defensive layer</h2>
+<p class="sub">The forced choice picks <b>which of the two buildable layers</b> you are making, and therefore which numbers the component writes into the simulation. Set the incoming fire on the right to watch the asymmetry move live: the <b>shield</b> soak is the attacker's, fixed; the <b>armour</b> resist is yours, tunable.</p>
+<div class="build">
+
+<div class="bsec"><p class="blab">The forced choice — which layer are you building?</p>
+<div class="chips">
+<button class="chip lchip" type="button" data-layer="shield" aria-pressed="true">Shield generator — a recharging pool</button>
+<button class="chip lchip" type="button" data-layer="armour" aria-pressed="false">Armour plate — a flat per-shot bounce</button>
+</div>
+<p class="sub" id="layernote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec" id="shieldsec">
+<p class="blab">The shield dials</p>
+<div class="sl"><div class="slh"><span>Shield capacity — how big the pool is</span><span id="s_cap"></span></div><input type="range" id="cap" min="0" max="100" value="10" aria-label="Shield capacity"><div class="ends"><span id="e_cap0"></span><span id="e_cap1"></span></div></div>
+<div class="sl"><div class="slh"><span>Shield regen — how fast it refills</span><span id="s_regen"></span></div><input type="range" id="regen" min="0" max="100" value="0" aria-label="Shield regen"><div class="ends"><span id="e_reg0"></span><span id="e_reg1"></span></div></div>
+<p class="sub" style="margin:6px 0 0">The two ends of the same choice: a <b>big slow pool</b> (Shield Generator) eats one alpha then stays down; a <b>small fast pool</b> (Ward Projector) shrugs sustained chip-fire. Capacity is paid in <b>mass</b>; regen in mass too.</p>
+</div>
+
+<div class="bsec" id="armoursec" style="display:none">
+<p class="blab">The armour dials — thickness, then how it is tuned</p>
+<div class="sl"><div class="slh"><span>Plate thickness — flat bounce per shot</span><span id="s_arm"></span></div><input type="range" id="arm" min="0" max="100" value="10" aria-label="Plate thickness"><div class="ends"><span>bare (Defense 0)</span><span>heavy (Defense 50)</span></div></div>
+<p class="blab" style="margin:16px 0 7px">Nature tuning — zero-sum, the four always sum to 4.0</p>
+<div class="chips" style="margin-bottom:9px">
+<button class="chip tn" type="button" data-t="plain" aria-pressed="true">Plain (Composite)</button>
+<button class="chip tn" type="button" data-t="energy" aria-pressed="false">Ablative — vs Energy</button>
+<button class="chip tn" type="button" data-t="kinexpl" aria-pressed="false">Reactive — vs Kin/Expl</button>
+<button class="chip tn" type="button" data-t="exotic" aria-pressed="false">Null-ward — vs Exotic</button>
+</div>
+<div class="sl"><div class="slh"><span>vs Kinetic</span><span id="s_vk"></span></div><input type="range" id="vk" min="1" max="100" value="25" aria-label="Resist vs kinetic"></div>
+<div class="sl"><div class="slh"><span>vs Energy</span><span id="s_ve"></span></div><input type="range" id="ve" min="1" max="100" value="25" aria-label="Resist vs energy"></div>
+<div class="sl"><div class="slh"><span>vs Explosive</span><span id="s_vx"></span></div><input type="range" id="vx" min="1" max="100" value="25" aria-label="Resist vs explosive"></div>
+<div class="sl"><div class="slh"><span>vs Exotic</span><span id="s_vo"></span></div><input type="range" id="vo" min="1" max="100" value="25" aria-label="Resist vs exotic"></div>
+<div class="tun" id="tun"></div>
+<p class="sub" style="margin:7px 0 0"><b>Tune one nature up and another drops</b> — the four resists always renormalize to sum 4.0, so tougher against everything is impossible: you only choose <em>where to be weak</em>. Thickness (total protection) is paid in mass; tuning only redistributes, and is free. That makes tuning a <b>bet on what the enemy fields</b> — and intel on what a rival shoots load-bearing.</p>
+</div>
+
+<div class="bsec"><p class="blab">The incoming fire — to test the layer against</p>
+<div class="chips">
+<button class="chip nat" type="button" data-v="kinetic" aria-pressed="true">Kinetic</button>
+<button class="chip nat" type="button" data-v="energy" aria-pressed="false">Energy</button>
+<button class="chip nat" type="button" data-v="explos" aria-pressed="false">Explosive</button>
+<button class="chip nat" type="button" data-v="exotic" aria-pressed="false">Exotic</button>
+</div>
+<div class="sl" style="margin-top:11px"><div class="slh"><span>Incoming shot size — same damage, packaged differently</span><span id="s_shot"></span></div><input type="range" id="shot" min="0" max="100" value="35" aria-label="Incoming shot size"><div class="ends"><span>many small</span><span>one huge</span></div></div>
+</div>
+
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i id="l_a1"></i><u class="mk set" id="k_a1">you set it</u><b id="v_a1"></b></div>
+<div class="num set"><i id="l_a2"></i><u class="mk set" id="k_a2">you set it</u><b id="v_a2"></b></div>
+<div class="num fixed"><i>Evasion mult</i><u class="mk read" id="k_ev">read</u><b id="v_ev"></b></div>
+<div class="num fixed"><i>Structure</i><u class="mk read" id="k_st">read</u><b id="v_st"></b></div>
+<div class="num fixed"><i>Mass</i><u class="mk calc" id="k_mass">computed</u><b id="v_mass"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it is actually worth — against the incoming fire you set</p>
+<p class="muN">effective health = Health × evasion-mult × armour-mult, with the shield the one depleting pool on top. Read by the shared kernel.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">Shield vs this nature</i><u class="mk sim" id="k_m1">reaches the sim</u><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Armour lets past</i><u class="mk sim" id="k_m2">reaches the sim</u><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Effective health</i><u class="mk calc" id="k_m3">computed</u><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Time to kill</i><u class="mk calc" id="k_m4">computed</u><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk set">you set it</u></dt><dd>You chose it with a control above.</dd>
+<dt><u class="mk read">read</u></dt><dd><b>This value is set elsewhere</b> — evasion by chassis + propulsion, structure by chassis. The Defense door only reads it.</dd>
+<dt><u class="mk sim">reaches the sim</u></dt><dd>This number is genuinely read by the running combat kernel.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>The asymmetry, in two clicks.</b> Pick <b>shield</b>, then switch the incoming from <b>Kinetic</b> to <b>Exotic</b>: the soak drops 100% → 0% and your pool does nothing, and <em>you never touched a shield dial</em> — the attacker decided. Now pick <b>armour</b> and drag the four resists: the number vs Exotic is <em>yours</em>. Same fight, opposite ownership.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The mirror — who decides the number, and does shot size matter</h2>
+<p class="sub">This is why Defense was worth deriving second: it confirms the weapons derivation from the other side.</p>
+<div class="scroll"><table class="t">
+<tr><th>&nbsp;</th><th>Who sets the strength</th><th>Cares about shot size</th></tr>
+<tr><td>Shield</td><td><b class="r">the ATTACKER</b> — 100 / 50 / 75 / 0% by the weapon's nature, identical on every target</td><td>no</td></tr>
+<tr><td>Armour</td><td><b class="g">the DEFENDER</b> — plate thickness + its four nature resists</td><td><b>yes — everything</b></td></tr>
+<tr><td>Structure</td><td>nobody</td><td>no</td></tr>
+</table></div>
+<p class="sub" style="margin-top:10px"><b>You cannot build an anti-energy shield.</b> A shield's response to a damage nature is fixed by what is being fired at it — the defender gets no say, and there is one shield-soak table for the whole galaxy. Armour is the exact opposite: its four resists are the defender's alone, which is why <b>you never publish a single "energy vs armour" number</b> — the plate carries it. That is the same asymmetry the weapons door states from the attacking side, and it holds.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>Does it reproduce what ships today?</h2>
+<p class="sub">Every shipped shield generator and armour plate is a preset of the two dials-plus-tuning above. Values verbatim from <code>GameData/basemod/TemplateFiles/installations.json</code>.</p>
+<div class="scroll"><table class="t">
+<tr><th>Shipped template</th><th>Layer</th><th>Its dials</th><th>Under this door</th></tr>
+<tr><td><b>Shield Generator</b></td><td>Shield</td><td>Shield 0–1500 (def 150), <b>no regen</b></td><td><b class="g">the big-slow end</b> — capacity high, regen zero</td></tr>
+<tr><td><b>Ward Projector</b></td><td>Shield</td><td>Shield 0–600 (def 60), Regen 0–5 (def 1.0)</td><td><b class="g">the small-fast end</b> — capacity low, regen up</td></tr>
+<tr><td><b>Composite Plating</b> <s>the 3-arg plate</s></td><td>Armour</td><td>HP 1–1500 (150), Defense 0–50 (5), all resists <b>1.0</b></td><td><b class="g">Plain</b> — the four resists at 1.0 each</td></tr>
+<tr><td><b>Ablative Laminate</b></td><td>Armour</td><td>Vs K 0.6 · <b class="g">E 2.0</b> · X 1.0 · O 1.0</td><td><b class="g">tune Energy up</b> — shrugs lasers, thin vs slugs</td></tr>
+<tr><td><b>Reactive Plating</b></td><td>Armour</td><td>Vs <b class="g">K 1.6</b> · E 0.6 · <b class="g">X 2.0</b> · O 1.0</td><td><b class="g">tune Kinetic + Explosive up</b> — poor vs energy</td></tr>
+</table></div>
+<div class="warnbox"><b>One honest note on the zero-sum ruling.</b> The shipped ablative (0.6 / 2.0 / 1.0 / 1.0) sums to <b>4.6</b> and reactive to <b>5.2</b>, not 4.0 — those are <em>flagged balance values</em> in the JSON, authored before the <b>🔒 2026-07-29</b> zero-sum ruling (<em>"tuning against one costs you against the others; if you want better defence you fit more"</em>). This door builds the ruling in: the four resists renormalize to sum 4.0, so the plates above reproduce as their <em>intent</em> (energy-strong / kinetic-explosive-strong), with the exact shipped numbers awaiting the same balance pass their own descriptions already flag.</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>What the four authored doors got wrong — and what moved</h2>
+<div class="kill"><h4>Hardening is not a combat defence — it moved to environment/survival</h4><p>It writes <code>EnvironmentalResistance</code>, read in <b>one place</b>: the environmental attrition step (<code>GroundForcesProcessor.cs</code>). It never touches a weapon hit — it decides whether a unit survives vacuum, toxins, or radiation. It belongs with <b>survival and the environment</b>, not beside armour and shields. (It is now Defense ▸ Hardening 5.3 → ground attrition.)</p></div>
+<div class="kill"><h4>Fortification is not something you wear — it is a place you build</h4><p>A <b>building</b> that modifies a <b>location</b>: a divisor on incoming, capped at halving it, ground only. Different mechanic, different owner. It is infrastructure, not kit.</p></div>
+<div class="kill"><h4>Evasion — the best defence in the game — is not sold here</h4><p>It comes from <b>hull volume</b> and <b>engine acceleration</b>. To buy evasion you buy a smaller chassis or a bigger drive; the only component that overrides it is filed under Propulsion. <b>The Defense door cannot sell you the layer that stops damage from ever being rolled</b> — it can only read the multiplier the chassis and drive already produced.</p></div>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>Two real combat layers</b> belong at Defense: <b>Shield</b> (Capacity ↔ Regen) and <b>Armour</b> (Thickness + four zero-sum nature resists). <b>Structure</b> comes from the chassis; <b>evasion</b> from chassis and drive — both read, neither sold here.</p>
+<p>🔒 <b>RULED 2026-07-29:</b> tuning is <b>zero-sum</b> — the four resists always sum to 4.0. Two separate axes: <b>how much plate</b> raises total protection and is paid in <b>mass</b>; <b>how it is tuned</b> only redistributes, and is free. So tuning is a <b>bet</b> on what the enemy fields, which makes <b>intel load-bearing</b> — knowing what a rival shoots is what tells you how to tune, wiring Defense to the sensor and espionage layers for free.</p>
+<p><b>The asymmetry is the keystone and it is symmetric across the door and the weapons door:</b> vs shields the <b>attacker</b> decides (fixed by nature, published once for the galaxy); vs armour the <b>defender</b> decides (four resists, never a single published number); vs hull nobody decides. <b>Still flagged (balance, not design):</b> a floor and ceiling so no design sits at 0.00 against a nature — suggested band 0.25–2.50, unset until playtest.</p>
+</div></footer>
+
+<script>
+// ── verbatim constants ──────────────────────────────────────────────────────
+// Combat/CombatKernel.cs : shield soak by attacker nature (Kinetic 1.0 / Energy 0.5 / Explosive 0.75 / Exotic 0.0),
+//   ArmourSoakPerPoint 1.5, ArmourMinPassFraction 0.1.
+// installations.json : shield-generator Shield 0..1500 (150), CarryMass 1..2000 (20); ward-projector Shield 0..600 (60)
+//   + ShieldRegenFraction 0..5 (1.0); composite plating HP 1..1500 (150) Defense 0..50 (5) resists all 1.0;
+//   ablative Vs 0.6/2.0/1.0/1.0; reactive Vs 1.6/0.6/2.0/1.0.  Evasion up to x20 (from chassis+propulsion); armour reaches x10.
+const NAT={
+ kinetic:{n:'Kinetic',soak:1.00,key:'vk'},
+ energy: {n:'Energy', soak:0.50,key:'ve'},
+ explos: {n:'Explosive',soak:0.75,key:'vx'},
+ exotic: {n:'Exotic', soak:0.00,key:'vo'}
+};
+const ARMSOAK=1.5, MINPASS=0.1, DPS=500000;     // incoming reference = 0.5 MJ/s in J/s (the weapons-door / assembler laser)
+const EVA_READ=3.2, EVA_MAX=20, HP_READ=4000;   // read from chassis + propulsion (illustrative baseline)
+const CAP_MAX=1500, REGEN_MAX=5, DEF_MAX=50;
+// SI shield scale — the engine/assembler runtime unit is JOULES. Default slider (cap=10) -> 5 MJ = the engine deflector.
+const CAP_MAX_J=50000000, REGEN_MAX_J=1000000;
+
+// the two buildable layers — the forced choice
+const LAYER={
+ shield:{
+  a1:'Shield pool', a2:'Regen (J/s)',
+  desc:'A recharging buffer taken before HP. It soaks a fraction of the incoming set by the ATTACKER’s weapon nature — you do not get to choose it — and it is the only layer that comes back on its own.'},
+ armour:{
+  a1:'Armour points (Defense)', a2:'Tuned toward',
+  desc:'A flat subtraction from every single shot, floored so at least 10% always lands. It never recharges, and it carries its OWN four nature resists — so shot size and your tuning decide everything.'}
+};
+// tuning presets -> the four raw slider values (renormalize to sum 4.0 on render)
+const PRESET={ plain:[25,25,25,25], energy:[15,50,25,25], kinexpl:[40,15,50,25], exotic:[20,20,20,60] };
+
+let layer='shield', nat='kinetic', tune='plain';
+const $=id=>document.getElementById(id);
+const qa=s=>document.querySelectorAll(s);
+function set(i,v){const e=$(i);if(e)e.textContent=v;}
+function show(id,on){const e=$(id);if(e)e.style.display=on?'':'none';}
+function fmt(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(a<10?1:0);}
+function lin(d,lo,hi){return lo+(hi-lo)*d/100;}
+
+function resists(){
+ const raw={vk:+$('vk').value, ve:+$('ve').value, vx:+$('vx').value, vo:+$('vo').value};
+ const s=raw.vk+raw.ve+raw.vx+raw.vo||1;
+ return {vk:raw.vk/s*4, ve:raw.ve/s*4, vx:raw.vx/s*4, vo:raw.vo/s*4};
+}
+
+// compositional name
+function shieldName(pool,regen){
+ const scale = pool>=1000?'Bastion':pool>=350?'Shield':'Deflector';
+ const cyc = regen>=2.5?'Fast-Cycle ':regen>=0.5?'Cycling ':pool>=350&&regen<0.3?'Deep ':'';
+ const noun = (regen>=0.5 && pool<=650) ? 'Ward Projector' : 'Shield Generator';
+ return (cyc+ (regen>=0.5&&pool<=650?'Ward':scale)).trim();
+}
+function reproShield(pool,regen){
+ if(regen<0.3 && pool>=100 && pool<=260) return 'Shield Generator';
+ if(regen>=0.6 && pool<=180) return 'Ward Projector';
+ return 'a custom shield';
+}
+function armourName(def,r){
+ const scale = def>=33?'Heavy':def>=12?'':'Light';
+ let noun='Composite Plating';
+ const mx=Math.max(r.vk,r.ve,r.vx,r.vo), sp=Math.max(r.vk,r.ve,r.vx,r.vo)-Math.min(r.vk,r.ve,r.vx,r.vo);
+ if(sp<0.25) noun='Composite Plating';
+ else if(r.ve===mx) noun='Ablative Laminate';
+ else if(r.vo===mx) noun='Null-Ward Plating';
+ else if(r.vx>=1.4 && r.vk>=1.2) noun='Reactive Plating';
+ else if(r.vk===mx) noun='Kinetic Plating';
+ else if(r.vx===mx) noun='Reactive Plating';
+ return [scale,noun].filter(Boolean).join(' ');
+}
+function reproArmour(r){
+ const sp=Math.max(r.vk,r.ve,r.vx,r.vo)-Math.min(r.vk,r.ve,r.vx,r.vo);
+ if(sp<0.25) return 'Composite Plating';
+ const mx=Math.max(r.vk,r.ve,r.vx,r.vo);
+ if(r.ve===mx) return 'Ablative Laminate';
+ if(r.vx===mx && r.vk>=1.2) return 'Reactive Plating';
+ if(r.vo===mx) return 'a custom Null-ward';
+ return 'a custom plate';
+}
+
+function render(){
+ const nt=NAT[nat];
+ // layer visibility
+ qa('.lchip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.layer===layer));
+ show('shieldsec', layer==='shield');
+ show('armoursec', layer==='armour');
+ $('layernote').innerHTML = layer==='shield'
+  ? '<b>Building a Shield.</b> Two dials — <b>Capacity</b> (the pool) and <b>Regen</b> (how fast it refills). But the soak fraction is the <b>attacker’s</b> to set: change the incoming nature and watch the shield’s worth swing without touching a dial.'
+  : '<b>Building an Armour plate.</b> One thickness dial plus four zero-sum nature resists — all <b>yours</b>. Boost one nature and another drops; the plate cares about shot SIZE, so drag the incoming shot-size slider too.';
+
+ // ── shield readout values
+ const capV=+$('cap').value, regenV=+$('regen').value;
+ const pool = lin(capV,0,CAP_MAX);               // points — kept only for the naming/reproduce thresholds
+ const regenFrac = lin(regenV,0,REGEN_MAX);      // 0..5 — kept only for naming/reproduce
+ const regenPts = regenFrac*300;
+ const poolJ = lin(capV,0,CAP_MAX_J);            // Joules — the engine/assembler runtime unit (cap=10 default -> 5 MJ deflector)
+ const regenJps = lin(regenV,0,REGEN_MAX_J);     // J/s — engine-real regen (regenV=10 -> 100 kJ/s, the deflector's)
+
+ // ── armour readout values
+ const armV=+$('arm').value;
+ const Defense = lin(armV,0,DEF_MAX);
+ const r=resists();
+ // tuning grid
+ const tg=$('tun');
+ if(tg){ const lab={vk:'Kin',ve:'Energy',vx:'Expl',vo:'Exotic'};
+  tg.innerHTML=['vk','ve','vx','vo'].map(k=>{const v=r[k];const cls=v>1.02?'up':v<0.98?'dn':'eq';
+   return '<div class="tv '+cls+'"><i>'+lab[k]+'</i><b>'+v.toFixed(2)+'</b></div>';}).join(''); }
+ ['vk','ve','vx','vo'].forEach(k=>set('s_'+k, r[k].toFixed(2)+'×'));
+
+ // slider readouts
+ set('s_cap', fmt(poolJ)+' J'); set('e_cap0','0 J'); set('e_cap1','50 MJ · deflector = 5 MJ');
+ set('s_regen', fmt(regenJps)+' J/s'); set('e_reg0','0 · generator'); set('e_reg1','1 MJ/s · ward');
+ set('s_arm', 'Defense '+Defense.toFixed(0));
+ set('s_shot', (+$('shot').value)+' / 100');
+
+ // ── incoming packaging
+ const shot=+$('shot').value;
+ const perShot=DPS*Math.pow(10,(shot-50)/26), rate=DPS/perShot;
+
+ // ── the shared-kernel resolution (spec formula)
+ const soakFrac=nt.soak;
+ const soakable=DPS*soakFrac;                    // J/s the shield must absorb
+ const shieldHolds = poolJ>0 && regenJps>=soakable && soakFrac>0;
+ const shieldEHP = soakFrac<=0 ? 0 : (shieldHolds? Infinity : poolJ);  // exotic -> shield worthless
+ const resistNat = r[nt.key];
+ const fracPast = Defense<=0 ? 1 : Math.max(perShot - Defense*ARMSOAK*resistNat, perShot*MINPASS)/perShot;
+ const armourMult = 1/Math.max(fracPast,1e-4);
+ const baseEHP = HP_READ*EVA_READ*armourMult;
+ const effEHP = shieldEHP===Infinity? Infinity : baseEHP+shieldEHP;
+ const ttk = effEHP===Infinity? Infinity : effEHP/DPS;
+
+ // ── NAME + reproduction
+ let name, sub, oname, repro, mass, mk1,mk2, a1v,a2v;
+ if(layer==='shield'){
+  name=shieldName(pool,regenFrac);
+  sub='capacity ← pool size · regen ← refill rate · soak ← the ATTACKER (fixed)';
+  repro=reproShield(pool,regenFrac);
+  mass = Math.max(1, pool/9 + regenFrac*40);     // CarryMass-scale, illustrative
+  set('l_a1', LAYER.shield.a1); a1v=fmt(poolJ)+' J';
+  set('l_a2', LAYER.shield.a2); a2v=fmt(regenJps)+' J/s';
+  oname = fmt(poolJ)+' J pool'+(regenFrac>=0.5?' @ '+fmt(regenJps)+' J/s regen':', no regen')+' for '+fmt(mass)+' kg';
+ } else {
+  name=armourName(Defense,r);
+  sub='thickness ← total protection (mass) · tuning ← zero-sum, sums to 4.0 (free)';
+  repro=reproArmour(r);
+  mass = Math.max(1, Defense*30);
+  set('l_a1', LAYER.armour.a1); a1v=Defense.toFixed(0)+' pts';
+  set('l_a2', LAYER.armour.a2);
+  const mxk=['vk','ve','vx','vo'].reduce((a,b)=>r[b]>r[a]?b:a,'vk');
+  a2v = ({vk:'Kinetic',ve:'Energy',vx:'Explosive',vo:'Exotic'})[mxk]+' '+r[mxk].toFixed(2)+'×';
+  oname='Defense '+Defense.toFixed(0)+', tuned '+a2v+' for '+fmt(mass)+' kg';
+ }
+ set('v_name', name);
+ set('v_namesub', sub);
+ set('oname', oname);
+ $('odesc').innerHTML = '<b>'+LAYER[layer].desc+'</b> <span style="display:block;margin-top:7px">Current settings reproduce: <b>'+repro+'</b>.</span>';
+ set('v_a1', a1v); set('v_a2', a2v);
+ set('v_ev', EVA_READ.toFixed(1)+'× (max '+EVA_MAX+')');
+ set('v_st', fmt(HP_READ)+' HP');
+ set('v_mass', fmt(mass)+' kg');
+
+ // ── worth panel
+ set('l_m1','Shield vs '+nt.n);
+ set('m_1', Math.round(soakFrac*100)+'% soak');
+ set('s_m1', soakFrac<=0?'exotic bypasses it entirely':'set by the ATTACKER');
+ $('m_1').parentElement.className='mt '+(soakFrac>=0.75?'g':soakFrac>0?'a':'r');
+
+ set('l_m2','Armour lets past');
+ set('m_2', Math.round(fracPast*100)+'%');
+ set('s_m2', fracPast<=MINPASS+0.001?'floored at 10% — shots too small':(Defense<=0?'no plate fitted':'you tuned this, vs '+nt.n));
+ $('m_2').parentElement.className='mt '+(fracPast<=0.35?'g':fracPast<0.9?'a':'r');
+
+ set('l_m3','Effective health');
+ set('m_3', effEHP===Infinity?'∞':fmt(effEHP));
+ set('s_m3','Health × evasion × armour'+(shieldEHP>0?' + shield':''));
+ $('m_3').parentElement.className='mt g';
+
+ set('l_m4','Time to kill');
+ set('m_4', ttk===Infinity?'never':ttk>=3600?'>1 h':fmt(ttk)+' s');
+ set('s_m4', shieldHolds?'shield regen out-paces it':'at '+fmt(DPS)+' J/s incoming');
+ $('m_4').parentElement.className='mt '+(ttk===Infinity||ttk>600?'g':ttk>90?'a':'r');
+
+ // ── verdict
+ let verdict;
+ if(layer==='shield'){
+  verdict = soakFrac<=0
+   ? '<b>Exotic walks straight through.</b> Your capacity and regen are both meaningless here — and you never touched a dial to make it so. <b>The attacker set the soak to 0%.</b> This is the asymmetry: against a shield, the weapon’s nature decides, identically on every target in the galaxy.'
+   : shieldHolds
+   ? '<b>The pool holds — regen out-paces the soakable fraction.</b> A small fast Ward beats sustained chip-fire; but note it still only soaks '+Math.round(soakFrac*100)+'% of THIS nature, because the attacker owns that number.'
+   : '<b>Capacity + regen are yours; the soak fraction is not.</b> Switch the incoming nature and the same pool is worth 100% one moment and nothing the next — the defining fact of the shield layer.';
+ } else {
+  verdict = fracPast<=MINPASS+0.001
+   ? '<b>Flat armour, floored.</b> Against many small shots the flat bounce ('+ARMSOAK+' per point) eats almost all of each — but it can never stop everything (10% floor). Drag shot size up and watch a single big alpha punch through.'
+   : '<b>Every one of these four numbers is YOURS.</b> There is no single “energy vs armour” figure in the game — the plate carries its own, and you just tuned it. That is the mirror of the shield: the defender decides, and intel on what the enemy shoots is what tells you how.';
+ }
+ $('verdict').innerHTML=verdict;
+}
+
+// ── wiring
+qa('.lchip').forEach(c=>c.addEventListener('click',()=>{ layer=c.dataset.layer;
+ qa('.lchip').forEach(x=>x.setAttribute('aria-pressed',x===c)); render(); }));
+qa('.nat').forEach(c=>c.addEventListener('click',()=>{ nat=c.dataset.v;
+ qa('.nat').forEach(x=>x.setAttribute('aria-pressed',x===c)); render(); }));
+qa('.chip.tn').forEach(c=>c.addEventListener('click',()=>{ tune=c.dataset.t;
+ qa('.chip.tn').forEach(x=>x.setAttribute('aria-pressed',x===c));
+ const p=PRESET[tune]||PRESET.plain; ['vk','ve','vx','vo'].forEach((k,i)=>{ if($(k))$(k).value=p[i]; });
+ render(); }));
+['cap','regen','arm','vk','ve','vx','vo','shot'].forEach(i=>{ const e=$(i); if(e)e.addEventListener('input',render); });
+render();
+</script>

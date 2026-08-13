@@ -371,7 +371,7 @@ BATTLE ─ CombatEngagement.StepEngagementGroup(members, dt)   (every 5 s game-t
 |---|---|---|
 | `VelocityReference_mps` | 1e6 | `CombatKernel.cs:38` |
 | `SaturationReference` | 50 | `:42` |
-| `MinLandedFraction` | 0.02 | `:46` |
+| `MinLandedFraction` | 0.05 | `:71` |  *(corrected 2026-08-13: was 0.02/:46; source = 1 − EvasionCap = 0.05. NB every `CombatKernel.cs` cite in this §6.4 block drifted ~+25 lines as the file grew to 339 lines — re-baseline on the next resolver dive; RESOLVER-SIM.md has current lines.)*
 | `FlightTimeReference_s` | 10 | `:51` |
 | `RangeBaseMiss` | 0.9 | `:57` ⚠ mutable |
 | Shield soak K/E/X/O | 1.0 / 0.5 / 0.75 / 0.0 | `:62-68` |
@@ -451,7 +451,8 @@ ring, **not saved**, per-fleet whole-ship counts). **Ground has no battle log at
 
 ## 8. THE SCENARIO-CORRECTNESS MATRIX — the fastest answer in the file
 
-Fourteen combat scenarios, each with a **space verdict** and a **ground verdict**: **HANDLED** / **PARTIAL** / **GAP**.
+Fifteen combat scenarios, each with a **space verdict** and a **ground verdict**: **HANDLED** / **PARTIAL** / **GAP**
+(row 15, added 2026-08-08, carries a **DESIGN** verdict — designed, native to the resolver, not yet built).
 Produced by an eight-component read-only survey (2026-07-17), **re-verified and re-stamped 2026-07-29** — three rows
 moved since the original because slices landed in between. Where the survey agents disagreed, the cell says so out
 loud rather than smoothing it over.
@@ -472,6 +473,7 @@ loud rather than smoothing it over.
 | 12 | **Fog of war / first-strike (blind enemy)** | HANDLED | **GAP** (detection) | Space: detection asymmetry — a seer shoots a blind target that cannot reply (`CanEngageTarget`), behind `RequireDetectionToEngage`. Ground has **no detection combat gate**: radar reveals the *map*, not who may shoot. Its first-strike is **range-based only**. *(§12 Slice 4 is the design.)* |
 | 13 | **Wildly mismatched forces resolve cheaply** | HANDLED | **PARTIAL** | Space buckets by combat value → O(buckets); proven by `CombatPerformanceTests` (200 warships in ms) and `CombatBattleSims` B10 (1 dreadnought vs **1000** gnats ≈ 9 ms). Ground gets the right *outcome* but is **O(units²)** with **no perf gauge** — a large *symmetric* ground battle is far costlier than the space equivalent. *(W4 / slice 5c is the fix.)* |
 | 14 | **Defensive posture as improvised armour** | HANDLED | HANDLED | `ToughnessMult` / `DamageTakenMult` + hardened plating all stack. Missing only the per-source bounce (row 6) on the space side. |
+| 15 | **Air / altitude combat** (fighter · CAS · anti-air) | n/a | **SIM-PROVEN, engine PENDING** | **Designed + MODELLED IN THE SIM 2026-08-08** (§11.3 + `docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`; results in `docs/combat/RESOLVER-SIM.md`). An aircraft is a ground-domain unit at an altitude band; air-to-air / CAS / anti-air fall out of the ONE resolver via a 3D-gap distance (`RealGap3D`) + an `EngageBands` weapon gate + signature-as-stealth — no air domain, no air resolver. Built into `resolversim.html` and re-run (the `aircombined` scenario resolves with air fighting like air; byte-identical for all-surface fights). The C# `GroundForcesProcessor.cs` port is the remaining work. Orbital bombardment stays separate. |
 
 > **\*Honest disagreements, preserved.** Row 1 space is where the agents split — two called the fleet-of-N-ships case
 > HANDLED (N discrete kills), one called it PARTIAL (no per-*ship* hull tracking). **Both describe the same fact:
@@ -629,6 +631,54 @@ doctrine × situation) bucket**, and the caller scales it by the unit count. It 
 battalion combination" stays O(buckets) — and **why the kernel is a set of pure per-combatant functions
 (compute-one) with the count handled by the orchestration (distribute-across-N).** The refinement **confirms** the
 kernel's shape; nothing below the orchestration changes.
+
+### 11.3 The atmospheric layer — air is a THIRD POSITION inside the one resolver (design, 2026-08-08)
+
+**Air combat is NOT a third resolver.** The same "one model, both domains" principle extends to a third one: an aircraft
+is a **ground-domain unit carrying an altitude band**, and the air↔ground↔air exchange falls out of the ONE resolver the
+same way the ground closing fight does — no air domain, no air map, no air resolver, no `DoctrineDomain.Air`. Full design
++ the six locked rulings: **`docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`.**
+
+> **✅ MODELLED + PROVEN IN THE RESOLVER SIM (2026-08-08) — C# engine port still pending.** The full combat mechanism
+> below (band → `RealGap3D`, the `EngageBands` gate, signature-as-stealth, anti-air-falls-out) is built into
+> `docs/combat/resolversim.html` and re-run: the `aircombined` scenario resolves with air fighting like air (A2A, CAS,
+> anti-air via a SAM = surface unit + air-only weapon, altitude by geometry, stealth by a reach multiplier), and it is
+> **byte-identical** for every all-surface/space fight (13/13 geometry probes pass; full-log diff empty). The design is
+> proven to close; the `GroundForcesProcessor.cs` port is the remaining work. See `docs/combat/RESOLVER-SIM.md`.
+
+**The mechanism — one changed argument.** The ground resolver already gates fire on a real metre gap
+(`GroundMiniHex.RealGapMetres` → `CombatKernel.WithinReach` at `GroundForcesProcessor.cs:568`, and the dodge accuracy
+`HitFraction` at `:423`). Give each unit an altitude and swap in a **3D gap**:
+
+```
+RealGap3D(a, b) = √( RealGapMetres(a, b)²  +  (altitude_a − altitude_b)² )
+```
+
+Pythagoras with a vertical leg, behind a flag, **byte-identical at equal altitude** (the height leg is 0 → collapses to
+`RealGapMetres`). From that one substitution, all three air interactions emerge through the **unchanged shared kernel**:
+
+- **Air-to-air** — two units at altitude, close diagonal → the ordinary kernel fight; high evasion means only guided /
+  high-tracking weapons land (you can't cannon a jet).
+- **CAS** — an airborne unit fires *down*; only a long-range weapon reaches the slant, and anything that can shoot *up*
+  answers in the **same loop**. CAS is safe only once the sky is won. **It needs no special routine — it is native
+  resolver combat** (Call 6 below).
+- **Anti-air** — one new **`EngageBands` weapon dial** (an explicit mask of which altitude bands a weapon may fire at),
+  checked beside the geometric gate: a SAM (`EngageBands ⊇ air`, long range) hits; a rifle (`{Surface}`) cannot, ever.
+
+**Sortie-based, and cheap because endurance is emergent.** An aircraft flies **sorties from a base** — and its
+loiter/range/endurance **falls out of fuel + engine + mass by the same arithmetic a ship's range already does**
+(`thrust = ExhaustVelocity × FuelBurnRate`, delta-V = Tsiolkovsky, `BurnTime = fuel ÷ burn rate`; `ShipDesign` carries no
+authored endurance field — verified). So sortie air costs only a fuel runtime field (mirrors the ammo pool) and a
+launch/recover **order** (reuses the docking dock/undock order → One-Verb, both seats).
+
+**The six locked rulings (2026-08-08):** ① sortie-based air (endurance emergent) · ② **design-time** altitude (no
+climb/dive verb → zero new AI code) · ③ explicit **`EngageBands`** anti-air gate · ④ **3 bands** (Low/Med/High;
+near-space deferred) · ⑤ near-space↔space **flavor only** · ⑥ orbital bombardment and CAS **kept SEPARATE** —
+`ApplyGroundBombardment` (fleet → whole surface) stays its own untouched routine, CAS is native resolver combat.
+
+**Consistency with §13.4.** Air is a position *inside the ground plane*, not a fourth `BattleTheater` plane. Near-space
+only ever "borders orbit" via the existing orbital-bombardment edge (§13.4), and coupling it to the space plane is
+deferred (ruling ⑤). So this adds altitude to the ground closing fight; it does not add a plane or a resolver.
 
 ---
 
@@ -1347,7 +1397,12 @@ per-shot timing (→ charge telegraph) · a self-damage rule (→ overcharge/bur
 the effect bus + capture (→ stun/conversion/Exotic effects) · positional arc/traverse (**or drop it as flavour** —
 the aggregate resolver is non-positional) · full missiles-as-individually-resolvable-targets (→ per-projectile PD;
 today it is a **fleet-PD-rating-vs-missile-damage intercept fraction**, not a shootdown loop) · the
-air/altitude/depth combat layer · the H8 gate-network/addressing · Transfer ▸ teleport.
+**depth (underwater) combat layer** · the H8 gate-network/addressing · Transfer ▸ teleport.
+
+> **⤴ PROMOTED OUT 2026-08-08 — the AIR / ALTITUDE combat layer is no longer parked.** It is DESIGNED and native to the
+> resolver: **§11.3 + `docs/ground/ATMOSPHERIC-LAYER-DESIGN.md`** (six rulings locked; design only — not yet built). Air is
+> a third POSITION *inside* the one resolver — a ground-domain unit at an altitude band, resolved by a 3D-gap distance +
+> an `EngageBands` weapon gate — **not** a new domain or a separate resolver. Only the DEPTH (underwater) half stays parked.
 
 **Also parked:** the per-component damage sim (`DamageComplex`) — **the parent of whole-or-dead and therefore of
 half this document's limitations** (root `CLAUDE.md` **L10**).
@@ -1456,7 +1511,7 @@ Nothing was lost. Each row is a deleted file; the right column says where its co
 
 ### 20.1 What was deliberately NOT carried over
 
-- **The `docs/economy/COMPONENT-DESIGNER-DIALS.md` cross-references** from the dial-insertion map — dials are the
+- **The `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` cross-references** from the dial-insertion map — dials are the
   **designer's** subject and live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`. This file records only where
   a dial **lands on the resolver's input surface** (§6.2).
 - **The provenance/how-we-got-here paragraphs** of each source doc (which workflow produced them, which agent hit a

@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entity Assembler — the machine that turns designed components into totals</title>
+</head>
+<body>
+<style>
+:root{
+  --bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--card3:#ECEFF3;
+  --ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+  --rule:#C7CDD4;--rule2:#DFE4E9;
+  --ac:#0E7C86;--ac2:#0A5C64;
+  --ok:#2F855A;--okbg:#E4F1E9;
+  --warn:#8A6A1F;--warnbg:#F4EEDD;
+  --flag:#8E3B33;--flagbg:#F6E7E5;
+  --dead:#6D5A8A;--deadbg:#EEE9F3;
+  --sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045);
+  --shBig:0 2px 8px rgba(16,24,32,.06),0 12px 40px rgba(16,24,32,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0E1116;--card:#161B21;--card2:#1C222A;--card3:#222932;
+  --ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+  --rule:#2A313A;--rule2:#232931;
+  --ac:#3FB3BD;--ac2:#6FD3DB;
+  --ok:#54C08A;--okbg:#14251C;
+  --warn:#C9A24A;--warnbg:#282013;
+  --flag:#D2776C;--flagbg:#2A1917;
+  --dead:#A995C9;--deadbg:#1E1926;
+  --sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28);
+  --shBig:0 2px 10px rgba(0,0,0,.4),0 16px 48px rgba(0,0,0,.4);
+}}
+:root[data-theme=dark]{
+  --bg:#0E1116;--card:#161B21;--card2:#1C222A;--card3:#222932;
+  --ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+  --rule:#2A313A;--rule2:#232931;
+  --ac:#3FB3BD;--ac2:#6FD3DB;
+  --ok:#54C08A;--okbg:#14251C;--warn:#C9A24A;--warnbg:#282013;
+  --flag:#D2776C;--flagbg:#2A1917;--dead:#A995C9;--deadbg:#1E1926;
+  --sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28);
+  --shBig:0 2px 10px rgba(0,0,0,.4),0 16px 48px rgba(0,0,0,.4);
+}
+:root[data-theme=light]{
+  --bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--card3:#ECEFF3;
+  --ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+  --rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;
+  --ok:#2F855A;--okbg:#E4F1E9;--warn:#8A6A1F;--warnbg:#F4EEDD;
+  --flag:#8E3B33;--flagbg:#F6E7E5;--dead:#6D5A8A;--deadbg:#EEE9F3;
+  --sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045);
+  --shBig:0 2px 8px rgba(16,24,32,.06),0 12px 40px rgba(16,24,32,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.mono,.val,.lbl,.tag,.pill,.gv,.hv{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:1160px;margin:0 auto;padding:0 18px}
+h1{margin:0;font-size:27px;line-height:1.08;letter-spacing:-.025em;font-weight:770;text-wrap:balance}
+h2{margin:0;font-size:15px;letter-spacing:.02em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ac2);margin:0 0 12px}
+.lead{margin:12px 0 0;font-size:14.5px;color:var(--ink2);max-width:74ch}.lead b{color:var(--ink);font-weight:640}
+
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px;position:relative}
+.themeBtn{position:absolute;top:16px;right:18px;font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink3);background:var(--card2);border:1px solid var(--rule);
+  border-radius:20px;padding:7px 13px;cursor:pointer}
+.themeBtn:hover{color:var(--ink);border-color:var(--ink3)}
+
+/* host selector */
+.hostwrap{margin:20px 0 0}
+.hostlab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:0 0 9px}
+.hosts{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:720px}
+.host{border:1px solid var(--rule);border-radius:8px;background:var(--card2);padding:13px 15px;cursor:pointer;text-align:left;
+  transition:border-color .12s,background .12s,box-shadow .12s}
+.host:hover{border-color:var(--ink3)}
+.host[aria-pressed=true]{border-color:var(--ac);background:var(--card);box-shadow:0 0 0 1px var(--ac) inset,var(--sh)}
+.host .hn{font-weight:720;font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.host .hd{margin:4px 0 0;font-size:12px;color:var(--ink3);line-height:1.4}
+.host .dot{width:9px;height:9px;border-radius:50%;background:var(--ink3);flex:none}
+.host[aria-pressed=true] .dot{background:var(--ac)}
+
+/* two-pane console */
+.console{display:grid;grid-template-columns:1fr;gap:16px;padding:22px 0 40px}
+@media(min-width:960px){.console{grid-template-columns:minmax(360px,430px) 1fr;align-items:start}}
+.pane{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:9px;box-shadow:var(--sh);overflow:hidden}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--rule2);background:var(--card2)}
+.phead h2{color:var(--ink)}
+.phead .sub{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.05em;color:var(--ink3);text-transform:uppercase}
+.pbody{padding:13px 14px}
+
+/* roster */
+.cat{font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:14px 0 7px}
+.cat:first-child{margin-top:0}
+.item{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--rule2)}
+.item:first-of-type{border-top:none}
+.item.dis{opacity:.4}
+.iname{font-weight:640;font-size:13.5px;letter-spacing:-.005em;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.imeta{grid-column:1;font:11px/1.45 ui-monospace,Menlo,monospace;color:var(--ink3);margin-top:2px}
+.step{display:flex;align-items:center;gap:0;border:1px solid var(--rule);border-radius:7px;overflow:hidden;background:var(--card2);grid-row:span 2}
+.step button{width:30px;height:30px;border:none;background:transparent;color:var(--ink2);font-size:17px;cursor:pointer;line-height:1;display:grid;place-items:center}
+.step button:hover:not(:disabled){background:var(--card3);color:var(--ink)}
+.step button:disabled{opacity:.3;cursor:not-allowed}
+.step .ct{min-width:26px;text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.item.on .iname{color:var(--ac2)}
+
+/* budgets */
+.bud{display:flex;flex-direction:column;gap:11px}
+.budrow .bl{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px}
+.budrow .bl .bn{color:var(--ink2)}
+.budrow .bl .bv{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.track{height:9px;background:var(--card3);border-radius:5px;overflow:hidden;border:1px solid var(--rule2)}
+.fill{height:100%;background:var(--ac);border-radius:5px;transition:width .18s ease}
+.fill.over{background:var(--flag)}
+.fill.warn{background:var(--warn)}
+
+/* gates */
+.gates{display:flex;flex-direction:column;gap:8px}
+.gate{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--rule2);border-radius:7px;background:var(--card2)}
+.gate .gi{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;margin-top:1px;color:#fff}
+.gate.pass .gi{background:var(--ok)} .gate.fail .gi{background:var(--flag)} .gate.na .gi{background:var(--ink3)} .gate.pend .gi{background:var(--warn)}
+.gate .gt{font-size:12.5px;color:var(--ink)}
+.gate .gr{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--ink3);margin-top:2px}
+.gate.fail{background:var(--flagbg);border-color:var(--flag)}
+.gate.pend{background:var(--warnbg);border-color:var(--warn)}
+
+/* presets */
+.presetbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid var(--rule2)}
+.presetbar .pl{font:9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
+.preset{font-size:12px;padding:6px 11px;border:1px solid var(--rule);border-radius:20px;background:var(--card2);color:var(--ink2);cursor:pointer}
+.preset:hover{border-color:var(--ac);color:var(--ink)}
+.preset.hero{border-color:var(--ac);color:var(--ac2);font-weight:600}
+.preset.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+@media(prefers-color-scheme:dark){.preset.on{color:#0B1013}}
+:root[data-theme=dark] .preset.on{color:#0B1013}
+:root[data-theme=light] .preset.on{color:#fff}
+
+/* totals gauges */
+.gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:8px;overflow:hidden}
+@media(min-width:560px){.gauges{grid-template-columns:repeat(4,1fr)}}
+.gauge{background:var(--card);padding:12px 13px}
+.gauge i{display:block;font-style:normal;font:9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.gauge b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:4px;color:var(--ac2)}
+.gauge s{display:block;text-decoration:none;font:10px/1.3 ui-monospace,Menlo,monospace;color:var(--ink3);margin-top:2px}
+.gauge.muted b{color:var(--ink3)}
+.gauge.warnb b{color:var(--warn)} .gauge.okb b{color:var(--ok)}
+
+/* weapon profiles — the hero */
+.wp{border:1px solid var(--rule2);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.wp:last-child{margin-bottom:0}
+.wphd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:9px 12px;background:var(--card2);border-bottom:1px solid var(--rule2)}
+.wphd .wpn{font-weight:700;font-size:13.5px}
+.wphd .wpc{font:11px/1 ui-monospace,Menlo,monospace;color:var(--ink3)}
+.wpgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2)}
+@media(min-width:560px){.wpgrid{grid-template-columns:repeat(3,1fr)}}
+.f{background:var(--card);padding:7px 10px;position:relative}
+.f i{display:block;font-style:normal;font:9px/1 ui-monospace,Menlo,monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.f b{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.f.inert{background:var(--card2)}
+.f.inert b{color:var(--ink3);text-decoration:line-through;text-decoration-thickness:1px}
+.f .state{position:absolute;top:6px;right:8px;font:8px/1 ui-monospace,Menlo,monospace;letter-spacing:.04em;font-weight:700;text-transform:uppercase}
+.f.live .state{color:var(--ok)} .f.inert .state{color:var(--ink3)} .f.shiponly .state{color:var(--ac2)}
+
+/* engagement ranges — a magnitude ruler */
+.rng{display:flex;flex-direction:column;gap:8px}
+.rngrow{display:grid;grid-template-columns:130px 1fr 62px;gap:10px;align-items:center}
+.rngrow .rn{font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rngrow .rn em{font-style:normal;color:var(--ink3);font-size:10px}
+.rngtrack{height:9px;background:var(--card3);border:1px solid var(--rule2);border-radius:5px;overflow:hidden}
+.rngbar{height:100%;background:var(--ac);border-radius:5px;transition:width .18s ease}
+.rngbar.det{background:var(--ink3);opacity:.55}
+.rngrow.detrow .rn{color:var(--ink3)} .rngrow.detrow .rngv{color:var(--ink3)}
+.rngv{font:11px/1 ui-monospace,Menlo,monospace;color:var(--ac2);font-variant-numeric:tabular-nums;text-align:right}
+.rngscale{display:grid;grid-template-columns:130px 1fr 62px;gap:10px;margin-top:2px}
+.rngticks{grid-column:2;display:flex;justify-content:space-between;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3)}
+.rngcap{grid-column:1;font:9px/1 ui-monospace,Menlo,monospace;color:var(--ink3);align-self:center;letter-spacing:.04em}
+
+/* handoff */
+.handoff{background:var(--card2);border:1px solid var(--rule2);border-radius:8px;padding:0;overflow:hidden}
+.handoff pre{margin:0;padding:13px 15px;overflow-x:auto;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;line-height:1.55;color:var(--ink2);font-variant-numeric:tabular-nums}
+.handoff .k{color:var(--ac2)} .handoff .v{color:var(--ink)} .handoff .c{color:var(--ink3)}
+
+/* markers + legend */
+.mk{display:inline-block;font-style:normal;font:8.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.05em;font-weight:700;
+  text-transform:uppercase;padding:2px 5px;border-radius:4px;vertical-align:1px;border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.live{border-color:var(--ok);color:var(--ok);background:var(--okbg)}
+.mk.dead{border-color:var(--dead);color:var(--dead);background:var(--deadbg)}
+.mk.pend{border-color:var(--warn);color:var(--warn);background:var(--warnbg)}
+.mk.split{border-color:var(--ac);color:var(--ac2);background:var(--card)}
+.note{font-size:12.5px;color:var(--ink2);line-height:1.5}.note b{color:var(--ink)}
+.legend{margin-top:6px;padding:12px 14px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.55;color:var(--ink2)}
+.legend h4{margin:0 0 8px;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:baseline}
+.legend dt{white-space:nowrap}.legend dd{margin:0}
+.splitbar{margin:0;padding:11px 14px;border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:6px;background:var(--card);font-size:12.5px;color:var(--ink2)}
+.splitbar b{color:var(--ink)}
+footer{padding:6px 0 60px}
+.foot{font-size:12px;color:var(--ink3);line-height:1.6;border-top:1px solid var(--rule2);padding-top:14px;margin-top:8px}
+.foot b{color:var(--ink2)}
+@media(min-width:700px){h1{font-size:34px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="top"><div class="w">
+  <button class="themeBtn" id="themeBtn" aria-label="Toggle light or dark theme">◐ theme</button>
+  <p class="eyebrow">Pulsar4X · the entity assembler · the machine after the 12 doors</p>
+  <h1>The doors design <em>components</em>. The resolver reads <em>totals</em>. This is the machine in&nbsp;between.</h1>
+  <p class="lead">You don't fight with a component — you fight with a <b>whole thing</b>: a warship, a battalion, a station. The Entity Assembler is where designed parts get <b>mounted onto a host</b>, spend its budgets, pass its gates, and collapse into the handful of <b>totals</b> the combat resolver actually reads (<span class="mono">ShipCombatValueDB.Calculate</span>). Pick a host, add parts, watch it come together — and watch the numbers gate.</p>
+  <p class="lead" style="margin-top:10px">🔑 <b>The one thing this proves that a parts list can't:</b> the <b>same component behaves differently by host.</b> A railgun's armour-penetration is <b>live on a ground unit and inert on a ship</b> — the two resolvers read a different subset of its profile. Switch the host below and watch the weapon table re-wire itself. <span class="mono" style="color:var(--ink3)">(Verified in engine source, 2026-08-02.)</span></p>
+
+  <div class="hostwrap">
+    <p class="hostlab">Step 1 — choose the host <span style="color:var(--ink3)">· everything downstream depends on this</span></p>
+    <div class="hosts" id="hosts" role="group" aria-label="Host type"></div>
+  </div>
+</div></div>
+
+<div class="w"><div class="console">
+  <div class="pane">
+    <div class="panel">
+      <div class="phead"><h2>The bench</h2><span class="sub" id="rosterSub">step 2 · mount parts</span></div>
+      <div class="pbody">
+        <div class="presetbar" id="presets"></div>
+        <div id="roster"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane">
+    <div class="panel">
+      <div class="phead"><h2>Budgets</h2><span class="sub">the host's finite room</span></div>
+      <div class="pbody"><div class="bud" id="budgets"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Requirement gates</h2><span class="sub">pass / fail · reasons</span></div>
+      <div class="pbody"><div class="gates" id="gates"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Emergent totals</h2><span class="sub">what the resolver reads</span></div>
+      <div class="pbody">
+        <div class="gauges" id="gauges"></div>
+        <p class="note" id="totalsNote" style="margin:12px 0 0"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Mobility &amp; FTL</h2><span class="sub" id="mobsub">can it get there?</span></div>
+      <div class="pbody"><div class="gauges" id="mobility"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Endurance</h2><span class="sub">can it stay in the fight?</span></div>
+      <div class="pbody"><div class="gauges" id="endurance"></div><p class="note" id="endNote" style="margin:12px 0 0"></p></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Weapon profiles</h2><span class="sub" id="wpsub">the host split, live</span></div>
+      <div class="pbody" id="weapons"></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Engagement ranges</h2><span class="sub">how far each gun reaches · km</span></div>
+      <div class="pbody" id="ranges"></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Cost surface</h2><span class="sub">to <b>build</b> one · one-time</span></div>
+      <div class="pbody"><div class="gauges" id="cost"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Run cost — what you mount is what you pay</h2><span class="sub">to <b>keep</b> it running · every tick</span></div>
+      <div class="pbody"><div class="gauges" id="runcost"></div><p class="note" id="runNote" style="margin:12px 0 0"></p></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Resource bill</h2><span class="sub">the materials it eats</span></div>
+      <div class="pbody">
+        <div class="gauges" id="resources"></div>
+        <p class="note" id="resNote" style="margin:12px 0 0"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><h2>Totals handoff</h2><span class="sub">ShipCombatValueDB.Calculate</span></div>
+      <div class="pbody"><div class="handoff"><pre id="handoff"></pre></div></div>
+    </div>
+
+    <div class="legend">
+      <h4>Honesty — does the running game read this output?</h4>
+      <dl>
+        <dt><span class="mk live">live</span></dt><dd>a processor reads it today (verified file:line).</dd>
+        <dt><span class="mk split">host-split</span></dt><dd>live on one host, inert on the other — the two resolvers differ.</dd>
+        <dt><span class="mk pend">pending</span></dt><dd>the dial is designed; the engine target isn't built yet.</dd>
+        <dt><span class="mk dead">dead</span></dt><dd>written, but no rule reads it — a dial that does nothing.</dd>
+      </dl>
+    </div>
+  </div>
+</div></div>
+
+<div class="w"><footer>
+  <p class="splitbar" id="splitProse"></p>
+  <p class="foot"><b>What this is.</b> A design mock of the in-game Entity Assembler — the third piece of the designer suite, after the 12 component doors and their I/O matrix. The math here mirrors the real resolver contract (Firepower = Σ weapon damage/s · Toughness = Σ health + armour · Evasion 0–0.95 · Shield pool · per-weapon profiles). The honesty markers come from the 2026-08-02 source verification (<span class="mono">06-OUTPUTS-BY-DOOR.md</span>): every output traced to its live reader or proven dead. Design-only — nothing here is wired into the engine yet. No franchise IP.</p>
+  <p class="foot" style="margin-top:12px"><b>Energy is calibrated to the engine (2026-08-02).</b> Weapon damage is in real <span class="mono">MJ/s</span> (a laser 0.5, a heavy turbolaser 8, a railgun 1 — the engine's own values), and an energy weapon's reactor draw <b>equals</b> that damage (damage = the energy delivered = the energy drawn). Reactors are engine-scale MW (fusion ~75, capital ~800, hypermatter ~8,000). Shields are the engine's 5 MJ / 100 kJ&#8239;s deflector pool and draw <b>zero</b> reactor power (they self-regen). Warp's real cost is a one-time <b>1.25 GJ battery charge</b> to open the bubble (the new gate), then just 2.5 MW to hold it — not a big continuous draw. One honest caveat surfaced: the auto-resolver <b>stubs missile damage</b> at 0.1 MJ/s (real impact is GJ-scale, delivered in the live sim) — flagged on the launcher, not faked.</p>
+</footer></div>
+
+<script>
+"use strict";
+(function(){
+/* ---------- theme toggle (works standalone; the artifact host also has one) ---------- */
+var tb=document.getElementById('themeBtn');
+if(tb){tb.addEventListener('click',function(){
+  var r=document.documentElement;
+  var cur=r.dataset.theme;
+  if(!cur){cur=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
+  r.dataset.theme=(cur==='dark')?'light':'dark';
+});}
+
+/* ---------- hosts ---------- */
+var HOSTS={
+  ship:{name:'Warship',glyph:'▲',desc:'A mobile hull — from a corvette to a capital carrier. Armour folds into one Toughness pool; it dodges; it intercepts missiles.',
+        budgetName:'Hull mass budget',budget:20000,volCap:14000,crewRef:900,role:'ship'},
+  ground:{name:'Ground unit',glyph:'■',desc:'A battalion of troops/vehicles — a CARRIED unit whose chassis carry-class (Personnel or Vehicle) is the "deployable flag" a matching bay hauls (CARRIER-DESIGN §13a — the flag lives on the chassis, not as a boolean). Armour is soaked shot-by-shot; penetration bites here.',
+        budgetName:'Carry budget',budget:6000,volCap:5000,crewRef:200,role:'ground',carryClass:'Personnel · Vehicle'},
+  station:{name:'Station',glyph:'⬢',desc:'An orbital platform. Immense structure, but immobile — it never dodges.',
+        budgetName:'Structural budget',budget:22000,volCap:16000,crewRef:900,role:'station'},
+  dreadnought:{name:'Dreadnought',glyph:'◆',desc:'A mobile super-capital — a warship three times a normal hull, between a ship and a Battle Station. It still dodges (barely, at its size) and is FTL-capable; it mounts anything a ship OR a station can. The tier a 1,600 m Star Destroyer needs when it overflows the ship budget.',
+        budgetName:'Hull mass budget',budget:60000,volCap:44000,crewRef:40000,role:'ship'},
+  megastructure:{name:'Battle Station',glyph:'★',desc:'A moon-sized fortress and superweapon platform. Immobile in a fight (never dodges), but FTL-capable — an armed city with its own reactors, food, and a crew in the millions.',
+        budgetName:'Structural budget',budget:50000000,volCap:40000000,crewRef:500000,role:'megastructure'}
+};
+var HOSTORDER=['ship','ground','station','dreadnought','megastructure'];
+
+/* ---------- component catalog ----------
+   host output behaviour is encoded in weapon.fields[] state per host below. */
+var CAT=[
+ {id:'railgun',cat:'Weapons',name:'Railgun Battery',hosts:['ship','ground'],
+   mass:120,vol:42,crew:6,hp:24,supply:0,ammoUse:1.2,
+   weapon:{dps:1,nature:'Kinetic',delivery:'Projectile',pen:9,pershot:0.04,rate:26,range:80,vel:9000,track:0.55,ammo:true,pd:false},
+   cost:{bp:180,cr:12,rp:2,steel:96,elec:14},
+   honesty:'Kinetic → drains the ammo pool. Penetration/per-shot LIVE on ground, INERT on ship.'},
+ {id:'laser',cat:'Weapons',name:'Laser Cannon',hosts:['ship','ground'],
+   mass:80,vol:26,crew:4,hp:18,supply:0,heat:6,
+   weapon:{dps:0.5,nature:'Energy',delivery:'Beam',pen:0,pershot:0.015,rate:34,range:60,vel:299792,track:0.72,ammo:false,pd:false},
+   cost:{bp:150,cr:16,rp:3,steel:40,elec:34},
+   honesty:'Energy → runs on reactor power, no ammo. Engine-exact: its grid draw (0.5 MW) EQUALS its delivered damage (0.5 MJ/s) — the damage IS the energy it puts out. Adds heat (a live throttle on ships).'},
+ {id:'missile',cat:'Weapons',name:'Missile Launcher',hosts:['ship','ground'],
+   mass:100,vol:60,crew:5,hp:20,supply:0,ammoUse:3.0,
+   weapon:{dps:0.1,nature:'Explosive',delivery:'Guided',pen:4,pershot:0.08,rate:1.2,range:400,vel:14000,track:0.9,ammo:true,pd:false},
+   cost:{bp:200,cr:20,rp:4,steel:70,elec:40},
+   honesty:'Guided → the ONLY weapon point-defence can shoot down (a ship-only reader). ⚠ Damage caveat: the AUTO-RESOLVER stubs a missile at a flat 0.1 MJ/s (that\'s the real ShipCombatValueDB number, shown here) — but a real impact is GJ-scale kinetic energy delivered in the LIVE sim (MissileImpactProcessor), not the auto-resolve total. So a torpedo ship\'s resolver-firepower looks small; its true punch lands in live combat. An engine gap, flagged not faked.'},
+ {id:'plasma',cat:'Weapons',name:'Plasma Bolt Projector',hosts:['ship','ground'],
+   mass:92,vol:34,crew:4,hp:19,supply:0,heat:7,
+   weapon:{dps:2,nature:'Energy',delivery:'Bolt',pen:2,pershot:0.125,rate:16,range:55,vel:40000,track:0.6,ammo:false,pd:false},
+   cost:{bp:170,cr:18,rp:5,steel:44,elec:38},
+   honesty:'Teaching case: the door LABELS a bolt "ammo", but the engine reads its NATURE (Energy) → it runs on POWER, drains no ammo.'},
+ {id:'heavyturbo',cat:'Weapons',name:'Heavy Turbolaser Battery',hosts:['ship','station'],
+   mass:340,vol:120,crew:22,hp:42,supply:0,heat:20,
+   weapon:{dps:8,nature:'Energy',delivery:'Beam',pen:0,pershot:3.2,rate:2.5,range:220,vel:299792,track:0.35,ammo:false,pd:false},
+   cost:{bp:520,cr:70,rp:6,steel:240,elec:120},
+   honesty:'Capital energy gun — huge power draw, slow tracking (weak vs fighters). Runs on the reactor. Adds heavy heat.'},
+ {id:'medturbo',cat:'Weapons',name:'Medium Turbolaser',hosts:['ship','station'],
+   mass:200,vol:70,crew:12,hp:28,supply:0,heat:10,
+   weapon:{dps:3,nature:'Energy',delivery:'Beam',pen:0,pershot:0.75,rate:4,range:140,vel:299792,track:0.50,ammo:false,pd:false},
+   cost:{bp:300,cr:40,rp:5,steel:140,elec:70,mats:{'em-shielding-mesh':12}},
+   honesty:'The mid-weight main gun — between the point-defense screen and the heavy batteries. Energy, runs on the reactor.'},
+ {id:'pdbattery',cat:'Weapons',name:'Point-Defense Battery',hosts:['ship','ground','station'],
+   mass:38,vol:14,crew:3,hp:10,supply:0,ammoUse:0.3,
+   weapon:{dps:0.3,nature:'Kinetic',delivery:'Projectile',pen:1,pershot:0.0017,rate:180,range:12,vel:6000,track:0.95,ammo:true,pd:false},
+   cost:{bp:90,cr:8,rp:2,steel:44,elec:16},
+   honesty:'Flak — tiny damage, huge saturation, near-perfect tracking → the anti-fighter / anti-missile screen. Drains ammo.'},
+ {id:'superlaser',cat:'Weapons',name:'Superlaser',hosts:['megastructure'],
+   mass:6000000,vol:4000000,crew:12000,hp:8000,draw:120000,supply:0,superweapon:true,
+   cost:{bp:9000000,cr:1200000,rp:12,steel:3000000,elec:1200000,mats:{'antimatter':200000}},
+   honesty:'The Concave Dish Composite Beam Superlaser — the station’s ENTIRE reason for being. PENDING: the engine has no planetary-destruction mechanic; no processor reads a "crack a world" output. It draws colossal power from the hypermatter reactors, and its vented heat is (canonically) the exhaust-port weakness. The one capability that makes this the Death Star is the one the sim cannot express — flagged, never faked.'},
+ {id:'ioncannon',cat:'Weapons',name:'Ion Cannon',hosts:['ship','station','megastructure'],
+   mass:160,vol:60,crew:18,hp:24,supply:0,heat:8,ammoUse:0,
+   weapon:{dps:3,nature:'Exotic',delivery:'Beam',pen:0,pershot:1,rate:3,range:160,vel:299792,track:0.45,ammo:false,pd:false},
+   cost:{bp:340,cr:44,rp:6,steel:120,elec:90,mats:{'em-shielding-mesh':16}},
+   honesty:'Disables rather than destroys — ionized particles that fry systems. Maps to Exotic weapon nature, which is LIVE: shields can’t soak Exotic at all (the weapon triangle), so it punches straight through. The "disable vs kill" flavor is engine-simplified to raw Exotic damage.'},
+ {id:'armour',cat:'Defense',name:'Composite Armour Plating',hosts:['ship','ground','station'],
+   mass:64,vol:12,crew:0,hp:44,draw:0,supply:0,armour:{thick:22,vsK:1.6,vsE:0.9},
+   cost:{bp:90,cr:6,rp:1,steel:60,elec:2,mats:{'tungsten-plating':20,'ablative-composite':40}},
+   honesty:'Ship: thickness folds into one Toughness pool. Ground: soaked shot-by-shot vs each weapon nature.'},
+ {id:'shield',cat:'Defense',name:'Shield Generator',hosts:['ship','ground','station'],
+   mass:74,vol:22,crew:3,hp:16,supply:0,shield:{cap:5000000,regen:0.02},
+   cost:{bp:160,cr:22,rp:4,steel:30,elec:52,mats:{'em-shielding-mesh':30,'ree-magnetics':12}},
+   honesty:'A depleting pool laid over HP — engine-real 5 MJ capacity, 100 kJ/s regen (the default deflector). Ship: drained through the kernel. Ground: drained inline — different code, same idea. Engine-exact: shields DON\'T draw the reactor at all — they refill from their own internal pool (off the combat energy grid).'},
+ {id:'reactor',cat:'Power',name:'Fusion Reactor',hosts:['ship','ground','station'],
+   mass:200,vol:52,crew:8,hp:28,draw:0,supply:75,loud:true,deployDays:200,
+   cost:{bp:240,cr:30,rp:5,steel:110,elec:60,fissile:40},
+   honesty:'75 MW output (the engine\'s standard fusion plant, 50 kW/kg scaling). Supplies power AND is a loud heat/EM source — it decides who gets detected first. Note: a reactor vastly out-supplies its beam guns (one plant powers dozens of lasers), so power headroom is normal — the binding energy limits are the warp battery and heat, not raw generation. Its fissile core runs ~200 days before refuel — one of the two deployment clocks.'},
+ {id:'capreactor',cat:'Power',name:'Capital Reactor',hosts:['ship','station'],
+   mass:900,vol:240,crew:40,hp:60,draw:0,supply:800,loud:true,deployDays:500,
+   cost:{bp:820,cr:110,rp:7,steel:420,elec:180,fissile:160},
+   honesty:'Capital-scale output — 800 MW, one feeds a whole wall of turbolasers with room to spare. Very loud: a beacon on any sensor. Its fissile core runs ~500 days before refuel — the deployment clock for a big ship.'},
+ {id:'radiator',cat:'Power',name:'Radiator Bank',hosts:['ship','station'],
+   mass:40,vol:44,crew:1,hp:8,draw:0,supply:0,heatDissip:40,
+   cost:{bp:80,cr:6,rp:2,steel:60,elec:8},
+   honesty:'Sheds weapon heat. If energy guns make more heat than the radiators shed, the ship THROTTLES its own fire — a real live limit.'},
+ {id:'capacitor',cat:'Power',name:'Capacitor Bank',hosts:['ship','station'],
+   mass:70,vol:40,crew:1,hp:12,draw:0,supply:0,energyStore:750000,
+   cost:{bp:140,cr:18,rp:4,steel:40,elec:60,mats:{'lithium-battery':20}},
+   honesty:'Stored charge — 750 MJ per bank (the engine\'s Mass·500 battery scaling). THE warp-departure buffer: opening a jump bubble needs stored energy ≥ the drive\'s creation cost, so a warp ship must bank enough capacitors to jump at all. LIVE: EnergyStoreAtb → EnergyStored, which warp draws from at departure (WarpMoveCommand). The Power door already builds this.'},
+ {id:'hyperreactor',cat:'Power',name:'Hypermatter Reactor',hosts:['station','megastructure'],
+   mass:200000,vol:100000,crew:2000,hp:3000,draw:0,supply:2500,loud:true,deployDays:3650,
+   cost:{bp:2000000,cr:400000,rp:9,steel:900000,elec:400000,fissile:600000,mats:{'antimatter':40000}},
+   honesty:'The station’s heart — a hypermatter core at the engine’s MAXIMUM single-reactor output: 2,500 MW (2.5 GW = 50 kW/kg × 25 t × 2.0 overload — no engine reactor exceeds this). A battle station can’t mount one giant reactor; the engine caps every reactor at 2.5 GW, so it banks DOZENS of max-scale cores (~80 here) to feed its superlaser and thousands of turbolasers. Its ~10-year fuel core means the station never really runs down. (Capping at the real engine ceiling is the LAW — don’t show a reactor the engine can’t build.)'},
+ {id:'radtower',cat:'Power',name:'Radiator Tower',hosts:['station','megastructure'],
+   mass:20000,vol:30000,crew:20,hp:200,draw:0,supply:0,heatDissip:4000,
+   cost:{bp:30000,cr:2000,rp:3,steel:40000,elec:2000},
+   honesty:'A structural heat-sink tower — sheds the heat of thousands of energy weapons (4,000 MW each). Same live throttle mechanic as the Radiator Bank, at megastructure scale. (Canon aside: reactor heat has to vent somewhere — the exhaust port.)'},
+ {id:'drive',cat:'Propulsion',name:'Ion Drive',hosts:['ship','ground'],
+   mass:150,vol:40,crew:5,hp:22,draw:0,supply:0,thrust:220,ve:30,fuelBurn:9,speedFactor:1.6,
+   cost:{bp:190,cr:18,rp:4,steel:80,elec:24},
+   honesty:'Ship: thrust ÷ mass → Evasion + acceleration; exhaust velocity → Δv. Ground: locomotion (march speed). Burns fuel, not power.'},
+ {id:'fueltank',cat:'Propulsion',name:'Fuel Tank',hosts:['ship'],
+   mass:40,vol:90,crew:0,hp:10,draw:0,supply:0,fuelStore:600,
+   cost:{bp:60,cr:5,rp:1,steel:50,elec:2},
+   honesty:'Holds propellant. Fuel is wet mass (raises Δv when full) — and the endurance clock: run dry and the ship is adrift.'},
+ {id:'warp',cat:'Propulsion',name:'Warp Drive',hosts:['ship'],
+   mass:180,vol:50,crew:6,hp:20,draw:0,supply:0,warp:true,warpSustain:2.5,warpCreate:1250000,
+   cost:{bp:260,cr:34,rp:6,steel:90,elec:70,mats:{'ree-magnetics':16}},
+   honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Engine-exact energy: opening the bubble needs a 1.25 GJ stored-energy buffer (drawn from capacitors at departure — gated: no battery, no jump); sustaining it draws just 2.5 MW the whole crossing. So FTL\'s real cost is a big one-time BATTERY charge, not a big continuous draw.'},
+ {id:'fighterbay',cat:'Bay',name:'Flight Deck — StrikeCraft bay',hosts:['ship','station'],
+   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,bayClass:'StrikeCraft',cycleRate:6,
+   cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
+   honesty:'ONE generalized BayAtb, dialed to the StrikeCraft class (CARRIER-DESIGN §5 — the flight deck IS the troop bay IS the passenger berth, one component class-dialed). Holds ~70 strike craft + a Cycle Rate (the sortie tempo). A carried fighter is just a small ship whose CHASSIS carry-class is StrikeCraft (§13a — the deployable "flag" lives on the chassis, never as a boolean on the unit). THE carrier capability, with the honest gap: launch-as-a-sub-fleet is a PENDING output (the Docking bay exists, but no order launches a wing — §3). A fighter breaks off by recover-to-host, and if the carrier dies the aloft wing is STRANDED (§13b-c).'},
+ {id:'vehiclebay',cat:'Bay',name:'Troop & Vehicle Bay — Personnel · Vehicle',hosts:['ship','station'],
+   mass:300,vol:360,crew:10,hp:24,draw:2,supply:0,vehicles:16,troopsLive:true,bayClass:'Personnel · Vehicle',cycleRate:4,
+   cost:{bp:280,cr:36,rp:4,steel:150,elec:40,mats:{'reinforced-trusswork':40}},
+   honesty:'The SAME generalized BayAtb, dialed to the Personnel/Vehicle class — carries ground units (troops, gunships, walkers) to a surface. Unlike the StrikeCraft class, THIS chain is LIVE: GroundBayAtb → GroundTransport is the invasion path the game runs. Deploy is ONE-WAY here (a marine holds ground or dies — it does not dock back mid-battle), the per-class difference from a fighter round-trip recover (§13b: launch generalizes to every class, recover does not).'},
+ {id:'passengerbay',cat:'Bay',name:'Passenger Berths — Passenger',hosts:['ship','station'],
+   mass:120,vol:200,crew:4,hp:12,draw:2,supply:0,passengers:400,bayClass:'Passenger',cycleRate:2,
+   cost:{bp:120,cr:14,rp:2,steel:70,elec:20},
+   honesty:'The SAME generalized BayAtb, dialed to the Passenger class — colonists / VIPs / crews carried (not fighting units). A future consumer: the component is ready, a passenger-move order is the wire. Here to prove one bay component spans all five classes (CARRIER-DESIGN §5), not five parallel systems.'},
+ {id:'shuttlebay',cat:'Bay',name:'Shuttle Bay — Shuttle',hosts:['ship','station'],
+   mass:160,vol:220,crew:6,hp:16,draw:2,supply:0,shuttles:8,bayClass:'Shuttle',cycleRate:3,
+   cost:{bp:150,cr:18,rp:3,steel:90,elec:24},
+   honesty:'The SAME generalized BayAtb, dialed to the Shuttle class — utility craft that ferry units/cargo/personnel surface↔orbit and ship↔ship. Round-trip like the flight deck, non-combat. A future consumer (folds in the existing cargo-shuttlebay). One component, five classes — the anti-parallel-system move (CONVENTIONS §6).'},
+ {id:'magazine',cat:'Logistics',name:'Magazine',hosts:['ship','ground','station'],
+   mass:50,vol:34,crew:1,hp:14,draw:0,supply:0,ammoStore:true,ammoCap:36,
+   cost:{bp:70,cr:4,rp:1,steel:60,elec:2},
+   honesty:'Feeds kinetic/explosive weapons. Holds 36 t of rounds — the ammo endurance clock. Empty, ammo weapons fire dry and fall silent.'},
+ {id:'ammobunker',cat:'Logistics',name:'Ammo Bunker',hosts:['ship','ground','station'],
+   mass:180,vol:130,crew:2,hp:22,draw:0,supply:0,ammoStore:true,ammoCap:300,
+   cost:{bp:150,cr:10,rp:2,steel:150,elec:2,mats:{'reinforced-trusswork':20}},
+   honesty:'A deep magazine — 300 t of reserve rounds. Same feed as the magazine, far more of it: this is what keeps a capital ship’s guns fed through a long engagement instead of five minutes.'},
+ {id:'provisions',cat:'Logistics',name:'Provisions Store',hosts:['ship','ground','station'],
+   mass:45,vol:60,crew:0,hp:8,draw:0,supply:0,provisions:4000,storeFood:true,
+   cost:{bp:60,cr:6,rp:1,steel:34,elec:6,mats:{'food':30}},
+   honesty:'Stored food (the FoodProductionAtbDB output, packed as cargo — it eats hold volume). 4,000 crew-days. When it and the hydroponics run dry the crew can no longer man the unit.'},
+ {id:'hydroponics',cat:'Logistics',name:'Hydroponics Bay',hosts:['ship','ground','station'],
+   mass:60,vol:80,crew:2,hp:10,draw:2,supply:0,foodOut:200,
+   cost:{bp:100,cr:10,rp:3,steel:30,elec:20,mats:{'food':10}},
+   honesty:'Grows food underway — the live FoodProductionAtbDB output, on the move. Feeds 200 crew continuously, slowing the provisions drain. Enough of it = a closed loop that feeds the crew forever.'},
+ {id:'cargo',cat:'Logistics',name:'Cargo Hold',hosts:['ship','ground','station'],
+   mass:40,vol:120,crew:0,hp:10,draw:0,supply:0,cargo:500,
+   cost:{bp:60,cr:4,rp:1,steel:44,elec:2},
+   honesty:'General stores — spare parts, supplies, salvage. CargoStorageAtb is LIVE; a ship needs hold space for everything that isn’t ammo, fuel, or fighters.'},
+ {id:'quarters',cat:'Crew',name:'Crew Quarters',hosts:['ship','ground','station'],
+   mass:80,vol:100,crew:0,hp:12,draw:1,supply:0,berths:150,
+   cost:{bp:90,cr:8,rp:1,steel:50,elec:8,mats:{'food':4}},
+   honesty:'Living quarters — bunks, mess, the crew’s home for the whole cruise. Colony housing is LIVE (comfort→morale); a ship’s crew is drawn from the colony pool and assumed berthed, so onboard quarters aren’t a separate engine gate yet — modeled here as the real requirement.'},
+ {id:'lifesupport',cat:'Crew',name:'Life Support Plant',hosts:['ship','ground','station'],
+   mass:60,vol:70,crew:2,hp:10,draw:3,supply:0,lifeSupport:250,
+   cost:{bp:110,cr:12,rp:2,steel:40,elec:30,mats:{'em-shielding-mesh':6}},
+   honesty:'Recycles air and water — the crew can’t breathe without it. The engine models life-support CAPACITY for colonies (PopulationSupportAtbDB), not per-ship; here it’s the real onboard need.'},
+ {id:'medbay',cat:'Crew',name:'Medical Bay',hosts:['ship','ground','station'],
+   mass:70,vol:80,crew:4,hp:12,draw:2,supply:0,medical:300,
+   cost:{bp:120,cr:14,rp:3,steel:34,elec:30},
+   honesty:'Sickbay — treats casualties, keeps the crew fit on a long cruise. The civic “+health” output is PENDING in the engine (no consumer yet), so this is the need flagged, not a live number.'},
+ {id:'habblock',cat:'Crew',name:'Habitation Block',hosts:['station','megastructure'],
+   mass:60000,vol:120000,crew:0,hp:400,draw:4,supply:0,berths:25000,
+   cost:{bp:40000,cr:4000,rp:2,steel:30000,elec:4000,mats:{'space-crete':20000,'food':2000}},
+   honesty:'A residential sector — barracks, mess, quarters for 25,000. Same berthing role as Crew Quarters, at city scale (a build gate: berths ≥ crew).'},
+ {id:'lifecomplex',cat:'Crew',name:'Life Support Complex',hosts:['station','megastructure'],
+   mass:40000,vol:70000,crew:400,hp:300,draw:6,supply:0,lifeSupport:30000,
+   cost:{bp:50000,cr:5000,rp:3,steel:24000,elec:14000,mats:{'em-shielding-mesh':2000}},
+   honesty:'Atmosphere and water for 30,000. The colony-scale PopulationSupportAtbDB is LIVE; a station’s per-hull life support is modeled here (a build gate: support ≥ crew).'},
+ {id:'agridome',cat:'Crew',name:'Agriculture Dome',hosts:['station','megastructure'],
+   mass:50000,vol:100000,crew:300,hp:300,draw:3,supply:0,foodOut:50000,
+   cost:{bp:60000,cr:6000,rp:3,steel:20000,elec:8000,mats:{'food':4000}},
+   honesty:'A hydroponic agriculture sector — food for 50,000. The FoodProductionAtbDB output at city scale; enough of them close the food loop so the station feeds its own million and never runs down (deployment falls to the reactor’s ~10-year core).'},
+ {id:'sensor',cat:'Sensors',name:'Sensor Array',hosts:['ship','ground','station'],
+   mass:46,vol:20,crew:2,hp:12,draw:2,supply:0,detect:150,
+   cost:{bp:110,cr:14,rp:3,steel:28,elec:40},
+   honesty:'Detection range = who shoots first. LIVE, but behind a flag the client switches on.'},
+ {id:'searchsensor',cat:'Sensors',name:'Long-Range Sensor',hosts:['ship','station'],
+   mass:90,vol:44,crew:6,hp:14,draw:6,supply:0,detect:450,
+   cost:{bp:200,cr:28,rp:5,steel:40,elec:80,mats:{'ree-magnetics':16}},
+   honesty:'A dedicated deep-search array — sees far enough to target at capital-weapon range, so your torpedoes aren’t firing past your own vision. Detection is the who-shoots-first line (LIVE, client-gated).'},
+ {id:'firecontrol',cat:'Sensors',name:'Fire-Control Sensor',hosts:['ship','ground','station'],
+   mass:50,vol:22,crew:3,hp:10,draw:4,supply:0,fireControl:1.12,
+   cost:{bp:190,cr:26,rp:5,steel:30,elec:70,mats:{'ree-magnetics':10}},
+   honesty:'The targeting radar — locks and tracks a target so the guns land. LIVE (client-gated): BeamFireControlAtbDB.Range/TrackingSpeed feed ShipCombatValueDB, raising every gun’s tracking and reach. The Sensors door already builds this.'},
+ {id:'ecm',cat:'Sensors',name:'ECM Suite',hosts:['ship','station'],
+   mass:60,vol:26,crew:3,hp:10,draw:5,supply:0,ecm:0.10,
+   cost:{bp:200,cr:28,rp:6,steel:30,elec:80,mats:{'ree-magnetics':14}},
+   honesty:'Jams enemy targeting — they can’t get a clean lock, so fewer shots land. LIVE (client-gated): JammerAtb.SensitivityDegrade degrades their detection (SensorTools). The Sensors door already builds this.'},
+ {id:'tractor',cat:'Utility',name:'Tractor Beam Projector',hosts:['ship','station'],
+   mass:110,vol:40,crew:4,hp:16,draw:5,supply:0,tractor:true,
+   cost:{bp:150,cr:20,rp:4,steel:70,elec:40,mats:{'ree-magnetics':10}},
+   honesty:'Grips and drags a target — docking, salvage, capture. Battlefield payoff is PENDING: capture is still a bare ownership flip (an open ruling) and salvage isn’t built.'},
+ {id:'targeting',cat:'Enhancers',name:'Targeting Computer',hosts:['ship','ground','station'],
+   mass:30,vol:12,crew:2,hp:8,draw:3,supply:0,caliber:1.25,
+   cost:{bp:180,cr:26,rp:5,steel:20,elec:60,mats:{'ree-magnetics':8}},
+   honesty:'A fire-control enhancer — sharpens every gun by a quarter. Maps to UnitCaliberAtb.FirepowerMult, which is LIVE: ShipCombatValueDB.Calculate multiplies a ship’s firepower by the best installed caliber module.'},
+ {id:'bridge',cat:'Command',name:'Command Bridge',hosts:['ship','station'],
+   mass:40,vol:18,crew:-4,hp:15,draw:1,supply:0,deadOut:'Admin-level (seat scope)',
+   cost:{bp:120,cr:10,rp:2,steel:34,elec:20},
+   honesty:'Seats a commander (a real, live berth). But its "admin-level" scope dial is DEAD — printed, no rule reads it.'},
+ {id:'flagsuite',cat:'Command',name:'Flag Command Suite',hosts:['ship','station'],
+   mass:120,vol:80,crew:12,hp:16,draw:4,supply:0,flagship:true,
+   cost:{bp:200,cr:30,rp:5,steel:60,elec:70,mats:{'ree-magnetics':10}},
+   honesty:'A flagship’s command suite — a fleet CIC, not just the ship’s bridge. Seats a FLEET commander (CommandBerthAtb seats a leader, LIVE for site work), but fleet-command scope (AdminLevel) is DEAD in the engine — the capability, flagged.'},
+ /* ---- GROUND-UNIT PARTS (base-mod scale — costs mirror the installations.json ground templates; the ground host
+        only. On ground, a weapon's penetration/per-shot are LIVE. These are what the 5 ground presets build from. ---- */
+ {id:'gm_swarm',cat:'Chassis',name:'Swarmling Frame',hosts:['ground'],
+   mass:5,vol:3,crew:0,hp:40,draw:0,supply:0,
+   cost:{bp:15,cr:1,rp:1,steel:3,mats:{aluminium:2}},
+   honesty:'A near-free organic body — the cheapest chassis (mass 5, HP 40). Built by the score (UnitsPerBuild) so a brood is thrown in numbers. Base-mod swarm-frame.'},
+ {id:'gm_human',cat:'Chassis',name:'Human Frame',hosts:['ground'],
+   mass:20,vol:8,crew:0,hp:200,draw:0,supply:0,
+   cost:{bp:60,cr:2,rp:1,steel:12,mats:{aluminium:8}},
+   honesty:'The infantry chassis — a person-sized frame carrying weapons + gear (BaseHP 200, Personnel carry-class). Base-mod human-frame.'},
+ {id:'gm_walker',cat:'Chassis',name:'Walker Frame',hosts:['ground'],
+   mass:2500,vol:1400,crew:0,hp:1000,draw:0,supply:0,
+   cost:{bp:7500,cr:25,rp:2,steel:1500,mats:{aluminium:1000}},
+   honesty:'A multi-leg war-machine chassis (Vehicle carry-class) — climbs terrain wheels can\'t. Heavy: it eats most of the ground budget. Base-mod walker-frame.'},
+ {id:'gm_vehicle',cat:'Chassis',name:'Tracked Vehicle Frame',hosts:['ground'],
+   mass:4000,vol:2200,crew:0,hp:1500,draw:0,supply:0,
+   cost:{bp:12000,cr:40,rp:2,steel:2400,mats:{aluminium:1600}},
+   honesty:'The heaviest ground chassis — a tank / monster frame (Vehicle carry-class, BaseHP 1500). Base-mod vehicle-frame.'},
+ {id:'gw_rifle',cat:'Weapons',name:'Infantry Weapon (rifle / bio-fire)',hosts:['ground'],
+   mass:10,vol:4,crew:0,hp:5,draw:0,supply:0,
+   weapon:{dps:0.016,nature:'Kinetic',delivery:'Projectile',pen:0,pershot:0.004,rate:4,range:0.5,vel:1000,track:0.5,ammo:false,pd:false},
+   cost:{bp:30,cr:1,rp:1,steel:6,mats:{aluminium:4}},
+   honesty:'A shoulder weapon — a service rifle, a fleshborer, a blaster carbine. Self-contained (integral power/ammo, no reactor or magazine). On GROUND, penetration/per-shot are LIVE. Base-mod ground-rifle.'},
+ {id:'gw_claw',cat:'Weapons',name:'Rending Claws / Talons',hosts:['ground'],
+   mass:8,vol:3,crew:0,hp:2,draw:0,supply:0,
+   weapon:{dps:0.05,nature:'Kinetic',delivery:'Projectile',pen:12,pershot:0.03,rate:2,range:0.06,vel:200,track:0.3,ammo:false,pd:false},
+   cost:{bp:24,cr:1,rp:1,steel:5,mats:{aluminium:3}},
+   honesty:'Close-combat claws / talons — short reach, HIGH penetration (rends armour). Penetration is LIVE on ground. Base-mod claw-weapon.'},
+ {id:'gw_cannon',cat:'Weapons',name:'Heavy Ground Cannon / Bio-Cannon',hosts:['ground'],
+   mass:80,vol:30,crew:0,hp:8,draw:0,supply:0,
+   weapon:{dps:0.088,nature:'Kinetic',delivery:'Projectile',pen:8,pershot:0.05,rate:1,range:4,vel:1500,track:0.3,ammo:false,pd:false},
+   cost:{bp:240,cr:8,rp:2,steel:48,mats:{aluminium:32}},
+   honesty:'A vehicle-mounted heavy gun — a tank cannon or a monster\'s bio-cannon (self-fed). Base-mod ground-cannon (Artillery reach).'},
+ {id:'ga_plating',cat:'Defense',name:'Composite / Chitin Plating',hosts:['ground'],
+   mass:25,vol:8,crew:0,hp:150,draw:0,supply:0,armour:{thick:5,vsK:1,vsE:1},
+   cost:{bp:75,cr:2,rp:1,steel:15,mats:{aluminium:10}},
+   honesty:'Body armour — plastoid plate, chitin, composite (+150 HP, +5 armour). On ground, armour is soaked shot-by-shot. Base-mod ground-plating.'},
+ {id:'ga_heavyplate',cat:'Defense',name:'Heavy Carapace Plating',hosts:['ground'],
+   mass:300,vol:80,crew:0,hp:700,draw:0,supply:0,armour:{thick:45,vsK:1.4,vsE:0.8},
+   cost:{bp:900,cr:12,rp:2,steel:180,mats:{aluminium:120}},
+   honesty:'Vehicle-scale armour — a monster\'s carapace or a walker\'s hull plate (+700 HP, +45 armour). Base-mod heavy plating (nature-tuned).'},
+ {id:'gd_seal',cat:'Defense',name:'Sealed Systems (void / NBC seal)',hosts:['ground'],
+   mass:100,vol:20,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:400,cr:8,rp:2,steel:60,mats:{aluminium:40}},
+   honesty:'Sealed life-support — the unit fights in vacuum / toxic air without bleeding out (E4 attrition). "Sealed power armour matters." Base-mod sealed-systems.'},
+ {id:'ge_powerarmor',cat:'Enhancers',name:'Power Armour / Musculature',hosts:['ground'],
+   mass:30,vol:10,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:90,cr:3,rp:2,steel:18,mats:{aluminium:12}},
+   honesty:'A strength augment — power armour, or a monster\'s musculature — so the unit shoulders a heavier weapon. Base-mod power-armor (StrengthBonus).'},
+ {id:'ge_reflex',cat:'Enhancers',name:'Reflex Booster / Adrenal',hosts:['ground'],
+   mass:15,vol:5,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:45,cr:2,rp:1,steel:9,mats:{aluminium:6}},
+   honesty:'A dodge augment — reflexes / adrenal glands (+evasion; survive by not being hit). Base-mod reflex-booster (EvasionBonus).'},
+ {id:'ge_cadre',cat:'Enhancers',name:'Training Cadre',hosts:['ground'],
+   mass:110,vol:12,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:440,cr:9,rp:2,steel:66,mats:{aluminium:44}},
+   honesty:'Veterancy baked in — an elite unit hits harder and lasts longer (TrainingMultiplier). Dear in mass/credits: elite troops cost more. Base-mod training-cadre.'},
+ {id:'gp_loco',cat:'Propulsion',name:'Locomotion Drive',hosts:['ground'],
+   mass:200,vol:60,crew:2,hp:0,draw:0,supply:0,speedFactor:1.5,
+   cost:{bp:400,cr:8,rp:1,steel:120,mats:{aluminium:80}},
+   honesty:'A designed drive — legs, tracks, hover, a bio-gait. Sets march speed + all-terrain handling. Base-mod ground-locomotion.'},
+ {id:'gs_radar',cat:'Sensors',name:'Ground Radar',hosts:['ground'],
+   mass:100,vol:30,crew:3,hp:0,draw:0,supply:0,detect:200,
+   cost:{bp:200,cr:6,rp:1,steel:40,mats:{aluminium:20,electronics:40}},
+   honesty:'A scout sensor — reveals the ground each tick (lifts fog). The recon component a vanguard carries. Base-mod ground-radar.'},
+ /* ---- MOBILE SUIT PARTS (Gundam-scale — a WALKER that FLIES; the Sazabi build). Flight across to space, the remote
+        funnels, and the psycho-frame's Newtype amplification are cross-domain PENDING; the rest is LIVE on ground. ---- */
+ {id:'gm_mecha',cat:'Chassis',name:'Mobile Suit Frame (gundarium)',hosts:['ground'],
+   mass:1400,vol:700,crew:0,hp:900,draw:0,supply:0,
+   cost:{bp:4200,cr:20,rp:4,steel:840,mats:{aluminium:560,'ree-magnetics':40}},
+   honesty:'A 25 m humanoid war-frame — a Gundam-scale walker (Vehicle carry-class), big + agile on a gundarium-alloy skeleton. Modeled on the walker-frame; its native domain is FLIGHT (a mobile suit fights in space), which a ground unit can\'t do — see the Flight Thruster.'},
+ {id:'gm_msreactor',cat:'Power',name:'MS Fusion Reactor',hosts:['ground'],
+   mass:300,vol:100,crew:0,hp:40,draw:0,supply:8,loud:true,
+   cost:{bp:900,cr:15,rp:4,steel:150,elec:80,fissile:40},
+   honesty:'A mobile-suit thermonuclear reactor (~4 MW canon; 8 MW game) feeding the beam weapons + funnels through E-caps. Loud — a mobile suit lights up on sensors.'},
+ {id:'gw_beam',cat:'Weapons',name:'Beam Rifle / Mega Particle Gun',hosts:['ground'],
+   mass:60,vol:24,crew:0,hp:8,draw:0,supply:0,
+   weapon:{dps:0.4,nature:'Energy',delivery:'Beam',pen:0,pershot:0.1,rate:4,range:2,vel:299792,track:0.6,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:3,steel:24,elec:36},
+   honesty:'A mobile-suit beam weapon — the beam shot rifle (10.2 MW) or the waist mega particle gun (8.8 MW). Energy: it draws the reactor. Beam damage nature (no armour-penetration bonus — that\'s a slug\'s job).'},
+ {id:'gw_funnel',cat:'Weapons',name:'Funnel (remote psycommu weapon)',hosts:['ground'],
+   mass:22,vol:8,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.42,nature:'Energy',delivery:'Beam',pen:0,pershot:0.1,rate:4,range:3,vel:299792,track:0.9,ammo:false,pd:false},
+   cost:{bp:264,cr:9,rp:5,steel:26,elec:60,mats:{'ree-magnetics':8}},
+   honesty:'A detachable all-range beam bit (10.6 MW), flown by the pilot\'s thoughts. ⚠ PENDING: the "remote / all-range" nature — a weapon that leaves the unit and strikes from every angle — has NO engine reader (combat is aggregate). Here it contributes firepower like a fixed beam; its all-range advantage is flagged, not modeled.'},
+ {id:'gp_flight',cat:'Propulsion',name:'Flight Thruster / Vernier Pack',hosts:['ground'],
+   mass:200,vol:80,crew:0,hp:10,draw:0,supply:0,speedFactor:2.6,
+   cost:{bp:600,cr:12,rp:3,steel:120,elec:40},
+   honesty:'Huge thruster + vernier output (133,000 kg) — the mobile suit\'s defining edge over a ground walker. On GROUND it gives top march speed + evasion (AMBAC agility). ⚠ PENDING: true FLIGHT — a walker taking off into space/air combat — is a cross-domain capability the engine doesn\'t model (a unit is a ground walker OR a flying ship, never both). THIS is the walker-with-flight gap.'},
+ {id:'ge_psychoframe',cat:'Enhancers',name:'Psycho-Frame / Psycommu',hosts:['ground'],
+   mass:100,vol:20,crew:0,hp:0,draw:0,supply:0,caliber:1.3,
+   cost:{bp:800,cr:40,rp:6,steel:60,mats:{'ree-magnetics':20}},
+   honesty:'A Newtype-responsive frame + brainwave interface — the suit reacts as an extension of the pilot. LIVE mapping: a fire-control-like sharpening (caliber ×1.3, faster/surer strikes). ⚠ PENDING: true Newtype amplification (pilot skill → combat) + funnel thought-control have no engine model; the reaction edge is the honest LIVE slice.'},
+ /* ---- ATMOSPHERIC AIRCRAFT PARTS (the Apache / F-22 / LAAT builds — the FIRST units against the locked atmospheric
+        layer, docs/ground/ATMOSPHERIC-LAYER-DESIGN.md). An aircraft is a GROUND unit at an altitude band + a Flight
+        drive; the whole air layer is DESIGN-ONLY, so FLIGHT, the altitude band, EngageBands (air-vs-surface targeting),
+        stealth-as-undetectability, and sortie endurance/rearm are all flagged PENDING (like the Sazabi's flight/funnels).
+        On ground today they read as ground units at the 0.42 evasion ceiling. ---- */
+ {id:'af_rotor',cat:'Chassis',name:'Rotorcraft Gunship Airframe',hosts:['ground'],
+   mass:700,vol:320,crew:2,hp:500,draw:0,supply:0,
+   cost:{bp:2100,cr:16,rp:3,steel:420,mats:{aluminium:280}},
+   honesty:'A two-crew attack-helicopter airframe (Apache-class): armoured cockpit tub + crashworthy structure → hard to one-shot, graceful degradation. ⚠ ATMOSPHERIC: Environment=Atmospheric, LOW (terrain-following/hover) band. FLIGHT + hover are PENDING (a ground unit can\'t take off); reads as a ground unit at the evasion ceiling.'},
+ {id:'af_jet',cat:'Chassis',name:'Stealth Fighter Airframe',hosts:['ground'],
+   mass:900,vol:420,crew:1,hp:320,draw:0,supply:0,
+   cost:{bp:2700,cr:60,rp:6,steel:360,mats:{aluminium:360,'ree-magnetics':40}},
+   honesty:'A single-seat 5th-gen stealth-fighter airframe (F-22-class): faceted/RAM low-observable shaping + internal weapon bays → a "marble" radar cross-section. ⚠ ATMOSPHERIC: HIGH band, see-first/shoot-first. PENDING: FLIGHT, supercruise-as-standing-energy, and the whole point — LOW-OBSERVABILITY (being unseen) has NO mock reader, so its true ~0.85 agility + stealth read as the 0.42 ground evasion ceiling here.'},
+ {id:'af_gunship',cat:'Chassis',name:'Assault Gunship Airframe',hosts:['ground'],
+   mass:1100,vol:600,crew:4,hp:450,draw:0,supply:0,
+   cost:{bp:3300,cr:22,rp:3,steel:660,mats:{aluminium:440}},
+   honesty:'A four-crew repulsorlift assault-gunship airframe (LAAT/i-class): big open-bay hull with many gun stations, deliberately LIGHT on protection — no combat shields, thin superdispersive armour → a glass cannon. ⚠ ATMOSPHERIC: LOW band. FLIGHT/hover + the hot-LZ troop-drop are PENDING.'},
+ {id:'ap_rotor',cat:'Propulsion',name:'Turboshaft + Rotor (VTOL)',hosts:['ground'],
+   mass:250,vol:100,crew:0,hp:20,draw:0,supply:0,speedFactor:1.0,
+   cost:{bp:750,cr:14,rp:2,steel:150,mats:{aluminium:100}},
+   honesty:'Twin turboshafts + a 4-blade rotor (Apache: ~3,960 shp, ~293 km/h, true VTOL). SLOW but hovers + loiters for hours. ⚠ PENDING: FLIGHT/hover (walker-with-flight gap). Loiter endurance (2.5–3 hr) is EMERGENT from fuel÷burn — the atmospheric sortie model, PENDING.'},
+ {id:'ap_jet',cat:'Propulsion',name:'Afterburning Turbofan + Thrust-Vectoring',hosts:['ground'],
+   mass:350,vol:140,crew:0,hp:15,draw:0,supply:0,speedFactor:3.5,
+   cost:{bp:1050,cr:24,rp:4,steel:210,mats:{aluminium:140}},
+   honesty:'2× F119-class afterburning turbofans with ±20° thrust-vectoring (F-22: Mach 2.25, SUPERCRUISE ~Mach 1.8 without afterburner, T/W >1.25). ⚠ PENDING: FLIGHT + supercruise-as-standing-energy; true agility (~0.85) reads as the 0.42 ground ceiling here.'},
+ {id:'ap_repulsor',cat:'Propulsion',name:'Repulsorlift + Turbine',hosts:['ground'],
+   mass:300,vol:130,crew:0,hp:20,draw:0,supply:0,speedFactor:2.2,
+   cost:{bp:900,cr:16,rp:3,steel:180,mats:{aluminium:120}},
+   honesty:'Repulsorlift + turbine (LAAT: 620 km/h, low-altitude, hover/VTOL, agile). Atmospheric-containment sealing lets it be dropped from orbit (not interplanetary alone). ⚠ PENDING: FLIGHT/hover.'},
+ {id:'af_generator',cat:'Power',name:'Gunship Power Generator',hosts:['ground'],
+   mass:200,vol:80,crew:0,hp:20,draw:0,supply:12,loud:true,
+   cost:{bp:600,cr:12,rp:2,steel:100,elec:60},
+   honesty:'An onboard generator feeding the gunship\'s laser turrets — supplies the energy weapons\' draw. Loud on sensors.'},
+ {id:'aw_chaingun',cat:'Weapons',name:'30 mm Chain Gun (M230)',hosts:['ground'],
+   mass:60,vol:22,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.09,nature:'Kinetic',delivery:'Projectile',pen:6,pershot:0.05,rate:10,range:1.5,vel:805,track:0.5,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:2,steel:36,mats:{aluminium:24}},
+   honesty:'Chin-turret 30 mm autocannon (625 rpm, HEDP: penetrates light armour AND fragments vs infantry), helmet-slaved. EngageBands: SURFACE (danger-close CAS) — the air/CAS gate is PENDING. Munitions finite (1,200 rds); rearm-at-base is the sortie model, PENDING.'},
+ {id:'aw_hellfire',cat:'Weapons',name:'AGM-114 Hellfire (guided AP missile)',hosts:['ground'],
+   mass:50,vol:18,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.18,nature:'Explosive',delivery:'Guided',pen:20,pershot:0.15,rate:0.5,range:8,vel:450,track:0.9,ammo:false,pd:false},
+   cost:{bp:200,cr:8,rp:3,steel:20,mats:{aluminium:16,electronics:20}},
+   honesty:'Laser / Longbow-MMW anti-armour missile: tandem-HEAT, HIGH penetration (defeats reactive armour), ~8–11 km — the tank-killer. ⚠ PENDING: fire-and-forget from DEFILADE (hide behind a ridge, volley 16, re-hide) — the Apache\'s signature — has no mock reader. EngageBands: SURFACE.'},
+ {id:'aw_rockets',cat:'Weapons',name:'Hydra 70 Rocket Pod',hosts:['ground'],
+   mass:45,vol:20,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.12,nature:'Explosive',delivery:'Blast',pen:2,pershot:0.02,rate:6,range:3,vel:700,track:0.2,ammo:false,pd:false},
+   cost:{bp:135,cr:4,rp:1,steel:27,mats:{aluminium:18}},
+   honesty:'70 mm unguided rocket pod (19 tubes): area saturation vs infantry/soft targets (HE/flechette) — cheap, wide, inaccurate. EngageBands: SURFACE.'},
+ {id:'aw_amraam',cat:'Weapons',name:'AIM-120 AMRAAM (BVR air-to-air)',hosts:['ground'],
+   mass:55,vol:20,crew:0,hp:4,draw:0,supply:0,
+   weapon:{dps:0.16,nature:'Explosive',delivery:'Guided',pen:4,pershot:0.12,rate:0.5,range:10,vel:1000,track:0.95,ammo:false,pd:false},
+   cost:{bp:220,cr:9,rp:4,steel:22,mats:{aluminium:18,electronics:30}},
+   honesty:'Active-radar beyond-visual-range air-to-air missile — fire-and-forget, ~40–105 km — the F-22\'s primary KILL weapon. ⚠ EngageBands: AIR (kills aircraft) — the air-target gate is the atmospheric design, PENDING. BVR "shoot before they see you" first-shot has no mock reader; contributes firepower like any guided weapon here.'},
+ {id:'aw_sidewinder',cat:'Weapons',name:'AIM-9 Sidewinder (short-range A2A)',hosts:['ground'],
+   mass:40,vol:14,crew:0,hp:3,draw:0,supply:0,
+   weapon:{dps:0.12,nature:'Explosive',delivery:'Guided',pen:3,pershot:0.08,rate:0.5,range:2,vel:900,track:0.9,ammo:false,pd:false},
+   cost:{bp:160,cr:7,rp:3,steel:16,mats:{aluminium:12,electronics:16}},
+   honesty:'Short-range imaging-infrared dogfight missile (high off-boresight) — the within-visual-range kill if a fight closes. EngageBands: AIR (PENDING).'},
+ {id:'aw_vulcan',cat:'Weapons',name:'M61 Vulcan 20 mm Cannon',hosts:['ground'],
+   mass:60,vol:20,crew:0,hp:5,draw:0,supply:0,
+   weapon:{dps:0.10,nature:'Kinetic',delivery:'Projectile',pen:3,pershot:0.005,rate:20,range:1,vel:1050,track:0.6,ammo:false,pd:false},
+   cost:{bp:180,cr:6,rp:2,steel:36,mats:{aluminium:24}},
+   honesty:'6-barrel 20 mm rotary cannon (6,600 rpm → very high saturation = a wall of rounds a dodger can\'t evade) — the last-ditch gun kill. EngageBands: AIR + SURFACE (PENDING).'},
+ {id:'aw_beamturret',cat:'Weapons',name:'Composite-Beam Laser Turret',hosts:['ground'],
+   mass:70,vol:28,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.22,nature:'Energy',delivery:'Beam',pen:0,pershot:0.06,rate:4,range:2.5,vel:299792,track:0.7,ammo:false,pd:false},
+   cost:{bp:210,cr:7,rp:3,steel:28,elec:42},
+   honesty:'Gunner-operated pin-point composite-beam laser (LAAT ball/wing turret): the gunship\'s main punch, air AND ground. Energy → draws the generator. Precision aim past the turret\'s traverse. EngageBands: AIR + SURFACE (PENDING).'},
+ {id:'aw_aplaser',cat:'Weapons',name:'Anti-Personnel Laser Turret',hosts:['ground'],
+   mass:35,vol:14,crew:0,hp:3,draw:0,supply:0,
+   weapon:{dps:0.08,nature:'Energy',delivery:'Beam',pen:0,pershot:0.008,rate:12,range:1,vel:299792,track:0.6,ammo:false,pd:false},
+   cost:{bp:105,cr:3,rp:2,steel:14,elec:20},
+   honesty:'A light rapid laser turret (LAAT chin/rear) to SWEEP and suppress a landing zone as troops disembark. Energy → draws the generator. EngageBands: SURFACE.'},
+ {id:'aw_massdriver',cat:'Weapons',name:'Mass-Driver Missile Launcher',hosts:['ground'],
+   mass:90,vol:34,crew:0,hp:6,draw:0,supply:0,
+   weapon:{dps:0.20,nature:'Kinetic',delivery:'Guided',pen:18,pershot:0.16,rate:0.5,range:12,vel:3000,track:0.85,ammo:false,pd:false},
+   cost:{bp:270,cr:9,rp:3,steel:54,mats:{aluminium:36,electronics:20}},
+   honesty:'Dorsal mass-driver firing hypersonic anti-armour ordnance. ⚠ PENDING: OVER-THE-HORIZON targeting (hit what it can\'t directly see) has no mock reader; here it\'s a long-range high-penetration guided weapon. EngageBands: SURFACE.'},
+ {id:'aw_aarocket',cat:'Weapons',name:'Light Air-to-Air Rocket',hosts:['ground'],
+   mass:28,vol:10,crew:0,hp:2,draw:0,supply:0,
+   weapon:{dps:0.10,nature:'Explosive',delivery:'Guided',pen:2,pershot:0.03,rate:3,range:2,vel:800,track:0.7,ammo:false,pd:false},
+   cost:{bp:84,cr:3,rp:1,steel:17,mats:{aluminium:11}},
+   honesty:'Ventral wing-mounted light anti-aircraft rocket (×8 on the LAAT). EngageBands: AIR (PENDING).'},
+ {id:'as_aesa',cat:'Sensors',name:'AESA Radar (APG-77)',hosts:['ground'],
+   mass:120,vol:40,crew:0,hp:6,draw:0,supply:0,detect:400,
+   cost:{bp:360,cr:14,rp:5,steel:48,mats:{aluminium:24,electronics:80}},
+   honesty:'Active electronically-scanned array (F-22): very long detection = you see + shoot FIRST. ⚠ PENDING: LOW-PROBABILITY-OF-INTERCEPT (radiate hard, stay unheard) + sensor-fusion first-look have no mock reader; here it\'s a big detection number (the who-shoots-first line, LIVE, client-gated).'},
+ {id:'as_longbow',cat:'Sensors',name:'Longbow Mast FCR (APG-78)',hosts:['ground'],
+   mass:140,vol:45,crew:0,hp:6,draw:0,supply:0,detect:300,
+   cost:{bp:420,cr:16,rp:5,steel:56,mats:{aluminium:28,electronics:90}},
+   honesty:'Mast-mounted millimetre-wave fire-control radar above the rotor (Apache): classifies 128 targets, volleys 16 fire-and-forget missiles in ~30 s. ⚠ PENDING: the HUNT-FROM-HIDING signature — peek the dome over a ridge while the airframe stays in defilade — has no mock reader; here it\'s a long all-weather detection range (LIVE, client-gated).'},
+ {id:'ae_fusion',cat:'Enhancers',name:'Sensor Fusion / Targeting (TADS/AESA)',hosts:['ground'],
+   mass:80,vol:15,crew:0,hp:0,draw:0,supply:0,caliber:1.2,
+   cost:{bp:320,cr:12,rp:4,steel:24,mats:{aluminium:16,electronics:40}},
+   honesty:'Fused sensors + laser designator / thermal targeting (F-22 fusion, Apache TADS/PNVS): own-the-night, first-shot precision. LIVE: a fire-control sharpening (caliber ×1.2 — surer, faster strikes; UnitCaliberAtb). ⚠ PENDING: full "first-look/first-kill" initiative + MUM-T drone teaming have no mock reader.'},
+ {id:'ap_troopbay',cat:'Logistical',name:'Assault Troop Bay (×30)',hosts:['ground'],
+   mass:200,vol:300,crew:0,hp:0,draw:0,supply:0,
+   cost:{bp:400,cr:8,rp:1,steel:80,mats:{aluminium:120}},
+   honesty:'An open rapid-egress cabin carrying ~30 troopers into the LZ (LAAT). ⚠ PENDING: a surface troop-carry component / the deployable-squadron drop model has no mock reader (same flag as the AT-TE\'s troop bay) — it expresses the transport identity, not a live capacity.'}
+];
+
+var host='ship';
+var counts={};
+var activePreset='acclamator';
+CAT.forEach(function(c){counts[c.id]=0;});
+
+/* presets — one-click loadouts. The Venator is a franchise litmus:
+   a carrier first, a gunship second — it exercises what the assembler CAN and CAN'T express. */
+var PRESETS=[
+  {id:'escort',name:'Escort destroyer',host:'ship',
+    counts:{reactor:3,laser:3,railgun:2,missile:3,pdbattery:6,armour:8,shield:4,drive:2,warp:1,fueltank:3,radiator:2,capacitor:2,magazine:2,ammobunker:1,
+            provisions:2,cargo:2,quarters:2,lifesupport:2,medbay:1,targeting:1,sensor:2,searchsensor:1,firecontrol:2,ecm:1,bridge:1}},
+  {id:'venator',name:'▲ Venator-class carrier',hero:true,host:'ship',
+    /* CANON (Wookieepedia): 8 heavy dual turbolaser turrets · 2 medium dual turbolaser cannons · 52 point-defense
+       laser cannons · 4 heavy proton torpedo tubes · 6 tractor beam projectors · 420 starfighters ·
+       40 LAAT gunships + 24 AT-TE walkers · 7,400 crew · Class-1 hyperdrive. Support parts (reactors, radiators,
+       fuel, shields, armour, hydroponics, sensors, twin bridge towers) sized to power/cool/feed/man the above. */
+    counts:{heavyturbo:10,medturbo:2,pdbattery:52,missile:4,tractor:6,fighterbay:6,vehiclebay:4,
+            capreactor:4,radiator:7,capacitor:2,shield:5,armour:22,drive:4,warp:1,fueltank:4,magazine:5,ammobunker:5,
+            provisions:4,hydroponics:6,cargo:2,quarters:7,lifesupport:5,medbay:3,targeting:2,
+            sensor:2,searchsensor:2,firecontrol:2,ecm:1,bridge:2,flagsuite:1}},
+  {id:'acclamator',name:'Acclamator assault ship',host:'ship',
+    /* CANON: 12 quad turbolasers · 24 laser cannons · 4 torpedo tubes · a full clone Legion — 16,000 troops +
+       48 AT-TE + 36 SPHA-T + 80 LAAT + 320 speeder bikes · 700 crew · Class-0.6 hyperdrive. Light guns, huge
+       ground capacity — it out-lands and under-guns the Venator. Quad turbolasers mapped to medium turbolasers. */
+    counts:{heavyturbo:3,medturbo:12,pdbattery:24,missile:4,vehiclebay:23,
+            capreactor:3,radiator:5,shield:3,armour:7,drive:3,warp:1,fueltank:2,
+            magazine:2,ammobunker:2,cargo:3,quarters:6,lifesupport:4,medbay:3,provisions:5,hydroponics:2,
+            sensor:2,searchsensor:1,firecontrol:1,targeting:1,capacitor:2,bridge:2}},
+  {id:'sovereign',name:'Sovereign-class (Enterprise-E)',host:'ship',
+    /* CANON (re-verified 2026-08-04, Memory Alpha/Beta/DITL/Ex Astris): Type-XII phaser arrays — 12 as-built → 16
+       after the Nemesis refit (Type-XII is a generation above the Galaxy's Type-X) · 10 torpedo tubes = 1 forward
+       QUANTUM turret + 9 photon · strongest regenerative shields, armour-light · 2 FIXED nacelles, subspace-safe
+       warp field (only Warp 8 filmed; 9.9x is reference-book-only + the game has no warp factor) · ~855 crew · 685 m.
+       NOTE: the Sovereign was the first class DESIGNED AROUND quantum torpedoes, but the USS Defiant FIRED them first
+       (2371) — Enterprise-E was second (2373). Fights with firepower + positioning, NOT agility (evasion stays modest
+       for a 685 m capital). Trek mapping: phasers → energy beams, torpedoes → guided missiles (the resolver sim splits
+       these into Photon + Quantum, the quantum a heavier warhead). Leans shields + sensors, not armour. */
+    counts:{medturbo:16,laser:14,missile:16,pdbattery:12,shield:24,armour:12,
+            capreactor:5,radiator:7,warp:2,drive:3,fueltank:4,capacitor:4,
+            magazine:5,ammobunker:3,cargo:10,
+            quarters:12,lifesupport:9,medbay:5,provisions:5,hydroponics:5,
+            sensor:5,searchsensor:5,firecontrol:3,ecm:2,targeting:2,bridge:1,flagsuite:1}},
+  {id:'prometheus',name:'Prometheus-class (glass cannon)',host:'ship',
+    /* CANON (Memory Alpha/Beta, VOY "Message in a Bottle"): ~415 m advanced TACTICAL prototype — ~16 Type-XII phaser
+       arrays (a generation above the Galaxy's Type-X), photon + quantum torpedoes, REGENERATIVE shields + ABLATIVE
+       hull armour, warp 9.9, minimal EMH-run crew. Its signature — MULTI-VECTOR ASSAULT MODE (split into 3 warp-capable
+       sections) — has NO engine wire (one-host-per-ship), flagged PENDING in the dossier. MIN/MAXED for firepower-DENSITY:
+       a compact 415 m striker in a 20,000 t capital host (fills only ~69% mass), so the residual maxes phasers-per-tonne
+       — it reaches Sovereign-class absolute output at two-thirds the mass. Phasers → energy beams, torpedoes → guided. */
+    counts:{medturbo:28,laser:8,missile:8,pdbattery:6,shield:26,armour:14,
+            capreactor:1,radiator:12,capacitor:2,warp:1,drive:4,fueltank:2,
+            magazine:3,provisions:3,quarters:5,lifesupport:3,medbay:1,
+            sensor:2,searchsensor:2,firecontrol:1,targeting:1,ecm:1,bridge:1}},
+  {id:'isd1',name:'◆ Imperial-I Star Destroyer',hero:true,host:'dreadnought',
+    /* CANON (Wookieepedia / Incredible Cross-Sections / West End): 1,600 m do-everything conqueror — 60 heavy turbolasers
+       + 60 ion cannons, 6 tractor projectors (ICS; West End says 10), a 72-TIE wing, 20 AT-AT + 30 AT-ST + ~9,700
+       stormtroopers, ~37,085 crew, Class-2 hyperdrive. OVERFLOWS the 20,000 t ship host, so it uses the new mobile
+       DREADNOUGHT tier (60,000 t) — exactly as the Death Star needed the Battle Station tier. MIN/MAXED mass-bound
+       (96% mass, ~11,000 m³ volume stranded): residual → battle line (60→78 turbolasers, each paying its reactor +
+       radiator + berth) + armour. ~8× a Venator's firepower — the canon 60-vs-8 turbolaser ratio. Ground-invasion
+       chain is genuinely LIVE (GroundBayAtb→GroundTransport); TIE-launch, ion-disable, tractor, and turbolaser
+       surface-fire are all flagged PENDING. */
+    counts:{heavyturbo:78,ioncannon:60,pdbattery:12,tractor:6,
+            fighterbay:2,vehiclebay:4,passengerbay:25,shield:14,armour:22,
+            capreactor:3,radiator:60,capacitor:6,warp:1,drive:6,fueltank:4,
+            magazine:2,ammobunker:2,provisions:6,hydroponics:4,cargo:6,
+            quarters:34,lifesupport:20,medbay:6,
+            sensor:4,searchsensor:3,firecontrol:2,targeting:2,ecm:2,bridge:2,flagsuite:1}},
+  {id:'deathstar',name:'★ DS-1 Death Star',hero:true,host:'megastructure',
+    /* CANON (Wookieepedia): Concave Dish Composite Beam Superlaser · 5,000 heavy turbolasers · 5,000 turbolaser
+       batteries · 2,500 ion cannons · 2,500 laser cannons · 768 tractor beams · ~7,000 TIE fighters ·
+       ~1,200,000 crew · hypermatter reactor · Class-4 hyperdrive. Support (reactors/radiators/habitation/
+       life-support/agriculture) sized to power, cool, house and feed a city that never runs down. */
+    counts:{superlaser:1,heavyturbo:5000,medturbo:5000,ioncannon:2500,pdbattery:2500,tractor:768,
+            fighterbay:100,vehiclebay:50,hyperreactor:80,radtower:90,capacitor:40,shield:200,armour:500,
+            warp:1,drive:20,fueltank:100,magazine:50,ammobunker:200,cargo:100,
+            habblock:25,lifecomplex:20,agridome:9,medbay:100,provisions:50,
+            sensor:20,searchsensor:20,firecontrol:20,ecm:10,targeting:20,bridge:10,flagsuite:4}},
+  {id:'arc170',name:'ARC-170 (fighter)',host:'ship',
+    /* Canon Aggressive ReConnaissance-170: 2 forward + 2 tail medium laser cannons · 2 proton torpedo tubes · deflector
+       shield · Class-1.5 hyperdrive · 3 crew + astromech · ~5-day consumables. ⚠ SCALE CAVEAT: the mock catalog is
+       capital-scale (a Laser Cannon is 80 t), so this reads ~1,800 t — a REAL ARC-170 is ~22 t. Read the mass as "the
+       smallest the mock can express"; the true fighter is a fraction of the Escort. */
+    counts:{searchsensor:1,firecontrol:1,laser:4,missile:2,shield:1,armour:1,reactor:1,capacitor:2,radiator:1,
+            drive:2,warp:1,fueltank:1,magazine:1,cargo:1,provisions:1,bridge:1}},
+  {id:'miranda',name:'Miranda-class (frigate)',host:'ship',
+    /* Canon (USS Reliant config): a light Starfleet cruiser/frigate — 6 phaser + 2 pulse + 4 photon torpedo + 4 PD ·
+       strong shields · 2 warp + 2 impulse · ~220 crew. A frigate under-guns a capital by design. Phasers → energy
+       beams, torpedoes → guided missiles. */
+    counts:{laser:6,plasma:2,missile:4,pdbattery:4,shield:8,reactor:2,warp:2,drive:2,fueltank:2,capacitor:4,
+            sensor:1,firecontrol:1,quarters:2,lifesupport:2,provisions:2,medbay:1,bridge:1}},
+  {id:'termagant',name:'Termagant ×20 (ground)',host:'ground',
+    /* One gaunt; UnitsPerBuild=20 = a brood per build (cost ×20). Cheap fragile chaff — a fleshborer + rending claws
+       + light chitin + adrenal reflexes on a near-free swarm-frame, thrown in numbers. */
+    counts:{gm_swarm:1,gw_rifle:1,gw_claw:1,ga_plating:1,ge_reflex:1}},
+  {id:'clonetrooper',name:'Clone Trooper ×9 (ground)',host:'ground',
+    /* One trooper; UnitsPerBuild=9 = a squad. DC-15A + plastoid plate + the two signatures: SEALED all-environment
+       life-support + a TRAINING cadre (elite discipline) — the pricey bits. Thermal detonator omitted (minor). */
+    counts:{gm_human:1,gw_rifle:1,ga_plating:1,gd_seal:1,ge_cadre:1}},
+  {id:'genestealer',name:'Genestealer ×8 (ground)',host:'ground',
+    /* One Purestrain; UnitsPerBuild=8 = a brood. Elite vanguard: rending claws + hyper-musculature + a bio-drive to
+       close fast + chitin + void-seal + a scout radar + instinct-cadre. ~4× a clone per body (heavy augments). */
+    counts:{gm_human:1,gw_claw:1,ge_powerarmor:1,gp_loco:1,ga_plating:1,gd_seal:1,gs_radar:1,ge_cadre:1}},
+  {id:'carnifex',name:'Carnifex (ground monster)',host:'ground',
+    /* One monster (UnitsPerBuild=1). A bio-tank on a vehicle frame: 2 chitin carapaces + 2 sets of talons + a
+       bio-cannon + monstrous musculature + a bio-gait + a bio-seal. The heaviest ground unit. */
+    counts:{gm_vehicle:1,ga_heavyplate:2,gw_claw:2,gw_cannon:1,ge_powerarmor:1,gp_loco:1,gd_seal:1}},
+  {id:'atte',name:'AT-TE (gun-walker)',host:'ground',
+    /* One walker (UnitsPerBuild=1). A heavy assault-walker: a mass-driver (railgun) + 6 anti-personnel lasers, fed by a
+       reactor + magazine, on a walker frame under 4 heavy plates, with an all-terrain drive. Its canon troop-carry bay
+       is PENDING (no surface troop-carry component exists). */
+    counts:{gm_walker:1,railgun:1,laser:6,reactor:1,magazine:1,ga_heavyplate:4,gp_loco:1}},
+  {id:'sazabi',name:'⬢ MSN-04 Sazabi (mobile suit)',hero:true,host:'ground',
+    /* Char's Counterattack MSN-04 — Neo Zeon's Newtype flagship. 25.6 m, 71.2 t, generator 3,960 kW, TOTAL THRUST
+       133,000 kg (its signature). Armament: waist mega particle gun (8.8 MW) + beam shot rifle (10.2 MW) → 2 beam
+       weapons · 2 forearm beam sabers (+ the shield tomahawk) → gw_claw ×2 · SIX psycommu funnels (10.6 MW each) ·
+       gundarium armour · psycho-frame/psycommu. THE build is a WALKER WITH FLIGHT: the Flight Thruster + the funnels'
+       all-range attack + the psycho-frame's Newtype amp are the cross-domain PENDING flags (a ground unit can't take
+       flight into space, and remote/all-range + Newtype have no reader). Min-maxed as an ACE glass-cannon: light for
+       its host (~55% mass = high evasion/AMBAC), max beam+funnel alpha, reactor covers the draw, gundarium for
+       survivability — an agile alpha-striker, not a tank. */
+    counts:{gm_mecha:1,gm_msreactor:1,gp_flight:1,gw_beam:2,gw_funnel:6,gw_claw:2,ga_heavyplate:3,ge_psychoframe:1,gs_radar:1}},
+  {id:'apache',name:'⬢ AH-64 Apache (attack helo)',hero:true,host:'ground',
+    /* AH-64D/E Longbow — 2-crew all-weather anti-armour CAS gunship. ~15 m, 10.4 t max, 2× T700 (~3,960 shp, 293 km/h,
+       2.5–3 hr loiter, true VTOL). Armament: M230 30 mm chain gun (1,200 rds) + up to 16 AGM-114 Hellfire (tank-killer,
+       fire-and-forget from the mast radar) + Hydra 70 rocket pods; here a realistic MIXED loadout (8 Hellfire + 2 rocket
+       pods + gun). Sensors: APG-78 Longbow MAST radar (128 targets → 16-missile volley from defilade) + M-TADS/PNVS.
+       Armoured cockpit + crashworthy → hard to one-shot. MIN-MAXED for HOVER-AND-LOITER STANDOFF ANTI-ARMOUR: light
+       (~30% budget), Hellfire-dense punch ×1.2 fire-control, tough for its size. PENDING: hover/loiter, flight,
+       fire-and-forget-from-hiding, MUM-T, sortie endurance. */
+    counts:{af_rotor:1,ap_rotor:1,aw_chaingun:1,aw_hellfire:8,aw_rockets:2,as_longbow:1,ae_fusion:1,ga_plating:2}},
+  {id:'f22',name:'⬢ F-22 Raptor (stealth fighter)',hero:true,host:'ground',
+    /* Lockheed F-22A — single-seat 5th-gen air-dominance fighter. 18.9 m, ~38 t max, 2× F119 (~70,000 lbf AB, Mach 2.25,
+       SUPERCRUISE ~Mach 1.8, thrust-vectoring, T/W >1.25). Armament (internal, stealth): 6× AIM-120 AMRAAM (BVR
+       fire-and-forget KILL weapon) + 2× AIM-9 Sidewinder + M61A2 20 mm Vulcan (480 rds). Sensors: APG-77 AESA (LPI) +
+       sensor fusion → see-first/shoot-first. RCS ≈ a marble. MIN-MAXED for SEE-FIRST/SHOOT-FIRST AIR DOMINANCE: highest
+       detection (400), AMRAAM-dense, light + evasive, ×1.2 fusion. PENDING (the whole identity): FLIGHT, stealth-as-
+       undetectability (its ~0.85 agility + low-observability read as the 0.42 ground ceiling), supercruise, BVR first-shot. */
+    counts:{af_jet:1,ap_jet:1,aw_amraam:6,aw_sidewinder:2,aw_vulcan:1,as_aesa:1,ae_fusion:1,ga_plating:1}},
+  {id:'laat',name:'⬢ LAAT Gunship (Republic)',hero:true,host:'ground',
+    /* Rothana LAAT/i "larty" — 4-crew repulsorlift assault dropship. ~17.4 m, 620 km/h, low-altitude, carries 30 clone
+       troopers into a hot LZ. THE over-gunned airframe: 4 composite-beam laser turrets (2 manned ball + 2 auto) +
+       3 anti-personnel laser turrets + 2 dorsal mass-driver missile launchers (over-horizon anti-armour) + 8 ventral
+       air-to-air rockets. NO combat shields, thin superdispersive armour → a glass cannon. MIN-MAXED to its identity:
+       HIGHEST firepower of the three (volume of fire), a generator to power the lasers, a troop bay, deliberately LIGHT
+       armour despite the guns. PENDING: flight/hover, over-horizon targeting, the hot-LZ troop-drop, no-shield fragility. */
+    counts:{af_gunship:1,ap_repulsor:1,af_generator:1,aw_beamturret:4,aw_aplaser:3,aw_massdriver:2,aw_aarocket:8,ap_troopbay:1,ga_plating:1}},
+  {id:'clear',name:'Clear',host:null,counts:{}}
+];
+
+/* ---------- helpers ---------- */
+/* a Battle Station is a superset host — it mounts anything a ship OR a station can, plus its own mega-scale parts.
+   A Dreadnought is a big warship — it mounts anything a ship OR a station can (no mega-scale-only parts). */
+function hostAccepts(c){
+  if(host==='megastructure')return c.hosts.indexOf('megastructure')>=0||c.hosts.indexOf('station')>=0||c.hosts.indexOf('ship')>=0;
+  if(host==='dreadnought')return c.hosts.indexOf('ship')>=0||c.hosts.indexOf('station')>=0;
+  return c.hosts.indexOf(host)>=0;
+}
+function actives(){return CAT.filter(function(c){return counts[c.id]>0 && hostAccepts(c);});}
+function fmt(n,d){if(!isFinite(n))n=0;return n.toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+/* energy formatter — joules → human units. The engine stores weapon/shield energy in J, the grid in kJ. */
+function fmtE(j){if(!isFinite(j)||j===0)return '0 J';var a=Math.abs(j);
+  if(a>=1e9)return fmt(j/1e9,2)+' GJ';if(a>=1e6)return fmt(j/1e6,1)+' MJ';
+  if(a>=1e3)return fmt(j/1e3,0)+' kJ';return fmt(j,0)+' J';}
+
+/* ---------- render: host selector ---------- */
+function renderHosts(){
+  var el=document.getElementById('hosts');el.innerHTML='';
+  HOSTORDER.forEach(function(k){
+    var h=HOSTS[k];
+    var b=document.createElement('button');b.className='host';b.setAttribute('aria-pressed',String(k===host));
+    b.innerHTML='<span class="hn"><span class="dot"></span>'+h.glyph+' '+h.name+'</span><span class="hd">'+h.desc+'</span>';
+    b.addEventListener('click',function(){host=k;renderAll();});
+    el.appendChild(b);
+  });
+}
+
+/* ---------- render: presets ---------- */
+function renderPresets(){
+  var el=document.getElementById('presets');el.innerHTML='';
+  var lab=document.createElement('span');lab.className='pl';lab.textContent='presets';el.appendChild(lab);
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');b.className='preset'+(p.hero?' hero':'')+(p.id===activePreset?' on':'');b.textContent=p.name;
+    b.addEventListener('click',function(){
+      if(p.host)host=p.host;
+      CAT.forEach(function(c){counts[c.id]=0;});
+      Object.keys(p.counts).forEach(function(k){if(counts.hasOwnProperty(k))counts[k]=p.counts[k];});
+      activePreset=p.id;
+      renderAll();
+    });
+    el.appendChild(b);
+  });
+}
+
+/* ---------- render: roster ---------- */
+function renderRoster(){
+  var el=document.getElementById('roster');el.innerHTML='';
+  var lastCat=null;
+  CAT.forEach(function(c){
+    if(c.cat!==lastCat){var h=document.createElement('div');h.className='cat';h.textContent=c.cat;el.appendChild(h);lastCat=c.cat;}
+    var ok=hostAccepts(c);
+    var n=counts[c.id];
+    var row=document.createElement('div');row.className='item'+(ok?'':' dis')+(n>0&&ok?' on':'');
+    var meta=[];
+    meta.push(c.mass+'t');
+    if(c.weapon){meta.push(c.weapon.dps+' MJ/s');
+      if(c.weapon.nature==='Energy'||c.weapon.nature==='Exotic')meta.push('−'+c.weapon.dps+'MW');}
+    if(c.supply)meta.push('+'+c.supply+'MW');
+    if(c.draw)meta.push('−'+c.draw+'MW');
+    if(c.thrust)meta.push(c.thrust+'kN');
+    if(c.shield)meta.push(fmtE(c.shield.cap)+' shield');
+    if(c.armour)meta.push(c.armour.thick+' armour');
+    if(c.crew<0)meta.push((-c.crew)+' crew freed');else if(c.crew>0)meta.push(c.crew+' crew');
+    var whyDis=ok?'':'<span class="mk">'+(c.hosts.join('/'))+' only</span>';
+    row.innerHTML=
+      '<div class="iname">'+c.name+' '+whyDis+'</div>'+
+      '<div class="step">'+
+        '<button aria-label="Remove '+c.name+'" data-m="'+c.id+'"'+((n<=0||!ok)?' disabled':'')+'>–</button>'+
+        '<span class="ct">'+n+'</span>'+
+        '<button aria-label="Add '+c.name+'" data-p="'+c.id+'"'+(ok?'':' disabled')+'>+</button>'+
+      '</div>'+
+      '<div class="imeta">'+meta.join(' · ')+'</div>';
+    el.appendChild(row);
+  });
+  el.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.p]++;activePreset=null;renderAll();});});
+  el.querySelectorAll('[data-m]').forEach(function(b){b.addEventListener('click',function(){counts[b.dataset.m]=Math.max(0,counts[b.dataset.m]-1);activePreset=null;renderAll();});});
+  var total=actives().reduce(function(s,c){return s+counts[c.id];},0);
+  document.getElementById('rosterSub').textContent=total?(total+' part'+(total>1?'s':'')+' mounted'):'step 2 · mount parts';
+}
+
+/* ---------- compute totals ---------- */
+function compute(){
+  var A=actives();
+  var H=HOSTS[host];
+  var mass=0,vol=0,crew=0,supply=0,draw=0,thrust=0,hp=0,armourThick=0,shieldCap=0,shieldRegen=0,firepower=0;
+  var hasEnergyWeapon=false,hasAmmoWeapon=false,ammoStore=0,caliber=1;
+  var fighters=0,hasFighterBay=false,vehicles=0,hasVehicleBay=false,tractors=0,superweapons=0;
+  var passengers=0,hasPassengerBay=false,shuttles=0,hasShuttleBay=false,cycleRate=0,bayClasses=[];
+  var heatGen=0,heatDissip=0,fuelStore=0,fuelBurn=0,ve=0,provisions=0,foodProd=0,ammoCap=0,ammoUse=0,detect=0;
+  var warpCap=false,warpSustain=0,warpCreateNeed=0,speedFactor=0,reactorDays=Infinity;
+  var berths=0,lifeSupport=0,medical=0,cargo=0,caliber=1,hasFlag=false;
+  var energyStore=0,fcMult=1,ecmBonus=0;
+  A.forEach(function(c){
+    var n=counts[c.id];
+    mass+=c.mass*n;vol+=c.vol*n;crew+=c.crew*n;supply+=(c.supply||0)*n;hp+=(c.hp||0)*n;
+    if(c.thrust)thrust+=c.thrust*n;
+    if(c.armour)armourThick+=c.armour.thick*n;
+    if(c.shield){shieldCap+=c.shield.cap*n;shieldRegen+=c.shield.cap*c.shield.regen*n;}
+    if(c.ammoStore)ammoStore+=n;
+    if(c.fighters){fighters+=c.fighters*n;hasFighterBay=true;}
+    if(c.vehicles){vehicles+=c.vehicles*n;hasVehicleBay=true;}
+    if(c.passengers){passengers+=c.passengers*n;hasPassengerBay=true;}
+    if(c.shuttles){shuttles+=c.shuttles*n;hasShuttleBay=true;}
+    if(c.bayClass){cycleRate=Math.max(cycleRate,c.cycleRate||0);if(bayClasses.indexOf(c.bayClass)<0)bayClasses.push(c.bayClass);}
+    if(c.tractor)tractors+=n;
+    if(c.superweapon)superweapons+=n;
+    heatGen+=(c.heat||0)*n;
+    if(c.heatDissip)heatDissip+=c.heatDissip*n;
+    if(c.fuelStore)fuelStore+=c.fuelStore*n;
+    if(c.fuelBurn)fuelBurn+=c.fuelBurn*n;
+    if(c.ve)ve=Math.max(ve,c.ve);
+    if(c.provisions)provisions+=c.provisions*n;
+    if(c.foodOut)foodProd+=c.foodOut*n;
+    if(c.ammoCap)ammoCap+=c.ammoCap*n;
+    if(c.ammoUse)ammoUse+=c.ammoUse*n;
+    if(c.detect)detect=Math.max(detect,c.detect+(n-1)*20);
+    if(c.warp)warpCap=true;
+    if(c.warpSustain)warpSustain+=c.warpSustain*n;
+    if(c.warpCreate)warpCreateNeed+=c.warpCreate*n;
+    if(c.speedFactor)speedFactor=Math.max(speedFactor,c.speedFactor);
+    if(c.deployDays)reactorDays=Math.min(reactorDays,c.deployDays);
+    if(c.berths)berths+=c.berths*n;
+    if(c.lifeSupport)lifeSupport+=c.lifeSupport*n;
+    if(c.medical)medical+=c.medical*n;
+    if(c.cargo)cargo+=c.cargo*n;
+    if(c.caliber)caliber=Math.max(caliber,c.caliber);
+    if(c.flagship)hasFlag=true;
+    if(c.energyStore)energyStore+=c.energyStore*n;
+    if(c.fireControl)fcMult=Math.max(fcMult,c.fireControl);
+    if(c.ecm)ecmBonus=Math.max(ecmBonus,c.ecm);
+    if(c.weapon){
+      firepower+=c.weapon.dps*n;
+      // ENGINE-EXACT: an energy/exotic weapon's grid draw (MW) EQUALS its delivered damage (MJ/s) —
+      // the damage IS the energy it puts out. Kinetic/explosive weapons run off the ammo pool: no grid draw at all.
+      if(c.weapon.nature==='Energy'||c.weapon.nature==='Exotic'){hasEnergyWeapon=true;draw+=c.weapon.dps*n;}
+      else {hasAmmoWeapon=true;}
+    } else {
+      draw+=(c.draw||0)*n;
+    }
+  });
+  firepower*=caliber*fcMult; // caliber module (UnitCaliberAtb) × fire-control tracking (BeamFireControlAtb), both LIVE
+  var baseHP={ship:120,ground:80,station:400,dreadnought:120,megastructure:40000}[host];
+  var totalHP=baseHP+hp;
+  var toughness=(totalHP + armourThick*(host==='station'?4:2))*0.1; // MJ-ish
+  var accel=mass>0?thrust/mass:0; // kN/t = m/s^2
+  var evasion;
+  if(host==='ship'||host==='dreadnought'){evasion=clamp(accel/(accel+18)+(1-clamp(vol/H.volCap,0,1))*0.10,0,0.95);}
+  else if(host==='ground'){evasion=speedFactor>0?clamp(0.22+0.20,0,0.95):0.22;}
+  else {evasion=0;}
+  evasion=clamp(evasion+ecmBonus,0,0.95); // ECM jams enemy targeting → fewer shots land (a hit-avoidance term, not dodging)
+  var roleWeight=firepower>0?1.0:0.25;
+  // movement + FTL
+  var fuelMass=fuelStore;
+  var deltaV=(ve>0&&mass>0&&fuelMass>0)?ve*Math.log((mass+fuelMass)/mass):0; // km/s
+  var fuelHrs=fuelBurn>0?fuelStore/fuelBurn:(fuelStore>0?Infinity:0);
+  var marchKmh=(host==='ground')?(speedFactor>0?30*speedFactor:18):0;
+  var warpIndex=(warpCap&&mass>0)?supply/mass:0; // power-to-mass proxy for warp cruise
+  // endurance — provisions are stored food; hydroponics grow food to offset the crew's draw
+  var foodNet=Math.max(0,crew-foodProd); // crew-days consumed per day after homegrown food
+  var selfSufficient=(crew>0&&foodProd>=crew);
+  var provDays=foodNet>0?provisions/foodNet:(crew>0?Infinity:(provisions>0?Infinity:0));
+  // deployment (on-station) endurance — the PATROL clock: whichever continuous consumable runs out first,
+  // reactor fuel core or crew provisions. Propellant is NOT here — you coast, so it's a separate maneuver budget.
+  var deployDays=Math.min(reactorDays,provDays);
+  var deployLimiter=(reactorDays<provDays)?'reactor fuel core':((provDays<reactorDays)?'crew provisions':((reactorDays===Infinity)?'—':'reactor + provisions'));
+  var ammoMin=ammoUse>0?ammoCap/ammoUse:(hasAmmoWeapon?0:Infinity);
+  var heatBalance=heatDissip-heatGen; // MW; <0 = throttling
+  return {A:A,H:H,mass:mass,vol:vol,crew:crew,supply:supply,draw:draw,thrust:thrust,
+    firepower:firepower,toughness:toughness,evasion:evasion,shieldCap:shieldCap,shieldRegen:shieldRegen,
+    roleWeight:roleWeight,hasEnergyWeapon:hasEnergyWeapon,hasAmmoWeapon:hasAmmoWeapon,ammoStore:ammoStore,
+    fighters:fighters,hasFighterBay:hasFighterBay,vehicles:vehicles,hasVehicleBay:hasVehicleBay,tractors:tractors,superweapons:superweapons,
+    passengers:passengers,hasPassengerBay:hasPassengerBay,shuttles:shuttles,hasShuttleBay:hasShuttleBay,cycleRate:cycleRate,bayClasses:bayClasses,
+    accel:accel,ve:ve,deltaV:deltaV,fuelStore:fuelStore,fuelHrs:fuelHrs,marchKmh:marchKmh,
+    warpCap:warpCap,warpIndex:warpIndex,warpSustain:warpSustain,warpCreateNeed:warpCreateNeed,
+    provisions:provisions,provDays:provDays,foodProd:foodProd,foodNet:foodNet,selfSufficient:selfSufficient,
+    reactorDays:reactorDays,deployDays:deployDays,deployLimiter:deployLimiter,
+    berths:berths,lifeSupport:lifeSupport,medical:medical,cargo:cargo,caliber:caliber,hasFlag:hasFlag,
+    energyStore:energyStore,fcMult:fcMult,ecmBonus:ecmBonus,
+    ammoCap:ammoCap,ammoUse:ammoUse,ammoMin:ammoMin,
+    heatGen:heatGen,heatDissip:heatDissip,heatBalance:heatBalance,detect:detect,
+    over:mass>H.budget,volOver:vol>H.volCap,baseHP:baseHP,totalHP:totalHP,armourThick:armourThick};
+}
+
+/* ---------- render: budgets ---------- */
+function renderBudgets(S){
+  var el=document.getElementById('budgets');
+  function bar(name,used,cap,unit){
+    var pct=cap>0?clamp(used/cap*100,0,100):0;
+    var cls=used>cap?'over':(used>cap*0.85?'warn':'');
+    return '<div class="budrow"><div class="bl"><span class="bn">'+name+'</span>'+
+      '<span class="bv">'+fmt(used)+' / '+fmt(cap)+' '+unit+'</span></div>'+
+      '<div class="track"><div class="fill '+cls+'" style="width:'+pct+'%"></div></div></div>';
+  }
+  var powerCap=S.supply,powerUse=S.draw;
+  var ppct=powerCap>0?clamp(powerUse/powerCap*100,0,100):(powerUse>0?100:0);
+  var pcls=powerUse>powerCap?'over':(powerUse>powerCap*0.85?'warn':'');
+  el.innerHTML=
+    bar(S.H.budgetName,S.mass,S.H.budget,'t')+
+    bar('Volume',S.vol,S.H.volCap,'m³')+
+    '<div class="budrow"><div class="bl"><span class="bn">Crew required</span><span class="bv">'+fmt(Math.max(0,S.crew))+' from the pool</span></div>'+
+      '<div class="track"><div class="fill warn" style="width:'+clamp(Math.max(0,S.crew)/S.H.crewRef*100,0,100)+'%"></div></div></div>'+
+    '<div class="budrow"><div class="bl"><span class="bn">Power draw vs reactor</span><span class="bv">'+fmt(powerUse)+' / '+fmt(powerCap)+' MW</span></div>'+
+      '<div class="track"><div class="fill '+pcls+'" style="width:'+ppct+'%"></div></div></div>'+
+    '<p class="note" style="margin:11px 0 0;color:var(--ink3);font-size:11.5px;line-height:1.5">⚡ <b style="color:var(--ink2)">Energy is engine-real now.</b> An energy weapon\'s power draw (MW) <b style="color:var(--ink2)">equals its delivered damage (MJ/s)</b> — the damage <em>is</em> the energy it puts out. Shields and sublight drives run off their own pools (no reactor draw). A reactor out-supplies its beam guns many times over, so power <b style="color:var(--ink2)">headroom is normal</b> — the binding energy limits are the <b style="color:var(--ink2)">warp battery</b> (a gate below) and <b style="color:var(--ink2)">heat</b> (endurance), not raw generation.</p>';
+}
+
+/* ---------- render: gates ---------- */
+function renderGates(S){
+  var el=document.getElementById('gates');var g=[];
+  function gate(state,title,reason){
+    var sym=state==='pass'?'✓':state==='fail'?'✕':state==='pend'?'~':'–';
+    g.push('<div class="gate '+state+'"><div class="gi">'+sym+'</div><div><div class="gt">'+title+'</div><div class="gr">'+reason+'</div></div></div>');
+  }
+  var any=S.A.length>0;
+  gate(!any?'na':(S.over?'fail':'pass'),S.H.budgetName,
+    !any?'nothing mounted yet':(S.over?('over by '+fmt(S.mass-S.H.budget)+' t — trim parts or pick a bigger host'):(fmt(S.H.budget-S.mass)+' t of '+fmt(S.H.budget)+' t free')));
+  gate(!any?'na':(S.volOver?'fail':'pass'),'Volume',
+    !any?'—':(S.volOver?('over by '+fmt(S.vol-S.H.volCap)+' m³'):(fmt(S.H.volCap-S.vol)+' m³ free')));
+  // power
+  var pState=(S.draw<=0)?'na':(S.draw<=S.supply?'pass':'fail');
+  gate(pState,'Power supply ≥ draw',
+    S.draw<=0?'no powered parts':(S.draw<=S.supply?(fmt(S.supply-S.draw)+' MW headroom'):('short '+fmt(S.draw-S.supply)+' MW — add a reactor')));
+  // reactor for energy weapons
+  var eState=!S.hasEnergyWeapon?'na':(S.supply>0?'pass':'fail');
+  gate(eState,'Reactor for energy weapons',
+    !S.hasEnergyWeapon?'no energy weapons':(S.supply>0?'a reactor is present':'energy weapon with no reactor — it can\'t fire'));
+  // ammo feed
+  var aState=!S.hasAmmoWeapon?'na':(S.ammoStore>0?'pass':'fail');
+  gate(aState,'Ammo feed for kinetic/explosive',
+    !S.hasAmmoWeapon?'no ammo weapons':(S.ammoStore>0?'a magazine is present':'ammo weapon with no magazine — it fires dry, then falls silent'));
+  // warp battery — a real engine gate: the jump bubble needs stored energy ≥ the drive's creation cost
+  if(S.warpCap){
+    var wbOK=S.energyStore>=S.warpCreateNeed;
+    gate(wbOK?'pass':'fail','Warp battery ≥ jump-bubble cost',
+      wbOK?(fmtE(S.energyStore*1000)+' stored ≥ '+fmtE(S.warpCreateNeed*1000)+' to open the bubble — it can jump')
+          :('only '+fmtE(S.energyStore*1000)+' stored — the drive needs '+fmtE(S.warpCreateNeed*1000)+' to jump. Add a Capacitor Bank (this is the real energy cost of FTL, not the reactor).'));
+  }
+  // crew
+  gate(!any?'na':'pass','Crew from the population pool',
+    !any?'—':(S.crew<=0?'net crew freed by automation':fmt(S.crew)+' drawn from the colony pool (informational — the pool provides it)'));
+  // crew sustainment — the ship must house and support its own crew (Civic door, applied to a ship)
+  if(S.crew>0){
+    gate(S.berths>=S.crew?'pass':'fail','Crew berths ≥ crew',
+      S.berths>=S.crew?(fmt(S.berths)+' berths for '+fmt(S.crew)+' crew'):('only '+fmt(S.berths)+' berths for '+fmt(S.crew)+' crew — add Crew Quarters'));
+    gate(S.lifeSupport>=S.crew?'pass':'fail','Life support ≥ crew',
+      S.lifeSupport>=S.crew?(fmt(S.lifeSupport)+' air/water capacity'):('supports '+fmt(S.lifeSupport)+' of '+fmt(S.crew)+' crew — add a Life Support Plant'));
+    gate(S.medical>0?'pass':'pend','Medical coverage',
+      S.medical>0
+        ? (fmt(S.medical)+' sickbay capacity ('+(S.medical>=S.crew?'covers the crew':'partial')+') — readiness only; the +health output is engine-pending')
+        : 'no medical bay — readiness note only, since the +health output is engine-pending anyway');
+  }
+  // generalized bay (CARRIER-DESIGN §5 + §13) — the deployable / carried-unit capability, all classes as ONE component
+  if(S.bayClasses && S.bayClasses.length){
+    var bayBits=[];
+    if(S.hasFighterBay) bayBits.push(fmt(S.fighters)+' strike craft (StrikeCraft — launch PENDING)');
+    if(S.hasVehicleBay) bayBits.push(fmt(S.vehicles)+' troops/vehicles (Personnel·Vehicle — LIVE, one-way)');
+    if(S.hasPassengerBay) bayBits.push(fmt(S.passengers)+' passengers (Passenger — future)');
+    if(S.hasShuttleBay) bayBits.push(fmt(S.shuttles)+' shuttles (Shuttle — future)');
+    var bayLive = S.hasVehicleBay;   // Personnel/Vehicle is the one live class today
+    gate(bayLive?'pass':'pend','Generalized bay — deployable / carried units',
+      'ONE BayAtb, class-dialed (CARRIER-DESIGN §5): '+bayBits.join(' · ')+'. Cycle/sortie rate '+fmt(S.cycleRate)+'/pulse. A carried unit is designated by its CHASSIS carry-class (§13a — not a boolean on the unit). LAUNCH is one order for every class (§13b); RECOVER is per-class — a fighter docks round-trip, a marine deploys one-way. Kill the host and an aloft StrikeCraft wing is STRANDED (§13c). Personnel/Vehicle is LIVE (GroundBayAtb→GroundTransport); StrikeCraft launch is the PENDING wire.');
+  }
+  // tractor beams — pending payoff
+  if(S.tractors>0){
+    gate('pend','Tractor beams',
+      S.tractors+' projector'+(S.tractors>1?'s':'')+' — docking / salvage / capture payoff is PENDING (capture is a bare ownership flip, an open ruling; salvage isn’t built).');
+  }
+  // superweapon — THE honest gap: the station's whole purpose can't be expressed
+  if(S.superweapons>0){
+    gate('pend','Superweapon (planet destruction)',
+      S.superweapons+' superlaser'+(S.superweapons>1?'s':'')+' mounted — but PENDING: the engine has no planetary-destruction mechanic, no reader for a "crack a world" output. The station’s entire reason for being is the one thing the sim cannot express — an engine feature to build, flagged not faked.');
+  }
+  el.innerHTML=g.join('');
+}
+
+/* ---------- render: gauges ---------- */
+function renderGauges(S){
+  var el=document.getElementById('gauges');
+  function gauge(label,val,sub,muted){
+    return '<div class="gauge'+(muted?' muted':'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+sub+'</s></div>';
+  }
+  el.innerHTML=
+    gauge('Firepower',fmt(S.firepower,1),'Σ MJ/s delivered (= MW)',S.firepower<=0)+
+    gauge('Toughness',fmt(S.toughness,0),'health + armour',S.toughness<=12)+
+    gauge('Evasion',(S.evasion*100).toFixed(0)+'%',host==='station'?'stations never dodge':'chance a shot misses',S.evasion<=0)+
+    gauge('Shield',S.shieldCap>0?fmtE(S.shieldCap):'—','+'+fmtE(S.shieldRegen)+'/s regen',S.shieldCap<=0);
+  var nt=document.getElementById('totalsNote');
+  var bits=[];
+  bits.push('Role: <b>'+(S.roleWeight>=1?'armed (weight 1.0)':'utility (weight 0.25)')+'</b>');
+  if(host==='ship'||host==='dreadnought')bits.push('Evasion is emergent — thrust ÷ mass, then hull size.');
+  if(host==='ground')bits.push('Ground armour is soaked shot-by-shot, so penetration bites (see weapons).');
+  if(host==='station')bits.push('Immobile: Evasion is 0 by construction.');
+  if(S.caliber>1||S.fcMult>1)bits.push('<b style="color:var(--ac2)">Firepower ×'+(S.caliber*S.fcMult).toFixed(2)+'</b> (targeting + fire-control, LIVE)');
+  if(S.ecmBonus>0)bits.push('<b style="color:var(--ac2)">ECM +'+(S.ecmBonus*100).toFixed(0)+'%</b> hit-avoidance (LIVE)');
+  if(S.energyStore>0)bits.push('Capacitors '+fmtE(S.energyStore*1000)+' stored (warp-jump buffer)');
+  if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
+  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' strike craft (StrikeCraft bay) — launch PENDING.</b>');
+  if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' troops/vehicles — invasion chain LIVE.</b>');
+  if(S.hasPassengerBay)bits.push(fmt(S.passengers)+' passengers (Passenger bay — future).');
+  if(S.hasShuttleBay)bits.push(fmt(S.shuttles)+' shuttles (Shuttle bay — future).');
+  if(S.superweapons>0)bits.push('<b style="color:var(--warn)">Superlaser aboard — PENDING (planet-crack has no engine reader).</b>');
+  nt.innerHTML=bits.join(' · ');
+}
+
+/* ---------- render: mobility & FTL ---------- */
+function renderMobility(S){
+  var el=document.getElementById('mobility');var sub=document.getElementById('mobsub');
+  function g(label,val,s,muted){return '<div class="gauge'+(muted?' muted':'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+s+'</s></div>';}
+  var out;
+  if(host==='megastructure'){sub.textContent='immobile in a fight, FTL between';
+    out=g('Sublight','immobile','holds position — never dodges',true)+
+        g('Δv','—','no meaningful sublight drive',true)+
+        g('FTL',S.warpCap?'hyperdrive':'—',S.warpCap?'strategic jump capability':'no hyperdrive',!S.warpCap)+
+        g('Warp sustain',S.warpCap?fmt(S.warpSustain,0)+' MW':'—','power drawn crossing',!S.warpCap);
+  } else if(host==='station'){sub.textContent='immobile';
+    out=g('Sublight','—','a station holds station',true)+g('Δv','—','—',true)+g('FTL','—','stations don’t move',true)+g('Warp','—','—',true);
+  } else if(host==='ground'){sub.textContent='how fast it marches';
+    out=g('March speed',S.marchKmh?fmt(S.marchKmh,0)+' km/h':'—',S.marchKmh?'from locomotion':'no drive → crawl',!S.marchKmh)+
+        g('Terrain','varies','slowed by rough ground',true)+
+        g('FTL','—','ground units don’t warp',true)+
+        g('Lift','transport','carried between worlds',true);
+  } else {sub.textContent='can it get there — and back?';
+    out=g('Acceleration',S.accel>0?fmt(S.accel,2)+' m/s²':'—',S.accel>0?'thrust ÷ mass':'no drive',S.accel<=0)+
+        g('Δv',S.deltaV>0?fmt(S.deltaV,1)+' km/s':'—',S.deltaV>0?'on the fuel load':(S.accel>0?'add fuel':'add a drive'),S.deltaV<=0)+
+        g('FTL',S.warpCap?'warp':'sublight',S.warpCap?'cruise ∝ power÷mass = '+fmt(S.warpIndex,3):'no warp drive',!S.warpCap)+
+        g('Warp sustain',S.warpCap?fmt(S.warpSustain,0)+' MW':'—',S.warpCap?'power drawn crossing':'—',!S.warpCap);
+  }
+  el.innerHTML=out;
+}
+
+/* ---------- render: endurance (fuel · food · ammo · heat) ---------- */
+function renderEndurance(S){
+  var el=document.getElementById('endurance');var note=document.getElementById('endNote');
+  function g(label,val,s,cls){return '<div class="gauge'+(cls||'')+'"><i>'+label+'</i><b>'+val+'</b><s>'+s+'</s></div>';}
+  // DEPLOYMENT — the patrol clock: reactor fuel core + provisions (runs whether it moves or not)
+  var dV,dS,dC='';
+  if(S.deployDays===Infinity){dV='∞';dS=(S.crew<=0?'no crew, no reactor fuel to burn':'reactor + food both self-sustaining');dC=' okb';}
+  else{
+    var yr=S.deployDays>=365?' (~'+fmt(S.deployDays/365,1)+' yr)':'';
+    dV=fmt(S.deployDays,0)+' d';
+    dS='on station · capped by '+S.deployLimiter+(S.selfSufficient?' (food: closed loop)':'')+yr;
+    dC=(S.deployDays<30?' warnb':'');
+  }
+  // MANEUVER FUEL — a Δv reserve you spend in bursts, then coast (NOT the deployment clock)
+  var fV,fS,fC='';
+  if(host!=='ship'&&host!=='dreadnought'){fV='—';fS=(host==='ground'?'ground units march, not burn':'immobile — holds station');fC=' muted';}
+  else if(S.fuelStore<=0){fV=S.accel>0?'0 h':'—';fS=S.accel>0?'a drive with no fuel tank':'no drive';fC=S.accel>0?' warnb':' muted';}
+  else {fV=fmt(S.fuelHrs,0)+' h';fS='full-burn reserve · Δv '+fmt(S.deltaV,1)+' km/s — spent in bursts, coast between';}
+  // ammo
+  var aV,aS,aC='';
+  if(!S.hasAmmoWeapon){aV='—';aS='no ammo weapons';aC=' muted';}
+  else if(S.ammoMin<=0){aV='0';aS='ammo guns, no magazine';aC=' warnb';}
+  else {aV=fmt(S.ammoMin,0)+' min';aS=fmt(S.ammoCap,0)+' t ÷ '+fmt(S.ammoUse,1)+' t/min';}
+  // heat
+  var hV,hS,hC='';
+  if(S.heatGen<=0){hV='—';hS='no energy weapons';hC=' muted';}
+  else if(S.heatBalance>=0){hV='+'+fmt(S.heatBalance,0)+' MW';hS='radiators clear the heat';hC=' okb';}
+  else {hV=fmt(S.heatBalance,0)+' MW';hS='over-heats → throttles fire';hC=' warnb';}
+  el.innerHTML=g('Deployment',dV,dS,dC)+g('Maneuver fuel',fV,fS,fC)+g('Ammo',aV,aS,aC)+g('Heat margin',hV,hS,hC);
+  var w=[];
+  if((host==='ship'||host==='dreadnought')&&S.accel>0&&S.fuelStore<=0)w.push('a drive with no fuel — it can’t maneuver');
+  if(S.crew>0&&!S.selfSufficient&&S.provisions<=0)w.push('crew aboard with no food — add provisions or hydroponics');
+  if(S.hasAmmoWeapon&&S.ammoMin<=0)w.push('ammo weapons with no magazine — they fire dry');
+  if(S.heatBalance<0)w.push('energy guns out-heat the radiators — sustained fire throttles');
+  note.innerHTML=w.length?('⚠ '+w.join(' · ')):'Two different clocks. <b>Deployment</b> is how long it stays on station — reactor fuel + food, burning whether it moves or not. <b>Maneuver fuel</b> is a Δv reserve spent in bursts, then coast (a patrol ship isn’t under thrust the whole time). Ammo + heat cap the fight itself.';
+}
+
+/* ---------- render: weapon profiles (the hero) ---------- */
+function renderWeapons(S){
+  var el=document.getElementById('weapons');
+  var W=S.A.filter(function(c){return c.weapon;});
+  if(!W.length){el.innerHTML='<p class="note" style="color:var(--ink3)">No weapons mounted. Add one and switch the host to see its profile re-wire.</p>';
+    document.getElementById('wpsub').textContent='the host split, live';return;}
+  document.getElementById('wpsub').textContent=host+' resolver';
+  var html='';
+  W.forEach(function(c){
+    var w=c.weapon,n=counts[c.id];
+    // field states per host — the verified split
+    function fld(label,val,state){
+      // state: 'live' | 'inert' | 'shiponly'
+      var cls=state==='inert'?'f inert':(state==='shiponly'?'f shiponly':'f live');
+      var tag=state==='inert'?'inert':(state==='shiponly'?'ship':'live');
+      return '<div class="'+cls+'"><span class="state">'+tag+'</span><i>'+label+'</i><b>'+val+'</b></div>';
+    }
+    var groundOnly = (host==='ground')?'live':'inert';
+    var pdState = w.pd || w.delivery==='Guided' ? ((host==='ship'||host==='dreadnought')?'shiponly':'inert') : null;
+    var g='';
+    var powered=(w.nature==='Energy'||w.nature==='Exotic');
+    g+=fld('damage/s',fmt(w.dps*n,1)+' MJ/s','live');
+    if(powered)g+=fld('grid draw',fmt(w.dps*n,1)+' MW','live'); // engine-exact: draw = damage
+    g+=fld('nature',w.nature,'live');
+    g+=fld('range',w.range+' km','live');
+    g+=fld('velocity',fmt(w.vel,0),'live');
+    g+=fld('tracking',(w.track*100).toFixed(0)+'%','live');
+    g+=fld('saturation',fmt(w.rate*n,0)+'/s','live');
+    g+=fld('penetration',w.pen,groundOnly);
+    g+=fld('per-shot',fmtE(w.pershot*1e6),groundOnly);
+    if(w.delivery==='Guided') g+=fld('PD-answerable',w.pd||w.delivery==='Guided'?'yes':'no',pdState);
+    // runs-on (nature-decided, verified): energy/exotic beams draw the grid; kinetic/explosive draw ammo
+    var runs=powered?'power':'ammo';
+    g+=fld('runs on',runs,'live');
+    html+='<div class="wp"><div class="wphd"><span class="wpn">'+c.name+'</span>'+
+      '<span class="wpc">×'+n+' · '+w.delivery+'</span></div><div class="wpgrid">'+g+'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+/* ---------- the material bill (shared by cost + resources) ---------- */
+function materialBill(S){
+  var m={};
+  function add(k,v){if(v)m[k]=(m[k]||0)+v;}
+  S.A.forEach(function(c){var n=counts[c.id];if(!c.cost)return;
+    add('stainless-steel',(c.cost.steel||0)*n);
+    add('electronics',(c.cost.elec||0)*n);
+    add('fissile-fuels',(c.cost.fissile||0)*n);
+    if(c.cost.mats)Object.keys(c.cost.mats).forEach(function(k){add(k,c.cost.mats[k]*n);});
+  });
+  var arr=Object.keys(m).map(function(k){return {name:k,t:m[k]};}).sort(function(a,b){return b.t-a.t;});
+  var total=arr.reduce(function(s,x){return s+x.t;},0);
+  return {arr:arr,total:total};
+}
+
+/* ---------- render: cost surface ---------- */
+function renderCost(S){
+  var el=document.getElementById('cost');
+  var bp=0,cr=0,rp=0;
+  S.A.forEach(function(c){var n=counts[c.id];if(c.cost){bp+=(c.cost.bp||0)*n;cr+=(c.cost.cr||0)*n;rp=Math.max(rp,c.cost.rp||0);}});
+  var bill=materialBill(S);
+  el.innerHTML=
+    '<div class="gauge'+(bp?'':' muted')+'"><i>Build points</i><b>'+fmt(bp)+'</b><s>factory-hours</s></div>'+
+    '<div class="gauge'+(cr?'':' muted')+'"><i>Credits</i><b>'+fmt(cr)+'k</b><s>to construct</s></div>'+
+    '<div class="gauge'+(rp?'':' muted')+'"><i>Tech tier</i><b>'+(rp||'—')+'</b><s>highest RP gate</s></div>'+
+    '<div class="gauge'+(bill.total?'':' muted')+'"><i>Materials</i><b>'+fmt(bill.total)+'t</b><s>'+bill.arr.length+' types (below)</s></div>';
+}
+
+/* ---------- render: RUN cost surface — the ongoing bill, a Σ over the mounted parts (Capitol-world doc §8) ----------
+   The twin of the build cost above: power draw · jobs · food · upkeep. Each badged LIVE (the engine charges it today)
+   or PENDING (the per-component dial exists but its producer/coefficient isn't wired). This is "what you mount is what
+   you pay," made honest — the four run-loops of the surface economy, per entity. */
+function renderRunCost(S){
+  var el=document.getElementById('runcost');var note=document.getElementById('runNote');
+  var UPKEEP_PER_T=0.1;                    // ground-unit rate: UpkeepCredits = Mass × 0.1 /month (FLAGGED)
+  var upkeepMo=S.mass*UPKEEP_PER_T;
+  var jobs=Math.max(0,S.crew);
+  var live='<span class="mk" style="border-color:var(--ok);color:var(--ok)">live</span>';
+  var pend='<span class="mk pend">pending</span>';
+  var part='<span class="mk pend">partial</span>';
+  var pShort=S.draw>S.supply;
+  // POWER — energy-weapon + warp draw is engine-LIVE; a generic component's draw is the C12 gap (modeled here; the
+  // engine reads 0 for non-weapon parts). JOBS = Σ CrewReq (live as crew; pending as an employment→morale producer,
+  // backlog #2). FOOD — the per-entity provisions loop is modeled; the COLONY per-capita coefficient is 0 (pending).
+  // UPKEEP — a ground unit bills mass×0.1/mo today; ships/installations are pending (the number is "what it would cost").
+  el.innerHTML=
+    '<div class="gauge'+(S.draw?'':' muted')+'"><i>Power draw</i><b>'+fmt(S.draw)+' MW</b><s>'+
+      (S.draw?(pShort?('short '+fmt(S.draw-S.supply)+' MW'):(fmt(S.supply-S.draw)+' MW spare')):'no powered parts')+' · '+live+' guns / '+pend+' C12</s></div>'+
+    '<div class="gauge'+(jobs?'':' muted')+'"><i>Jobs / crew</i><b>'+fmt(jobs)+'</b><s>watchstanders · '+live+' as crew, '+pend+' as morale (#2)</s></div>'+
+    '<div class="gauge'+(S.crew>0?'':' muted')+'"><i>Food / day</i><b>'+(S.selfSufficient?'closed loop':fmt(S.foodNet)+' cd')+'</b><s>'+
+      (S.crew>0?(S.selfSufficient?'homegrown ≥ crew':fmt(S.foodProd)+' grown vs '+fmt(S.crew)+' eaten')+' · '+part:'no crew')+'</s></div>'+
+    '<div class="gauge'+(upkeepMo?'':' muted')+'"><i>Upkeep / mo</i><b>'+fmt(upkeepMo)+' cr</b><s>'+
+      (host==='ground'?('mass × 0.1 · '+live):('mass × 0.1 · '+pend+' off-ground'))+'</s></div>';
+  note.innerHTML='The <b>RUN</b> bill — what this costs every tick it exists, the twin of the <b>build</b> bill above. '+
+    'Each line is a <b>Σ over the mounted parts</b>: what you mount is what you pay. '+
+    '<span class="mk" style="border-color:var(--ok);color:var(--ok)">live</span> = the engine charges it today · '+
+    '<span class="mk pend">pending</span> = the per-component dial exists but its producer/coefficient isn’t wired yet '+
+    '(jobs→employment = backlog #2 · per-capita food = 0 · generic power draw = C12 · off-ground upkeep). '+
+    'Build each to the shape the infrastructure grid already proves works — <b>dial → colony Σ → a reader that bites</b>. '+
+    'Detail: <span class="mono">docs/economy/CAPITOL-WORLD-INFRASTRUCTURE-2026-08-06.md §8</span>.';
+}
+
+/* ---------- render: resource bill (the materials — cradle rung) ---------- */
+function renderResources(S){
+  var el=document.getElementById('resources');var note=document.getElementById('resNote');
+  var bill=materialBill(S);
+  if(!bill.arr.length){el.innerHTML='<p class="note" style="color:var(--ink3)">Nothing mounted — no materials required.</p>';note.innerHTML='';return;}
+  el.innerHTML=bill.arr.map(function(x){
+    return '<div class="gauge"><i>'+x.name+'</i><b>'+fmt(x.t)+'t</b><s>'+(bill.total?(x.t/bill.total*100).toFixed(0):0)+'% of bill</s></div>';
+  }).join('');
+  note.innerHTML='Every line is a <b>refined</b> material that mines back to raw ore — '+
+    '<b>stainless-steel</b> ← iron + chromium · <b>electronics</b> ← copper + silicon + plastic · '+
+    '<b>fissile-fuels</b> ← fissionables · <b>tungsten-plating</b> ← tungsten. '+
+    'Verified provided end-to-end in the inputs check (05) + resource ledger (03).';
+}
+
+/* ---------- render: engagement ranges (the war-range ruler) ---------- */
+function renderRanges(S){
+  var el=document.getElementById('ranges');
+  var W=S.A.filter(function(c){return c.weapon;});
+  if(!W.length){el.innerHTML='<p class="note" style="color:var(--ink3)">No weapons mounted — no engagement envelope.</p>';return;}
+  var rows=W.map(function(c){return {name:c.name,nature:c.weapon.nature,range:c.weapon.range};})
+            .sort(function(a,b){return b.range-a.range;});
+  var maxR=rows[0].range;
+  var maxScale=Math.max(maxR,S.detect||0);
+  var nice=(function(v){var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var f=v/p;var n=f<=1?1:f<=2?2:f<=5?5:10;return n*p;})(maxScale);
+  var bars=rows.map(function(r){
+    var w=clamp(r.range/nice*100,0,100);
+    var nm=r.name.replace('Battery','').replace('Launcher','').replace('Projector','').replace('Cannon','').trim();
+    return '<div class="rngrow"><span class="rn">'+nm+' <em>'+r.nature.toLowerCase()+'</em></span>'+
+      '<div class="rngtrack"><div class="rngbar" style="width:'+w+'%"></div></div>'+
+      '<span class="rngv">'+fmt(r.range)+' km</span></div>';
+  }).join('');
+  // detection overlay
+  var det='';
+  if(S.detect>0){
+    var dw=clamp(S.detect/nice*100,0,100);
+    det='<div class="rngrow detrow"><span class="rn">Detection <em>sensors</em></span>'+
+      '<div class="rngtrack"><div class="rngbar det" style="width:'+dw+'%"></div></div>'+
+      '<span class="rngv">'+fmt(S.detect)+' km</span></div>';
+  }
+  var ticks='<div class="rngscale"><span class="rngcap">◄ hull</span><span class="rngticks">'+
+    '<span>0</span><span>'+fmt(nice/4)+'</span><span>'+fmt(nice/2)+'</span><span>'+fmt(nice*3/4)+'</span><span>'+fmt(nice)+' km</span></span></div>';
+  var detNote;
+  if(S.detect<=0){detNote='<b style="color:var(--warn)">⚠ No sensors — you fire blind.</b> Add a Sensor Array to set how far you can actually target.';}
+  else if(S.detect<maxR){detNote='<b style="color:var(--warn)">⚠ Your longest gun reaches '+fmt(maxR)+' km but sensors see only '+fmt(S.detect)+' km</b> — you can’t target the far edge of your own range. Add sensors, or don’t pay for that reach.';}
+  else {detNote='Sensors ('+fmt(S.detect)+' km) reach past every gun — you spot targets before they’re in range and <b style="color:var(--ink2)">shoot first</b>. That grey bar is the real engagement edge.';}
+  el.innerHTML='<div class="rng">'+bars+det+'</div>'+ticks+
+    '<p class="note" style="margin:11px 0 0;color:var(--ink3)">Each bar starts at the hull (0) and reaches that weapon’s max range; the grey <b style="color:var(--ink2)">Detection</b> bar is how far you can see. '+detNote+' Real km — hexes are only a display ruler.</p>';
+}
+
+/* ---------- render: handoff object ---------- */
+function renderHandoff(S){
+  var el=document.getElementById('handoff');
+  var W=S.A.filter(function(c){return c.weapon;});
+  var wlines=W.map(function(c){var w=c.weapon,n=counts[c.id];
+    return '    <span class="c">{</span> dps:<span class="v">'+fmt(w.dps*n,0)+'</span>, nature:<span class="v">"'+w.nature+'"</span>, pen:<span class="v">'+w.pen+'</span>, delivery:<span class="v">"'+w.delivery+'"</span> <span class="c">}</span>  <span class="c">// '+c.name+' ×'+n+'</span>';
+  }).join('\n');
+  if(!wlines)wlines='    <span class="c">(none)</span>';
+  el.innerHTML=
+    '<span class="c">// what ShipCombatValueDB.Calculate() emits for a '+S.H.name+' — Firepower MJ/s, shields J:</span>\n'+
+    '<span class="k">Firepower</span>       = <span class="v">'+fmt(S.firepower,1)+'</span>\n'+
+    '<span class="k">Toughness</span>       = <span class="v">'+fmt(S.toughness,0)+'</span>\n'+
+    '<span class="k">Evasion</span>         = <span class="v">'+S.evasion.toFixed(2)+'</span>\n'+
+    '<span class="k">RoleWeight</span>      = <span class="v">'+S.roleWeight.toFixed(2)+'</span>\n'+
+    '<span class="k">ShieldCapacity_J</span>= <span class="v">'+fmt(S.shieldCap,0)+'</span>\n'+
+    '<span class="k">ShieldRegen_Jps</span> = <span class="v">'+fmt(S.shieldRegen,0)+'</span>\n'+
+    '<span class="k">Weapons</span>         = [\n'+wlines+'\n]';
+}
+
+/* ---------- split prose ---------- */
+function renderSplit(){
+  var p=document.getElementById('splitProse');
+  var msg={
+    ship:'<b>On a warship,</b> a weapon\'s penetration, per-shot energy and rate are <b>struck through — inert.</b> The ship resolver folds all armour into one Toughness pool and never runs the shot-by-shot armour math, so those three numbers write to nothing here. Missiles, though, become interceptable — point-defence is a ship-only reader.',
+    ground:'<b>On a ground unit,</b> those same three numbers come <b>alive</b> — penetration cancels the enemy\'s plating point-for-point, because the ground resolver soaks armour shot-by-shot. But there\'s no missile-intercept step, so "PD-answerable" goes quiet. Same components, different live wires.',
+    station:'<b>On a station,</b> it fights like a ship (armour → Toughness) but never moves — Evasion is pinned at zero. Its value is structure and firepower, not dodging.'
+  };
+  p.innerHTML='🔑 '+msg[host];
+}
+
+/* ---------- master render ---------- */
+function renderAll(){
+  renderHosts();renderPresets();renderRoster();
+  var S=compute();
+  renderBudgets(S);renderGates(S);renderGauges(S);renderMobility(S);renderEndurance(S);renderWeapons(S);renderRanges(S);renderCost(S);renderRunCost(S);renderResources(S);renderHandoff(S);renderSplit();
+}
+
+/* open on the Acclamator preset — the newest build. (activePreset defaults to 'acclamator'.) */
+(function(){var v=PRESETS.find(function(p){return p.id==='acclamator';});
+  if(v){host=v.host;Object.keys(v.counts).forEach(function(k){if(counts.hasOwnProperty(k))counts[k]=v.counts[k];});}})();
+renderAll();
+})();
+</script>
+</body>
+</html>

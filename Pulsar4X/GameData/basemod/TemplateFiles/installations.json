@@ -3220,6 +3220,49 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "environmental-hardening",
+      "Name": "Environmental Hardening",
+      "Formulas": {
+        "Description": "Thermal + corrosion hardening — ablative heat shielding, cryo insulation, and corrosion-resistant plating — that lets a ground unit fight on a world that would cook, freeze, or dissolve even a SEALED one: a scorching/freezing surface (fire tornadoes, cryostorms) or a corrosive superstorm. The seal is the price of admission to a vacuum/toxic world; this is the price of admission to a burning/freezing/corrosive one. Mount it in the unit designer and the whole unit stops bleeding on those worlds. One dial covers both thermal (fire AND cryo) and corrosive attrition. Hardening fraction + cost curve are FLAGGED balance values.",
+        "Mass": "40 * (1 + PropertyValue('Hardening') * 1.5)",
+        "Volume": "[Mass] * 0.01",
+        "HTK": "1.0",
+        "CrewReq": "0",
+        "ResearchCost": "[Mass] * 2",
+        "CreditCost": "[Mass] * 0.5",
+        "BuildPointCost": "[Mass] * 4"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3"
+      },
+      "ComponentType": "Augment",
+      "MountType": "GroundUnit",
+      "CargoTypeID": "None",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Hardening",
+          "DescriptionFormula": "'Hardening: the fraction of thermal (fire/cryo) + corrosive attrition this shell negates (1.0 = fully hardened, immune to both, 0.5 = a partial shell). Higher = dearer to field.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.9"
+        },
+        {
+          "Name": "environmentalHardeningArgs",
+          "DescriptionFormula": "'atb args'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Hardening'))",
+          "AttributeType": "Pulsar4X.GroundCombat.GroundHardeningAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "swarm-frame",
       "Name": "Swarmling Frame",
       "Formulas": {

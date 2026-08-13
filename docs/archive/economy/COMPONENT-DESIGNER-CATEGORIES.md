@@ -1,10 +1,14 @@
+> # 🗄 ARCHIVED 2026-08-03 — SUPERSEDED DESIGNER DIAL SPEC
+>
+> **The DESIGN model here — the old "11 categories / 37 doors" dial-by-dial spec — is SUPERSEDED.** The canonical component designers are the **12 door HTMLs** (`docs/Actual HTMLs Of designers/`) + **`docs/economy/DESIGNER-NORTH-STAR.md`**, which COLLAPSES the 37 doors / 41 dial-groups down to a few choices + sliders per category (worked end-to-end for Weapons: 5 doors + 41 dials → 2 choices + 4 sliders). Do NOT design from the 37-door model here. Locked developer decisions live in `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md`.
+
 # The Universal Component Designer — Categories, Doors & Dials
 
 **As of:** 2026-07-09 · branch `claude/sol-playtest-earth-map-8r59j6` · **status: DESIGN-LOCKED — all 11 categories / 37 doors locked, stress-tested, holes catalogued + dispositioned, and WIRING-READY.**
 
-> **Consolidated 2026-07-13 from:** `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` + `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md`. The full unit-by-unit stress-test build, the shared-effect-bus insight, and the tier-by-cost hole-plugging catalogue that used to live in the companion `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` are now folded in below as **"Appendix: Franchise Stress-Test & Hole Resolutions."** §4/§5 remain the executive summary; the appendix is the full detail.
+> **Consolidated 2026-07-13 from:** `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` + `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md`. The full unit-by-unit stress-test build, the shared-effect-bus insight, and the tier-by-cost hole-plugging catalogue that used to live in the companion `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` are now folded in below as **"Appendix: Franchise Stress-Test & Hole Resolutions."** §4/§5 remain the executive summary; the appendix is the full detail.
 
-> **⚙ WIRING-READY (2026-07-09).** This doc is the **map** (the 11 categories, the boundary, the stress test, the holes). The **wiring reference for each category is its self-contained ⚙ Wiring Dossier** in `docs/economy/COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — dials → engine-wire (file:line) → resolver insertion → dead stubs → §0g stamp, all verified against the live engine. **To wire a category, read its dossier; read this doc for the boundary rules and the hole it owns.** Together, these two docs are the only reference needed to wire — every external source (the resolver anatomy, the five merged strategic docs) has been transferred, translated, and folded into the dossiers.
+> **⚙ WIRING-READY (2026-07-09).** This doc is the **map** (the 11 categories, the boundary, the stress test, the holes). The **wiring reference for each category is its self-contained ⚙ Wiring Dossier** in `docs/archive/economy/COMPONENT-DESIGNER-DIALS.md` (`⚙ 1`…`⚙ 11`) — dials → engine-wire (file:line) → resolver insertion → dead stubs → §0g stamp, all verified against the live engine. **To wire a category, read its dossier; read this doc for the boundary rules and the hole it owns.** Together, these two docs are the only reference needed to wire — every external source (the resolver anatomy, the five merged strategic docs) has been transferred, translated, and folded into the dossiers.
 
 > The decision doc for collapsing Pulsar's **67 hand-authored component templates** into **11 parametric designer categories**. Supersedes the "author a new template per thing" model and the "reconcile the two parallel (space/ground) systems" plan (`WEAPON-UNIFICATION-DESIGN.md`, deleted). The current-state evidence this replaces is `docs/archive/DESIGNER-AUDIT-2026-07-08/`. The governing principle is `docs/economy/UNIVERSAL-ASSEMBLY-DESIGN.md`.
 
@@ -66,7 +70,7 @@ The designer makes **gear**. It does **not** make the *being* that uses it. Inna
 
 ## 4. Stress test — 12 iconic units across three franchises
 
-Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5). **Full door-by-door build of every unit + the detailed hole-plugging analysis is in the companion `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md`.**
+Each unit was "built" through the designer to find where it strains. ✅ = maps cleanly. ⚠ = exposes a hole (catalogued in §5). **Full door-by-door build of every unit + the detailed hole-plugging analysis is in the companion `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md`.**
 
 ### Star Trek
 1. **Galaxy-class *Enterprise*** — Chassis ▸ Hull (large) · Propulsion ▸ Warp + Reaction (impulse) · Weapons ▸ Energy (phasers) + Guided (photon torpedoes) · Defense ▸ Shields · Sensors ▸ Detection + Survey (science ship) · Civic ▸ Habitation + Development (families + labs aboard). ✅ mostly — but **saucer separation** ⚠H5 (one chassis → two operational ships) and the **transporter** ⚠H1 (beam matter/people point-to-point) have no home.
@@ -110,7 +114,7 @@ Ranked by how often they recurred across franchises and how load-bearing they ar
 | **H12** | **Exotic power source** — effectively unlimited / no-fuel | Asgard, advanced tech | likely just a **Power ▸ Generation source dial** (very high output, no fuel). Validates Power. | LOW |
 
 ### Hole disposition (2026-07-09) — where each hole now lives, per the ⚙ Wiring Dossiers
-Every hole now has a named home + status in a category dossier (`docs/economy/COMPONENT-DESIGNER-DIALS.md`):
+Every hole now has a named home + status in a category dossier (`docs/archive/economy/COMPONENT-DESIGNER-DIALS.md`):
 - **H1** teleport → Logistical ▸ Transfer teleport-mode *(open; home named — dossier ⚙ 8)*.
 - **H2** adaptive/self-repair → Defense adaptation dial + Enhancers self-repair regen *(both blocked on the parked per-component degraded-condition model — ⚙ 5 / ⚙ 6)*.
 - **H3** self-replication/mobile-fab → Industrial: mobile-fabrication = a cheap universal-mount *(home Industrial ⚙ 7)*; self-replication deferred.
@@ -146,7 +150,7 @@ This doc locks the **categories**; the design is complete and **wiring-ready** (
 
 # Appendix: Franchise Stress-Test & Hole Resolutions
 
-**Folded in 2026-07-13 from `docs/economy/COMPONENT-DESIGNER-CATEGORIES.md` (as of 2026-07-08).** This is the full unit-by-unit build behind the §4 summary, plus the effect-bus insight and the tier-by-cost plug catalogue behind the §5 hole table.
+**Folded in 2026-07-13 from `docs/archive/economy/COMPONENT-DESIGNER-CATEGORIES.md` (as of 2026-07-08).** This is the full unit-by-unit build behind the §4 summary, plus the effect-bus insight and the tier-by-cost plug catalogue behind the §5 hole table.
 
 **Headline:** ~80% of every franchise falls straight out of the doors+dials. Of the 12 holes, **11 plug with a dial/mode on an existing door or by reusing an engine system Pulsar already has** (jump points, capture, doctrine-switch, shield-regen, the crew-supply gate, units-as-entities). Only a few need a genuinely new mechanic — and the deepest one (H4) is a *boundary decision*, not a new parallel system. The categorization holds.
 

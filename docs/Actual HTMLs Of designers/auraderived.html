@@ -1,0 +1,397 @@
+<meta charset="utf-8">
+<title>Projected Effects, derived — the one thing a unit does to OTHER units, and the engine pass it needs</title>
+<style>
+:root{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+@media(prefers-color-scheme:dark){:root{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}}
+:root[data-theme=dark]{--bg:#101317;--card:#171B21;--card2:#1D222A;--ink:#DEE2E7;--ink2:#9AA5B1;--ink3:#6D7883;
+--rule:#2A313A;--rule2:#232931;--ac:#3FB3BD;--ac2:#6FD3DB;--warn:#C9A24A;--flag:#D2776C;
+--sh:0 1px 2px rgba(0,0,0,.4),0 3px 14px rgba(0,0,0,.28)}
+:root[data-theme=light]{--bg:#E9EBEE;--card:#FDFDFE;--card2:#F3F5F8;--ink:#171A1E;--ink2:#4A535D;--ink3:#78838E;
+--rule:#C7CDD4;--rule2:#DFE4E9;--ac:#0E7C86;--ac2:#0A5C64;--warn:#8A6A1F;--flag:#8E3B33;
+--sh:0 1px 2px rgba(16,24,32,.05),0 3px 12px rgba(16,24,32,.045)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.m,.id,.n,.on,.val,.lbl,h4,.chip,.num b,.tag{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace}
+.w{max-width:920px;margin:0 auto;padding:0 15px}
+h1{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.025em;font-weight:760;text-wrap:balance}
+h2{margin:0 0 3px;font-size:19px;letter-spacing:-.018em}
+.eyebrow{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--ac2);margin:0 0 11px}
+.lead{margin:11px 0 0;font-size:15px;color:var(--ink2)}.lead b{color:var(--ink);font-weight:640}
+sec,section{display:block}
+.top{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0 22px}
+.band{padding:26px 0;border-bottom:1px solid var(--rule2)}
+.band.alt{background:var(--card)}
+.sub{margin:3px 0 15px;font-size:13.5px;color:var(--ink3)}
+
+.build{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--sh);overflow:hidden}
+.bsec{padding:13px;border-bottom:1px solid var(--rule2)}
+.blab{font:10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:7px 11px;border:1px solid var(--rule);border-radius:3px;background:var(--card2);
+ color:var(--ink2);cursor:pointer;flex:1 1 auto;text-align:center;min-width:70px}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff}
+:root[data-theme=dark] .chip[aria-pressed=true],
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#0B1013}}
+.chip:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.sl{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sl:last-child{margin-bottom:0}
+.slh{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+.slh span:last-child{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ac2)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px;margin:0}
+.ends{display:flex;justify-content:space-between;font:10px/1 ui-monospace,Menlo,monospace;color:var(--ink3);letter-spacing:.05em}
+.out{background:var(--card2);padding:13px}
+.oname{font-size:20px;font-weight:730;letter-spacing:-.02em;margin:0 0 2px}
+.odesc{margin:0 0 12px;font-size:12.5px;color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.num{background:var(--card);padding:7px 9px}
+.num i{display:block;font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.num b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.num.set b{color:var(--ac2)}
+.num.fixed b{color:var(--ink2)}
+
+.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:0}
+.t th{text-align:left;font:10px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--ink3);padding:0 8px 6px 0;font-weight:400;vertical-align:bottom}
+.t td{padding:7px 8px 7px 0;border-top:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.t td:first-child{color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.t s{display:block;text-decoration:none;font-size:11px;color:var(--ink3);margin-top:2px}
+.t b.g{color:var(--ac2)} .t b.a{color:var(--warn)} .t b.r{color:var(--flag)}
+
+.kill{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:9px}
+.kill h4{margin:0 0 5px;font-size:13.5px;font-family:inherit}
+.kill p{margin:0;font-size:13px;color:var(--ink2)}.kill b{color:var(--ink)}
+
+.mu{border-top:1px solid var(--rule2);margin-top:13px}
+.muN{margin:0 0 8px;font-size:11.5px;color:var(--ink3)}
+.mus{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule2);border:1px solid var(--rule2);border-radius:3px;overflow:hidden}
+.mt{background:var(--card);padding:8px 9px}
+.mt i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mt b{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-variant-numeric:tabular-nums;line-height:1.25}
+.mt s{display:block;text-decoration:none;font-size:10.5px;color:var(--ink3);margin-top:1px}
+.mt.g b{color:var(--ac2)} .mt.a b{color:var(--warn)} .mt.r b{color:var(--flag)}
+@media(min-width:700px){.mus{grid-template-columns:repeat(4,1fr)}}
+
+.lay{border:1px solid var(--rule);border-radius:4px;background:var(--card);padding:12px 14px;margin-bottom:8px}
+.lay.door{border-left:3px solid var(--ac)} .lay.read{border-left:3px solid var(--warn)}
+.lay h4{margin:0 0 4px;font-size:14px;font-family:inherit;display:flex;gap:9px;align-items:baseline}
+.lay h4 em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-left:auto}
+.lay p{margin:0;font-size:13px;color:var(--ink2)}.lay b{color:var(--ink)}
+
+.dname{font:600 17px/1.25 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:-.01em;margin:0 0 3px;color:var(--ac)}
+.dnsub{font-size:11.5px;color:var(--ink3);margin:0 0 13px;padding-bottom:11px;border-bottom:1px solid var(--rule2)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--card2);border:1px solid var(--rule2);border-radius:3px;padding:0 3px}
+.warnbox{border:1px solid var(--rule);border-left:3px solid var(--flag);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.warnbox b{color:var(--ink)}
+.okbox{border:1px solid var(--rule);border-left:3px solid var(--ac);border-radius:4px;background:var(--card);padding:10px 12px;margin-top:11px;font-size:12.5px;color:var(--ink2)}
+.okbox b{color:var(--ink)}
+.mk{display:inline-block;font-style:normal;font-size:9px;letter-spacing:.06em;font-weight:700;
+ text-transform:uppercase;padding:2px 5px;border-radius:4px;margin-left:7px;vertical-align:2px;
+ border:1px solid var(--rule);color:var(--ink3);background:var(--card)}
+.mk.set{border-color:var(--ac);color:var(--ac2)}
+.mk.calc{border-color:var(--rule);color:var(--ink3)}
+.mk.sim{border-color:#3f9a55;color:#3f9a55}
+.mk.pend{border-color:var(--warn);color:var(--warn)}
+.mk.read{border-color:var(--warn);color:var(--warn)}
+.legend{margin-top:14px;padding:11px 13px;border:1px solid var(--rule);border-radius:9px;background:var(--card2);font-size:12.5px;line-height:1.6;color:var(--ink2)}
+.legend h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.legend dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.legend dt{font-weight:600;color:var(--ink);white-space:nowrap}.legend dd{margin:0}
+footer{padding:24px 0 50px}
+.state{border:1px solid var(--rule);border-left:3px solid var(--warn);border-radius:4px;background:var(--card);padding:14px 16px}
+.state h3{margin:0 0 6px;font-size:14px}.state p{margin:0 0 8px;font-size:13px;color:var(--ink2)}.state p:last-child{margin:0}
+.state b{color:var(--ink)}
+@media(min-width:700px){.w{padding:0 24px}h1{font-size:38px}h2{font-size:22px}.nums{grid-template-columns:repeat(5,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="top"><div class="w">
+<p class="eyebrow">Pulsar4X · component designer · a PROPOSED new door — projected effects</p>
+<h1>Every other door changes the unit that carries it. This one changes the units around it.</h1>
+<p class="lead">An <b>aura</b> is the one capability that does not fit any door built so far. Weapons, Defense, Enhancers, Propulsion — all of them act on the <b>unit that mounts them</b>. A rally banner, a dread presence, a command net, a jamming bubble, a projected shield — each reaches <b>OUTWARD</b>, changing OTHER units inside a radius. That single difference — <em>it acts on someone else</em> — is why it earns its own door and cannot be an Enhancer.</p>
+<p class="lead" style="margin-top:10px">🔑 <b>The honest headline first, because it governs everything below: this door is a SPEC, not a live designer.</b> The engine has <b>no aura pass</b> — no code that, each tick, walks a unit's neighbours, filters them by friend-or-foe, and applies an effect. Four of the five effects also write a variable that <b>does not exist yet</b> (there is still no morale field — the same wall the <b>Steadiness / fury</b> enhancer hit). So the panel below shows you <em>the shape the engine must build</em>, every readout marked <b>ENGINE-PENDING</b>, so nobody ships an aura button that does nothing.</p>
+</div></div>
+
+<section class="band"><div class="w">
+<h2>Why it is a door, not an Enhancer — the one-line test</h2>
+<p class="sub">The Enhancers door has a written thesis: <em>"an enhancer is a scalar multiplier on a stat the unit already has."</em> An aura fails that test on the word <b>OTHER</b>.</p>
+<div class="lay read"><h4>An Enhancer<em>acts on SELF</em></h4><p>Power armour raises <b>this</b> unit's carry. A reflex booster raises <b>this</b> unit's evasion. The number it writes lands on the sheet of the part's own host. <b>You can set it knowing only the unit.</b></p></div>
+<div class="lay door"><h4>An Aura<em>acts on OTHERS</em></h4><p>A rally beacon raises the morale of <b>every friendly unit within range</b>. It writes nothing on its own host's combat sheet — its whole output is a field that lands on <b>someone else</b>. There is no "stat it already has" to multiply, because the target is not itself. That is a different verb, so it is a different door.</p></div>
+<p class="sub" style="margin-top:11px">🔒 <b>The intrinsic test still passes for the DIALS.</b> How strong the field is, how far it reaches, and who it targets are all settable <b>knowing only the projector component</b> — so strength, radius and target are legitimate designer dials, not assembly decisions. What is <em>not</em> a dial is <b>how many units it actually hits</b>: that depends on who is standing in the radius when it fires, which is a battlefield fact, not a property of the part. So that number is an <b>emergent readout</b>, shown but never set.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The designer — build one projected effect</h2>
+<p class="sub">The forced choice picks <b>what the field projects</b>, and therefore which variable it would write on the units it reaches. The second choice picks <b>who it lands on</b>. Two sliders shape it. Every consumer row states, honestly, whether the engine can read the number today — and for this door the answer is almost always <b>not yet</b>.</p>
+<div class="build">
+
+<div class="bsec"><p class="blab">The forced choice — what does the field project?</p>
+<div class="chips">
+<button class="chip echip" type="button" data-e="rally" aria-pressed="true">Rally — steady friends</button>
+<button class="chip echip" type="button" data-e="fear" aria-pressed="false">Dread — break foes</button>
+<button class="chip echip" type="button" data-e="command" aria-pressed="false">Command — quicken friends</button>
+<button class="chip echip" type="button" data-e="jamming" aria-pressed="false">Jamming — blind foes</button>
+<button class="chip echip" type="button" data-e="ward" aria-pressed="false">Ward — shield friends</button>
+</div>
+<p class="sub" id="enote" style="margin:9px 0 0"></p></div>
+
+<div class="bsec"><p class="blab">The second choice — who does it land on?</p>
+<div class="chips">
+<button class="chip tchip" type="button" data-t="friends" aria-pressed="true">Friendly units</button>
+<button class="chip tchip" type="button" data-t="foes" aria-pressed="false">Enemy units</button>
+<button class="chip tchip" type="button" data-t="all" aria-pressed="false">Everyone in range</button>
+</div>
+<p class="sub" style="margin:9px 0 0">Filtered by <b>IFF</b> — the identify-friend-or-foe flag every unit already carries for targeting. Each effect opens on its natural side (rally→friends, dread→foes) but the target is <b>yours to set</b>, because it is a property of the emitter.</p></div>
+
+<div class="bsec">
+<p class="blab">The two dials — strength, then reach</p>
+<div class="sl"><div class="slh"><span id="n_str">Strength — how hard it pushes</span><span id="s_str"></span></div><input type="range" id="str" min="0" max="100" value="45" aria-label="Field strength"><div class="ends"><span id="e_str0">faint</span><span id="e_str1">potent</span></div></div>
+<div class="sl"><div class="slh"><span>Radius — how far it reaches</span><span id="s_rad"></span></div><input type="range" id="rad" min="0" max="100" value="40" aria-label="Field radius"><div class="ends"><span>50 m — close</span><span>5,000 m — grand</span></div></div>
+<p class="sub" style="margin:6px 0 0"><b>Strength is paid in mass and power; radius is paid harder</b> — area grows with the <em>square</em> of reach, so doubling the radius quadruples what the projector must drive. A wide faint field and a tight potent one are two honest ends of the same budget.</p>
+</div>
+
+<div class="out">
+<p class="dname" id="v_name">—</p><p class="dnsub" id="v_namesub"></p>
+<p class="oname" id="oname">—</p><p class="odesc" id="odesc"></p>
+<div class="nums">
+<div class="num set"><i>Strength</i><u class="mk set" id="k_a1">you set it</u><b id="v_a1"></b></div>
+<div class="num set"><i>Radius</i><u class="mk set" id="k_a2">you set it</u><b id="v_a2"></b></div>
+<div class="num set"><i>Targets</i><u class="mk set" id="k_a3">you set it</u><b id="v_a3"></b></div>
+<div class="num fixed"><i>Area covered</i><u class="mk calc" id="k_a4">computed</u><b id="v_a4"></b></div>
+<div class="num fixed"><i>Mass</i><u class="mk calc" id="k_a5">computed</u><b id="v_a5"></b></div>
+</div>
+<div class="mu">
+<p class="blab" style="margin:15px 0 3px">What it would do — and whether the engine can read it</p>
+<p class="muN">An aura needs a per-tick pass: for each emitter, find units in radius, filter by IFF, apply the effect. That pass does not exist yet, so every row below is marked for what it waits on.</p>
+<div class="mus">
+<div class="mt"><i id="l_m1">The variable it writes</i><u class="mk pend" id="k_m1">pending</u><b id="m_1"></b><s id="s_m1"></s></div>
+<div class="mt"><i id="l_m2">Its effect at strength</i><u class="mk calc" id="k_m2">computed</u><b id="m_2"></b><s id="s_m2"></s></div>
+<div class="mt"><i id="l_m3">Units affected</i><u class="mk calc" id="k_m3">emergent</u><b id="m_3"></b><s id="s_m3"></s></div>
+<div class="mt"><i id="l_m4">Can the engine read it?</i><u class="mk pend" id="k_m4">pending</u><b id="m_4"></b><s id="s_m4"></s></div>
+</div>
+</div>
+<p class="sub" id="verdict" style="margin-top:10px"></p>
+</div>
+</div>
+<div class="legend">
+<h4>How to read this panel</h4>
+<dl>
+<dt><u class="mk set">you set it</u></dt><dd>You chose it with a control above — a real designer dial.</dd>
+<dt><u class="mk calc">computed</u></dt><dd>A formula derived it from your dials.</dd>
+<dt><u class="mk calc">emergent</u></dt><dd><b>Not a dial</b> — it depends on who is standing in the radius, a battlefield fact.</dd>
+<dt><u class="mk pend">pending</u></dt><dd><b>The engine cannot read this yet</b> — either the aura pass or the target variable does not exist.</dd>
+</dl>
+<p style="margin:9px 0 0"><b>One thing to try.</b> Switch the effect from <b>Jamming</b> to <b>Rally</b> and watch the "Can the engine read it?" row change from <em>aura-pass only</em> to <em>needs a morale field too</em>. Jamming is the one effect whose <b>target variable already exists</b> — it only wants the pass; the other four want the pass <b>and</b> a variable that has not been built.</p>
+</div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>The five effects — and exactly how far each one is from real</h2>
+<p class="sub">Derived by asking, of each effect, the one question that matters: <b>which variable on the affected unit would it write, and does that variable exist?</b> That is what separates "needs one engine pass" from "needs a whole new system first."</p>
+<div class="scroll"><table class="t">
+<tr><th>Effect</th><th>Lands on</th><th>Writes</th><th>Does the target variable exist?</th><th>Distance from real</th></tr>
+<tr><td><b>Rally</b></td><td>friends</td><td>a morale / steadiness <b>bonus</b></td><td><b class="r">no — there is no morale field</b></td><td>aura pass <b>+</b> the morale state</td></tr>
+<tr><td><b>Dread</b></td><td>foes</td><td>a morale / to-hit <b>penalty</b></td><td><b class="r">no — same missing morale field</b></td><td>aura pass <b>+</b> the morale state</td></tr>
+<tr><td><b>Command</b></td><td>friends</td><td>a switch-cooldown / to-hit <b>bonus</b></td><td><b class="a">partly — <code>SwitchableAfter</code> exists, as a SELF stat</b></td><td>aura pass to apply it by <b>area</b></td></tr>
+<tr><td><b>Jamming</b></td><td>foes</td><td>a detection-range <b>penalty</b></td><td><b class="g">yes — the detection / signature system is real</b></td><td><b class="g">aura pass ONLY</b></td></tr>
+<tr><td><b>Ward</b></td><td>friends</td><td>a projected <b>shield pool</b></td><td><b class="a">partly — the shield pool exists, applied to SELF</b></td><td>aura pass to <b>project</b> it onto others</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔑 <b>This table is the build order.</b> <b>Jamming ships first</b> — it needs nothing but the pass, and it wires the aura door straight into the sensor and fog-of-war layer, which is where an ECM bubble belongs. <b>Command and Ward are next</b> — their target variables exist, they only need projecting by area. <b>Rally and Dread are last</b>, because they wait on the morale field that the Steadiness / fury enhancer is also waiting on: build that once and two doors light up together.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The one engine primitive this whole door needs — the aura pass</h2>
+<p class="sub">Every effect above waits on the same missing piece. It is small, and it is one thing.</p>
+<div class="okbox"><b>The aura pass, in plain terms:</b> once per tick, for each unit that mounts an aura projector, walk the units near it, keep the ones whose IFF matches the projector's target choice and that fall inside the radius, and add (or subtract) the effect from a named variable on each. That is the entire mechanism — <b>the same shape as a weapon's target-acquisition sweep the engine already runs</b>, except it writes a buff instead of a hit. <b>Nothing about it is exotic; it simply has not been built.</b></p>
+<p class="sub" style="margin-top:12px"><b>Two guard-rails the pass must respect, so the door does not become a "pretty" one:</b></p>
+<div class="lay door"><h4>1 &nbsp;Auras do not stack without limit<em>the balance rail</em></h4><p>Two rally beacons over the same squad must not double the morale. Take the <b>best</b> single field of each kind, not the sum — the exact rule the Defense door already uses for shields-that-take-the-best. Otherwise a stack of cheap projectors becomes free invincibility, which is the "everything is free" failure this campaign exists to delete.</p></div>
+<div class="lay door"><h4>2 &nbsp;A destroyed projector drops its field instantly<em>the grave rung</em></h4><p>The aura is a <b>component</b>. Kill the unit carrying the command uplink and every friendly unit that was quickened returns to its base speed <em>that tick</em>. That is what makes an aura projector a real target — a decapitation strike on the beacon-bearer is a genuine tactic, and the field is only as alive as the part that emits it.</p></div>
+</div></section>
+
+<section class="band"><div class="w">
+<h2>Cradle to grave — the aura is a component, so it earns the whole chain</h2>
+<p class="sub">The reason to model an aura as a component rather than a bespoke engine flag: it inherits research-gating, construction-from-materials, save/load and the design UI for free — and it can be lost. Trace it end to end.</p>
+<div class="scroll"><table class="t">
+<tr><th>Rung</th><th>For an aura projector</th></tr>
+<tr><td>mineral → material</td><td>the same mined + refined stock every component is built from — an emitter is metal and electronics, not magic</td></tr>
+<tr><td>research</td><td>a tech gates what fields you can design and how strong — a faint short rally is early, a grand command net is late</td></tr>
+<tr><td>component</td><td><b>this door</b> — pick the effect, the target, the strength and the radius; out comes a designed projector</td></tr>
+<tr><td>build → install</td><td>built at a colony from materials, installed on a unit or a building like any other component</td></tr>
+<tr><td>the decision (the lever)</td><td>which unit carries the beacon, where it stands, whether the field is on — <b>a positioning choice</b>, because the field moves with its bearer</td></tr>
+<tr><td>damaged / destroyed</td><td><b>the grave rung</b> — the projector is a component that can be shot off; when it dies the field dies with it, that tick</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>No rung is skipped.</b> An aura that were a bespoke engine flag — un-researchable, un-buildable, un-killable — would fail cradle-to-grave, the "pretty" disease in its vertical form. Modeled as a component, it is a thing you discover, build, place, and lose.</p>
+</div></section>
+
+<section class="band alt"><div class="w">
+<h2>The science-fiction cross-check — what an aura door has to be able to express</h2>
+<p class="sub">Run as a completeness test on the five effects, in generic terms — no franchise names, just the shape each one demands.</p>
+<div class="scroll"><table class="t">
+<tr><th>The battlefield thing</th><th>Lands in</th><th>Verdict</th></tr>
+<tr><td>A banner or leader that keeps a line from routing</td><td><b>Rally</b> (friends, +morale)</td><td><b class="g">✅ the archetypal friendly aura</b></td></tr>
+<tr><td>A presence that makes the enemy break and run</td><td><b>Dread</b> (foes, −morale)</td><td><b class="g">✅ the mirror of rally</b></td></tr>
+<tr><td>A command net that lets a formation react as one</td><td><b>Command</b> (friends, −cooldown / +to-hit)</td><td><b class="g">✅ and it pays off the doctrine-switch lever</b></td></tr>
+<tr><td>An ECM bubble that blinds everything hostile near it</td><td><b>Jamming</b> (foes, −detection)</td><td><b class="g">✅ the one that ships first — the variable exists</b></td></tr>
+<tr><td>A projected barrier that shields a whole squad</td><td><b>Ward</b> (friends, +shield pool)</td><td><b class="g">✅ the shield door, pointed outward</b></td></tr>
+<tr><td>A healing / repair field</td><td><em>would write the same "damaged-but-alive" state self-repair needs</em></td><td>⚠ <b>HELD BACK</b> — blocked on the whole-or-dead ruling, like field repair</td></tr>
+<tr><td>A permanent "presence" that never moves or dies</td><td><em>not a component — cannot be researched, built or lost</em></td><td>🚫 <b>REFUSED</b> — fails cradle-to-grave; "it sounds cool" is not a reason</td></tr>
+</table></div>
+<p class="sub" style="margin-top:11px">🔒 <b>Five effects cover the field, one is deferred for a stated reason, one is refused for a stated reason.</b> That is the bar: an effect earns a slot only if it writes a nameable variable and rides the component chain. A healing aura is deferred not because it is unwanted but because the state it would repair does not exist yet — the same wall, named so it is not lost.</p>
+</div></section>
+
+<footer class="w"><div class="state">
+<h3>Where the door stands</h3>
+<p><b>This is a proposed door, and it is honest about being a spec.</b> It gives the projected-effect capability a real home — <b>one forced choice</b> (what it projects) <b>+ a target choice</b> (friend / foe / all) <b>+ two dials</b> (strength, radius) — and it passes the intrinsic test for every dial while keeping "how many it hits" as an emergent readout, never a knob.</p>
+<p>⚠ <b>Nothing here reaches the running game yet.</b> The engine has no aura pass, and four of the five effects also write a variable that does not exist (there is still no morale field — the wall the Steadiness / fury enhancer hit). <b>Jamming is the exception</b>: its target variable — detection range — is real, so it is the one effect that needs only the pass, and the one to build first.</p>
+<p><b>The build order falls out of the table:</b> ① the aura pass + Jamming (wires straight into sensors / fog-of-war); ② Command and Ward (their variables exist, they need projecting by area); ③ Rally and Dread (build the morale field once and these light up alongside the fury enhancer). Two guard-rails are non-negotiable: <b>take-the-best not sum</b> (no free stacking) and <b>a destroyed projector drops its field that tick</b> (the grave rung that makes the beacon-bearer a target).</p>
+</div></footer>
+
+<script>
+// ── This door is a SPEC. No effect reaches the running game yet: there is no aura pass, and four of the
+//    five effects write a variable that does not exist (no morale field — same wall as the fury enhancer).
+//    Jamming is the exception — its target variable (detection range) is real, so it needs only the pass.
+// ── Verbatim anchors used for the honesty rows:
+//    · Enhancers thesis: "an enhancer is a scalar multiplier on a stat the unit already has" (acts on SELF).
+//    · SwitchableAfter — the doctrine/stance switch cooldown the Command effect would cut (exists, SELF-only).
+//    · The shield pool the Ward effect would project (exists in Defense, applied to SELF).
+//    · Detection range / signature — the one target variable that already exists (Jamming).
+const RAD_LO=50, RAD_HI=5000;      // metres — the reach dial
+const DENSITY=1/40000;             // illustrative: ~1 unit per 40,000 m^2 at open-order spacing (EMERGENT, not a dial)
+
+// the five effects — the forced choice. `pending` says what each still waits on.
+const EFFECT={
+ rally:  {n:'Rally beacon', tgt:'friends', noun:'Rally Beacon',
+   variable:'morale / steadiness (+)', mlab:'morale', mlo:0, mhi:50, munit:'%',
+   read:'no', pend:'aura pass + a morale field',
+   desc:'A field that steadies friendly units — they hold when a green line would rout, and press a charge home. It writes a per-unit morale bonus.',
+   why:'<b>ENGINE-PENDING, twice over.</b> There is no aura pass to apply it by area, and there is <b>no morale field</b> for it to write — a Pulsar unit is whole-or-dead and never routs (the same wall the <b>Steadiness / fury</b> enhancer hit). Build that morale state once and rally and the fury enhancer both come alive.'},
+ fear:   {n:'Dread field', tgt:'foes', noun:'Dread Field',
+   variable:'morale / to-hit (−)', mlab:'morale', mlo:0, mhi:50, munit:'%',
+   read:'no', pend:'aura pass + a morale field',
+   desc:'The mirror of rally — it saps the nerve of enemy units in range, pushing them toward a rout and spoiling their aim. It writes a per-unit morale penalty.',
+   why:'<b>ENGINE-PENDING, twice over.</b> No aura pass, and the same missing morale field — this is rally pointed at the enemy, and it lights up the same day the morale state is built.'},
+ command:{n:'Command uplink', tgt:'friends', noun:'Command Uplink',
+   variable:'switch-cooldown / to-hit (+)', mlab:'cooldown cut', mlo:0, mhi:60, munit:'%',
+   read:'partial', pend:'aura pass to apply it by AREA',
+   desc:'A coordination field — friendly units in range re-task faster and fight in concert, cutting the doctrine / stance switch cooldown. It writes to the switch timer.',
+   why:'<b>ENGINE-PENDING, but closer.</b> The variable it would write — <code>SwitchableAfter</code>, the doctrine/stance switch cooldown — is <b>real</b>, and the Interface enhancer already cuts it for a SELF host. What is missing is the pass that applies that cut over an <b>area</b> to a unit\'s neighbours.'},
+ jamming:{n:'Jamming array', tgt:'foes', noun:'Jamming Array',
+   variable:'detection range (−)', mlab:'detection cut', mlo:0, mhi:60, munit:'%',
+   read:'yes', pend:'aura pass ONLY — the variable exists',
+   desc:'An ECM bubble — hostile units in range see less far, their sensors degraded. It writes a penalty onto enemy detection range.',
+   why:'<b>The one effect whose target variable ALREADY EXISTS.</b> The detection / signature system is real and rigorous; a jamming aura simply lowers an enemy\'s detection range while inside the bubble. It needs <b>only the aura pass</b> — no new variable — which is why it ships first and wires this door straight into sensors and fog-of-war.'},
+ ward:   {n:'Aegis projector', tgt:'friends', noun:'Aegis Projector',
+   variable:'projected shield pool (+)', mlab:'shield pool', mlo:0, mhi:800, munit:' pts',
+   read:'partial', pend:'aura pass to PROJECT it onto others',
+   desc:'A barrier thrown over friendly units in range — a shared shield pool that soaks hits before their own health. It writes a shield buffer onto each covered unit.',
+   why:'<b>ENGINE-PENDING, but closer.</b> The shield pool it would grant is <b>real</b> — the Defense door builds exactly this, as a layer on the unit\'s OWN sheet. What is missing is the pass that <b>projects</b> that pool onto a unit\'s neighbours instead of itself.'}
+};
+const READMAP={
+ yes:    {cls:'g', badge:'aura pass only',      m4:'aura pass only',        s4:'the target variable EXISTS (detection range)'},
+ partial:{cls:'a', badge:'variable exists',     m4:'variable exists, no pass',s4:'the variable is real but applied to SELF, not by area'},
+ no:     {cls:'r', badge:'no variable yet',     m4:'no — needs both',        s4:'no aura pass AND no morale field to write'}
+};
+const TGT={friends:'friendly units',foes:'enemy units',all:'everyone in range'};
+
+let eff='rally', tgt='friends';
+const $=id=>document.getElementById(id);
+const qa=s=>document.querySelectorAll(s);
+function set(i,v){const e=$(i);if(e)e.textContent=v;}
+function fmt(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1)+'M':a>=1e3?(v/1e3).toFixed(1)+'k':v.toFixed(a<10?1:0);}
+function lin(d,lo,hi){return lo+(hi-lo)*d/100;}
+function logmap(d,lo,hi){return lo*Math.pow(hi/lo,d/100);}
+
+function auraName(radius,strengthFrac){
+ const E=EFFECT[eff];
+ const scale = radius>=3000?'Grand':radius>=1500?'Wide':radius>=500?'':'Close';
+ const temper = strengthFrac>=0.66?'Potent':strengthFrac<=0.33?'Faint':'';
+ return [scale,temper,E.noun].filter(Boolean).join(' ');
+}
+
+function render(){
+ const E=EFFECT[eff];
+ // chip state
+ qa('.echip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.e===eff));
+ qa('.tchip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.t===tgt));
+
+ // dials
+ const strV=+$('str').value, radV=+$('rad').value;
+ const strengthFrac = strV/100;
+ const radius = logmap(radV, RAD_LO, RAD_HI);
+ const magnitude = lin(strV, E.mlo, E.mhi);          // the per-effect variable it writes
+ const area = Math.PI*radius*radius;                  // m^2
+ const areaKm = area/1e6;
+ const affected = Math.max(0, Math.round(area*DENSITY));// EMERGENT — depends on spacing, shown not set
+ // illustrative cost: strength linear, radius quadratic (area drives the power/mass)
+ const mass = Math.max(20, strengthFrac*400 + areaKm*600);
+
+ // the forced-choice note
+ $('enote').innerHTML = '<b>Projecting: '+E.n+'.</b> '+E.desc+' <span style="display:block;margin-top:6px">'+E.why+'</span>';
+
+ // slider readouts
+ const munit = E.munit;
+ set('n_str','Strength — '+E.mlab);
+ set('s_str', (munit===' pts'? fmt(magnitude)+munit : magnitude.toFixed(0)+munit));
+ set('e_str0','faint ('+E.mlo+(munit===' pts'?'':munit)+')');
+ set('e_str1','potent ('+E.mhi+(munit===' pts'?'':munit)+')');
+ set('s_rad', fmt(radius)+' m');
+
+ // the design name + reproduction line
+ set('v_name', auraName(radius,strengthFrac));
+ set('v_namesub','effect ← what it projects · target ← who it lands on · strength & radius ← the two dials');
+ set('oname', E.n+' — '+ (munit===' pts'? fmt(magnitude)+munit : magnitude.toFixed(0)+munit) +' over '+fmt(radius)+' m to '+TGT[tgt]);
+ $('odesc').innerHTML = '<b>'+E.desc+'</b> <span style="display:block;margin-top:7px">This is <b>'+auraName(radius,strengthFrac)+'</b> — a component you would research, build, install and can lose.</span>';
+
+ // the five set/computed numbers
+ set('v_a1', (munit===' pts'? fmt(magnitude)+munit : magnitude.toFixed(0)+munit));
+ set('v_a2', fmt(radius)+' m');
+ set('v_a3', TGT[tgt]);
+ set('v_a4', areaKm>=1? areaKm.toFixed(2)+' km²' : fmt(area)+' m²');
+ set('v_a5', fmt(mass)+' kg');
+
+ // ── the worth panel — every row states its build state
+ const R=READMAP[E.read];
+ set('l_m1','The variable it writes');
+ set('m_1', E.variable);
+ set('s_m1','on each '+TGT[tgt]+' in range');
+ $('k_m1').className='mk pend'; $('k_m1').textContent='pending';
+ $('m_1').parentElement.className='mt '+R.cls;
+
+ set('l_m2','Its effect at strength');
+ const signed = (E.tgt==='foes' || tgt==='foes') ? '−' : '+';
+ set('m_2', signed+(munit===' pts'? fmt(magnitude)+munit : magnitude.toFixed(0)+munit));
+ set('s_m2','the '+E.mlab+' it would apply');
+ $('m_2').parentElement.className='mt g';
+
+ set('l_m3','Units affected');
+ set('m_3', '≈'+affected);
+ set('s_m3','EMERGENT — depends on who is in range');
+ $('m_3').parentElement.className='mt a';
+
+ set('l_m4','Can the engine read it?');
+ set('m_4', R.m4);
+ set('s_m4', R.s4);
+ $('k_m4').className='mk pend'; $('k_m4').textContent='pending';
+ $('m_4').parentElement.className='mt '+R.cls;
+
+ // verdict
+ let verdict;
+ if(E.read==='yes'){
+  verdict = '<b>The nearest to real in the whole door.</b> Jamming lowers an enemy\'s detection range — and that variable is <b>already in the simulation</b>. Everything else this door needs is the one shared aura pass. Build the pass, and this effect is playable the same day, wiring auras into the sensor and fog-of-war layer where an ECM bubble belongs.';
+ } else if(E.read==='partial'){
+  verdict = '<b>Half-real.</b> The variable this effect writes — '+(eff==='command'?'the doctrine/stance switch cooldown':'a shield pool')+' — <b>exists in the game today</b>, but only ever applied to a unit\'s OWN sheet. What is missing is the pass that projects it by area onto a unit\'s neighbours. So it is a shorter build than rally or dread, and a longer one than jamming.';
+ } else {
+  verdict = '<b>The farthest from real — and honest about it.</b> This effect writes a morale bonus or penalty, and <b>the game has no morale field at all</b>: a unit is whole-or-dead and never routs. So it waits on the same missing state as the Steadiness / fury enhancer. Build the morale field once, and this aura and that enhancer come alive together — which is exactly why the shape is designed and marked now, not shipped as a dead knob.';
+ }
+ $('verdict').innerHTML = verdict;
+}
+
+qa('.echip').forEach(c=>c.addEventListener('click',()=>{ eff=c.dataset.e; tgt=EFFECT[eff].tgt; render(); }));
+qa('.tchip').forEach(c=>c.addEventListener('click',()=>{ tgt=c.dataset.t; render(); }));
+['str','rad'].forEach(i=>$(i).addEventListener('input',render));
+render();
+</script>
