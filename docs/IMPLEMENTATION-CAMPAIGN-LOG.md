@@ -25,9 +25,12 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
 > `DrawBattalionRowColumns`), **S4** the unified selection (`ForceRef` with `OfFleet`/`OfShip`/`OfBattalion`, the
 > Battalions tab already migrated onto it). NEXT: build **B-S5 — the new All Forces flat roster tab** (FORCES-WINDOW
-> S5, BUILD-grade): a new sibling tab beside Fleets + Battalions holding ONE table over every force the player owns —
-> gather fleets (via `FactionInfoDB`/`FleetDB` from `PlayerFaction`) + battalions (via `AllFormationsFor`) into a list
-> of `ForceRef`; draw each row with the S3 methods; add the Domain / Mil-Civ / Class (via `ClassifyRole`) / Location
+> S5, BUILD-grade): a new sibling tab beside Fleets + Battalions holding ONE table over every force the player owns.
+> **Enumeration (recon done):** fleets = `PlayerFaction.GetDataBlob<FleetDB>().GetChildren()` (the faction entity's
+> root FleetDB, the same `factionRoot` the Fleets tab walks at `:128`/`:1990`); ships = recurse that fleet tree
+> collecting the `IsValid && !HasDataBlob<FleetDB>()` children (the exact filter used at `:990`); battalions =
+> `GroundFormationTools.AllFormationsFor(game, PlayerFaction.Id)`. Fold each into a `ForceRef`; draw each row with the
+> S3 methods; add the Domain / Mil-Civ / Class (via `ClassifyRole`) / Location
 > filters; and a **kind-swapping detail panel** below that dispatches on `_selRoster.Kind` (Fleet → the combat sheet,
 > Battalion → `DrawBattalionOrders`, Ship → entity info). Seed the `ShipRanges` cache for the roster's ships (S3 note)
 > so the Beam/See/Seen columns are real, not "—". Add a `ForceRef _selRoster` field (distinct from `_selBattalion`).
