@@ -15,15 +15,15 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **PHASE A COMPLETE (A1–A5 all pushed) → confirm CI green, then start Phase B.** All five first-five welds are
-> committed + pushed (A3 compile CI-validated; A1/A2/A4/A5 file-disjoint, in CI on commit `72dcc72`+A5). Parked for
-> the developer: A1 calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE). NEXT: **(1)** confirm the latest CI
-> run (the full branch A1–A5) is green on both jobs (`test` + `build-client`) via GitHub MCP `actions_list`
-> list_workflow_jobs; fix any red first (a test failure only shows in the test shards — watch A1's jobs>0 assumption,
-> A2's cannon-top-weapon, A5's surveyor/dropship lookups). **(2)** Then begin **Phase B — the Forces window**: slice
-> **B-S1** (point the Battalions tab at the built `GroundFormationTools.AllFormationsFor`, scope to PlayerFaction —
-> pure reuse, DATA-grade) per FORCES-WINDOW-DESIGN §8. Phase B evolves `FleetWindow.cs` (keep the class name) and is
-> client-heavy — CI compile-checks it but can't runtime-test, so add each behavior to `docs/CLIENT-TEST-CHECKLIST.md`.
+> **PHASE A VERIFIED CLEAN → Phase B is live.** All five first-five welds are pushed AND CI-verified: the whole
+> branch (A1–A5) leaves the `rest` shard with **exactly the two PRE-EXISTING base-red failures and nothing else**;
+> `build-client` and all six other shards are green; every new A1–A5 test passes. My slices add **zero** new
+> failures (see PRE-EXISTING BASE RED below for the two-line pass/fail protocol). Parked for the developer: A1
+> calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE) + the two base-red economy tests (surfaced, not mine).
+> NEXT: begin **Phase B — the Forces window**: slice **B-S1** (point the Battalions tab at the built
+> `GroundFormationTools.AllFormationsFor`, scope to PlayerFaction — pure reuse, DATA-grade) per FORCES-WINDOW-DESIGN
+> §8. Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't
+> runtime-test, so add each behavior to `docs/CLIENT-TEST-CHECKLIST.md`.
 
 ---
 
@@ -40,11 +40,11 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⏳CI | (pending) · calibration parked ⚖ |
-| A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⏳CI | (pending) |
-| A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
-| A4 | De-fang the 4 order stubs (no wedge/crash) + park their behavior: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⏳CI | (pending) · 4 behaviors parked ⚖ |
-| A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⏳CI | (pending) |
+| A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ✅ | `892924b` · calibration parked ⚖ |
+| A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ✅ | `a676efd` |
+| A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ✅ | `e91b722` |
+| A4 | De-fang the 4 order stubs (no wedge/crash) + park their behavior: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ✅ | `72dcc72` · 4 behaviors parked ⚖ |
+| A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ✅ | `761a017` |
 
 ### Phase B — the Forces window (evolve `FleetWindow.cs`, keep the class name) — ladder S1→S9
 
@@ -89,6 +89,46 @@ ladder row and, once landed, the commit sha.
 ---
 
 ## ADJUDICATION QUEUE (items parked for the developer — §6 STOP conditions)
+
+### 🔴 PRE-EXISTING BASE RED — two economy tests were already failing when this campaign branched (found 2026-08-13)
+
+**Plain English:** when this campaign's branch was cut, two tests were **already red** — they broke on the PR #90
+merge, *before* I touched a single line. I proved it: my very first commit here was **docs-only** (no code), and
+CI failed it on these same two tests. Every one of my five code slices (A1–A5) also fails **only** these same two
+and nothing more. So they are not my breakage — but they matter, because they turn the CI board red, and a red
+board is exactly the gauge this campaign trusts. I've **surfaced** them here rather than fix them, for two reasons:
+they're in the **economy** system (food + cargo) — a different subsystem than this campaign owns (combat / ground
+/ ships / UI) — and fixing either is a **data-design decision that's yours**, not a one-line typo.
+
+**The two failing tests (both in the `rest` shard):**
+1. `CargoCompartmentTests.EveryResource_IsConsumedBySomething` — *Expected: not null, But was: null.* A data-audit
+   gauge that insists every material a colony can hold is **consumed by something** (a recipe, a build cost, or a
+   fuel dial). One resource now has no consumer. The fix is a judgment call: either give that resource a consumer,
+   or retire it from the data — an economy-content decision.
+2. `FoodProductionTests.FoodProduction_GraveRung_DestroyingTheFarmReturnsStarvation` — *Expected: 1.0, But was:
+   0.0.* After a farm is built (food supply covers demand → shortage 0), the test destroys the farm and expects the
+   shortage to return to total (1.0). It stays at 0.0 — i.e. a **destroyed farm no longer re-triggers starvation**.
+   Most likely a food-buffering / stockpile interaction that changed in the merge; diagnosing it means reading the
+   `SustenanceProcessor` food-balance path, an economy job.
+
+**Why the merge did it (best read):** both test files were last touched on the *other* side of the PR #90 merge
+(`CargoCompartmentTests` in `0db10e3` "fix CI: four breaks…"). This has the shape of a **merge-semantic break** —
+a test from one branch meeting data/code from the other — where each side was green alone but the combination
+isn't. `b0f005f` (the Sol-JSON fix in the merge) only touched Mars/Mercury/gas-giant data, **not Earth** (where the
+test colony lives), so it's probably not the cause; the cause is likely upstream in the merged economy code.
+
+**THE CAMPAIGN VERIFICATION PROTOCOL (how every future slice is judged green — use this every push):**
+> A slice is **CLEAN** iff, in its CI run: (a) `build-client` is green, (b) all six non-`rest` shards are green,
+> and (c) the `rest` shard fails **exactly these two tests and no others**. Any *third* failure — or a failure in
+> any other shard — is **mine** and blocks the slice until fixed. (Check with GitHub MCP `get_job_logs` on the
+> `rest` job; the per-test table lists every ❌ by name.)
+
+**My recommendation:** leave them to the economy work / to you — they're outside this campaign's scope and need a
+data call. If you'd rather I take a run at them as a one-off "green the base" commit, say so and I'll dig into the
+`SustenanceProcessor` + the cargo-consumer audit; but I won't guess at economy content unasked. Nothing in this
+campaign is blocked by them beyond needing the two-line protocol above to read the board.
+
+---
 
 ### ⚖ A1-CALIBRATION — should turning employment→morale ON use the full workforce as the denominator? (parked 2026-08-13)
 
@@ -162,7 +202,7 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### A3 — `ShipRoleTools.ClassifyRole` (the ship role classifier) — ⏳CI
+### A3 — `ShipRoleTools.ClassifyRole` (the ship role classifier) — ✅ `e91b722`
 **What it does (plain English):** the engine now has ONE place that decides what KIND a ship is — warship,
 freighter, survey ship, transport, tender, hauler, or bare utility — by reading the parts bolted to the hull
 (a weapon → warship, a survey sensor → survey ship, and so on), exactly the way the ground side already reads a
@@ -190,7 +230,7 @@ showing the column. The engine classifier (FORCES-WINDOW S2) is now built, but t
 Phase B (S5) actually surfaces it in the window. The ground classifier (`GroundRoleComposer.ClassifyRole`)
 already existed; "surfacing" it is window work, also Phase B.
 
-### A2 — Ground `Penetration` + `PerShotEnergy` carry-through (the ground assembler path) — ⏳CI
+### A2 — Ground `Penetration` + `PerShotEnergy` carry-through (the ground assembler path) — ✅ `a676efd`
 **What it does (plain English):** a ground weapon you DESIGN in the Entity Assembler (a frame + weapon parts) now
 carries its armour-piercing power. Before this, only the pre-built "monolithic" tank/infantry/artillery units
 could crack armour — a *player-built* AP gun came out with zero penetration and bounced off plate. Now the
@@ -225,7 +265,7 @@ pen; and `GroundDamageMatrix.ArmourSoak` lands more with pen than without (AP cr
 true for the assembler path too, so no HTML flip was needed. The backlog item #1 flipped ⬜→✅ (the engine caught
 up to the badge).
 
-### A1 — Employment → morale producer (feed the ±40 term "that can never fire") — ⏳CI · calibration parked ⚖
+### A1 — Employment → morale producer (feed the ±40 term "that can never fire") — ✅ `892924b` · calibration parked ⚖
 **What it does (plain English):** the game has a morale rule for "do people have jobs?" — but it never actually
 worked, because nothing in the game ever declared a single job, so the number was always zero. A1 wires it up: a
 colony's jobs are now counted from its buildings' operating-crew requirement (a factory that needs 500 crew
@@ -252,7 +292,7 @@ grade "BUILD-NOW" flipped to reflect the honest state — the **producer is buil
 term is **flag-gated pending the parked calibration** (not "live on every colony," which would mislead since it's
 off by default). Backlog item #2 flipped ⬜→✅ (built, flag-gated).
 
-### A4 — de-fang the four order stubs (no wedge, no crash) — ⏳CI · 4 behaviors parked ⚖
+### A4 — de-fang the four order stubs (no wedge, no crash) — ✅ `72dcc72` · 4 behaviors parked ⚖
 **What it does (plain English):** the Forces window has four orders that were never finished and just do nothing
 when issued. Two of them were worse than useless — a real BUG: "Refuel" and "Resupply," once issued, would **jam
 the fleet's order queue forever** (the order never marked itself done, and a fleet won't take new standing orders
@@ -275,7 +315,7 @@ left as the documented display shim); `Pulsar4X.Tests/OrderStubSafetyTests.cs` (
 `ServeyAnomalyAction`/`ShipLogisticsOrders` `Clone()` doesn't throw; the survey order is a safe inert shell.
 Engine-only, no JSON drift, no save-break (no class renamed).
 
-### A5 — the order→ability component scan (`AbilitiesOf` + `CanIssue`) — ⏳CI
+### A5 — the order→ability component scan (`AbilitiesOf` + `CanIssue`) — ✅ `761a017`
 **What it does (plain English):** an order in the game isn't a free-floating verb — it's powered by a part bolted
 to the unit (a survey sensor lets you survey, a jump drive lets you jump, a troop bay lets you load troops). So the
 Forces window should offer an order only when the unit actually carries the part. The engine already did this by
