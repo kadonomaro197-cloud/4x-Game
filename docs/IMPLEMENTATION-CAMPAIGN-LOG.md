@@ -15,13 +15,15 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **A1–A4 all pushed → gate CI, then build A5 (component-scan) — the last Phase-A slice.** A3/A2/A1/A4 are
-> committed + pushed (A3's compile CI-validated green; A2/A1/A4 file-disjoint, in CI). A1 + A4 have parked items in
-> the ADJUDICATION QUEUE. NEXT: confirm all CI runs green (`test` + `build-client`); fix any red first. Then build
-> **A5** — the order→ability component-scan table + `AbilitiesOf(entity)` (FORCES-WINDOW §4.5), generalizing the
-> `Has*Ability` pattern (`EntityExtensions.cs:199`) — a pure additive engine helper (recon result in the workflow
-> journal). That closes Phase A; then **Phase B** (the Forces window S1→S9). Update each slice's row + this NEXT
-> ACTION on landing.
+> **PHASE A COMPLETE (A1–A5 all pushed) → confirm CI green, then start Phase B.** All five first-five welds are
+> committed + pushed (A3 compile CI-validated; A1/A2/A4/A5 file-disjoint, in CI on commit `72dcc72`+A5). Parked for
+> the developer: A1 calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE). NEXT: **(1)** confirm the latest CI
+> run (the full branch A1–A5) is green on both jobs (`test` + `build-client`) via GitHub MCP `actions_list`
+> list_workflow_jobs; fix any red first (a test failure only shows in the test shards — watch A1's jobs>0 assumption,
+> A2's cannon-top-weapon, A5's surveyor/dropship lookups). **(2)** Then begin **Phase B — the Forces window**: slice
+> **B-S1** (point the Battalions tab at the built `GroundFormationTools.AllFormationsFor`, scope to PlayerFaction —
+> pure reuse, DATA-grade) per FORCES-WINDOW-DESIGN §8. Phase B evolves `FleetWindow.cs` (keep the class name) and is
+> client-heavy — CI compile-checks it but can't runtime-test, so add each behavior to `docs/CLIENT-TEST-CHECKLIST.md`.
 
 ---
 
@@ -42,7 +44,7 @@ ladder row and, once landed, the commit sha.
 | A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⏳CI | (pending) |
 | A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
 | A4 | De-fang the 4 order stubs (no wedge/crash) + park their behavior: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⏳CI | (pending) · 4 behaviors parked ⚖ |
-| A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⬜ | |
+| A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⏳CI | (pending) |
 
 ### Phase B — the Forces window (evolve `FleetWindow.cs`, keep the class name) — ladder S1→S9
 
@@ -272,6 +274,34 @@ left as the documented display shim); `Pulsar4X.Tests/OrderStubSafetyTests.cs` (
 **Gauge:** `OrderStubSafetyTests` — Refuel/Resupply complete after `Execute` (de-wedged, IsFinished flips true);
 `ServeyAnomalyAction`/`ShipLogisticsOrders` `Clone()` doesn't throw; the survey order is a safe inert shell.
 Engine-only, no JSON drift, no save-break (no class renamed).
+
+### A5 — the order→ability component scan (`AbilitiesOf` + `CanIssue`) — ⏳CI
+**What it does (plain English):** an order in the game isn't a free-floating verb — it's powered by a part bolted
+to the unit (a survey sensor lets you survey, a jump drive lets you jump, a troop bay lets you load troops). So the
+Forces window should offer an order only when the unit actually carries the part. The engine already did this by
+hand for three specific cases; A5 turns it into ONE shared tool: `AbilitiesOf(unit)` (the set of parts a unit
+carries), an order→part table, and `CanIssue(unit, "GeoSurvey")` that checks them. A fleet's abilities are the
+union of its ships' — "can this fleet survey?" = "does any ship aboard carry a survey sensor?"
+
+**Why it matters:** it's the mechanism the deep order menu gates on (Forces-window §4.5), and it's read by the
+window AND the AI (one-verb-both-seats). It's cradle-to-grave: install the part → the order appears; lose the part
+in battle → the order vanishes. That last bit needed a subtle fix — when a component is uninstalled the engine
+leaves an empty entry behind, so `AbilitiesOf` filters on a live part count, or a shot-off sensor would still
+grant its order (the grave rung).
+
+**Files:** `GameEngine/Ships/ShipRoleTools.cs` (extended the A3 file — added `AbilitiesOf` + `OrderAbilityTable` +
+`CanIssue`); `Pulsar4X.Tests/AbilityScanTests.cs` (new gauge). **Byte-identical:** pure additive read-only helper;
+nothing consumes it yet (the window/AI reroute onto it is a later slice, deliberately deferred to keep A5 green).
+
+**Gauge:** `AbilityScanTests` — a surveyor reports GeoSurveyAtb + `CanIssue("GeoSurvey")`; a fleet holding it
+reports the same (the union); a non-surveyor can't; clearing the component (the grave-rung stale state) removes the
+ability (the Count>0 filter); a troop bay is covered too (it has no *AbilityDB — the case that forced the client's
+hand-written scan).
+
+**Phase A is COMPLETE.** All five first-five welds landed (A1 employment · A2 ground-penetration · A3
+role-classifier · A4 order-stub safety · A5 component-scan). Two developer decisions parked (A1 calibration, A4
+order behaviors). Next: **Phase B** — the Forces window (S1→S9), starting with the roster + the reuse of the
+existing `AllFormationsFor`.
 
 ---
 
