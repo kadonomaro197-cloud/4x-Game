@@ -39,6 +39,21 @@ namespace Pulsar4X.Colonies
         public const double MaxEmploymentBonus = 15.0;
         /// <summary>Morale penalty at total unemployment (no jobs for the population).</summary>
         public const double MaxUnemploymentPenalty = 25.0;
+        /// <summary>
+        /// The employment-morale CALIBRATION (developer-authorized 2026-08-13). The employment term compares a colony's
+        /// installed-building jobs (<see cref="Pulsar4X.Datablobs.ComponentInstancesDB"/>.GetTotalJobs) to a per-capita
+        /// job DEMAND = <c>population × JobsPerCapita</c> — the SAME shape as the trusted <c>SustenanceProcessor</c>
+        /// food/power model, so the denominator SCALES with population instead of pinning to −25 against a
+        /// billions-strong workforce (the category error the raw jobs÷workforce ratio produced — see
+        /// docs/society/MORALE-AND-POPULATION-DESIGN.md:153). Calibrated so the fully-built start homeworld (~52,000
+        /// installed jobs vs 8.2e9 pop) reads a ratio just under 1 → a MILD employment deficit (near-neutral): a
+        /// thriving, fully-employed world is EARNED by over-building industry (the +15 bonus), not granted by default.
+        /// A MUTABLE static (not a const) so a scenario "strain" node / the DevTools Society lever can retune it (the
+        /// <c>SustenanceProcessor.SetDemand</c> pattern) and a future <c>GovernmentDB</c> can re-skin it — government-ready.
+        /// Still flag-gated by <c>PopulationProcessor.EnableEmploymentMorale</c> (default off → byte-identical); flipping
+        /// the term ON live wants a developer runtime read (morale feeds migration → tax → legitimacy, which CI can't watch).
+        /// </summary>
+        public static double JobsPerCapita = 7.0e-6;
         /// <summary>Cap on the housing-comfort morale bonus.</summary>
         public const double MaxComfortBonus = 20.0;
         /// <summary>Morale penalty at 100% tax rate (scales linearly with the tax rate). M4.</summary>

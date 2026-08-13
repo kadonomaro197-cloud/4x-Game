@@ -1,5 +1,7 @@
+using System.Collections.Generic;   // Dictionary (the ComputeMorale factors out-param)
+using System.Linq;                   // Sum (colony population total)
 using NUnit.Framework;
-using Pulsar4X.Colonies;      // PopulationProcessor, ColonyMoraleDB
+using Pulsar4X.Colonies;      // PopulationProcessor, ColonyMoraleDB, ColonyInfoDB
 using Pulsar4X.Datablobs;     // ComponentInstancesDB
 using Pulsar4X.Extensions;    // GetTotalJobs (extension)
 
@@ -61,14 +63,68 @@ namespace Pulsar4X.Tests
                 Assert.That(off, Is.EqualTo(0.0).Within(1e-9),
                     "flag off → the employment term is neutral (byte-identical — the homeworld morale baseline is unchanged)");
 
-                // ON → the term fires. On a billions-pop homeworld the installed-infra jobs are a tiny fraction of the
-                // workforce, so the ratio reads heavy unemployment — a NON-ZERO (negative) employment contribution.
+                // ON → the term fires. With the 2026-08-13 calibration the ratio is jobs ÷ (pop × JobsPerCapita), so a
+                // fully-built homeworld reads a MILD deficit (near-neutral) — a NON-ZERO employment contribution either
+                // way (the calibration BAND is pinned by EmploymentMorale_PerCapitaDemand_… below).
                 PopulationProcessor.EnableEmploymentMorale = true;
                 pop.GrowPopulation(s.Colony);
                 double on = moraleDB.Factors.TryGetValue("employment", out var vn) ? vn : 0.0;
                 Log($"employment factor (flag ON) = {on}");
                 Assert.That(on, Is.Not.EqualTo(0.0).Within(1e-9),
                     "flag on → the employment term contributes to morale (the ±40 band is live)");
+            }
+            finally { PopulationProcessor.EnableEmploymentMorale = saved; }
+        }
+
+        /// <summary>The employment morale factor for a given ratio, read from the REAL math (ComputeMorale's factor
+        /// out-param) with every other input neutral — so the assertions pin the shipped term, not a re-derivation.</summary>
+        private static double EmploymentFactor(double ratio)
+        {
+            var factors = new Dictionary<string, double>();
+            ColonyMoraleDB.ComputeMorale(0.0, 0.0, ratio, 0.0, 0.0, factors);
+            return factors.TryGetValue("employment", out var e) ? e : 0.0;
+        }
+
+        [Test]
+        [Description("THE CALIBRATION (developer-authorized 2026-08-13). The employment denominator is now a per-capita "
+                   + "job DEMAND (pop × ColonyMoraleDB.JobsPerCapita), mirroring SustenanceProcessor — so it SCALES with "
+                   + "population instead of pinning to −25 against a billions-strong workforce. Pins (a) the term SHAPE "
+                   + "over known ratios and (b) that the fully-built homeworld, on its ENGINE-MEASURED installed-jobs "
+                   + "total, reads a MILD employment deficit (near-neutral) — lifted off the −25 catastrophe and NOT the "
+                   + "EARNED +15 full-employment bonus. Prints the real numbers so the coefficient can be fine-tuned.")]
+        public void EmploymentMorale_PerCapitaDemand_LandsHomeworldNearNeutral()
+        {
+            // (a) THE SHAPE — discontinuous by design (ColonyMoraleDB): ratio<1 → a negative approaching 0⁻; ratio≥1
+            //     jumps to the earned +15; the −1 sentinel ("no job data") → neutral 0. Calibration-independent.
+            Assert.That(EmploymentFactor(0.95), Is.EqualTo(-1.25).Within(1e-6), "near-full employment → a small deficit");
+            Assert.That(EmploymentFactor(0.5),  Is.EqualTo(-12.5).Within(1e-6), "half the demand met → half the −25 penalty");
+            Assert.That(EmploymentFactor(0.0),  Is.EqualTo(-25.0).Within(1e-6), "no jobs for the demand → full unemployment penalty");
+            Assert.That(EmploymentFactor(1.0),  Is.EqualTo(15.0).Within(1e-6),  "demand met → the EARNED full-employment bonus");
+            Assert.That(EmploymentFactor(-1.0), Is.EqualTo(0.0).Within(1e-6),   "no job data (sentinel) → neutral");
+
+            // (b) THE HOMEWORLD, on the ENGINE-MEASURED jobs total (what the coefficient is tuned against).
+            var s = TestScenario.CreateWithColony();
+            var pop = new PopulationProcessor();
+            var moraleDB = s.Colony.GetDataBlob<ColonyMoraleDB>();
+            long jobs = s.Colony.GetDataBlob<ComponentInstancesDB>().GetTotalJobs();
+            long totalPop = s.Colony.GetDataBlob<ColonyInfoDB>().Population.Values.Sum();
+            double jobDemand = totalPop * ColonyMoraleDB.JobsPerCapita;
+            Log($"HOMEWORLD calibration: pop {totalPop:N0}, jobs {jobs:N0}, jobDemand {jobDemand:N0}, "
+              + $"ratio {(jobDemand > 0 ? jobs / jobDemand : 0):0.000}, JobsPerCapita {ColonyMoraleDB.JobsPerCapita:0.0e-0}");
+
+            bool saved = PopulationProcessor.EnableEmploymentMorale;
+            try
+            {
+                PopulationProcessor.EnableEmploymentMorale = true;
+                pop.GrowPopulation(s.Colony);
+                double homeFactor = moraleDB.Factors.TryGetValue("employment", out var v) ? v : 0.0;
+                Log($"HOMEWORLD employment factor = {homeFactor:0.00}, morale = {moraleDB.Morale:0.0}");
+                // Strictly negative and mild: proves the calibration lifted the homeworld off the −25 catastrophe to
+                // near-neutral, AND that its ratio is < 1 (it did NOT snap to the earned +15). The band tolerates the
+                // ~52k jobs estimate wobbling; the printout above carries the exact landing for fine-tuning the coefficient.
+                Assert.That(homeFactor, Is.GreaterThan(-9.0).And.LessThan(0.0),
+                    "the calibrated homeworld reads a MILD employment deficit (near-neutral) — off the −25 catastrophe and "
+                    + "below the EARNED +15 (a thriving, fully-employed world is earned by over-building industry)");
             }
             finally { PopulationProcessor.EnableEmploymentMorale = saved; }
         }

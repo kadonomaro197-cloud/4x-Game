@@ -83,13 +83,15 @@ namespace Pulsar4X.Colonies
                     crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
                 }
 
-                // M2 employment + M3 fix: jobs are measured against the WORKFORCE (the drawable fraction of
-                // population), not raw headcount — a 500M homeworld isn't "employed" by a handful of
-                // installations. Two-sided; a colony with no installation declaring jobs has "no job data"
-                // → neutral employment (sentinel -1), not 100% unemployment. Housing comfort is a bonus.
+                // M2 employment + the 2026-08-13 CALIBRATION: jobs are measured against a per-capita job DEMAND
+                // (pop × ColonyMoraleDB.JobsPerCapita), the SAME shape SustenanceProcessor uses for food/power — the
+                // denominator SCALES with population, so a billions-pop homeworld no longer pins to −25 (the category
+                // error a raw jobs÷workforce ratio produced). Two-sided; a colony with no installation declaring jobs
+                // has "no job data" → neutral employment (sentinel -1), not 100% unemployment. Housing comfort is a bonus.
+                // 🔁 KEEP IN SYNC with the identical block in ComputeCurrentMorale below + StationPopulationProcessor.
                 long jobs = instancesDB.GetTotalJobs();
-                long workforce = ColonyManpowerDB.Workforce(totalPop);
-                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double jobDemand = totalPop * ColonyMoraleDB.JobsPerCapita;
+                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && jobDemand > 0) ? jobs / jobDemand : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
                 // M4: tax is a morale input (read the colony's tax rate; ColonyEconomyProcessor reads morale
@@ -228,9 +230,11 @@ namespace Pulsar4X.Colonies
                     crowdingRatio = capacity > 0.0 ? totalPop / capacity : 2.0;
                 }
 
+                // 🔁 KEEP IN SYNC with GrowPopulation above + StationPopulationProcessor — the per-capita job-demand
+                // denominator (2026-08-13 calibration). See the comment on the GrowPopulation copy for the rationale.
                 long jobs = instancesDB.GetTotalJobs();
-                long workforce = ColonyManpowerDB.Workforce(totalPop);
-                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double jobDemand = totalPop * ColonyMoraleDB.JobsPerCapita;
+                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && jobDemand > 0) ? jobs / jobDemand : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
                 double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;

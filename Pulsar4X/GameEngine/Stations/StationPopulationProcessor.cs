@@ -71,10 +71,12 @@ namespace Pulsar4X.Stations
             {
                 double crowdingRatio = popCap > 0 ? (double)totalPop / popCap : 2.0;
                 long jobs = instancesDB.GetTotalJobs();
-                long workforce = ColonyManpowerDB.Workforce(totalPop);
-                // A1 — the employment→morale term is flag-gated (default off → the -1.0 neutral sentinel, byte-identical);
+                // 🔁 KEEP IN SYNC with PopulationProcessor — the per-capita job-demand denominator (2026-08-13 calibration):
+                // pop × ColonyMoraleDB.JobsPerCapita, the SustenanceProcessor-shape denominator that scales with population.
+                // The employment→morale term is flag-gated (default off → the -1.0 neutral sentinel, byte-identical);
                 // shares PopulationProcessor.EnableEmploymentMorale so a station and a colony flip together.
-                double employmentRatio = (PopulationProcessor.EnableEmploymentMorale && jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double jobDemand = totalPop * ColonyMoraleDB.JobsPerCapita;
+                double employmentRatio = (PopulationProcessor.EnableEmploymentMorale && jobs > 0 && jobDemand > 0) ? jobs / jobDemand : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
                 moraleDB.Morale = ColonyMoraleDB.ComputeMorale(0.0, crowdingRatio, employmentRatio, comfort, 0.0, moraleDB.Factors);
                 migration = ColonyMoraleDB.MigrationRate(moraleDB.Morale);

@@ -143,7 +143,7 @@ verified by a parallel investigation workflow + independent source reads that ag
 
 ---
 
-### ⚖ A1-CALIBRATION — should turning employment→morale ON use the full workforce as the denominator? (parked 2026-08-13)
+### ✅ A1-CALIBRATION — RESOLVED: the employment→morale denominator (was parked 2026-08-13, done 2026-08-13)
 
 **Plain English:** A1 wired up the "do people have jobs?" morale term. The engine now counts a colony's jobs by
 adding up every building's operating-crew requirement. The problem: those crew numbers were written as "how many
@@ -155,18 +155,32 @@ That's why A1 shipped with the term **flag-gated OFF by default** (byte-identica
 game). The code works and is tested; what needs YOUR call is the *number*, before the flag is turned on for real.
 
 **The question:** when we turn employment-morale on, what should "full employment" mean?
-- **Option A — keep the full workforce as the denominator, and re-tune the building CrewReq numbers** so a colony's
-  buildings realistically employ a big fraction of its people. (Most faithful to "jobs come from buildings"; most
-  data to re-balance.)
-- **Option B — divide jobs by a smaller "employable" figure**, not the whole workforce (e.g. only the fraction of
-  population actually seeking industrial work), so today's CrewReq numbers land near full employment. (Least
-  data-churn; changes what "workforce" means for this term.)
-- **Option C — leave it OFF** for now; it's a future-economy nicety, not on the MVP path. (Zero risk; the term
-  stays dark until you want it.)
+- **Option A — keep the full workforce as the denominator, and re-tune the building CrewReq numbers.** ❌ **REJECTED.**
+  CrewReq is *shared* — the ship-crew gate (`ManpowerTools.ResolveBuild`) and talent draws read the same number, so
+  inflating it to billions-scale corrupts ship crewing (Prime-Directive violation). And it can't scale: one factory
+  can't employ 4.1 billion; you'd need absurd per-building numbers that still don't track population.
+- **Option B — a per-capita job DEMAND denominator.** ✅ **CHOSEN.** Measure jobs against `population × JobsPerCapita`
+  — the SAME shape the trusted `SustenanceProcessor` uses for food/power. The denominator now **scales with
+  population**, so it isn't a magic number tied to one colony's size; a populous colony that under-builds industry
+  reads a deficit, building more climbs toward the +15 bonus.
+- **Option C — leave it OFF.** Superseded; the calibration is done (below), but the live on-switch stays the
+  developer's (see the flag note).
 
-**My recommendation:** **Option A** long-term (it's the honest model — a world's buildings *are* its jobs), but it's
-a balance pass, not a one-liner. Until you want to do that pass, the flag stays off (Option C is the safe interim).
-Nothing else in the campaign is blocked by this — the wire is built and gauged; only the on-switch waits on you.
+**✅ RESOLVED (developer authorized "do the morale cal", 2026-08-13).** Chose **Option B**, verified by a parallel
+investigation workflow + an adversarial review (which caught two defects in the first draft — a `0`-default that would
+have red-lit the existing flag-gate test, and a fragile band assertion — both fixed). **The number:** the fully-built
+start homeworld has **~52,000** installed jobs against 8.2 billion people; `JobsPerCapita = 7.0e-6` makes the per-capita
+demand ≈ 57,400, so the homeworld reads a ratio just under 1 → a **mild employment deficit (near-neutral)** — lifted off
+the −25 catastrophe, and NOT the **earned** +15 full-employment bonus (a thriving world is earned by over-building, per
+the locked design). `JobsPerCapita` is a **mutable static** (`ColonyMoraleDB.JobsPerCapita`) so a scenario node / the
+DevTools Society lever can retune it. **Files:** `ColonyMoraleDB.cs` (the coefficient) · `PopulationProcessor.cs` (both
+morale sites) · `StationPopulationProcessor.cs` (the station site) · `EmploymentMoraleTests.cs` (the calibration band +
+homeworld readout gauge). **The flag stays OFF** (`PopulationProcessor.EnableEmploymentMorale = false`): the calibration
+is done and gauged, but turning the term ON live changes morale on every colony and cascades into migration → tax →
+legitimacy — effects only the developer's local playtest can judge (CI can't run the client). **Flip
+`EnableEmploymentMorale = true` (one line) to go live**, read the `[a1-employment] HOMEWORLD …` line in the CI log /
+`game_logs/` to confirm the exact landing, and tune `JobsPerCapita` if you want the homeworld nearer neutral (raise it →
+more of a deficit; lower it → nearer full employment; too low snaps to the +15 bonus).
 
 ---
 
