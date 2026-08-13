@@ -15,13 +15,13 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **A1/A2/A3 all pushed → gate CI, then build A4 (order stubs).** A3, A2, A1 are committed + pushed (all ⏳CI,
-> file-disjoint; A1's calibration parked in the ADJUDICATION QUEUE). NEXT: confirm the three CI runs green (`test` +
-> `build-client`) — A3 run 31657640207, A2 run 31658202698, A1's run; fix any red first (my first CI-verified
-> compile, so watch closely). Then build **A4** — finish the 4 order stubs (`RefuelAction`/`ResupplyAction` empty
-> `Execute`, `ServeyAnomalyAction` throws, `ShipLogisticsOrders` empty) so they actually act BEFORE any menu
-> surfaces them (recon result in the workflow journal). Then A5 (order→ability component-scan). Update each slice's
-> row + this NEXT ACTION on landing.
+> **A1–A4 all pushed → gate CI, then build A5 (component-scan) — the last Phase-A slice.** A3/A2/A1/A4 are
+> committed + pushed (A3's compile CI-validated green; A2/A1/A4 file-disjoint, in CI). A1 + A4 have parked items in
+> the ADJUDICATION QUEUE. NEXT: confirm all CI runs green (`test` + `build-client`); fix any red first. Then build
+> **A5** — the order→ability component-scan table + `AbilitiesOf(entity)` (FORCES-WINDOW §4.5), generalizing the
+> `Has*Ability` pattern (`EntityExtensions.cs:199`) — a pure additive engine helper (recon result in the workflow
+> journal). That closes Phase A; then **Phase B** (the Forces window S1→S9). Update each slice's row + this NEXT
+> ACTION on landing.
 
 ---
 
@@ -41,7 +41,7 @@ ladder row and, once landed, the commit sha.
 | A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⏳CI | (pending) · calibration parked ⚖ |
 | A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⏳CI | (pending) |
 | A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
-| A4 | Finish 4 order stubs: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⬜ | |
+| A4 | De-fang the 4 order stubs (no wedge/crash) + park their behavior: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⏳CI | (pending) · 4 behaviors parked ⚖ |
 | A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⬜ | |
 
 ### Phase B — the Forces window (evolve `FleetWindow.cs`, keep the class name) — ladder S1→S9
@@ -112,6 +112,36 @@ game). The code works and is tested; what needs YOUR call is the *number*, befor
 **My recommendation:** **Option A** long-term (it's the honest model — a world's buildings *are* its jobs), but it's
 a balance pass, not a one-liner. Until you want to do that pass, the flag stays off (Option C is the safe interim).
 Nothing else in the campaign is blocked by this — the wire is built and gauged; only the on-switch waits on you.
+
+---
+
+### ⚖ A4-ORDERS — what should the four "issue-and-do-nothing" orders actually DO? (parked 2026-08-13)
+
+**Plain English:** the Forces window offers (or will offer) four orders that were never finished — they issue and do
+nothing. A4 made them **SAFE** (they can no longer jam a fleet's order queue or crash the game clock — real bugs
+that are now fixed). But making each one actually *work* needs a design call from you, because each is genuinely
+ambiguous:
+
+1. **Refuel a fleet in place** — WHAT is a "supply source" (a friendly colony/station you're parked at? a fleet
+   tanker ship?), and must the fleet be physically close enough to receive fuel? (The cargo-transfer code does no
+   distance check, so without a rule it would teleport fuel from anywhere.) **My recommendation:** refuel from a
+   *co-located* friendly colony/station (same body) that holds the fuel — the natural "top off at the base you're
+   at" — reusing the existing, proven `CargoTransferOrder.CreateRefuelFleetCommand`. Say the word and I finish it
+   (also needs a one-line client fix so the menu passes the fleet to the order).
+2. **Resupply a fleet** — this one has no defined meaning yet. Is "resupply" = reloading missile/ordnance
+   magazines? Or an Aurora-style "maintenance supply point" resource that **doesn't exist in this engine at all**?
+   **My recommendation:** define it as ordnance/magazine reload (the only thing the engine can actually move), and
+   I'll build a `CreateResupplyFleetCommand` mirroring the refuel one.
+3. **Survey an anomaly** — this is a near-duplicate of the already-working jump-point survey order (an "anomaly" is
+   the same kind of surveyable point). **My recommendation:** DELETE this half-built duplicate and route "survey
+   nearest anomaly" through the existing survey order — duplicating survey logic just invites the two to drift.
+4. **Ship logistics (per-ship)** — the automated freight market already moves cargo (the base-side bidding loop
+   does the real work), so this per-ship order is a *display shim*. **My recommendation:** leave it a shim (it's
+   correct as-is); building a second per-ship state machine would duplicate the working market. Only revisit if you
+   want manual per-ship logistics control.
+
+**Meanwhile:** Refuel/Resupply currently complete as safe no-ops if issued. If you'd rather they NOT appear in the
+menu until finished, I can pull them from the client's order list — your call (I recommend finishing #1 instead).
 
 ---
 
@@ -219,6 +249,29 @@ before A1); the flag gates the morale term (OFF → neutral 0, byte-identical; O
 grade "BUILD-NOW" flipped to reflect the honest state — the **producer is built** and the wire is complete, but the
 term is **flag-gated pending the parked calibration** (not "live on every colony," which would mislead since it's
 off by default). Backlog item #2 flipped ⬜→✅ (built, flag-gated).
+
+### A4 — de-fang the four order stubs (no wedge, no crash) — ⏳CI · 4 behaviors parked ⚖
+**What it does (plain English):** the Forces window has four orders that were never finished and just do nothing
+when issued. Two of them were worse than useless — a real BUG: "Refuel" and "Resupply," once issued, would **jam
+the fleet's order queue forever** (the order never marked itself done, and a fleet won't take new standing orders
+while its queue is stuck). The other two would **crash the game clock** if ever wired in (they threw an error on
+the background thread when the game tried to copy them). A4 removes both landmines: the two now complete cleanly
+instead of jamming, and the two crash-throwers are made safe.
+
+**Why the behavior is parked, not finished:** making each order actually *work* needs a design decision from the
+developer (what's a supply source, what "resupply" means, whether to finish-or-delete the duplicate anomaly-survey,
+whether the per-ship logistics order should exist at all). Those four decisions are in the ADJUDICATION QUEUE with
+my recommendation for each. The campaign's own STOP rule covers this: a stub with a real open question and no
+documented default gets parked — but I fixed the live bugs (wedge/crash) either way.
+
+**Files:** `RefuelAction.cs` + `ResupplyAction.cs` (de-wedged — `Execute` completes the order so it leaves the
+lane); `ServeyAnomalyAction.cs` (was a raw throwing skeleton → now a safe inert shell, real non-throwing `Clone`;
+the misspelled class name kept — it's embedded in saves, L3); `ShipLogisticsOrders.cs` (real non-throwing `Clone`,
+left as the documented display shim); `Pulsar4X.Tests/OrderStubSafetyTests.cs` (new gauge).
+
+**Gauge:** `OrderStubSafetyTests` — Refuel/Resupply complete after `Execute` (de-wedged, IsFinished flips true);
+`ServeyAnomalyAction`/`ShipLogisticsOrders` `Clone()` doesn't throw; the survey order is a safe inert shell.
+Engine-only, no JSON drift, no save-break (no class renamed).
 
 ---
 

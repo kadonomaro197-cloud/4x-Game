@@ -24,10 +24,19 @@ public class ResupplyAction : EntityCommand
 
     internal override void Execute(DateTime atDateTime)
     {
+        // BEHAVIOR PARKED (OPERATION BLUEPRINT-TO-STEEL A4 — campaign log ADJUDICATION QUEUE): "resupply" is
+        // under-specified — is it reloading missile/ordnance MAGAZINES (ShipMagazineAtb/OrdnancePayloadAtb items),
+        // or an Aurora-style Maintenance-Supply-Point resource that DOES NOT EXIST in this engine? There is no
+        // CreateResupplyFleetCommand helper yet. Needs a developer ruling before it can act.
+        //
+        // DE-WEDGED (this slice): complete immediately so this can never JAM the fleet's blocking order lane (same
+        // fix + reason as RefuelAction — an empty Execute + never-finishing IsFinished stuck the lane forever).
+        _isFinished = true;
     }
 
     internal override bool IsValidCommand(Game game)
     {
+        CommandHelpers.IsCommandValid(game.GlobalManager, RequestingFactionGuid, EntityCommandingGuid, out _, out _entityCommanding);
         return true;
     }
 

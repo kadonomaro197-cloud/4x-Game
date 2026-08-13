@@ -96,6 +96,25 @@ public class ShipLogisticsOrders : EntityCommand
 
     public override EntityCommand Clone()
     {
-        throw new NotImplementedException();
+        // De-crashed (OPERATION BLUEPRINT-TO-STEEL A4): the base-side bidding loop (LogisticsProcessor) drives the
+        // real cargo work, so this per-ship order is a DISPLAY SHIM — Execute is intentionally empty and its only
+        // construction site (LogiShipperDB) has the HandleOrder call commented out, so it is never issued today. But a
+        // throwing Clone would land on the sim thread as a clock-killing [FATAL] if it were ever standing-ordered.
+        // Driving the per-ship CurrentState machine (MoveToSupply→Loading→…) in Execute is a parked design decision
+        // (campaign log ADJUDICATION QUEUE); the blobs re-resolve in IsValidCommand, so the clone needs only the base
+        // command fields + the display strings.
+        var command = new ShipLogisticsOrders
+        {
+            _name = this._name,
+            _details = this._details,
+            UseActionLanes = this.UseActionLanes,
+            RequestingFactionGuid = this.RequestingFactionGuid,
+            EntityCommandingGuid = this.EntityCommandingGuid,
+            CreatedDate = this.CreatedDate,
+            ActionOnDate = this.ActionOnDate,
+            ActionedOnDate = this.ActionedOnDate,
+            IsRunning = this.IsRunning
+        };
+        return command;
     }
 }

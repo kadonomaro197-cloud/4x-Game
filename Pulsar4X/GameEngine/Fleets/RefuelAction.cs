@@ -25,10 +25,24 @@ namespace Pulsar4X.Fleets
 
         internal override void Execute(DateTime atDateTime)
         {
+            // BEHAVIOR PARKED (OPERATION BLUEPRINT-TO-STEEL A4 — campaign log ADJUDICATION QUEUE): the real refuel
+            // transfer needs a developer decision — WHAT counts as a supply source (a co-located friendly
+            // colony/station? a fleet tender with a CargoTransferAtb?) and whether the fleet must be within transfer
+            // RANGE (CargoTransferOrder does no proximity check). Once settled, the proven routine to call is
+            // CargoTransferOrder.CreateRefuelFleetCommand(supply, fleet).
+            //
+            // DE-WEDGED (this slice): complete immediately so this can never JAM the fleet's blocking order lane. The
+            // old body was empty AND IsFinished never flipped true, so once a standing "refuel when low" order fired
+            // this onto the ActionList it stayed there forever (IsBlocking + never-finished), and FleetOrderProcessor
+            // won't add further standing actions while ActionList.Count > 0 — the fleet's order lane was stuck for good.
+            _isFinished = true;
         }
 
         internal override bool IsValidCommand(Game game)
         {
+            // De-fanged: resolve the commanding fleet if we can (mirrors CargoTransferOrder), else stay valid as a
+            // no-op so the order completes and clears rather than erroring on the sim thread.
+            CommandHelpers.IsCommandValid(game.GlobalManager, RequestingFactionGuid, EntityCommandingGuid, out _, out _entityCommanding);
             return true;
         }
 
