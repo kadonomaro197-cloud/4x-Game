@@ -17,6 +17,22 @@ namespace Pulsar4X.Colonies
         public TimeSpan FirstRunOffset { get; } = TimeSpan.FromDays(30);
         public Type GetParameterType { get; } = typeof(ColonyInfoDB);
 
+        /// <summary>
+        /// OPERATION BLUEPRINT-TO-STEEL A1 (civic door / ENGINE-WIRING-BACKLOG TIER 2) — turns ON the employment→morale
+        /// term. Default OFF so a game is byte-identical: with it off the employment ratio reads the -1.0 "no job data"
+        /// neutral sentinel exactly as before (and <c>MoraleTests.StartingColony_HasMorale_NeutralOnHomeworld</c> stays
+        /// green). With it ON, a colony's installed-building jobs (<c>ComponentInstancesDB.GetTotalJobs</c>, now sourced
+        /// from each building's CrewReq) move morale in a ±40 band vs the workforce — the biggest single live behaviour
+        /// change in the backlog (morale feeds migration, tax income, legitimacy), so it is deliberately player/dev-gated
+        /// (the client/menu turns it on when the calibration below is settled).
+        /// ⚠ CALIBRATION PARKED FOR THE DEVELOPER: CrewReq was authored as operating-crew (0..1,000,000 across templates),
+        /// so against a billions-pop workforce the ratio reads heavy unemployment. The denominator (full workforce vs a
+        /// smaller "employable" figure) is a design decision to settle before flipping this on for real. The gauge proves
+        /// the mechanism; the number needs the developer's tuning. Read by all three morale consumers below +
+        /// <c>StationPopulationProcessor</c>.
+        /// </summary>
+        public static bool EnableEmploymentMorale = false;
+
         internal void GrowPopulation(Entity colony)
         {
             // Get current population
@@ -73,7 +89,7 @@ namespace Pulsar4X.Colonies
                 // → neutral employment (sentinel -1), not 100% unemployment. Housing comfort is a bonus.
                 long jobs = instancesDB.GetTotalJobs();
                 long workforce = ColonyManpowerDB.Workforce(totalPop);
-                double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
                 // M4: tax is a morale input (read the colony's tax rate; ColonyEconomyProcessor reads morale
@@ -214,7 +230,7 @@ namespace Pulsar4X.Colonies
 
                 long jobs = instancesDB.GetTotalJobs();
                 long workforce = ColonyManpowerDB.Workforce(totalPop);
-                double employmentRatio = (jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
+                double employmentRatio = (EnableEmploymentMorale && jobs > 0 && workforce > 0) ? (double)jobs / workforce : -1.0;
                 double comfort = instancesDB.GetHousingComfort();
 
                 double taxRate = colony.TryGetDataBlob<ColonyEconomyDB>(out var econDB) ? econDB.TaxRate : 0.0;

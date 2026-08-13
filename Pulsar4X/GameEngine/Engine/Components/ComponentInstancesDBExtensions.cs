@@ -12,17 +12,31 @@ namespace Pulsar4X.Extensions
     public static class ComponentInstancesDBExtensions
     {
         /// <summary>
-        /// Total jobs (worker slots) provided by installed components carrying <see cref="EmploymentAtbDB"/>,
-        /// scaled by component health. Zero when no installation declares jobs (M2 treats that as "no job data"
-        /// → neutral employment, not 100% unemployment). See docs/society/MORALE-AND-POPULATION-DESIGN.md.
+        /// Total jobs (worker slots) an entity's installed components provide — the EMPLOYMENT the morale model reads
+        /// against the workforce. Per the civic-door design ("jobs are published from every industry building's CrewReq",
+        /// civicderived.html:207), a component's operating-CREW requirement IS its employment — an emergent colony total,
+        /// no new data. A component may OVERRIDE that with an explicit <see cref="EmploymentAtbDB.Jobs"/> (e.g. a habitat
+        /// that employs beyond its raw operating crew), which keeps that attribute live rather than dead. Health-scaled
+        /// (a bomb-damaged factory employs fewer). Only enabled components count.
+        ///
+        /// This is ONE producer read by (eventually) TWO consumers — the ±40 employment→morale term
+        /// (<see cref="PopulationProcessor"/>) and the future workforce→production staffing throttle (ENGINE-WIRING-BACKLOG
+        /// TIER 2.6) — so this number stays TRUTHFUL. The behaviour flag that turns the morale term on lives at the morale
+        /// consumers (<c>PopulationProcessor.EnableEmploymentMorale</c>), not here, so the staffing reader gets the real
+        /// figure. Before A2/employment-wiring (2026-08-13) no template declared jobs, so this summed to 0 forever.
+        /// See docs/society/MORALE-AND-POPULATION-DESIGN.md + docs/assembler/ENGINE-WIRING-BACKLOG-2026-08-06.md TIER 2.
         /// </summary>
         public static long GetTotalJobs(this ComponentInstancesDB componentInstances)
         {
             long jobs = 0;
-            foreach (var design in componentInstances.GetDesignsByType(typeof(EmploymentAtbDB)))
+            foreach (var byDesign in componentInstances.GetComponentsByDesigns())
             {
-                int perComponent = design.GetAttribute<EmploymentAtbDB>().Jobs;
-                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                if (!componentInstances.AllDesigns.TryGetValue(byDesign.Key, out var design)) continue;
+                // Jobs = an explicit EmploymentAtbDB.Jobs override if the component declares one, else the building's
+                // operating-crew requirement (the civic-door default). A component with neither declares no jobs.
+                long perComponent = design.TryGetAttribute<EmploymentAtbDB>(out var emp) ? emp.Jobs : design.CrewReq;
+                if (perComponent <= 0) continue;
+                foreach (var component in byDesign.Value.Where(c => c.IsEnabled))
                     jobs += (long)(perComponent * component.HealthPercent);
             }
             return jobs;

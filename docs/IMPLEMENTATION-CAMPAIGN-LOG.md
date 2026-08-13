@@ -15,13 +15,13 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **A2 + A3 pushed → gate CI on both, then build A1 (employment, flag-gated).** A3 (`ShipRoleTools`) + A2
-> (ground penetration) are committed + pushed (both ⏳CI, file-disjoint). NEXT: check the CI runs (GitHub MCP
-> `actions_list`/`get_job_logs`) for `e91b722` (A3) + the A2 commit; if red, fix first. Then build **A1** —
-> Employment→morale producer, flag-gated default-off (`PopulationProcessor.EnableEmploymentMorale`), byte-identical
-> off; **PARK the calibration question** in the ADJUDICATION QUEUE (CrewReq-as-jobs reads heavy unemployment vs a
-> billions-pop workforce — the developer must decide the denominator before the flag goes on for real). Then A4
-> (order stubs), A5 (component scan).
+> **A1/A2/A3 all pushed → gate CI, then build A4 (order stubs).** A3, A2, A1 are committed + pushed (all ⏳CI,
+> file-disjoint; A1's calibration parked in the ADJUDICATION QUEUE). NEXT: confirm the three CI runs green (`test` +
+> `build-client`) — A3 run 31657640207, A2 run 31658202698, A1's run; fix any red first (my first CI-verified
+> compile, so watch closely). Then build **A4** — finish the 4 order stubs (`RefuelAction`/`ResupplyAction` empty
+> `Execute`, `ServeyAnomalyAction` throws, `ShipLogisticsOrders` empty) so they actually act BEFORE any menu
+> surfaces them (recon result in the workflow journal). Then A5 (order→ability component-scan). Update each slice's
+> row + this NEXT ACTION on landing.
 
 ---
 
@@ -38,7 +38,7 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⬜ | |
+| A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⏳CI | (pending) · calibration parked ⚖ |
 | A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⏳CI | (pending) |
 | A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
 | A4 | Finish 4 order stubs: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⬜ | |
@@ -88,9 +88,35 @@ ladder row and, once landed, the commit sha.
 
 ## ADJUDICATION QUEUE (items parked for the developer — §6 STOP conditions)
 
-*None yet.* When a slice hits a genuine ambiguity (two HTMLs contradict, a save-break with no safe pattern, a
-DECISION-PENDING with no default, or an HTML number impossible without a redesign), it parks here with a
-plain-English question + options + my recommendation, and I keep working every unaffected slice.
+### ⚖ A1-CALIBRATION — should turning employment→morale ON use the full workforce as the denominator? (parked 2026-08-13)
+
+**Plain English:** A1 wired up the "do people have jobs?" morale term. The engine now counts a colony's jobs by
+adding up every building's operating-crew requirement. The problem: those crew numbers were written as "how many
+people it takes to RUN the building" (a factory might list a few thousand, a spaceport up to a million), while a
+homeworld has **billions** of people. So "jobs ÷ workforce" comes out near zero — the game would read almost every
+colony as **near-total unemployment** and dock up to −40 morale everywhere the moment the term is switched on.
+
+That's why A1 shipped with the term **flag-gated OFF by default** (byte-identical — nothing changes in a current
+game). The code works and is tested; what needs YOUR call is the *number*, before the flag is turned on for real.
+
+**The question:** when we turn employment-morale on, what should "full employment" mean?
+- **Option A — keep the full workforce as the denominator, and re-tune the building CrewReq numbers** so a colony's
+  buildings realistically employ a big fraction of its people. (Most faithful to "jobs come from buildings"; most
+  data to re-balance.)
+- **Option B — divide jobs by a smaller "employable" figure**, not the whole workforce (e.g. only the fraction of
+  population actually seeking industrial work), so today's CrewReq numbers land near full employment. (Least
+  data-churn; changes what "workforce" means for this term.)
+- **Option C — leave it OFF** for now; it's a future-economy nicety, not on the MVP path. (Zero risk; the term
+  stays dark until you want it.)
+
+**My recommendation:** **Option A** long-term (it's the honest model — a world's buildings *are* its jobs), but it's
+a balance pass, not a one-liner. Until you want to do that pass, the flag stays off (Option C is the safe interim).
+Nothing else in the campaign is blocked by this — the wire is built and gauged; only the on-switch waits on you.
+
+---
+
+*(Other slices with genuine ambiguity — two HTMLs contradict, a save-break with no safe pattern, a DECISION-PENDING
+with no default, or an HTML number impossible without a redesign — will park here the same way.)*
 
 Known future parks (from the backlog, not yet reached):
 - **TIER 4 items 6–8** (Console Space on ship bridge · chassis √-law slider · Fighter Construction Points) are
@@ -166,6 +192,33 @@ pen; and `GroundDamageMatrix.ArmourSoak` lands more with pen than without (AP cr
 **HTML badge:** the entityassembler.html penetration badge already read "LIVE on ground" — A2 makes that claim
 true for the assembler path too, so no HTML flip was needed. The backlog item #1 flipped ⬜→✅ (the engine caught
 up to the badge).
+
+### A1 — Employment → morale producer (feed the ±40 term "that can never fire") — ⏳CI · calibration parked ⚖
+**What it does (plain English):** the game has a morale rule for "do people have jobs?" — but it never actually
+worked, because nothing in the game ever declared a single job, so the number was always zero. A1 wires it up: a
+colony's jobs are now counted from its buildings' operating-crew requirement (a factory that needs 500 crew
+provides 500 jobs), exactly as the civic-door design says.
+
+**Why it's flag-gated (and parked):** turning this on is the single biggest live behaviour change in the backlog —
+morale feeds migration, tax income, and legitimacy. And there's a calibration wrinkle: the crew numbers were
+written as "crew to run the building," which against a billions-population homeworld reads as near-total
+unemployment (up to −40 morale everywhere). So A1 ships the term **switched OFF by default**
+(`PopulationProcessor.EnableEmploymentMorale`) — a current game is byte-identical — and the "should we turn it on,
+and with what denominator?" decision is **parked in the ADJUDICATION QUEUE** above for the developer. The wire is
+built and tested; only the on-switch waits.
+
+**Files:** `ComponentInstancesDBExtensions.cs` (`GetTotalJobs` now sums `CrewReq`, `EmploymentAtbDB.Jobs` overrides
+— keeps that attribute live, no dead code); `PopulationProcessor.cs` (the `EnableEmploymentMorale` flag + gates at
+its 2 morale sites); `StationPopulationProcessor.cs` (the shared gate); `Pulsar4X.Tests/EmploymentMoraleTests.cs`
+(new gauge).
+
+**Gauge:** `EmploymentMoraleTests` — the producer now reads a non-zero jobs total on a staffed colony (was 0
+before A1); the flag gates the morale term (OFF → neutral 0, byte-identical; ON → the term fires).
+
+**HTML badge:** civicderived.html's "the morale term that can never fire" / "ZERO. Nothing produces it" / Jobs
+grade "BUILD-NOW" flipped to reflect the honest state — the **producer is built** and the wire is complete, but the
+term is **flag-gated pending the parked calibration** (not "live on every colony," which would mislead since it's
+off by default). Backlog item #2 flipped ⬜→✅ (built, flag-gated).
 
 ---
 

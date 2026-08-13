@@ -96,7 +96,19 @@ Ordered by **impact × cheapness** — the same ranking as the audit.
 
 ## TIER 2 — The cheapest base-game fix (every colony, every game)
 
-### 2. An Employment producer — feed the morale term that can never fire  ⬜ NOT BUILT
+### 2. An Employment producer — feed the morale term that can never fire  ✅ BUILT — FLAG-GATED (2026-08-13, OPERATION BLUEPRINT-TO-STEEL A1)
+
+> ✅ **PRODUCER BUILT (option a).** `ComponentInstancesDBExtensions.GetTotalJobs` now sources each installed building's
+> operating-CREW requirement (`ComponentDesign.CrewReq`) as its employment — the civic-door design exactly, no new data
+> (an explicit `EmploymentAtbDB.Jobs` still overrides where a template declares one, so the attribute stays live, not
+> dead). So the morale term's producer is no longer 0. The ±40 employment→morale term is **FLAG-GATED**
+> (`PopulationProcessor.EnableEmploymentMorale`, default OFF → byte-identical; the -1.0 neutral sentinel and
+> `MoraleTests` stay green) at all three consumers (`PopulationProcessor` ×2 + `StationPopulationProcessor`). Gauge:
+> `EmploymentMoraleTests`. **⚠ CALIBRATION PARKED FOR THE DEVELOPER (turn-on decision):** CrewReq was authored as
+> operating-crew (0..1,000,000 across templates), so against a billions-pop workforce the ratio reads heavy
+> unemployment — flipping the flag on unbaselined pushes every colony's morale down. The denominator (full workforce vs
+> a smaller "employable" figure) is the developer's call before the client/menu turns it on. The mechanism is proven;
+> the number needs tuning. (Recorded in `docs/IMPLEMENTATION-CAMPAIGN-LOG.md` ADJUDICATION QUEUE.)
 - **What the tool already promises.** The civic door's whole thesis is *"the morale term that can never fire"*
   (`civicderived.html:152-279`): the intended design is that a colony's **jobs** move morale in a ±40 band,
   and jobs are *"published from every industry building's `CrewReq`, an emergent colony total"*
