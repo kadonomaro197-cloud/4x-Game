@@ -261,8 +261,8 @@ Two of the §2 inputs are **cross-body reads** (a moon reads its parent giant's 
 
 The forensics surfaced silent authoring errors that partly explain the "edit a bunch" pain:
 
-- **`"HyrdoExtent"` misspelled** on `mars.json` / `titan.json` / `saturn.json` — the loader reads the correct key, so these bodies silently read **hydrosphere 0**. (This is the class of bug root `CLAUDE.md` gotcha #10 is about — a reference that doesn't bind fails silent.)
-- **Mercury and Mars authored `Tectonics: "earth-like"`** — wrong (both are geologically near-dead); the value drives ash-storm generation + mountain terrain, so they generate hazards they shouldn't.
+- ✅ **FIXED 2026-08-13.** **`"HyrdoExtent"` misspelled** — the loader reads the correct key `HydroExtent` (`SystemBodyBlueprint.cs:64`, consumed `SystemBodyFactory.cs:180`), so these bodies silently read **hydrosphere 0**. (This is the class of bug root `CLAUDE.md` gotcha #10 is about — a reference that doesn't bind fails silent.) *Actual affected files were `mars`/`saturn`/`jupiter`/`uranus`/`neptune`/`dwarfPlanets` (10 keys — not `titan`, which has no such field); all authored values were **0**, so the rename is a pure correctness fix (0 stays 0) that removes the silent-fail landmine.*
+- ✅ **FIXED 2026-08-13.** **Mercury and Mars authored `Tectonics: "earth-like"`** — wrong (both are geologically near-dead); the value drives ash-storm generation + mountain terrain (the hazard flag `Tectonics != Dead && != Unknown`, `PlanetEnvironmentFactory.cs:73`), so they generated hazards they shouldn't. *Set both to `"dead"` (the only terrestrial value that makes the flag false; Earth stays `earth-like`, Venus left active). No test pins Mars/Mercury terrain; the home colony is Earth.*
 
 ---
 

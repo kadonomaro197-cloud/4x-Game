@@ -129,7 +129,7 @@
       "Atmosphere": {
         "Pressure": 0.00000987,
         "Hydrosphere": false,
-        "HyrdoExtent": 0,
+        "HydroExtent": 0,
         "GreenhouseFactor": 0,
         "GreenhousePressure": 0,
         "SurfaceTemperature": -229,
