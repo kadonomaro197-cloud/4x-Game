@@ -29,13 +29,18 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > **Enumeration (recon done):** fleets = `PlayerFaction.GetDataBlob<FleetDB>().GetChildren()` (the faction entity's
 > root FleetDB, the same `factionRoot` the Fleets tab walks at `:128`/`:1990`); ships = recurse that fleet tree
 > collecting the `IsValid && !HasDataBlob<FleetDB>()` children (the exact filter used at `:990`); battalions =
-> `GroundFormationTools.AllFormationsFor(game, PlayerFaction.Id)`. Fold each into a `ForceRef`; draw each row with the
-> S3 methods; add the Domain / Mil-Civ / Class (via `ClassifyRole`) / Location
-> filters; and a **kind-swapping detail panel** below that dispatches on `_selRoster.Kind` (Fleet → the combat sheet,
-> Battalion → `DrawBattalionOrders`, Ship → entity info). Seed the `ShipRanges` cache for the roster's ships (S3 note)
-> so the Beam/See/Seen columns are real, not "—". Add a `ForceRef _selRoster` field (distinct from `_selBattalion`).
-> Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't
-> runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S6–S9 + B-orders follow S5.)
+> `GroundFormationTools.AllFormationsFor(game, PlayerFaction.Id)`. Fold each into a `ForceRef`. ⚠ **Table shape (per
+> design §4.2, corrected):** the flat roster is a **COMMON-column** table — Unit / Domain(Space·Ground) / Kind(Ship·
+> Formation) / **Class** (`ShipRoleTools.ClassifyRole` for ships, `GroundRoleComposer.ClassifyRole` for formations) /
+> **Mil-Civ** (`ShipRoleTools.IsMilitary`) / Location(`PositionDB` system·body / `LeaderRegion`) / Strength
+> (`ShipCombatValueDB.Firepower` / `FormationStrength`) / Order — **NOT** the kind-specific S3 rows. Health is BUILD-space
+> (needs the S8 aggregate accessor) → show "—" for ships this slice. So B-S5 writes a NEW common-column `DrawRosterRow`;
+> the **S3 rows + whole panels serve the DETAIL panel (§4.3), which swaps by `_selRoster.Kind`:** Ship→warship combat
+> sheet (`DisplayFleetCombatSheet`-style) / Formation→`DrawBattalionOrders`, each led by a "why this Class?" line.
+> Filters: Domain / Role(Mil-Civ) / Class / Location / search. Add a `ForceRef _selRoster` field (distinct from
+> `_selBattalion`). Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it
+> but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S6 adds per-unit child rows +
+> `AllUnitsFor`; S7–S9 + B-orders follow.)
 
 ---
 
