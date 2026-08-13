@@ -511,9 +511,19 @@ namespace Pulsar4X.Tests
                          ("electronics-d",     "electronics",     "electronics-a"),
                      })
             {
-                var c = data.CargoGoods.GetAny(cheap) as Pulsar4X.Industry.ProcessedMaterial;
-                var m = data.CargoGoods.GetAny(std) as Pulsar4X.Industry.ProcessedMaterial;
-                var p = data.CargoGoods.GetAny(prem) as Pulsar4X.Industry.ProcessedMaterial;
+                // ⚠ The grade ladder is DELIBERATELY unwired — the four grade materials sit on the awaitingAMechanic
+                // list above precisely BECAUSE no build-with-grade mechanic exists to unlock them, so they are in no
+                // colony's StartingItems and never unlock. A faction's `CargoGoods` starts EMPTY and only holds
+                // UNLOCKED goods (Unlock moves them out of `LockedCargoGoods` — FactionDataStore.cs:41/43/98-99), so
+                // a locked grade material reads null from `CargoGoods.GetAny` even though it is a perfectly good
+                // authored blueprint. Look it up in the unlocked store OR the locked one, so the ladder-SHAPE checks
+                // below run against the authored data regardless of unlock state. UNLOCKING these would create real
+                // refining jobs "you can queue forever for no reason" — the exact thing this whole audit condemns.
+                Pulsar4X.Industry.ProcessedMaterial Mat(string id) =>
+                    (data.CargoGoods.GetAny(id) ?? data.LockedCargoGoods.GetAny(id)) as Pulsar4X.Industry.ProcessedMaterial;
+                var c = Mat(cheap);
+                var m = Mat(std);
+                var p = Mat(prem);
                 Assert.That(c, Is.Not.Null); Assert.That(m, Is.Not.Null); Assert.That(p, Is.Not.Null);
                 Log($"  grade ladder {cheap} {c.CreditValue} < {std} {m.CreditValue} < {prem} {p.CreditValue}");
                 Assert.That(c.CreditValue, Is.LessThan(m.CreditValue),

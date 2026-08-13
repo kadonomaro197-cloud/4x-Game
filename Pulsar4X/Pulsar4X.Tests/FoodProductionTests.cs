@@ -10,6 +10,7 @@ using Pulsar4X.Datablobs;          // ComponentInstancesDB (namespace ≠ folder
 using Pulsar4X.Colonies;
 using Pulsar4X.Modding;
 using Pulsar4X.Extensions;         // GetTotalFoodOutput / GetAverageFoodQuality
+using Pulsar4X.Storage;            // CargoStorageDB, GetUnitsStored, CargoTransferProcessor (drain the banked food)
 
 namespace Pulsar4X.Tests
 {
@@ -206,9 +207,24 @@ namespace Pulsar4X.Tests
             // Destroy the farm — the exact removal an orbital-bombardment installation-kill performs.
             comps.RemoveComponentInstance(instance);
             Assert.That(comps.GetTotalFoodOutput(), Is.EqualTo(0.0), "no food output once the farm is gone");
+
+            // ⚠ While it stood, the farm GREW 5000/day and the colony ate 2000/day, so SustenanceProcessor.BankFoodSurplus
+            // banked the ~90,000-unit surplus into the colony's cold store — a DELIBERATE food-supply-line buffer (a
+            // colony survives on stored reserves after its farm dies; the shippable-food feature is its own gauge,
+            // Food_IsAShippableGood_AndAnImportedStockpileFeedsAColony). So the grave rung is NOT that starvation is
+            // instantaneous — it is that food is a LOSABLE capability: with no production AND no reserves, the colony
+            // starves. Drain the banked reserve to test that TRUE grave condition (draining, not fighting the buffer,
+            // keeps the shipped feature intact).
+            var food = fData.CargoGoods.GetAny(SustenanceProcessor.FoodGoodID);
+            var hold = s.Colony.GetDataBlob<CargoStorageDB>();
+            long banked = hold.GetUnitsStored(food, false);
+            Assert.That(banked, Is.GreaterThan(0),
+                "the running farm banked its surplus into the cold store — the buffer that (correctly) delays starvation");
+            CargoTransferProcessor.RemoveCargoItems(s.Colony, food, banked > int.MaxValue ? int.MaxValue : (int)banked);
+
             SustenanceProcessor.Recalc(s.Colony);
             Assert.That(sust.FoodShortage, Is.EqualTo(1.0),
-                "destroying the farm returns the colony to total food shortage — food is a losable capability");
+                "with the farm destroyed AND the food reserve exhausted, the colony returns to total shortage — food is a losable capability");
         }
     }
 }

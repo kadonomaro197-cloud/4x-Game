@@ -107,43 +107,39 @@ ladder row and, once landed, the commit sha.
 
 ## ADJUDICATION QUEUE (items parked for the developer — §6 STOP conditions)
 
-### 🔴 PRE-EXISTING BASE RED — two economy tests were already failing when this campaign branched (found 2026-08-13)
+### ✅ RESOLVED — the two PRE-EXISTING base-red economy tests are FIXED (developer authorized "do the data design call", 2026-08-13)
 
-**Plain English:** when this campaign's branch was cut, two tests were **already red** — they broke on the PR #90
-merge, *before* I touched a single line. I proved it: my very first commit here was **docs-only** (no code), and
-CI failed it on these same two tests. Every one of my five code slices (A1–A5) also fails **only** these same two
-and nothing more. So they are not my breakage — but they matter, because they turn the CI board red, and a red
-board is exactly the gauge this campaign trusts. I've **surfaced** them here rather than fix them, for two reasons:
-they're in the **economy** system (food + cargo) — a different subsystem than this campaign owns (combat / ground
-/ ships / UI) — and fixing either is a **data-design decision that's yours**, not a one-line typo.
+**Plain English:** when this campaign branched, two tests were **already red** (proven: the docs-only opening commit
+failed them identically). The developer authorized the data-design call, so both are now fixed. **Both turned out to
+be TEST bugs — the engine and data were CORRECT** — where an older test expectation met a newer, deliberately-built
+feature (a "merge-semantic break"). Both fixes are **test-only and byte-identical** (zero engine/data/JSON change),
+verified by a parallel investigation workflow + independent source reads that agreed exactly.
 
-**The two failing tests (both in the `rest` shard):**
-1. `CargoCompartmentTests.EveryResource_IsConsumedBySomething` — *Expected: not null, But was: null.* A data-audit
-   gauge that insists every material a colony can hold is **consumed by something** (a recipe, a build cost, or a
-   fuel dial). One resource now has no consumer. The fix is a judgment call: either give that resource a consumer,
-   or retire it from the data — an economy-content decision.
-2. `FoodProductionTests.FoodProduction_GraveRung_DestroyingTheFarmReturnsStarvation` — *Expected: 1.0, But was:
-   0.0.* After a farm is built (food supply covers demand → shortage 0), the test destroys the farm and expects the
-   shortage to return to total (1.0). It stays at 0.0 — i.e. a **destroyed farm no longer re-triggers starvation**.
-   Most likely a food-buffering / stockpile interaction that changed in the merge; diagnosing it means reading the
-   `SustenanceProcessor` food-balance path, an economy job.
+1. **`CargoCompartmentTests.EveryResource_IsConsumedBySomething`** — *was Expected: not null, But was: null.* The
+   failing assert was **not** the "unconsumed resource" check (that passes); it was the **grade-ladder shape check**
+   (`:508-525`) which looks up four deliberately-unwired materials (`stainless-steel-d/-a`, `electronics-d/-a`) via
+   the faction's **UNLOCKED** store `data.CargoGoods`. Those four sit on the test's own "awaiting-a-mechanic" list —
+   they have no build-with-grade mechanic yet, so they are correctly **never unlocked**, so `CargoGoods.GetAny`
+   returns null (a faction's `CargoGoods` starts empty; all materials live in `LockedCargoGoods` until unlocked —
+   `FactionDataStore.cs:41/98-99`). **Fix:** the ladder lookup falls back to `LockedCargoGoods` so the shape check
+   runs against the authored blueprint regardless of unlock state. **Data call: the four materials STAY LOCKED** —
+   unlocking them would create "refining jobs you can queue forever for no reason", the exact thing this audit
+   condemns.
+2. **`FoodProductionTests.FoodProduction_GraveRung_DestroyingTheFarmReturnsStarvation`** — *was Expected: 1.0, But
+   was: 0.0.* The engine is correct: while the farm ran (5000/day grown vs 2000/day eaten),
+   `SustenanceProcessor.BankFoodSurplus` banked the ~90,000-unit surplus into the colony's cold store — a
+   **deliberate food-supply-line buffer** (its own gauge: `Food_IsAShippableGood_…`). So a destroyed farm doesn't
+   starve the colony *instantly*; it starves once reserves run out. The old test expected instant starvation. **Fix:**
+   the grave-rung gauge now **drains the banked reserve** after destroying the farm, then asserts total shortage — the
+   TRUE grave condition (no production AND no reserves). Food stays a losable capability; the buffer stays intact.
 
-**Why the merge did it (best read):** both test files were last touched on the *other* side of the PR #90 merge
-(`CargoCompartmentTests` in `0db10e3` "fix CI: four breaks…"). This has the shape of a **merge-semantic break** —
-a test from one branch meeting data/code from the other — where each side was green alone but the combination
-isn't. `b0f005f` (the Sol-JSON fix in the merge) only touched Mars/Mercury/gas-giant data, **not Earth** (where the
-test colony lives), so it's probably not the cause; the cause is likely upstream in the merged economy code.
+**Files:** `Pulsar4X.Tests/CargoCompartmentTests.cs` (grade-ladder lookup → locked-store fallback) ·
+`Pulsar4X.Tests/FoodProductionTests.cs` (drain the banked food before the grave assert; `+using Pulsar4X.Storage`).
 
-**THE CAMPAIGN VERIFICATION PROTOCOL (how every future slice is judged green — use this every push):**
-> A slice is **CLEAN** iff, in its CI run: (a) `build-client` is green, (b) all six non-`rest` shards are green,
-> and (c) the `rest` shard fails **exactly these two tests and no others**. Any *third* failure — or a failure in
-> any other shard — is **mine** and blocks the slice until fixed. (Check with GitHub MCP `get_job_logs` on the
-> `rest` job; the per-test table lists every ❌ by name.)
-
-**My recommendation:** leave them to the economy work / to you — they're outside this campaign's scope and need a
-data call. If you'd rather I take a run at them as a one-off "green the base" commit, say so and I'll dig into the
-`SustenanceProcessor` + the cargo-consumer audit; but I won't guess at economy content unasked. Nothing in this
-campaign is blocked by them beyond needing the two-line protocol above to read the board.
+**THE CAMPAIGN VERIFICATION PROTOCOL — UPDATED (the base is now GREEN):**
+> A slice is **CLEAN** iff its CI run is **fully green — `build-client` + all seven test shards, zero failures.**
+> (Before this fix the protocol tolerated exactly two known `rest`-shard failures; that carve-out is retired — any
+> red is now real.) Check with GitHub MCP `get_job_logs` on any failed job.
 
 ---
 
