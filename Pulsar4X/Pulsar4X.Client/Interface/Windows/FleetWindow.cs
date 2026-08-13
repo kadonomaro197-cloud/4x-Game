@@ -1148,25 +1148,29 @@ namespace Pulsar4X.Client
 
         private void DisplayBattalions()
         {
-            if(_uiState.Faction == null) { ImGui.TextDisabled("No faction loaded."); return; }
-            int myFaction = _uiState.Faction.Id;
+            // B-S1: this is the player's ORDER OF BATTLE — scope it to PlayerFaction (FORCES-WINDOW-DESIGN §S1), so it
+            // shows YOUR battalions even while SM-viewing another faction. Normal play PlayerFaction == Faction, so this
+            // is byte-identical there; the `?? Faction` fallback keeps it working if PlayerFaction is somehow unset.
+            var forceFaction = _uiState.PlayerFaction ?? _uiState.Faction;
+            if(forceFaction == null) { ImGui.TextDisabled("No faction loaded."); return; }
+            int myFaction = forceFaction.Id;
 
             DisplayHelpers.Header("Battalions",
                 "Your ground formations across every world — the ground echo of the fleet list. Select one to command it.");
 
-            // Gather every player formation across all known systems/bodies (pure client; mirrors the ship-enumeration
-            // precedent in SystemMapRendering — the engine's AllFormationsFor helper is a GROUND follow-up).
+            // B-S1: gather every one of the player's formations across every world via the BUILT engine helper
+            // (GroundForcesDB.cs:1147 — its doc comment names this window; CI-pinned by
+            // EfGroundFormUpTests.AllFormationsFor_EnumeratesAcrossBodies_FactionFiltered). Replaces the old hand-rolled
+            // walk over _uiState.StarSystemStates (which could miss a body that dropped out of the known-systems view).
+            // Reconstruct the (system, forces) the table's filters + aggregators read off the body the helper returns —
+            // body.Manager IS the StarSystem (the same cast the position path uses at :310).
             var all = new List<(Entity body, StarSystem system, GroundForcesDB forces, GroundFormation formation)>();
-            foreach(var (_, sysState) in _uiState.StarSystemStates)
+            foreach(var (body, f) in GroundFormationTools.AllFormationsFor(_uiState.Game, myFaction))
             {
-                var system = sysState?.StarSystem;
+                if(body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) continue;
+                var system = body.Manager as StarSystem;
                 if(system == null) continue;
-                foreach(var body in system.GetAllEntitiesWithDataBlob<GroundForcesDB>())
-                {
-                    if(!body.TryGetDataBlob<GroundForcesDB>(out var forces)) continue;
-                    foreach(var f in GroundFormationTools.FormationsFor(forces, myFaction))
-                        all.Add((body, system, forces, f));
-                }
+                all.Add((body, system, forces, f));
             }
 
             if(all.Count == 0)

@@ -20,10 +20,12 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > `build-client` and all six other shards are green; every new A1–A5 test passes. My slices add **zero** new
 > failures (see PRE-EXISTING BASE RED below for the two-line pass/fail protocol). Parked for the developer: A1
 > calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE) + the two base-red economy tests (surfaced, not mine).
-> NEXT: begin **Phase B — the Forces window**: slice **B-S1** (point the Battalions tab at the built
-> `GroundFormationTools.AllFormationsFor`, scope to PlayerFaction — pure reuse, DATA-grade) per FORCES-WINDOW-DESIGN
-> §8. Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't
-> runtime-test, so add each behavior to `docs/CLIENT-TEST-CHECKLIST.md`.
+> **B-S1 is pushed (⏳CI):** the Battalions tab now gathers via the built `GroundFormationTools.AllFormationsFor`,
+> scoped to PlayerFaction. NEXT: confirm the B-S1 CI run is CLEAN by the PRE-EXISTING BASE RED protocol (build-client
+> green + only the two known `rest` failures), then continue Phase B with **B-S3** (make the ship-combat-row +
+> battalion-row reusable — FORCES-WINDOW S3) toward the S4 selection refactor and the S5 All-Forces roster. Phase B
+> evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so
+> each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
 
 ---
 
@@ -50,7 +52,7 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ⬜ | |
+| B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ⏳CI | (pending) |
 | B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ⬜ | |
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ⬜ | |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⬜ | |
@@ -201,6 +203,33 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-S1 — Battalions tab reads the built cross-body helper — ⏳CI
+**What it does (plain English):** the "Battalions" tab of the Force Management window lists every ground formation you
+own across every world — the ground echo of the fleet list. It was gathering that list the hard way: walking every
+star system the player currently knows and summing up each world's formations by hand, with a code comment admitting
+"there's no engine helper for this yet." That engine helper *does* exist now (`AllFormationsFor` — its own comment
+literally names this window as the thing it was built for), so this slice just points the tab at it.
+
+**Why it matters:** it's the studio "one place, one way" discipline — the engine now owns "list all my battalions
+across the galaxy" as ONE tested method, instead of the client re-deriving it. The hand-rolled walk could also *miss*
+a battalion sitting on a world that had dropped out of the player's known-systems view; the engine helper walks the
+real game, so your order of battle is complete. And it's scoped to **PlayerFaction** (the design's call), so the tab
+shows YOUR battalions even while a Space-Master session is viewing another faction — before, SM mode showed the
+viewed faction's (empty for the Game Master).
+
+**Files:** `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` (`DisplayBattalions` — the gather swapped from the
+`StarSystemStates` walk to `GroundFormationTools.AllFormationsFor(game, myFaction)`; `myFaction` now
+`PlayerFaction ?? Faction`; each returned body reconstructs its `(system, forces)` via `body.Manager as StarSystem` —
+the same cast the position path already uses). Docs: `Pulsar4X.Client/CLAUDE.md` (Battalions-tab stale "no engine
+helper yet" note corrected), `docs/CLIENT-TEST-CHECKLIST.md` (B-S1 runtime row).
+
+**Gauge:** the engine helper is already CI-pinned by
+`EfGroundFormUpTests.AllFormationsFor_EnumeratesAcrossBodies_FactionFiltered` (cross-body enumeration, faction-filtered,
+each paired with its body) — the exact contract this tab now relies on — so no new engine test was needed. The client
+change is compile-checked by the `build-client` CI job; its runtime look/feel is the developer's local build
+(CLIENT-TEST-CHECKLIST B-S1). **Byte-identical in normal play** (PlayerFaction == Faction, and `AllFormationsFor`
+returns the same formations the hand-walk did for known systems); only SM-mode scoping + completeness improve.
 
 ### A3 — `ShipRoleTools.ClassifyRole` (the ship role classifier) — ✅ `e91b722`
 **What it does (plain English):** the engine now has ONE place that decides what KIND a ship is — warship,

@@ -252,12 +252,15 @@ The ground echo of the fleet manager, and the reason the window is now **"Force 
 on `FleetWindow` (beside "Fleets") that makes ground formations first-class citizens the player can command from ONE
 place, across ALL their worlds — the same way the Fleets tab commands ships. `DisplayBattalions()`:
 
-1. **Cross-body registry** — enumerates every world the player knows that carries a `GroundForcesDB`
-   (`_uiState.StarSystemStates` → each `StarSystem.GetAllEntitiesWithDataBlob<GroundForcesDB>()` →
-   `GroundFormationTools.FormationsFor(forces, factionId)`), the exact pure-client enumeration precedent `SiteWindow`
-   uses. **There is no engine cross-body helper yet** (`GroundFormationTools.AllFormationsFor` is a GROUND follow-up);
-   the client sums per-body `FormationsFor` itself. The engine contract is CI-pinned by
-   `EfC3BattalionRegistryTests` (two formations on two bodies both collected + aggregated, enemy excluded).
+1. **Cross-body registry** — enumerates every one of the player's ground formations across every world via the BUILT
+   engine helper **`GroundFormationTools.AllFormationsFor(game, factionId)`** (`GroundForcesDB.cs:1147`), scoped to
+   **`PlayerFaction`** (this is your order of battle, shown even while SM-viewing another faction — normal play
+   `PlayerFaction == Faction`, byte-identical). ⚠ **UPDATED 2026-08-13 (OPERATION BLUEPRINT-TO-STEEL B-S1):** this used
+   to hand-roll the walk over `_uiState.StarSystemStates` → per-body `GroundFormationTools.FormationsFor` because "there
+   was no engine cross-body helper yet." That helper now exists and this tab uses it (its own doc comment names this
+   window); the client reconstructs the `(system, forces)` the table needs off each returned body (`body.Manager as
+   StarSystem`). Engine contract CI-pinned by `EfGroundFormUpTests.AllFormationsFor_EnumeratesAcrossBodies_FactionFiltered`
+   (cross-body, faction-filtered) + the aggregation half by `EfC3BattalionRegistryTests`.
 2. **Table** — Battalion (name + member count) / World / Region (`GroundForces.LeaderRegion`) / Strength
    (`FormationStrength`) / Health (`FormationHealth`) / Reach (`FormationReachHexes` in hexes) / Stance / ROE, with
    **filters** (system combo / world combo / "with orders only" checkbox). A `Selectable` row selects the battalion

@@ -280,3 +280,17 @@ Source: `docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`. CI can't run the client
       Expected today: **the middle faction takes roughly double** — a unit applies its full attack pool to each enemy
       faction (`GroundForcesProcessor.cs:443/:445` + `:491`/`:524`). This is the live double-count bug (record §10
       row 4); the fix is the pinned residual allocation in §13.7.
+
+---
+
+## 🎯 ADDED 2026-08-13 — OPERATION BLUEPRINT-TO-STEEL (Phase B: the Forces window)
+
+Source: `docs/IMPLEMENTATION-CAMPAIGN-LOG.md` + `docs/combat/FORCES-WINDOW-DESIGN.md`. CI compiles the client but can't
+run it — these need the local Windows build.
+
+- [ ] **B-S1 — the Battalions tab still lists every battalion across every world.** Force Management ▸ Battalions now
+      gathers via the engine's `GroundFormationTools.AllFormationsFor` (was a hand-rolled walk). Raise ground units on
+      TWO different worlds, form them up, and confirm BOTH worlds' battalions appear in the one table with correct
+      world / region / strength / health / reach, the system+world filters still work, and selecting one still gives the
+      march / queue / stance / ROE order surface. **Scope check:** the tab shows YOUR (PlayerFaction) battalions even
+      while in SM mode viewing another faction (previously it showed the viewed faction's — empty for the GameMaster).
