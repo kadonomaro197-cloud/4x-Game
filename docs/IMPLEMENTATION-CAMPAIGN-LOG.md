@@ -20,15 +20,19 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > `build-client` and all six other shards are green; every new A1–A5 test passes. My slices add **zero** new
 > failures (see PRE-EXISTING BASE RED below for the two-line pass/fail protocol). Parked for the developer: A1
 > calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE) + the two base-red economy tests (surfaced, not mine).
-> **B-S1, B-S3, B-S4 are pushed.** B-S1 (Battalions tab → built `AllFormationsFor`, scope PlayerFaction) and B-S3
-> (extract `DrawShipCombatRow` + `DrawBattalionRowColumns` for reuse) both have **GREEN `build-client`** and the branch
-> shows only the two known base-red `rest` failures. B-S4 (the unified `ForceRef` selection type + the Battalions tab
-> migrated onto it, byte-identical) is committed ⏳CI. NEXT: confirm the B-S4 `build-client` is green (same
-> PRE-EXISTING BASE RED protocol), then build **B-S5** — the new **All Forces** flat roster tab: one table over the S2
-> classifier (`ShipRoleTools.ClassifyRole`) + the S3 reusable rows + the S4 `ForceRef` selection, with
-> Domain/Mil-Civ/Class/Location filters and a kind-swapping detail panel (`ForceRef.OfFleet`/`OfShip`/`OfBattalion`
-> finally get their consumer). Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI
-> compile-checks it but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
+> **B-S1, B-S3, B-S4 are ALL pushed and CI-verified** — every one has a **GREEN `build-client`** and the branch shows
+> only the two known base-red `rest` failures (nothing new). The Forces-window foundation is now fully in place:
+> **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
+> `DrawBattalionRowColumns`), **S4** the unified selection (`ForceRef` with `OfFleet`/`OfShip`/`OfBattalion`, the
+> Battalions tab already migrated onto it). NEXT: build **B-S5 — the new All Forces flat roster tab** (FORCES-WINDOW
+> S5, BUILD-grade): a new sibling tab beside Fleets + Battalions holding ONE table over every force the player owns —
+> gather fleets (via `FactionInfoDB`/`FleetDB` from `PlayerFaction`) + battalions (via `AllFormationsFor`) into a list
+> of `ForceRef`; draw each row with the S3 methods; add the Domain / Mil-Civ / Class (via `ClassifyRole`) / Location
+> filters; and a **kind-swapping detail panel** below that dispatches on `_selRoster.Kind` (Fleet → the combat sheet,
+> Battalion → `DrawBattalionOrders`, Ship → entity info). Seed the `ShipRanges` cache for the roster's ships (S3 note)
+> so the Beam/See/Seen columns are real, not "—". Add a `ForceRef _selRoster` field (distinct from `_selBattalion`).
+> Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't
+> runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S6–S9 + B-orders follow S5.)
 
 ---
 
@@ -56,8 +60,8 @@ ladder row and, once landed, the commit sha.
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
 | B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ✅ | `7f96ea1` (build-client green) |
-| B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ⏳CI | (pending) |
-| B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ⏳CI | (pending) |
+| B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ✅ | `d0f9df6` (build-client green) |
+| B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⬜ | |
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⬜ | |
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⬜ | |
@@ -207,7 +211,7 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### B-S4 — the unified "selected force" (`ForceRef`) — ⏳CI
+### B-S4 — the unified "selected force" (`ForceRef`) — ✅ `edd32d8` (build-client green)
 **What it does (plain English):** the Force Management window is going to grow one flat "All Forces" list that mixes
 ships, fleets, and battalions in a single table (the next slice, S5). For that to work, the window needs ONE way to
 say "this is the thing you have selected" that can point at *any* kind of force — not the three separate,
@@ -234,7 +238,7 @@ ints replaced by one `_selBattalion` `ForceRef` at its three sites (field, `isSe
 exactly as before." The `OfFleet`/`OfShip` factories are deliberately not consumed yet — S5 wires them, the same
 "foundation for the next slice" pattern as A5's ability scan.
 
-### B-S3 — the ship-combat row + battalion row are now reusable methods — ⏳CI
+### B-S3 — the ship-combat row + battalion row are now reusable methods — ✅ `d0f9df6` (build-client green)
 **What it does (plain English):** the Force Management window draws two tables — the Combat tab's per-ship line, and
 the Battalions tab's per-formation line. Until now each was written *inline*, tangled into its own loop, so the coming
 "All Forces" tab (one flat list of everything you own) couldn't reuse them without copy-pasting. This slice lifts each
