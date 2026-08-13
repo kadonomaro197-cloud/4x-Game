@@ -15,13 +15,16 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **PHASE A VERIFIED CLEAN → Phase B is live.** All five first-five welds are pushed AND CI-verified: the whole
-> branch (A1–A5) leaves the `rest` shard with **exactly the two PRE-EXISTING base-red failures and nothing else**;
-> `build-client` and all six other shards are green; every new A1–A5 test passes. My slices add **zero** new
-> failures (see PRE-EXISTING BASE RED below for the two-line pass/fail protocol). Parked for the developer: A1
-> calibration + the 4 A4 order behaviors (ADJUDICATION QUEUE) + the two base-red economy tests (surfaced, not mine).
-> **B-S1, B-S3, B-S4 are ALL pushed and CI-verified** — every one has a **GREEN `build-client`** and the branch shows
-> only the two known base-red `rest` failures (nothing new). The Forces-window foundation is now fully in place:
+> **DEVELOPER-REQUESTED WORK DONE (2026-08-13): the two base-red economy tests are fixed, the morale term is
+> calibrated AND turned ON for the real game.** ✅ The base is greened (cargo + food test fixes, commit `c96dd5f`) —
+> the PRE-EXISTING BASE RED carve-out is **retired**; any red is now real. ✅ The A1 employment→morale calibration
+> (Option B per-capita demand, `JobsPerCapita = 7.0e-6`, commit `2e06464`) is resolved, and ✅ the term is **flipped
+> ON for menu games** via `NewGameMenu` (engine default still OFF → tests byte-identical, commit `7ea23f4`). **⏳
+> VERIFYING:** the `rest` shard (run 31687745533) confirms cargo/food/employment + prints the engine-measured
+> homeworld jobs — if the homeworld band snapped to +15, `ColonyMoraleDB.JobsPerCapita` needs a nudge (a scheduled
+> check-in handles this). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **Then: B-S5.**
+>
+> **Phase A + B-S1/S3/S4 are CI-verified.** The Forces-window foundation is fully in place:
 > **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
 > `DrawBattalionRowColumns`), **S4** the unified selection (`ForceRef` with `OfFleet`/`OfShip`/`OfBattalion`, the
 > Battalions tab already migrated onto it). NEXT: build **B-S5 — the new All Forces flat roster tab** (FORCES-WINDOW
