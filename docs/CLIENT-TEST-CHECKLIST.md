@@ -303,6 +303,23 @@ run it — these need the local Windows build.
       selects it (highlight + the order surface appears below), clicking another switches selection, and the initial
       "nothing selected" state is unchanged. No player-visible change is intended — this is the shared selection model
       the S5 All-Forces roster will sit on.
+- [ ] **B-S5 — the new "All Forces" roster lists ships AND battalions in one table.** Open **Force Management** — there's
+      now a third tab, **All Forces**, beside Fleets and Battalions. With at least one ship (Fleets) and one battalion
+      (raise + form up on a world) present, open it and confirm:
+      - The table lists BOTH — each ship as a `Ship` row (Domain **Space**, Class = Warship/Freighter/Survey/… from its
+        parts, Mil/Civ = Military only for a warship, Location = system / orbited body, Strength = firepower) AND each
+        battalion as a `Battalion` row (Domain **Ground**, Class = its plurality role Line/Artillery/Screen/Support,
+        Military, Location = world + R#, Strength = formation strength). A summary line reads "N of M force(s) — X
+        ship(s), Y battalion(s)".
+      - **Filters narrow correctly:** the **Domain** combo (All / Space / Ground) hides the other domain; the **Role**
+        combo (Mil+Civ / Military / Civilian) filters by Mil/Civ; the **Search** box matches on unit name / class /
+        location.
+      - **The detail panel swaps by kind:** click a **ship** row → a combat readout (Firepower / Toughness / Evasion) +
+        a **Select on map** button (which selects the ship in the system view). Click a **battalion** row → the SAME
+        march / queue / stance / ROE order surface the Battalions tab gives. Selecting a ship then a battalion (or vice
+        versa) swaps the panel cleanly.
+      - **Scope check** (like B-S1): it shows YOUR (PlayerFaction) forces even while SM-viewing another faction.
+      *(An empty roster reads "No forces yet …" — expected before you have any ships or battalions.)*
 
 ---
 

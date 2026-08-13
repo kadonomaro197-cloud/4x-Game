@@ -20,30 +20,28 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > the PRE-EXISTING BASE RED carve-out is **retired**; any red is now real. ✅ The A1 employment→morale calibration
 > (Option B per-capita demand, `JobsPerCapita = 7.0e-6`, commit `2e06464`) is resolved, and ✅ the term is **flipped
 > ON for menu games** via `NewGameMenu` (engine default still OFF → tests byte-identical, commit `7ea23f4`). **⏳
-> VERIFYING:** the `rest` shard (run 31687745533) confirms cargo/food/employment + prints the engine-measured
-> homeworld jobs — if the homeworld band snapped to +15, `ColonyMoraleDB.JobsPerCapita` needs a nudge (a scheduled
-> check-in handles this). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **Then: B-S5.**
+> VERIFIED (2026-08-13):** the morale run `2e06464` completed **FULL SUCCESS (all 7 shards green)** — the base is
+> green (cargo + food) and the employment homeworld-band test passed, so the calibration landed near-neutral (**no
+> +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
+> compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1/S3/S4 are CI-verified.** The Forces-window foundation is fully in place:
-> **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
+> **Phase A + B-S1/S3/S4 are CI-verified; B-S5 is BUILT (⏳ CI in flight).** The Forces-window foundation is fully in
+> place: **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
 > `DrawBattalionRowColumns`), **S4** the unified selection (`ForceRef` with `OfFleet`/`OfShip`/`OfBattalion`, the
-> Battalions tab already migrated onto it). NEXT: build **B-S5 — the new All Forces flat roster tab** (FORCES-WINDOW
-> S5, BUILD-grade): a new sibling tab beside Fleets + Battalions holding ONE table over every force the player owns.
-> **Enumeration (recon done):** fleets = `PlayerFaction.GetDataBlob<FleetDB>().GetChildren()` (the faction entity's
-> root FleetDB, the same `factionRoot` the Fleets tab walks at `:128`/`:1990`); ships = recurse that fleet tree
-> collecting the `IsValid && !HasDataBlob<FleetDB>()` children (the exact filter used at `:990`); battalions =
-> `GroundFormationTools.AllFormationsFor(game, PlayerFaction.Id)`. Fold each into a `ForceRef`. ⚠ **Table shape (per
-> design §4.2, corrected):** the flat roster is a **COMMON-column** table — Unit / Domain(Space·Ground) / Kind(Ship·
-> Formation) / **Class** (`ShipRoleTools.ClassifyRole` for ships, `GroundRoleComposer.ClassifyRole` for formations) /
-> **Mil-Civ** (`ShipRoleTools.IsMilitary`) / Location(`PositionDB` system·body / `LeaderRegion`) / Strength
-> (`ShipCombatValueDB.Firepower` / `FormationStrength`) / Order — **NOT** the kind-specific S3 rows. Health is BUILD-space
-> (needs the S8 aggregate accessor) → show "—" for ships this slice. So B-S5 writes a NEW common-column `DrawRosterRow`;
-> the **S3 rows + whole panels serve the DETAIL panel (§4.3), which swaps by `_selRoster.Kind`:** Ship→warship combat
-> sheet (`DisplayFleetCombatSheet`-style) / Formation→`DrawBattalionOrders`, each led by a "why this Class?" line.
-> Filters: Domain / Role(Mil-Civ) / Class / Location / search. Add a `ForceRef _selRoster` field (distinct from
-> `_selBattalion`). Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it
-> but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S6 adds per-unit child rows +
-> `AllUnitsFor`; S7–S9 + B-orders follow.)
+> Battalions tab already migrated onto it). **B-S5 — the All Forces flat roster tab — is now written** (FleetWindow
+> `DisplayAllForces` + `DrawRosterDetail` + `AllShipsUnder`/`CollectShips` + `ShipLocation`/`BattalionLocation`/
+> `FormationClass`): a new sibling tab beside Fleets + Battalions holding ONE **common-column** table (Unit / Domain /
+> Kind / **Class** via `ShipRoleTools.ClassifyRole`·`GroundRoleComposer.ClassifyRole` / **Mil-Civ** via
+> `ShipRoleTools.IsMilitary` / Location / Strength via `ShipCombatValueDB.Firepower`·`FormationStrength`) over every
+> force the player owns — ships (recurse `PlayerFaction`'s root `FleetDB`, cycle-guarded by fleet id, non-`FleetDB`
+> leaves) + battalions (`GroundFormationTools.AllFormationsFor`), folded into `ForceRef`. Domain/Mil-Civ/search
+> filters; a **kind-swapping detail panel (§4.3)** off the new `_selRoster` field — Ship → a compact combat readout +
+> Select-on-map, Battalion → the SAME `DrawBattalionOrders` surface the Battalions tab gives. Thin/defensive: the tab
+> body is try/catch-wrapped (logs `[RenderError]` once, still runs `EndTabItem`), evasion shown as `F2` not `P0` to
+> dodge the ImGui `%` printf trap. **NEXT after B-S5 goes green: B-S6** (per-individual ground-unit child rows +
+> engine `AllUnitsFor`; Health "—" for ships waits on the S8 aggregate accessor). Phase B evolves `FleetWindow.cs`
+> (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so each behavior gets a
+> `docs/CLIENT-TEST-CHECKLIST.md` row. (S7–S9 + B-orders follow.)
 
 ---
 
@@ -73,7 +71,7 @@ ladder row and, once landed, the commit sha.
 | B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ✅ | `7f96ea1` (build-client green) |
 | B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ✅ | `d0f9df6` (build-client green) |
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
-| B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⬜ | |
+| B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⏳CI | (build-client gating) |
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⬜ | |
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⬜ | |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⬜ | |
@@ -233,6 +231,38 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-S5 — the All Forces flat roster tab — ⏳ CI in flight (build-client gating)
+**What it does (plain English):** the Force Management window gets a new sibling tab, **"All Forces"**, next to Fleets
+and Battalions. It's a single flat list of *everything* you own — every ship AND every battalion, space AND ground —
+in one table with the same columns for both: **Unit** (its name), **Domain** (Space or Ground), **Kind** (Ship or
+Battalion), **Class** (Warship / Freighter / Survey… for a ship; Line / Artillery / Screen / Support for a battalion),
+**Mil/Civ** (is it a fighting unit or a civilian one), **Location** (which system + body, or which world + region),
+and **Strength** (firepower for a ship, formation strength for a battalion). So the question "what do I have, and
+where is it?" is answered in ONE place instead of hopping between two tabs. Click any row and the panel below swaps to
+the right tools for that KIND: a ship shows its combat readout (firepower / toughness / evasion) plus a "Select on
+map" jump; a battalion shows the exact same march / queue / stance / ROE order surface the Battalions tab gives.
+
+**Why it matters:** this is the design's "front door" (FORCES-WINDOW §4.2/§4.3) — the whole point of the Force
+Management window. The earlier slices built the parts it needs (S2 the class classifier, S3 the reusable rows, S4 the
+one-selection `ForceRef`); this slice assembles them into the unified roster a player actually reads. It reuses the
+CI-tested engine brains rather than inventing new logic: `ShipRoleTools.ClassifyRole`/`IsMilitary` for a ship's class,
+`GroundRoleComposer.ClassifyRole` for a battalion's plurality role, `GroundFormationTools.AllFormationsFor` for the
+cross-body battalion list — the "one verb, both seats" classifiers the AI uses too, so the window and the AI agree.
+
+**Files:** `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — the "All Forces" tab item (try/catch-wrapped, logs
+`[RenderError]` once, still runs `EndTabItem`); `DisplayAllForces()` (gather ships by recursing `PlayerFaction`'s root
+`FleetDB` with a fleet-id cycle guard + battalions via `AllFormationsFor`, fold each into a `RosterEntry`; Domain /
+Mil-Civ / search filters; the common-column table over `_selRoster`); `DrawRosterDetail()` (kind-swapping — battalion
+→ `DrawBattalionOrders`, ship → combat readout + Select-on-map); helpers `AllShipsUnder`/`CollectShips`,
+`ShipLocation`, `BattalionLocation`, `FormationClass`; the `ForceDomain` enum + `RosterEntry` struct + `_selRoster`/
+filter fields (added in the S4/S5 prep). Docs: `docs/CLIENT-TEST-CHECKLIST.md` (B-S5 roster row).
+
+**Gauge:** compile-checked by `build-client` (the client can't run in CI). Runtime is the developer's PC play-test —
+the CLIENT-TEST-CHECKLIST row: open Force Management → All Forces, confirm ships + battalions both list with the right
+Class/Mil-Civ/Location/Strength, the Domain/Role/search filters narrow correctly, and clicking a ship vs a battalion
+swaps the detail panel to the right tools. Defensive notes baked in: evasion renders as `F2` (not `P0`) to dodge the
+ImGui `%` printf trap; every faction/entity read is `TryGet`-guarded; the fleet recursion is cycle-guarded.
 
 ### B-S4 — the unified "selected force" (`ForceRef`) — ✅ `edd32d8` (build-client green)
 **What it does (plain English):** the Force Management window is going to grow one flat "All Forces" list that mixes
