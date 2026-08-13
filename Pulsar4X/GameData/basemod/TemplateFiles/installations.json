@@ -2140,10 +2140,28 @@
           "PropertyFormula": "500"
         },
         {
+          "Name": "Penetration",
+          "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
           "Name": "groundrifleArgs",
           "DescriptionFormula": "'atb ctor args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2554,10 +2572,28 @@
           "PropertyFormula": "2000"
         },
         {
+          "Name": "Penetration",
+          "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "6"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "40"
+        },
+        {
           "Name": "autocannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2715,10 +2751,28 @@
           "PropertyFormula": "4000"
         },
         {
+          "Name": "Penetration",
+          "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "20"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "140"
+        },
+        {
           "Name": "groundcannonArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -2876,10 +2930,28 @@
           "PropertyFormula": "20000"
         },
         {
+          "Name": "Penetration",
+          "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "90"
+        },
+        {
           "Name": "energyweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]
@@ -3412,10 +3484,28 @@
           "PropertyFormula": "0"
         },
         {
+          "Name": "Penetration",
+          "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal strike that bounces off plate, high = a rending/power weapon). FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "PerShotEnergy",
+          "DescriptionFormula": "'Alpha vs chip — energy in one strike; a heavy blow (high) punches plate, a flurry (low) glances off. FLAGGED balance value.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "5000",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
           "Name": "clawweaponArgs",
           "DescriptionFormula": "'atb args'",
           "GuiHint": "None",
-          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'))",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('CarryMass'), PropertyValue('Attack'), PropertyValue('Range'), PropertyValue('Mode'), PropertyValue('Range_m'), PropertyValue('Penetration'), PropertyValue('PerShotEnergy'))",
           "AttributeType": "Pulsar4X.GroundCombat.GroundWeaponAtb"
         }
       ]

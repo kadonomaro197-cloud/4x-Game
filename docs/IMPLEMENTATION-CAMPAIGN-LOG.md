@@ -15,12 +15,13 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **A3 pushed → gate its CI, and build A2 (ground penetration) meanwhile — file-disjoint.** A3 (`ShipRoleTools`)
-> is committed + pushed (⏳CI). While its ~33-min CI runs, build **A2** (carry `Penetration`/`PerShotEnergy`
-> through the ground assembler — TIER 1) using the recon ledger below; it touches `GroundWeaponAtb.cs`,
-> `GroundUnitAssembly.cs`, `installations.json` — disjoint from A3's files. Then A1 (employment, flag-gated —
-> park the calibration question), A4 (order stubs), A5 (component scan). Confirm both CI jobs (test +
-> build-client) green before marking any slice ✅.
+> **A2 + A3 pushed → gate CI on both, then build A1 (employment, flag-gated).** A3 (`ShipRoleTools`) + A2
+> (ground penetration) are committed + pushed (both ⏳CI, file-disjoint). NEXT: check the CI runs (GitHub MCP
+> `actions_list`/`get_job_logs`) for `e91b722` (A3) + the A2 commit; if red, fix first. Then build **A1** —
+> Employment→morale producer, flag-gated default-off (`PopulationProcessor.EnableEmploymentMorale`), byte-identical
+> off; **PARK the calibration question** in the ADJUDICATION QUEUE (CrewReq-as-jobs reads heavy unemployment vs a
+> billions-pop workforce — the developer must decide the denominator before the flag goes on for real). Then A4
+> (order stubs), A5 (component scan).
 
 ---
 
@@ -38,7 +39,7 @@ ladder row and, once landed, the commit sha.
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
 | A1 | Employment → morale producer (feed the dead morale term via `CrewReq`→`GetTotalJobs`, flag-gated) | `civicderived.html` / ENGINE-WIRING-BACKLOG TIER 2 | ⬜ | |
-| A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⬜ | |
+| A2 | Ground `Penetration` + `PerShotEnergy` carry-through in the ground assembler path | `entityassembler.html` / ENGINE-WIRING-BACKLOG TIER 1 | ⏳CI | (pending) |
 | A3 | `ShipRoleTools.ClassifyRole` + surface `GroundRoleComposer.ClassifyRole` (one helper, window+AI) | `forceswindow.html` / FORCES-WINDOW S2 | ⏳CI | (pending) |
 | A4 | Finish 4 order stubs: `RefuelAction`, `ResupplyAction`, `ServeyAnomalyAction`, `ShipLogisticsOrders` | `forceswindow.html` §10 | ⬜ | |
 | A5 | order→ability component-scan table + `AbilitiesOf(entity)` (generalize `Has*Ability`) | `forceswindow.html` §4.5 | ⬜ | |
@@ -130,6 +131,41 @@ design; Mil/Civ maps only Warship to Military; null-safe.
 showing the column. The engine classifier (FORCES-WINDOW S2) is now built, but the column badge stays BUILD until
 Phase B (S5) actually surfaces it in the window. The ground classifier (`GroundRoleComposer.ClassifyRole`)
 already existed; "surfacing" it is window work, also Phase B.
+
+### A2 — Ground `Penetration` + `PerShotEnergy` carry-through (the ground assembler path) — ⏳CI
+**What it does (plain English):** a ground weapon you DESIGN in the Entity Assembler (a frame + weapon parts) now
+carries its armour-piercing power. Before this, only the pre-built "monolithic" tank/infantry/artillery units
+could crack armour — a *player-built* AP gun came out with zero penetration and bounced off plate. Now the
+weapon part carries two dials: **Penetration** (how much of the target's armour the shot ignores) and
+**PerShotEnergy** (whether it's one big alpha shot that punches through, or a spray of little shots that bounce).
+
+**Why it matters:** it's the root-cause fix the backlog put first — the reason the ground-battle sim had to
+hand-type the Tyranids' claw penetration. A player-designed anti-tank weapon now cracks plate a small-arms
+weapon of equal firepower bounces off. And it's **per-weapon**: a unit carrying both a rifle and a cannon cracks
+plate only with the cannon (the "honest home").
+
+**Files:** `GroundWeaponAtb.cs` (2 new fields + 6th/7th ctor args + Clone); `GroundWeaponMount.cs` (per-mount
+fields + copy-ctor); `GroundUnitAssembly.cs` (Result fields + weapon loop + `ToGroundUnitDesign`);
+`GroundCombatant.cs:114` (the profile reads the mount's own pen/per-shot — the one behaviour edit);
+`installations.json` (all 5 base-mod weapon templates → 7 `AtbConstrArgs` in lockstep, gotcha-6);
+`Pulsar4X.Tests/GroundWeaponPenetrationAssemblyTests.cs` (new gauge).
+
+**Flagged values (developer owns):** cannon **20/140** (= the monolithic Armor gun — parity), autocannon 6/40,
+energy 10/90, rifle 0/10, claw 0/10. These reproduce the monolithic behaviour for the assembler path; the
+developer can retune. Penetration is a **free dial this slice** (not costed in the Mass formula, so
+`GroundWeaponAttackCostTests` stays byte-identical); costing it (CONVENTIONS §16) is a flagged follow-up.
+
+**Not byte-identical (intended):** assembled cannon units now crack plate. No existing resolver test fields an
+assembled unit, so nothing re-baselined. `GroundWeaponAttackCostTests` + `BaseModIntegrityTests` (the 7-arg JSON
+bind sensor) stay green as tripwires.
+
+**Gauge:** `GroundWeaponPenetrationAssemblyTests` — a cannon (authored 20/140) assembles a unit whose design +
+mount + resolver profile carry 20/140; a rifle stays 0/10; on a mixed rifle+cannon unit each mount keeps its OWN
+pen; and `GroundDamageMatrix.ArmourSoak` lands more with pen than without (AP cracks plate).
+
+**HTML badge:** the entityassembler.html penetration badge already read "LIVE on ground" — A2 makes that claim
+true for the assembler path too, so no HTML flip was needed. The backlog item #1 flipped ⬜→✅ (the engine caught
+up to the badge).
 
 ---
 

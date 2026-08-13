@@ -43,23 +43,40 @@ namespace Pulsar4X.GroundCombat
         /// Design: docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §12.</summary>
         [JsonProperty] public double Range_m { get; internal set; }
         [JsonProperty] public GroundWeaponMode Mode { get; internal set; } = GroundWeaponMode.Ballistic;
+        /// <summary>ARMOUR-CRACK dial (the ground echo of <c>WeaponProfile.Penetration</c>): how much of the target's flat
+        /// armour (<c>GroundUnit.Defense</c>) this shot IGNORES. 0 = a normal round that bounces off plate; high = an
+        /// AP/sabot/lance cracker. The MONOLITHIC base-mod ground UNITS already carry this (armour 20, artillery 8,
+        /// infantry 0) on <c>GroundUnitAtb</c>; this is the ASSEMBLER's twin so a player-designed AP weapon cracks plate
+        /// too. Read into the per-weapon <c>GroundWeaponMount.Penetration</c> by the assembler → the resolver's armour
+        /// soak (<c>GroundForcesProcessor</c> → <c>GroundDamageMatrix.ArmourSoak</c>).</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+        /// <summary>ALPHA-vs-CHIP dial (the ground echo of <c>WeaponProfile.PerShotEnergy</c>): joules in ONE shot. The
+        /// kernel's <c>BurstShotCount</c> = total damage ÷ this splits a source into that many flat-soaked shots, so a
+        /// swarm of chips bounces off plate while one alpha of equal total punches through. 0 = a single lump (one shot).
+        /// Monolithic parity: armour 140, artillery 80, infantry 10.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
 
         public GroundWeaponAtb() { }
 
         // double args for the JSON/NCalc binder (gotcha L7). Order = template PropertyFormula order. NOTE (gotcha 6): the
         // JSON binder is EXACT-ARITY — it calls this ctor with exactly the number of AtbConstrArgs values the template
-        // passes, so every base-mod ground-weapon template now passes 5 values (CarryMass, Attack, Range, Mode, Range_m).
-        // The `= 0` default is only for C# callers/tests (a code-built weapon that omits the real range).
-        public GroundWeaponAtb(double mass, double attack, double range, double mode, double range_m = 0)
+        // passes, so every base-mod ground-weapon template now passes 7 values (CarryMass, Attack, Range, Mode, Range_m,
+        // Penetration, PerShotEnergy). Penetration + PerShotEnergy are TRAILING args (mirroring GroundUnitAtb's 6th/7th) —
+        // the exact K1 Range_m pattern. The `= 0` defaults are only for C# callers/tests (a code-built weapon that omits
+        // the real range / pen / per-shot).
+        public GroundWeaponAtb(double mass, double attack, double range, double mode, double range_m = 0,
+            double penetration = 0, double perShotEnergy = 0)
         {
             Mass = mass < 0 ? 0 : mass;
             Attack = attack < 0 ? 0 : attack;
             Range = range < 0 ? 0 : (int)range;
             Mode = (GroundWeaponMode)(int)mode;
             Range_m = range_m < 0 ? 0 : range_m;
+            Penetration = penetration < 0 ? 0 : penetration;
+            PerShotEnergy = perShotEnergy < 0 ? 0 : perShotEnergy;
         }
 
-        public override object Clone() => new GroundWeaponAtb(Mass, Attack, Range, (double)(int)Mode, Range_m);
+        public override object Clone() => new GroundWeaponAtb(Mass, Attack, Range, (double)(int)Mode, Range_m, Penetration, PerShotEnergy);
 
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance) { }
         public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance) { }

@@ -38,8 +38,20 @@ Ordered by **impact × cheapness** — the same ranking as the audit.
 
 ## TIER 1 — The root cause: the assembler's ground path is a rung behind its own base-mod path
 
-### 1. Carry `Penetration` + `PerShotEnergy` through the ground assembler  ⬜ NOT BUILT
-**This is the fix that would have stopped the "invented stats" sin. Do it first.**
+### 1. Carry `Penetration` + `PerShotEnergy` through the ground assembler  ✅ BUILT (2026-08-13, OPERATION BLUEPRINT-TO-STEEL A2)
+**This is the fix that would have stopped the "invented stats" sin. Done first.**
+
+> ✅ **DONE.** `GroundWeaponAtb` gained `Penetration` + `PerShotEnergy` as its 6th/7th ctor args (the exact K1 `Range_m`
+> pattern — trailing, defaulted, clamped); `GroundUnitAssembly.Compute` reads them onto each `GroundWeaponMount` **and**
+> the unit-level design (the primary-weapon fallback), `ToGroundUnitDesign` sets the design fields, and
+> `GroundCombatant.ToWeaponProfile(unit, mount)` now reads the MOUNT's own pen/per-shot (per-mount honesty — a
+> rifle+railgun unit cracks plate only with the railgun). All 5 base-mod weapon templates went to 7 `AtbConstrArgs` in
+> lockstep (cannon 20/140 = the monolithic Armor gun · autocannon 6/40 · energy 10/90 · rifle 0/10 · claw 0/10 —
+> **FLAGGED** balance values the developer owns). The entityassembler.html badge already read "LIVE on ground" — this
+> makes it true for the assembler path too, so no HTML flip was needed. Gauge: `GroundWeaponPenetrationAssemblyTests`.
+> **Non-byte-identical (intended):** assembled cannon units now crack plate; no existing resolver test fields an
+> assembled unit, so nothing re-baselined. `GroundWeaponAttackCostTests` (build-mass/carry unchanged — pen/per-shot are
+> NOT in the Mass formula) + `BaseModIntegrityTests` (the 7-arg JSON bind) stay green as tripwires.
 
 - **What the tool already promises.** The Entity Assembler draws a *penetration* and a *per-shot* number on
   every ground weapon and states plainly that they are **"LIVE on ground, INERT on ship"**

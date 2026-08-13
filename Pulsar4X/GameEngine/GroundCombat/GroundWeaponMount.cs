@@ -29,8 +29,16 @@ namespace Pulsar4X.GroundCombat
         [JsonProperty] public double Range_m { get; internal set; }
         /// <summary>This weapon's damage flavour (Ballistic / Energy / Artillery / Melee …).</summary>
         [JsonProperty] public GroundWeaponMode Mode { get; internal set; } = GroundWeaponMode.Ballistic;
+        /// <summary>PER-MOUNT armour-crack (the "honest home" the assembler backlog names): this weapon's own
+        /// <c>GroundWeaponAtb.Penetration</c>, so a unit with a rifle AND a railgun cracks plate only with the railgun.
+        /// The resolver reads it via <c>GroundCombatant.ToWeaponProfile(unit, mount)</c> → the armour soak. 0 = a normal
+        /// round.</summary>
+        [JsonProperty] public double Penetration { get; internal set; }
+        /// <summary>PER-MOUNT alpha-vs-chip: this weapon's own <c>GroundWeaponAtb.PerShotEnergy</c> (joules per shot),
+        /// driving the kernel's burst-shot split. 0 = one lump.</summary>
+        [JsonProperty] public double PerShotEnergy { get; internal set; }
 
         public GroundWeaponMount() { }
-        public GroundWeaponMount(GroundWeaponMount o) { Attack = o.Attack; RangeHexes = o.RangeHexes; Range_m = o.Range_m; Mode = o.Mode; }
+        public GroundWeaponMount(GroundWeaponMount o) { Attack = o.Attack; RangeHexes = o.RangeHexes; Range_m = o.Range_m; Mode = o.Mode; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy; }
     }
 }

@@ -271,6 +271,20 @@ real game gets real distances on-by-default. Design: `docs/AUTO-RESOLVER-GROUND-
   (`SpaceWeaponGround.RealRange_m` reads the `ShipCombatValueDB` range constants — beam `MaxRange`, railgun/plasma 500
   km, flak 50 km, disruptor 400 km). **Live combat is byte-identical this slice** (the resolver still gated on hexes;
   `Range_m` is only populated).
+  - **A2 — `Penetration` + `PerShotEnergy` on the WEAPON PART (2026-08-13, OPERATION BLUEPRINT-TO-STEEL).** The exact K1
+    lockstep, one rung deeper: the monolithic ground UNITS (`GroundUnitAtb`) already carried the armour-crack + alpha-vs-chip
+    dials (W1c/W2c), but the assembler's weapon PART (`GroundWeaponAtb`) did not — so a *player-designed* AP weapon came out
+    0/0 and bounced off plate a monolithic tank cracked. Now `GroundWeaponAtb` carries `Penetration` + `PerShotEnergy` as its
+    **6th + 7th ctor args** (trailing, defaulted 0, clamped — mirroring `GroundUnitAtb`); all 5 base-mod weapon templates
+    went to **7 `AtbConstrArgs`** in lockstep (**FLAGGED** values: cannon **20/140** = the monolithic Armor gun, autocannon
+    6/40, energy 10/90, rifle 0/10, claw 0/10). `GroundUnitAssembly.Compute` reads them onto each `GroundWeaponMount`
+    (`Penetration`/`PerShotEnergy` fields, deep-copied) **and** the unit-level `GroundUnitAssemblyResult`/design (the
+    primary-weapon fallback, beside `DamageType`); `GroundCombatant.ToWeaponProfile(unit, mount)` now reads the **MOUNT's**
+    pen/per-shot (per-mount honesty — a rifle+cannon unit cracks plate only with the cannon), and the resolver's
+    `GroundDamageMatrix.ArmourSoak` reader was already live. **Non-byte-identical (intended):** assembled cannon units now
+    crack plate; no resolver test fields an assembled unit, so nothing re-baselined. Pen/per-shot are **not** in the Mass
+    formula (so `GroundWeaponAttackCostTests` stays byte-identical); costing them (CONVENTIONS §16) is a flagged follow-up.
+    Space-weapon-on-ground mounts read 0 this slice (flagged). Gauge: `GroundWeaponPenetrationAssemblyTests`.
   - **K1b — the designer now shows ONE range knob: metres (2026-07-23).** The developer's ruling *"range is in METERS...
     That is IT"*: each of the 5 base-mod ground-weapon templates carried BOTH an editable hex `Range` dial AND the
     `Range_m` dial, so the Entity Assembler / `ComponentDesignWindow` presented two confusing range sliders. The hex

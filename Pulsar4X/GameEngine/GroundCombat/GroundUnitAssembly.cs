@@ -29,6 +29,11 @@ namespace Pulsar4X.GroundCombat
         // 0.34 (the old global constant; no shield → stays 0.34, moot) → byte-identical.
         public double ShieldRegenFraction = 0.34;
         public GroundWeaponMode DamageType = GroundWeaponMode.Ballistic;   // the heaviest weapon's flavour (System ①)
+        // A2 — armour-crack + alpha-vs-chip, UNIT-LEVEL (the heaviest weapon's values, tracked beside DamageType) for the
+        // collapsed-path fallback + the design snapshot + monolithic parity. The PER-MOUNT values on WeaponLoadout are the
+        // honest home the resolver reads (a rifle+railgun unit cracks plate only with the railgun). 0 = a normal round.
+        public double Penetration;
+        public double PerShotEnergy;
         public List<GroundWeaponMount> WeaponLoadout = new List<GroundWeaponMount>();   // W1 — one mount per weapon component (fed to per-weapon range banding, W2)
         // Enhancers ⚙6.2 — the BEST mounted Training Cadre's veterancy multiplier (baked into Attack + toughness at
         // raise). 1.0 = green/untrained (no cadre) → byte-identical, the ground echo of a ship's UnitCaliberAtb.
@@ -148,7 +153,9 @@ namespace Pulsar4X.GroundCombat
                     itemMass = Math.Max(w.Mass, w.Attack * AttackCarryFactor);
                     r.Attack += w.Attack * c;
                     if (w.Range > r.Range) r.Range = w.Range;   // reach = the longest weapon
-                    if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; }
+                    // The heaviest hitter sets the unit-level flavour AND its armour-crack / alpha-vs-chip (A2), the same
+                    // "primary weapon wins" rule DamageType uses — the collapsed-path fallback + monolithic-parity value.
+                    if (w.Attack > topWeaponAttack) { topWeaponAttack = w.Attack; r.DamageType = w.Mode; r.Penetration = w.Penetration; r.PerShotEnergy = w.PerShotEnergy; }
                     // W1 — keep this weapon DISTINCT in the loadout (its own range/mode) instead of only summing into
                     // r.Attack above, so W2 can fire it in its own range band as the unit closes. Attack ×count so
                     // Σ mount.Attack == r.Attack (the byte-identity invariant); Max(mount.RangeHexes) == r.Range.
@@ -156,7 +163,7 @@ namespace Pulsar4X.GroundCombat
                     // cannon 4000 m, artillery 30000 m …) if it carries one, else derived from the hex range × the
                     // nominal reference pitch (a code-built/mod weapon that omits it). The resolver's real-distance gate
                     // (K3) reads this; the hex RangeHexes stays the display ruler.
-                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Range_m = w.Range_m > 0 ? w.Range_m : w.Range * GroundCombatant.NominalHexPitch_m, Mode = w.Mode });
+                    r.WeaponLoadout.Add(new GroundWeaponMount { Attack = w.Attack * c, RangeHexes = w.Range, Range_m = w.Range_m > 0 ? w.Range_m : w.Range * GroundCombatant.NominalHexPitch_m, Mode = w.Mode, Penetration = w.Penetration, PerShotEnergy = w.PerShotEnergy });
                 }
                 else if (SpaceWeaponGround.IsSpaceWeapon(d))
                 {
@@ -311,6 +318,8 @@ namespace Pulsar4X.GroundCombat
                 ShieldRegenFraction = r.ShieldRegenFraction,
                 AmmoCapacity_kg = r.AmmoCapacity_kg,
                 DamageType = r.DamageType,
+                Penetration = r.Penetration,        // A2 — armour-crack (unit-level fallback + monolithic parity; per-mount rides WeaponLoadout)
+                PerShotEnergy = r.PerShotEnergy,     // A2 — alpha-vs-chip (drives BurstShotCount in the armour soak)
                 TrainingMultiplier = r.TrainingMultiplier,   // Enhancers ⚙6.2 — veterancy from the mounted cadre
                 UpkeepCredits = r.Mass * UpkeepCreditsPerMass,   // G2.3c — the standing-army bill scales with build mass (FLAGGED)
                 IndustryTypeID = string.IsNullOrEmpty(frame?.IndustryTypeID) ? "installation-construction" : frame.IndustryTypeID,
