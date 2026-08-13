@@ -115,8 +115,10 @@ when you've overpacked; enforcement is on in-game). The fighters, the AT-TEs, an
   unbuilt. This is the single biggest gap for *this* ship, because the carrier is its identity.
 - **Scale** — "Heavy hull, 180 t budget" is the largest frame, not a modelled 1,137 m. A Venator vs a corvette
   is how much you cram on the biggest hull, capped by the mass budget.
-- **Elite Republic gunnery** — the firepower-caliber enhancer is **dead in live combat** (audit finding
-  D-gate-2), so you can't make the turbolasers "elite" via caliber; dial raw count/damage instead.
+- **Elite Republic gunnery** — the firepower-caliber enhancer is **LIVE in real combat** *(corrected 2026-08-13;
+  the earlier "dead / D-gate-2" note was stale, the ship fix landed ~2026-08-02)*: `ShipCombatValueDB.cs:529`
+  applies `firepower *= UnitCaliberFirepowerMult`, and `Calculate` is called by both live resolvers
+  (`AutoResolve.cs:124`, `CombatEngagement.cs:1656`) — so caliber **does** make the turbolasers hit harder.
 - **Individual turrets** — weapons resolve as a bucketed fire mix by class, not eight named DBY-827 turrets
   (fine for auto-resolve; not a turret sim).
 

@@ -371,7 +371,7 @@ BATTLE ─ CombatEngagement.StepEngagementGroup(members, dt)   (every 5 s game-t
 |---|---|---|
 | `VelocityReference_mps` | 1e6 | `CombatKernel.cs:38` |
 | `SaturationReference` | 50 | `:42` |
-| `MinLandedFraction` | 0.02 | `:46` |
+| `MinLandedFraction` | 0.05 | `:71` |  *(corrected 2026-08-13: was 0.02/:46; source = 1 − EvasionCap = 0.05. NB every `CombatKernel.cs` cite in this §6.4 block drifted ~+25 lines as the file grew to 339 lines — re-baseline on the next resolver dive; RESOLVER-SIM.md has current lines.)*
 | `FlightTimeReference_s` | 10 | `:51` |
 | `RangeBaseMiss` | 0.9 | `:57` ⚠ mutable |
 | Shield soak K/E/X/O | 1.0 / 0.5 / 0.75 / 0.0 | `:62-68` |

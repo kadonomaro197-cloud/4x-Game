@@ -1,5 +1,7 @@
 # What all the premade units would cost
 
+> ⚠ **Scope caveat (2026-08-13):** this is a **2026-08-06 snapshot of 14 presets**. The assembler now has **18** — Sazabi and the three aircraft (Apache / F-22 / LAAT) landed after this snapshot and are priced only in their own build docs (`SAZABI-BUILD.md`, `AIRCRAFT-BUILDS.md`). The 14 numbers below are **not** contradicted (later commits only *added* parts/presets; existing presets compute unchanged) — the table is just incomplete. Refresh to 18 on the next assembler pass.
+
 **As of 2026-08-06.** All 14 premade units — now **every one a clickable assembler preset** — priced on both surfaces:
 **build** (one-time) and **run** (ongoing), straight from the assembler's own `compute()`/`materialBill()`. The 5 ground
 units + ARC-170 + Miranda were promoted to real presets (tasks #31/#32): 15 base-mod ground parts were added to the

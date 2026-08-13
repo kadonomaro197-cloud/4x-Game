@@ -1,5 +1,14 @@
 # Planetary View & Interaction — the surface as a board of environments
 
+> ✅ **CORRECTION 2026-08-13 — the Fire/Cryo/Corrosive "un-counterable" finding is now CLOSED.** This doc's headline
+> (repeated in §3/§4/§5/§8/§9/§11-Q4/§12) says only Vacuum/Toxic have a designable counter and Fire/Cryo/Corrosive
+> hazards can't be hardened against. **That gap was built (2026-08-09):** `GroundCombat/GroundHardeningAtb.cs` writes an
+> `EnvironmentalResistance {HeatDamage, CorrosiveDamage}` map at build time (one `Hardening` dial covers fire *and*
+> cryo — `HeatDamage` is the engine's thermal effect for both — plus corrosive), registered in the base mod and gauged
+> by `GroundHardeningComponentTests`. Read the body's "un-counterable" lines as historical. The prototype it describes
+> is now **rev-T** (the rev-B/rev-I text below is the design study; the current prototype adds the civilization,
+> resources, and units-on-map layers).
+
 **As of 2026-08-09 (rev. B — re-grounded on real game data).** Status: **DESIGN STUDY (design-only).** No engine code,
 no CI. This doc + its interactive prototype (`docs/ground/planetview.html`) answer one question the developer put on the
 table:

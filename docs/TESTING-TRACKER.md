@@ -73,7 +73,7 @@ These are self-maintaining (CI gates them red/green every push). Listed so we kn
 
 `rest` is the **complement filter**, so **every new fixture lands in the slowest shard by default.** Measured heavy-path load (`TestScenario.CreateWithColony`, the call `ci.yml` names as the dominant cost because it re-parses all the mod JSON per call): the `stations` shard — isolated *because* it was the ~11-min bottleneck — carries **18** calls; **`rest` carries 665 across 234 fixtures**, of which **`GroundForcesTests` alone is 48** across 61 tests, making it the single heaviest fixture in the suite.
 
-**🧨 The trap, and it is documented nowhere else:** `rest` is **hand-maintained** — `ci.yml:69` is `!~` of all seven named shards. Adding shard `X` **without also adding `FullyQualifiedName!~X` to the `rest` filter** makes `X` run **TWICE** (its own shard *and* `rest`), so the isolation costs more than it saves and `rest` never shrinks. **Every new-shard commit edits `ci.yml` in TWO places.** *(`docs/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding "gap-proof by construction" — true for **coverage**, silent on this **duplication** direction.)*
+**🧨 The trap, and it is documented nowhere else:** `rest` is **hand-maintained** — `ci.yml:69` is `!~` of all seven named shards. Adding shard `X` **without also adding `FullyQualifiedName!~X` to the `rest` filter** makes `X` run **TWICE** (its own shard *and* `rest`), so the isolation costs more than it saves and `rest` never shrinks. **Every new-shard commit edits `ci.yml` in TWO places.** *(`docs/archive/earthfall/IMPLEMENTATION-AUDIT-2026-07-22.md:83` calls the sharding "gap-proof by construction" — true for **coverage**, silent on this **duplication** direction.)*
 
 ---
 
