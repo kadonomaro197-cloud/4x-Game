@@ -1161,6 +1161,29 @@ namespace Pulsar4X.GroundCombat
             return result;
         }
 
+        /// <summary>The unit-level sibling of <see cref="AllFormationsFor"/> (FORCES-WINDOW-DESIGN §S6): every one of a
+        /// faction's ground UNITS across EVERY body in the game — <b>INCLUDING</b> formation-less ("loose") units that
+        /// <see cref="AllFormationsFor"/> cannot reach — each paired with its body. This is what closes "list <i>every</i>
+        /// unit" for the Force-Management All-Forces roster: an unformed garrison/landed unit belongs to no battalion, so
+        /// it would otherwise be invisible there. Walks <c>game.Systems</c> → each system's bodies carrying a
+        /// <see cref="GroundForcesDB"/> → its faction-owned units. Read-only, defensive (null game / null system → empty).</summary>
+        public static List<(Entity body, GroundUnit unit)> AllUnitsFor(Game game, int factionId)
+        {
+            var result = new List<(Entity, GroundUnit)>();
+            if (game?.Systems == null) return result;
+            foreach (var system in game.Systems)
+            {
+                if (system == null) continue;
+                foreach (var body in system.GetAllEntitiesWithDataBlob<GroundForcesDB>())
+                {
+                    if (body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces) || forces.Units == null) continue;
+                    foreach (var u in forces.Units)
+                        if (u != null && u.FactionOwnerID == factionId) result.Add((body, u));
+                }
+            }
+            return result;
+        }
+
         // ── AGGREGATION (the battalion↔fleet-parity reads, slice 5a — the developer's "a joined force moves at the
         //    pace of its slowest unit but can see/strike as far as its longest, and hits with the sum"; the ground twin
         //    of Combat.FleetCombat's WarpSpeedFloor / SensorReach / summed Firepower). v1 aggregates a formation's

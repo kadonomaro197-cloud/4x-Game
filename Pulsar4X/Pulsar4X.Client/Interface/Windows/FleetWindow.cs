@@ -1168,13 +1168,13 @@ namespace Pulsar4X.Client
         // (bodyId, formationId) — the exact (body, formation) pair a battalion has always been keyed by across worlds.
         // B-S4 introduces the type and migrates the Battalions tab's selection onto it (byte-identical); S5's roster
         // reuses it for ships + fleets, and S9 adds Station/Colony. A plain value-typed struct: cheap, no allocation.
-        private enum ForceKind { None = 0, Fleet, Ship, Battalion }
+        private enum ForceKind { None = 0, Fleet, Ship, Battalion, GroundUnit }
         private readonly struct ForceRef
         {
             public readonly ForceKind Kind;
-            public readonly int EntityId;     // ship/fleet entity id; -1 for a battalion or None
-            public readonly int BodyId;       // battalion's body entity id; -1 otherwise
-            public readonly int FormationId;  // battalion's formation id; -1 otherwise
+            public readonly int EntityId;     // ship/fleet entity id; a ground unit's UnitId; -1 for a battalion or None
+            public readonly int BodyId;       // battalion's / ground unit's body entity id; -1 otherwise
+            public readonly int FormationId;  // battalion's formation id; -1 otherwise (a ground-unit ref uses EntityId+BodyId)
             private ForceRef(ForceKind kind, int entityId, int bodyId, int formationId)
             { Kind = kind; EntityId = entityId; BodyId = bodyId; FormationId = formationId; }
 
@@ -1183,6 +1183,10 @@ namespace Pulsar4X.Client
             public static ForceRef OfShip(Entity e)  => new ForceRef(ForceKind.Ship,  e?.Id ?? -1, -1, -1);
             public static ForceRef OfBattalion(Entity body, GroundFormation f)
                 => new ForceRef(ForceKind.Battalion, -1, body?.Id ?? -1, f?.FormationId ?? -1);
+            // S6 — an individual ground unit, keyed by (body id, unit id). Kind + these two never collide with a
+            // ship (BodyId -1) or a battalion (Kind differs), so Matches() below distinguishes it cleanly.
+            public static ForceRef OfGroundUnit(Entity body, GroundUnit u)
+                => new ForceRef(ForceKind.GroundUnit, u?.UnitId ?? -1, body?.Id ?? -1, -1);
 
             public bool IsNone => Kind == ForceKind.None;
             // The battalion identity test — replaces the old "body.Id == _selBattalionBodyId && f.FormationId == …".
@@ -1207,18 +1211,21 @@ namespace Pulsar4X.Client
             public readonly bool Military;
             public readonly double Strength;
             public readonly Entity Ship;                 // Space rows
-            public readonly Entity Body;                 // Ground rows: the body + its forces + the formation
+            public readonly Entity Body;                 // Ground rows: the body + its forces + the formation / unit
             public readonly GroundForcesDB Forces;
-            public readonly GroundFormation Formation;
+            public readonly GroundFormation Formation;   // Ground battalion rows
+            public readonly GroundUnit GUnit;            // Ground UNIT rows (S6) — null for a battalion/ship row
             public RosterEntry(ForceRef r, ForceDomain domain, string unit, string kind, string cls, bool mil,
-                               string loc, double strength, Entity ship, Entity body, GroundForcesDB forces, GroundFormation formation)
+                               string loc, double strength, Entity ship, Entity body, GroundForcesDB forces,
+                               GroundFormation formation, GroundUnit gunit)
             { Ref = r; Domain = domain; Unit = unit; Kind = kind; Class = cls; Military = mil; Location = loc;
-              Strength = strength; Ship = ship; Body = body; Forces = forces; Formation = formation; }
+              Strength = strength; Ship = ship; Body = body; Forces = forces; Formation = formation; GUnit = gunit; }
         }
         private ForceRef _selRoster = ForceRef.None;          // the roster's current selection (distinct from _selBattalion)
         private int _rosterDomainFilter = 0;                  // 0 = all · 1 = Space · 2 = Ground
         private int _rosterRoleFilter = 0;                    // 0 = Mil+Civ · 1 = Military · 2 = Civilian
         private readonly byte[] _rosterSearch = new byte[64];
+        private bool _rosterShowUnits = false;                // S6 — expand battalions into member unit rows + list loose units
         private bool _rosterErrorLogged;
         private int _battStanceChoice = 0;
         private string _battStatus = "";
@@ -1772,11 +1779,14 @@ namespace Pulsar4X.Client
                         ForceRef.OfShip(ship), ForceDomain.Space,
                         ship.GetName(myFaction), "Ship", role.ToString(),
                         ShipRoleTools.IsMilitary(role), ShipLocation(ship), fp,
-                        ship, null, null, null));
+                        ship, null, null, null, null));
                 }
             }
 
             // Battalions: the same cross-body helper the Battalions tab uses (GroundFormationTools.AllFormationsFor).
+            // With "Show individual units" on (S6), each battalion is followed by its MEMBER unit rows (the design's
+            // "formations are rows; expand one to see its individual units as child rows"), and loose units are added
+            // below — so the roster lists EVERY unit, formed or not.
             foreach(var (body, f) in GroundFormationTools.AllFormationsFor(_uiState.Game, myFaction))
             {
                 if(body == null || !body.TryGetDataBlob<GroundForcesDB>(out var forces)) continue;
@@ -1786,8 +1796,18 @@ namespace Pulsar4X.Client
                     FormationClass(forces, f), true,   // a ground formation is a military unit (§7 — the default)
                     BattalionLocation(body, forces, f),
                     GroundFormationTools.FormationStrength(forces, f),
-                    null, body, forces, f));
+                    null, body, forces, f, null));
+                if(_rosterShowUnits)
+                    foreach(var u in GroundFormationTools.MembersOf(forces, f))
+                        entries.Add(UnitRow(body, forces, u, myFaction, formed: true));
             }
+
+            // S6 — LOOSE (formation-less) units: the piece AllFormationsFor can't reach. AllUnitsFor includes them; a
+            // formed unit is already listed under its battalion above, so here we take only FormationId < 0.
+            if(_rosterShowUnits)
+                foreach(var (body, u) in GroundFormationTools.AllUnitsFor(_uiState.Game, myFaction))
+                    if(u != null && u.FormationId < 0 && body != null && body.TryGetDataBlob<GroundForcesDB>(out var lforces))
+                        entries.Add(UnitRow(body, lforces, u, myFaction, formed: false));
 
             if(entries.Count == 0)
             {
@@ -1806,6 +1826,11 @@ namespace Pulsar4X.Client
             ImGui.SameLine();
             ImGui.SetNextItemWidth(160f);
             ImGui.InputText("Search##rostersearch", _rosterSearch, (uint)_rosterSearch.Length);
+            ImGui.SameLine();
+            // S6 — expand every battalion into its member unit rows + list the loose (formation-less) units, so the
+            // roster lists EVERY unit. Off by default → the S5 formation-level view (byte-identical). Read a frame late
+            // (immediate mode) since entries were built above — harmless one-frame lag on toggle.
+            ImGui.Checkbox("Show individual units##rosterunits", ref _rosterShowUnits);
             string search = Utils.StringFromBytes(_rosterSearch).Trim();
 
             var rows = entries.Where(e =>
@@ -1817,9 +1842,11 @@ namespace Pulsar4X.Client
                     || e.Location.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0))
                 .ToList();
 
-            ImGui.TextDisabled($"{rows.Count} of {entries.Count} force(s) — "
-                + $"{entries.Count(e => e.Domain == ForceDomain.Space)} ship(s), "
-                + $"{entries.Count(e => e.Domain == ForceDomain.Ground)} battalion(s)");
+            int shipN = entries.Count(e => e.Domain == ForceDomain.Space);
+            int battN = entries.Count(e => e.Formation != null);
+            int unitN = entries.Count(e => e.GUnit != null);
+            ImGui.TextDisabled($"{rows.Count} of {entries.Count} force(s) — {shipN} ship(s), {battN} battalion(s)"
+                + (_rosterShowUnits ? $", {unitN} unit(s)" : ""));
             ImGui.Separator();
 
             // ── The common-column table (§4.2) ──
@@ -1851,7 +1878,9 @@ namespace Pulsar4X.Client
                     ImGui.TableNextColumn();
                     if(e.Military) ImGui.TextColored(new Vector4(1f, 0.7f, 0.4f, 1f), "Military");
                     else ImGui.TextDisabled("Civilian");
-                    ImGui.TableNextColumn(); ImGui.Text(e.Location);
+                    // TextUnformatted: Location carries a user-renamable body/system name — a stray % would be read as
+                    // a printf specifier by ImGui.Text (the verify-lens finding). Kind/Class/Domain are fixed literals.
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted(e.Location);
                     ImGui.TableNextColumn(); ImGui.Text($"{e.Strength:N0}");
 
                     if(isSel) { selected = e; haveSelected = true; }
@@ -1870,21 +1899,31 @@ namespace Pulsar4X.Client
         // one list, but the RIGHT tools appear for whatever you pick.
         private void DrawRosterDetail(RosterEntry e)
         {
-            if(e.Domain == ForceDomain.Ground && e.Body != null && e.Forces != null && e.Formation != null)
+            // Ground battalion → the full order surface (self-contained: march / queue / stance / ROE / rename / infra).
+            if(e.Domain == ForceDomain.Ground && e.Formation != null && e.Body != null && e.Forces != null)
             {
                 DrawBattalionOrders(e.Body, e.Forces, e.Formation);
                 return;
             }
 
+            // Ground UNIT (S6) → its own stats readout + a jump to its world. Per-unit orders (march a single unit) are a
+            // flagged follow-up — the battalion is the command surface today.
+            if(e.Domain == ForceDomain.Ground && e.GUnit != null && e.Body != null)
+            {
+                DrawGroundUnitDetail(e.Body, e.GUnit);
+                return;
+            }
+
+            // Space ship → a compact combat readout + select-on-map.
             var ship = e.Ship;
             if(ship == null || !ship.IsValid) { ImGui.TextDisabled("This ship is no longer present."); return; }
             int myFaction = (_uiState.PlayerFaction ?? _uiState.Faction)?.Id ?? -1;
 
-            DisplayHelpers.Header(ship.GetName(myFaction), "Ship — its class and combat readout.");
-            ImGui.Text($"Class: {ShipRoleTools.ClassifyRole(ship)}    Location: {ShipLocation(ship)}");
+            // RosterDetailHeader + TextUnformatted for every line carrying a user-renamable NAME or a formatted number —
+            // a stray % in a renamed ship/body would be read as a printf specifier by ImGui.Text (the verify-lens trap).
+            RosterDetailHeader(ship.GetName(myFaction), "Ship — its class and combat readout.");
+            ImGui.TextUnformatted($"Class: {ShipRoleTools.ClassifyRole(ship)}    Location: {ShipLocation(ship)}");
             if(ship.TryGetDataBlob<ShipCombatValueDB>(out var cv))
-                // TextUnformatted: never route a formatted numeric string through ImGui.Text (a stray % would be read as
-                // a printf specifier — the Society-tab trap). Evasion as F2 (0..1), not P0, so no % is ever produced.
                 ImGui.TextUnformatted($"Firepower {cv.Firepower:N0} J/s    Toughness {cv.Toughness:N0} J    Evasion {cv.Evasion:F2}");
             else
                 ImGui.TextDisabled("No combat value computed for this ship yet.");
@@ -1896,6 +1935,56 @@ namespace Pulsar4X.Client
             }
             ImGui.SameLine();
             ImGui.TextDisabled("(ship movement + fleet orders live in the Fleets tab — select its fleet there)");
+        }
+
+        // A printf-SAFE section header (the DisplayHelpers.Header look — descriptive colour + [?] tooltip + separator —
+        // but the title goes through TextUnformatted, so a player-renamed name carrying a '%' can't be read as a format
+        // specifier by ImGui.Text and garble/crash the native layer). Used by the roster's ship + unit detail panels.
+        private static void RosterDetailHeader(string title, string tooltip)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, Styles.DescriptiveColor);
+            ImGui.TextUnformatted(title ?? "");
+            ImGui.PopStyleColor();
+            if(!string.IsNullOrEmpty(tooltip))
+            {
+                ImGui.SameLine();
+                ImGui.TextDisabled("[?]");
+                if(ImGui.IsItemHovered()) ImGui.SetTooltip(tooltip);
+            }
+            ImGui.Separator();
+        }
+
+        // The Ground UNIT detail (§4.3) — its own stats (type / class / health / attack / defense / range / veterancy /
+        // location). Read-only + a jump to the world; per-unit orders are a flagged follow-up (command via the battalion).
+        private void DrawGroundUnitDetail(Entity body, GroundUnit u)
+        {
+            int myFaction = (_uiState.PlayerFaction ?? _uiState.Faction)?.Id ?? -1;
+            RosterDetailHeader(string.IsNullOrEmpty(u.Name) ? u.UnitType.ToString() : u.Name,
+                "Ground unit — its own stats. Command it through its battalion (or the planet view).");
+            ImGui.TextUnformatted($"Type: {u.UnitType}    Class: {GroundRoleComposer.ClassifyRole(u)}"
+                + $"    On {body.GetName(myFaction)}, R{u.RegionIndex + 1}");
+            ImGui.TextUnformatted($"Health {u.Health:N0} / {u.MaxHealth:N0}    Attack {u.Attack:N0}    Defense {u.Defense:N0}"
+                + (u.Range > 0 ? $"    Range {u.Range} hex" : ""));
+            if(u.TrainingMultiplier > 1.0)
+                ImGui.TextColored(new Vector4(0.6f, 0.9f, 1f, 1f), $"Veteran x{u.TrainingMultiplier:0.00}");
+            if(u.FormationId < 0)
+                ImGui.TextDisabled("Unassigned (loose) — form it into a battalion (planet view) to command it.");
+            if(ImGui.Button($"Open planet view##rostunit{body.Id}_{u.UnitId}"))
+                JumpToPlanetView(body);
+        }
+
+        // Build a roster row for an individual ground unit (S6). Class = its maneuver role (GroundRoleComposer); Mil/Civ:
+        // a unit with no offensive punch (Attack ≤ 0 → Support) is civilian, else military (design §5 ground). The name
+        // is indented (└ = a battalion member, • = a loose unit) so units read as children under their formation.
+        private RosterEntry UnitRow(Entity body, GroundForcesDB forces, GroundUnit u, int viewerFactionId, bool formed)
+        {
+            string name = (formed ? "    └ " : "    • ")
+                + (string.IsNullOrEmpty(u.Name) ? u.UnitType.ToString() : u.Name);
+            string loc = body.GetName(viewerFactionId) + ", R" + (u.RegionIndex + 1);
+            return new RosterEntry(
+                ForceRef.OfGroundUnit(body, u), ForceDomain.Ground,
+                name, "Unit", GroundRoleComposer.ClassifyRole(u).ToString(), u.Attack > 0,
+                loc, u.Attack, null, body, forces, null, u);
         }
 
         // Recurse the faction's fleet tree, returning every SHIP (a non-FleetDB leaf). Cycle-guarded by fleet id

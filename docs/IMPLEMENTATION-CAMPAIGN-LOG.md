@@ -25,23 +25,22 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1/S3/S4 are CI-verified; B-S5 is BUILT (⏳ CI in flight).** The Forces-window foundation is fully in
-> place: **S2** the shared classifier (`ShipRoleTools.ClassifyRole`), **S3** the reusable rows (`DrawShipCombatRow` +
-> `DrawBattalionRowColumns`), **S4** the unified selection (`ForceRef` with `OfFleet`/`OfShip`/`OfBattalion`, the
-> Battalions tab already migrated onto it). **B-S5 — the All Forces flat roster tab — is now written** (FleetWindow
-> `DisplayAllForces` + `DrawRosterDetail` + `AllShipsUnder`/`CollectShips` + `ShipLocation`/`BattalionLocation`/
-> `FormationClass`): a new sibling tab beside Fleets + Battalions holding ONE **common-column** table (Unit / Domain /
-> Kind / **Class** via `ShipRoleTools.ClassifyRole`·`GroundRoleComposer.ClassifyRole` / **Mil-Civ** via
-> `ShipRoleTools.IsMilitary` / Location / Strength via `ShipCombatValueDB.Firepower`·`FormationStrength`) over every
-> force the player owns — ships (recurse `PlayerFaction`'s root `FleetDB`, cycle-guarded by fleet id, non-`FleetDB`
-> leaves) + battalions (`GroundFormationTools.AllFormationsFor`), folded into `ForceRef`. Domain/Mil-Civ/search
-> filters; a **kind-swapping detail panel (§4.3)** off the new `_selRoster` field — Ship → a compact combat readout +
-> Select-on-map, Battalion → the SAME `DrawBattalionOrders` surface the Battalions tab gives. Thin/defensive: the tab
-> body is try/catch-wrapped (logs `[RenderError]` once, still runs `EndTabItem`), evasion shown as `F2` not `P0` to
-> dodge the ImGui `%` printf trap. **NEXT after B-S5 goes green: B-S6** (per-individual ground-unit child rows +
-> engine `AllUnitsFor`; Health "—" for ships waits on the S8 aggregate accessor). Phase B evolves `FleetWindow.cs`
-> (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so each behavior gets a
-> `docs/CLIENT-TEST-CHECKLIST.md` row. (S7–S9 + B-orders follow.)
+> **Phase A + B-S1/S3/S4/S5 are CI-verified; B-S6 is BUILT (⏳ CI in flight).** The Forces-window foundation is fully
+> in place through the All-Forces roster (S5 — one common-column table over ships + battalions, kind-swapping detail,
+> all 7 shards + build-client green on `42d01c7`; adversarially re-verified — compile + design clean, one runtime
+> `%`-printf hardening folded into B-S6). **B-S6 — per-individual ground-unit rows — is now written**: an engine
+> sibling **`GroundFormationTools.AllUnitsFor(game, factionId)`** (the unit-level twin of `AllFormationsFor`, and the
+> piece it CAN'T reach — it INCLUDES formation-less "loose" units, closing "list *every* unit"), CI-gauged by
+> `EfGroundFormUpTests.AllUnitsFor_EnumeratesAcrossBodies_IncludesUnformed_FactionFiltered`; and the client half — a
+> **"Show individual units"** checkbox on the roster that expands each battalion into its member unit rows
+> (`GroundFormationTools.MembersOf`) + lists the loose units (`AllUnitsFor` where `FormationId < 0`), each a `Unit`-kind
+> row (Class via `GroundRoleComposer.ClassifyRole`, Mil/Civ = has offensive punch) selecting a new **ground-unit detail
+> panel** (`ForceKind.GroundUnit` + `ForceRef.OfGroundUnit`) that shows the unit's own stats (type/class/health/attack/
+> defense/range/veterancy/location) + an Open-planet-view jump. Default off → byte-identical to the S5 formation-level
+> view. **NEXT after B-S6 goes green: B-S7** (civilian-ship detail — promote the logistics manifest/routes/dV into the
+> roster; DATA-grade). Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it
+> but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S8 aggregate Health/Fuel gauges,
+> S9 stations/colonies + assign-commander, B-orders follow.)
 
 ---
 
@@ -71,8 +70,8 @@ ladder row and, once landed, the commit sha.
 | B-S1 | Battalions tab → built `AllFormationsFor`, scope `PlayerFaction` | `forceswindow.html` / FORCES-WINDOW S1 | ✅ | `7f96ea1` (build-client green) |
 | B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ✅ | `d0f9df6` (build-client green) |
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
-| B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ⏳CI | (build-client gating) |
-| B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⬜ | |
+| B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ✅ | `42d01c7` (all 7 shards + build-client green, run 31692300418) |
+| B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⏳CI | (engine `AllUnitsFor` + test + client unit rows) |
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⬜ | |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⬜ | |
 | B-S9 | Stations + colonies as rows (live-owner cross-check) + assign-commander UI | FORCES-WINDOW S9 | ⬜ | |
@@ -232,7 +231,38 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### B-S5 — the All Forces flat roster tab — ⏳ CI in flight (build-client gating)
+### B-S6 — per-individual ground-unit rows + engine `AllUnitsFor` — ⏳ CI in flight
+**What it does (plain English):** the All Forces roster (from B-S5) lists your battalions as single rows. This slice lets
+you drill into a battalion to see the *individual soldiers/vehicles* inside it — and, importantly, it also surfaces the
+**loose units** that aren't in any battalion yet (a freshly-raised garrison unit, a just-landed invader), which the old
+"list of battalions" simply couldn't show. A new **"Show individual units"** checkbox on the roster: leave it off and you
+get the tidy battalion-level view (unchanged); tick it and each battalion expands to show its member units as indented
+child rows (`└`), with the loose units listed below (`•`). Click any unit row and the detail panel shows *that unit's*
+stats — its type, its role, health, attack, defense, range, whether it's a veteran, and where it's standing.
+
+**Why it matters:** the design's S6 closes "list *every* unit" (`FORCES-WINDOW-DESIGN.md` §S6). Before this, a unit that
+hadn't been formed into a battalion was invisible in the Force-Management window — you couldn't even see it existed there.
+The load-bearing new piece is an **engine** helper, `GroundFormationTools.AllUnitsFor(game, factionId)` — the unit-level
+twin of the `AllFormationsFor` the Battalions/roster already use — which walks every world and returns *all* of a faction's
+ground units, formed or not. It's an engine method, so it gets a real CI test (unlike the client, which CI can't run):
+`EfGroundFormUpTests.AllUnitsFor_EnumeratesAcrossBodies_IncludesUnformed_FactionFiltered` proves it enumerates across
+multiple worlds, includes a loose unit a formation-walk would miss, and excludes other factions' units.
+
+**Files:** `Pulsar4X/GameEngine/GroundCombat/GroundForcesDB.cs` — new `GroundFormationTools.AllUnitsFor` (mirrors
+`AllFormationsFor`, iterates `forces.Units`, read-only/defensive). `Pulsar4X/Pulsar4X.Tests/EfGroundFormUpTests.cs` — the
+new gauge. `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — `ForceKind.GroundUnit` + `ForceRef.OfGroundUnit`; a
+`GroundUnit` slot on `RosterEntry`; the `_rosterShowUnits` checkbox + the interleave (battalion → its `MembersOf` rows;
+then loose units from `AllUnitsFor`); `UnitRow` (builds a unit row — Class via `GroundRoleComposer.ClassifyRole`, Mil/Civ
+= `Attack > 0`); `DrawGroundUnitDetail` (the unit stats panel); plus a small printf-safe `RosterDetailHeader` and a
+sweep routing user-renamable names/locations through `TextUnformatted` (the one runtime finding the B-S5 adversarial
+verification surfaced — a ship/body named with a `%` could garble ImGui's `Text`). Docs: campaign log, Client CLAUDE.md
+(All Forces §S6 note), GroundCombat CLAUDE.md (`AllUnitsFor`), CLIENT-TEST-CHECKLIST (B-S6 row).
+
+**Gauge:** engine `AllUnitsFor` → `EfGroundFormUpTests` (CI, `rest` shard). Client per-unit rows → the developer's PC
+play-test (CLIENT-TEST-CHECKLIST "B-S6"): tick "Show individual units", confirm a battalion expands to its members + loose
+units appear, and clicking a unit shows its stat panel. Default-off keeps the S5 view byte-identical.
+
+### B-S5 — the All Forces flat roster tab — ✅ `42d01c7` (all 7 shards + build-client green, run 31692300418)
 **What it does (plain English):** the Force Management window gets a new sibling tab, **"All Forces"**, next to Fleets
 and Battalions. It's a single flat list of *everything* you own — every ship AND every battalion, space AND ground —
 in one table with the same columns for both: **Unit** (its name), **Domain** (Space or Ground), **Kind** (Ship or

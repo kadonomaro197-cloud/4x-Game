@@ -174,6 +174,39 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("B-S6 (OPERATION BLUEPRINT-TO-STEEL): AllUnitsFor enumerates a faction's ground UNITS across EVERY body — INCLUDING formation-less (loose) units that AllFormationsFor can't reach (the 'list every unit' close) — each paired with its body, and filters out other factions.")]
+        public void AllUnitsFor_EnumeratesAcrossBodies_IncludesUnformed_FactionFiltered()
+        {
+            var s = TestScenario.CreateWithColony();
+            int before = GroundFormationTools.AllUnitsFor(s.Game, s.Faction.Id).Count;
+
+            var bodies = s.StartingSystem.GetAllEntitiesWithDataBlob<SystemBodyInfoDB>();
+            var otherBody = bodies.First(b => b.Id != s.StartingBody.Id);
+
+            // Two of MY units on the home body + one on another body — all raised LOOSE (unformed).
+            GroundForces.RaiseUnit(s.StartingBody, Infantry(), s.Faction.Id, 0);
+            GroundForces.RaiseUnit(s.StartingBody, Infantry(), s.Faction.Id, 0);
+            var u3 = GroundForces.RaiseUnit(otherBody, Infantry(), s.Faction.Id, 0);
+            // A rival's unit — must be excluded.
+            GroundForces.RaiseUnit(s.StartingBody, Infantry(), s.Faction.Id + 4242, 0);
+
+            // Form up the home body's two loose units into a battalion, leaving u3 (other body) UNFORMED — so the roster
+            // has BOTH a formed unit and a loose one, the exact mix the All-Forces roster must list.
+            var formed = GroundAssembly.FormUpLoose(s.StartingBody, s.Faction.Id);
+            Assert.That(formed.Count, Is.EqualTo(1), "the two home units swept into one battalion");
+            Assert.That(u3.FormationId, Is.LessThan(0), "the other-body unit is left LOOSE (unformed)");
+
+            var mine = GroundFormationTools.AllUnitsFor(s.Game, s.Faction.Id);
+            Assert.That(mine.Count, Is.EqualTo(before + 3), "all three of MY units enumerated (formed AND unformed); the rival's excluded");
+            Assert.That(mine.Select(p => p.body.Id).Distinct().Count(), Is.EqualTo(2), "across two distinct bodies");
+            Assert.That(mine.Any(p => p.unit.FormationId >= 0), Is.True, "a FORMED unit is included");
+            Assert.That(mine.Any(p => p.unit.FormationId < 0), Is.True, "a LOOSE (unformed) unit is included — the S6 point AllFormationsFor can't reach");
+            Assert.That(mine.All(p => p.unit.FactionOwnerID == s.Faction.Id), Is.True, "faction-filtered");
+            Log($"AllUnitsFor: {mine.Count} unit(s) across {mine.Select(p => p.body.Id).Distinct().Count()} bodies "
+                + $"({mine.Count(p => p.unit.FormationId >= 0)} formed / {mine.Count(p => p.unit.FormationId < 0)} loose)");
+        }
+
+        [Test]
         [Description("G2.1: RadarReachHexes reads a unit's best mounted radar range translated to hexes on this body (Range_km / hex pitch); a unit with no radar — and a null body/unit — reads 0.")]
         public void RadarReachHexes_ReadsBestRadar_ZeroWithoutOne()
         {

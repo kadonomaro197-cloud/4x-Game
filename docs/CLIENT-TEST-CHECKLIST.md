@@ -320,6 +320,17 @@ run it — these need the local Windows build.
         versa) swaps the panel cleanly.
       - **Scope check** (like B-S1): it shows YOUR (PlayerFaction) forces even while SM-viewing another faction.
       *(An empty roster reads "No forces yet …" — expected before you have any ships or battalions.)*
+- [ ] **B-S6 — "Show individual units" lists every ground unit (formed AND loose).** In **Force Management ▸ All Forces**
+      there's now a **"Show individual units"** checkbox in the filter row. Raise a few ground units on a world (DevTools ›
+      "Raise Ground Unit"), form SOME of them into a battalion (Planet view), and leave at least one un-formed. Then:
+      - **Off (default):** the roster looks exactly like B-S5 — battalions as single rows, no unit rows.
+      - **On:** each battalion row is followed by its member units as indented `└` child rows, and any un-formed
+        ("loose") unit appears as a `•` row — so **every** unit shows, including the loose ones the battalion list can't
+        reach. The summary line adds "…, N unit(s)". The Domain/Role/search filters still narrow (a unit with Attack ≤ 0
+        reads Civilian; else Military).
+      - **Click a unit row →** the detail panel shows THAT unit's stats (Type / Class / Health / Attack / Defense /
+        Range / a "Veteran ×N" line if trained / location) + an **Open planet view** button (per-unit orders are a
+        later slice — command via its battalion for now).
 
 ---
 
