@@ -106,7 +106,8 @@ ladder row and, once landed, the commit sha.
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ✅ | `e894b12` (all 7 shards + build-client green, run 31853742806) |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⏳CI | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout; `d369ebb` rest RED (defensive test NRE on unmanaged `Entity.Create()`) → guarded `Manager == null` in `5e42d87`, re-gating (run 31856896871) |
 | B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ⏳CI | engine `FactionAssets` + `FactionAssetsTests` (file-disjoint prep, built while B-S8 re-gated) |
-| B-S9b | Stations + colonies as roster ROWS (Domain "Holding") + assign-commander UI | FORCES-WINDOW S9 | ⬜ | client `FleetWindow.cs` — blocked on B-S8 green (shares the file) |
+| B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | 🔨 | client `FleetWindow.cs` — committed; **push gated on B-S9a green** (B-S9b calls `FactionAssets`) |
+| B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ⬜ | engine complete; client dropdown per `AdminSpaceDB.CommanderSeats` |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
@@ -307,6 +308,41 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-S9b-1 — colonies + stations as roster rows — 🔨 built (push gated on B-S9a green)
+**What it does (plain English):** the All Forces roster now lists your **colonies and stations** as rows, alongside your
+ships and battalions — so "everything I own, in one place" finally includes your *holdings*, not just your fighting
+forces. A new **"Holding"** domain (filter it with the Domain dropdown). Each row shows the holding's name, the body it
+sits on (Class column), its system (Location), and its **population** as the Strength number. A **station** also shows a
+real **Health %** (its structural-integrity pool); a colony shows "—" for health (a colony has no single hit-point bar —
+its strength is its population). Select one and the detail panel shows its host, population, (station) integrity, and its
+**installed infrastructure** — reusing the exact components panel the Planetary window draws — plus an "Open planet view"
+jump.
+
+**Why it matters (the capture-stale trap it closes):** the game keeps a *list* of each faction's colonies/stations that
+is written once at creation and **never cleaned up when a planet is captured** — so the raw list can name a colony you've
+lost. This slice lists holdings through the B-S9a engine helper `FactionAssets`, which verifies each one's **live owner**
+before showing it — so a colony captured away drops off your roster even while it lingers in the stale list. That's the
+design's §S9 "live-owner cross-check," done in the engine (CI-tested) so the client just reads the honest set.
+
+**Files:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — `ForceKind` gains `Colony`/`Station` (+
+`ForceRef.OfColony`/`OfStation`), `ForceDomain` gains `Holding`; `DisplayAllForces` gathers holdings via
+`FactionAssets.OwnedColonies`/`OwnedStations`; new `HoldingRow` (population/host/location) + `DrawHoldingDetail` (host +
+population + station integrity + `ComponentInstancesDBDisplay.Display` reused, resolved via the B-S7 `ResolveEntityState`)
++ a `RowHealthFraction` Holding case (station integrity; colony —). `+ using Pulsar4X.Stations`. **Thin/defensive:**
+reads only, `TextUnformatted` for every user-renamable name (the `%` printf trap), no hard-index; the holding entity rides
+the `RosterEntry.Ship` field with dispatch keyed on `Domain==Holding` FIRST so no ship logic ever sees it. **Engine
+byte-identical** (client-only; new draw methods + enum values). Docs: campaign log, Client CLAUDE.md (All Forces §S9),
+CLIENT-TEST-CHECKLIST (B-S9 row).
+
+**Split:** the **assign-commander** UI (a per-`AdminSpaceDB.CommanderSeats` dropdown of `FactionInfoDB.Commanders` →
+`AssignAdministratorOrder`) is the **B-S9b-2** follow-up — the engine for it is already complete; the detail panel notes
+it as coming. Kept B-S9b-1 to the rows + live-owner check per the mission's "prioritise the rows" guidance.
+
+**Gauge:** client-only → the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-S9"): the roster shows a Holding row per
+colony/station with population + (station) health; selecting one shows its host, population, installed infrastructure, and
+a planet-view jump; a colony captured away no longer appears (the live-owner filter). The engine half (`FactionAssets`) is
+the B-S9a CI gauge.
 
 ### B-S9a — engine live-owner cross-check — ⏳ CI (built file-disjoint while B-S8 re-gated)
 **What it does (plain English):** the next roster slice (B-S9b) will add a faction's **colonies and stations** as rows in

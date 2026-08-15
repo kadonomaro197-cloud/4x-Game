@@ -25,6 +25,7 @@ using Pulsar4X.Blueprints;
 using Pulsar4X.Sensors;
 using Pulsar4X.Weapons;
 using Pulsar4X.GroundCombat;
+using Pulsar4X.Stations;
 
 namespace Pulsar4X.Client
 {
@@ -1170,7 +1171,7 @@ namespace Pulsar4X.Client
         // (bodyId, formationId) — the exact (body, formation) pair a battalion has always been keyed by across worlds.
         // B-S4 introduces the type and migrates the Battalions tab's selection onto it (byte-identical); S5's roster
         // reuses it for ships + fleets, and S9 adds Station/Colony. A plain value-typed struct: cheap, no allocation.
-        private enum ForceKind { None = 0, Fleet, Ship, Battalion, GroundUnit }
+        private enum ForceKind { None = 0, Fleet, Ship, Battalion, GroundUnit, Colony, Station }
         private readonly struct ForceRef
         {
             public readonly ForceKind Kind;
@@ -1189,6 +1190,9 @@ namespace Pulsar4X.Client
             // ship (BodyId -1) or a battalion (Kind differs), so Matches() below distinguishes it cleanly.
             public static ForceRef OfGroundUnit(Entity body, GroundUnit u)
                 => new ForceRef(ForceKind.GroundUnit, u?.UnitId ?? -1, body?.Id ?? -1, -1);
+            // S9 — a HOLDING (colony/station) keyed by its entity id (like a ship); Kind distinguishes it in Matches().
+            public static ForceRef OfColony(Entity e)  => new ForceRef(ForceKind.Colony,  e?.Id ?? -1, -1, -1);
+            public static ForceRef OfStation(Entity e) => new ForceRef(ForceKind.Station, e?.Id ?? -1, -1, -1);
 
             public bool IsNone => Kind == ForceKind.None;
             // The battalion identity test — replaces the old "body.Id == _selBattalionBodyId && f.FormationId == …".
@@ -1203,7 +1207,7 @@ namespace Pulsar4X.Client
 
         // ── FORCES-WINDOW-DESIGN §S5 — the All-Forces roster (one flat table over ships + battalions) ──
         // Which tree/domain a force came from (§4.2 Domain column). Holdings (stations/colonies) join in S9.
-        private enum ForceDomain { Space = 0, Ground = 1 }
+        private enum ForceDomain { Space = 0, Ground = 1, Holding = 2 }
         // One roster row — the common columns (§4.2) plus the resolve handles the kind-swapping detail panel (§4.3) needs.
         private readonly struct RosterEntry
         {
@@ -1212,7 +1216,7 @@ namespace Pulsar4X.Client
             public readonly string Unit, Kind, Class, Location;
             public readonly bool Military;
             public readonly double Strength;
-            public readonly Entity Ship;                 // Space rows
+            public readonly Entity Ship;                 // Space rows — AND S9 Holding rows carry the colony/station entity here (dispatch on Domain==Holding first)
             public readonly Entity Body;                 // Ground rows: the body + its forces + the formation / unit
             public readonly GroundForcesDB Forces;
             public readonly GroundFormation Formation;   // Ground battalion rows
@@ -1811,6 +1815,15 @@ namespace Pulsar4X.Client
                     if(u != null && u.FormationId < 0 && body != null && body.TryGetDataBlob<GroundForcesDB>(out var lforces))
                         entries.Add(UnitRow(body, lforces, u, myFaction, formed: false));
 
+            // S9 — HOLDINGS: the player's colonies + stations as rows (§S9, Domain "Holding"). FactionAssets filters the
+            // capture-STALE registry (FactionInfoDB.Colonies/.Stations are added on creation but NOT cleared on capture —
+            // GroundForcesProcessor flips a taken planet's live owner but leaves it in the old faction's list) down to the
+            // assets whose LIVE FactionOwnerID still == the faction — so a colony lost to invasion drops out.
+            foreach(var colony in FactionAssets.OwnedColonies(forceFaction))
+                entries.Add(HoldingRow(colony, "Colony", myFaction));
+            foreach(var station in FactionAssets.OwnedStations(forceFaction))
+                entries.Add(HoldingRow(station, "Station", myFaction));
+
             if(entries.Count == 0)
             {
                 ImGui.TextDisabled("No forces yet. Build ships (Fleets tab) or raise battalions (Planet View) to see them here.");
@@ -1818,7 +1831,7 @@ namespace Pulsar4X.Client
             }
 
             // ── Filters: Domain / Mil-Civ / search ──
-            string[] domainNames = { "All domains", "Space", "Ground" };
+            string[] domainNames = { "All domains", "Space", "Ground", "Holdings" };
             ImGui.SetNextItemWidth(140f);
             ImGui.Combo("Domain##rosterdom", ref _rosterDomainFilter, domainNames, domainNames.Length);
             ImGui.SameLine();
@@ -1847,7 +1860,8 @@ namespace Pulsar4X.Client
             int shipN = entries.Count(e => e.Domain == ForceDomain.Space);
             int battN = entries.Count(e => e.Formation != null);
             int unitN = entries.Count(e => e.GUnit != null);
-            ImGui.TextDisabled($"{rows.Count} of {entries.Count} force(s) — {shipN} ship(s), {battN} battalion(s)"
+            int holdN = entries.Count(e => e.Domain == ForceDomain.Holding);
+            ImGui.TextDisabled($"{rows.Count} of {entries.Count} force(s) — {shipN} ship(s), {battN} battalion(s), {holdN} holding(s)"
                 + (_rosterShowUnits ? $", {unitN} unit(s)" : ""));
             ImGui.Separator();
 
@@ -1875,7 +1889,8 @@ namespace Pulsar4X.Client
                     if(ImGui.Selectable(e.Unit + tag, isSel, ImGuiSelectableFlags.SpanAllColumns))
                     { _selRoster = e.Ref; isSel = true; }
 
-                    ImGui.TableNextColumn(); ImGui.Text(e.Domain == ForceDomain.Space ? "Space" : "Ground");
+                    ImGui.TableNextColumn();
+                    ImGui.Text(e.Domain == ForceDomain.Space ? "Space" : e.Domain == ForceDomain.Ground ? "Ground" : "Holding");
                     ImGui.TableNextColumn(); ImGui.Text(e.Kind);
                     ImGui.TableNextColumn(); ImGui.Text(e.Class);
                     ImGui.TableNextColumn();
@@ -1908,6 +1923,15 @@ namespace Pulsar4X.Client
         // one list, but the RIGHT tools appear for whatever you pick.
         private void DrawRosterDetail(RosterEntry e)
         {
+            // S9 — a HOLDING (colony/station) → its host + population + installed infrastructure. Checked FIRST so the
+            // ship branch below never runs for a holding (the entity is carried in the Ship field). Assign-commander is
+            // the B-S9b-2 follow-up.
+            if(e.Domain == ForceDomain.Holding)
+            {
+                DrawHoldingDetail(e.Ship, e.Kind);
+                return;
+            }
+
             // Ground battalion → the full order surface (self-contained: march / queue / stance / ROE / rename / infra).
             if(e.Domain == ForceDomain.Ground && e.Formation != null && e.Body != null && e.Forces != null)
             {
@@ -2077,6 +2101,14 @@ namespace Pulsar4X.Client
         // no RosterEntry field is needed.
         private double RowHealthFraction(RosterEntry e)
         {
+            // S9 — a HOLDING: a station has a structural-integrity pool → a real fraction; a colony has no aggregate HP
+            // notion, so it reads "—" (its "strength" is population). Checked first — a holding is carried in Ship.
+            if(e.Domain == ForceDomain.Holding)
+            {
+                if(e.Ship != null && e.Ship.TryGetDataBlob<StationInfoDB>(out var st) && StationInfoDB.BaseStructuralIntegrity > 0)
+                    return Math.Min(1.0, st.StructuralIntegrity / StationInfoDB.BaseStructuralIntegrity);
+                return -1;
+            }
             if(e.GUnit != null) return e.GUnit.MaxHealth > 0 ? e.GUnit.Health / e.GUnit.MaxHealth : -1;
             if(e.Formation != null && e.Forces != null)
             {
@@ -2085,6 +2117,76 @@ namespace Pulsar4X.Client
             }
             if(e.Ship != null && e.Ship.IsValid) return ShipHealth.HealthFraction(e.Ship);
             return -1;
+        }
+
+        // S9 — a roster row for a HOLDING (colony/station). Strength = population (both blobs carry a Population dict);
+        // Class = the host body it sits on (colony → ColonyInfoDB.PlanetEntity, station → StationInfoDB.HostingBodyEntity);
+        // Location = the system that host is in (reuses ShipLocation on the host body). Civilian. Health falls out in
+        // RowHealthFraction (station integrity; colony —). The holding entity rides in the Ship field (dispatch keys on
+        // Domain==Holding first, so no ship logic ever sees it).
+        private RosterEntry HoldingRow(Entity holding, string kind, int viewerFactionId)
+        {
+            double pop = 0;
+            Entity host = null;
+            if(holding.TryGetDataBlob<ColonyInfoDB>(out var cinfo))
+            {
+                host = cinfo.PlanetEntity;
+                if(cinfo.Population != null) foreach(var v in cinfo.Population.Values) pop += v;
+            }
+            else if(holding.TryGetDataBlob<StationInfoDB>(out var sinfo))
+            {
+                host = sinfo.HostingBodyEntity;
+                if(sinfo.Population != null) foreach(var v in sinfo.Population.Values) pop += v;
+            }
+            bool haveHost = host != null && host.IsValid;
+            string cls = haveHost ? host.GetName(viewerFactionId) : "—";
+            string loc = haveHost ? ShipLocation(host) : "—";
+            return new RosterEntry(
+                kind == "Station" ? ForceRef.OfStation(holding) : ForceRef.OfColony(holding),
+                ForceDomain.Holding, holding.GetName(viewerFactionId), kind, cls, false,
+                loc, pop, holding, null, null, null, null);
+        }
+
+        // The HOLDING detail (§4.3) — host + population + (station) integrity + the installed infrastructure, reusing the
+        // engine's own components panel (the exact call PlanetaryWindow makes). Read-only + a jump to the host's planet
+        // view. Assign-commander (AdminSpaceDB.CommanderSeats + FactionInfoDB.Commanders + AssignAdministratorOrder) is the
+        // B-S9b-2 follow-up. Thin/defensive: TextUnformatted for the user-renamable holding/host name (the % printf trap).
+        private void DrawHoldingDetail(Entity holding, string kind)
+        {
+            if(holding == null || !holding.IsValid) { ImGui.TextDisabled("This holding is no longer present."); return; }
+            int myFaction = (_uiState.PlayerFaction ?? _uiState.Faction)?.Id ?? -1;
+            RosterDetailHeader(holding.GetName(myFaction), $"{kind} — its host, population, and installed infrastructure.");
+
+            Entity host = null; double pop = 0;
+            if(holding.TryGetDataBlob<ColonyInfoDB>(out var cinfo))
+            { host = cinfo.PlanetEntity; if(cinfo.Population != null) foreach(var v in cinfo.Population.Values) pop += v; }
+            else if(holding.TryGetDataBlob<StationInfoDB>(out var sinfo))
+            { host = sinfo.HostingBodyEntity; if(sinfo.Population != null) foreach(var v in sinfo.Population.Values) pop += v; }
+            bool haveHost = host != null && host.IsValid;
+
+            ImGui.TextUnformatted($"Kind: {kind}"
+                + (haveHost ? $"    Host: {host.GetName(myFaction)}    Location: {ShipLocation(host)}" : ""));
+            ImGui.TextUnformatted($"Population: {pop:N0}");
+            if(holding.TryGetDataBlob<StationInfoDB>(out var st2))
+                ImGui.TextUnformatted($"Structural integrity: {st2.StructuralIntegrity:N0} / {StationInfoDB.BaseStructuralIntegrity:N0}");
+
+            // Installed infrastructure — reuse the engine's own components panel (ComponentInstancesDBDisplay.Display,
+            // the panel PlanetaryWindow renders). It needs the holding's client-side EntityState, resolved by the B-S7
+            // ResolveEntityState walk (degrades to a note if the holding isn't in the active system view).
+            if(holding.TryGetDataBlob<ComponentInstancesDB>(out var cdb))
+            {
+                ImGui.Separator();
+                ImGui.TextDisabled("Installed infrastructure:");
+                var es = ResolveEntityState(holding);
+                if(es != null) cdb.Display(es, _uiState);
+                else ImGui.TextDisabled("   (infrastructure list unavailable — holding not in the active system view)");
+            }
+
+            ImGui.Separator();
+            ImGui.TextDisabled("Assign a commander to this post: coming in B-S9b-2 (AdminSpaceDB seats + AssignAdministratorOrder).");
+
+            if(haveHost && ImGui.Button($"Open planet view##rosthold{holding.Id}"))
+                JumpToPlanetView(host);
         }
 
         // Green (full) → amber → red (near-dead), for the Health column.

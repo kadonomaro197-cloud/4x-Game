@@ -354,6 +354,22 @@ run it — these need the local Windows build.
         in the roster (and reads lower than a pristine sister ship). A destroyed component should pull it down honestly
         (not stay near 100% by averaging only the survivors).
 
+- [ ] **B-S9b-1 — colonies + stations appear as "Holding" rows in the roster.** In **Force Management ▸ All Forces**,
+      confirm:
+      - Your **Earth colony** (and any station you've built) shows as a row with **Domain = Holding**, **Kind =
+        Colony/Station**, Class = the body it's on (e.g. "Earth"), Location = its system (e.g. "Sol"), and **Strength =
+        its population**. The Domain filter has a new **"Holdings"** option.
+      - **Health column:** a **station** shows a real **%** (its structural integrity); a **colony** shows **"—"** (a
+        colony has no single HP bar — its strength is population).
+      - Select a holding → the detail panel shows its **host body + system**, **population**, (station) **structural
+        integrity**, and its **installed infrastructure** (the same components list the Planetary window shows), plus an
+        **"Open planet view"** button that jumps to the host.
+      - **Live-owner check (needs a capture, optional):** if you lose a colony to an enemy ground invasion (its owner
+        flips), it should **drop off** your roster — even though the engine's internal colony list still names it. (The
+        reverse — a colony you *capture* showing up as yours — is a known follow-up; capture doesn't yet add it to your
+        list.)
+      - **Not yet:** assigning a commander to the holding is the B-S9b-2 follow-up (the panel says so).
+
 ---
 
 ## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)
