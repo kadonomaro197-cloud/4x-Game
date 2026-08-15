@@ -14,7 +14,8 @@ public class SetLogisticsOrder : EntityCommand
         SetBaseItems,
         AddLogiShipDB,
         RemoveLogiShipDB,
-        SetShipTypeAmounts
+        SetShipTypeAmounts,
+        SetDesiredLevels
     }
 
     //public SetLogisticsOrder Order;
@@ -34,6 +35,7 @@ public class SetLogisticsOrder : EntityCommand
     Entity _factionEntity;
 
     private Dictionary<ICargoable,(int count, int demandSupplyWeight)> _baseChanges;
+    private Dictionary<ICargoable,(int minVal, int maxVal)> _desiredChanges;
     private Changes _shipChanges;
 
     internal override bool IsValidCommand(Game game)
@@ -47,6 +49,11 @@ public class SetLogisticsOrder : EntityCommand
                     return true;
                 return false;
             }
+
+            // A SetDesiredLevels order is only valid on a trade hub (a colony OR a station carrying a LogiBaseDB) —
+            // Execute reads that blob, so guard here rather than throwing on execution.
+            if (_type == OrderTypes.SetDesiredLevels)
+                return _entityCommanding.HasDataBlob<LogiBaseDB>();
 
             return true;
 
@@ -75,6 +82,28 @@ public class SetLogisticsOrder : EntityCommand
             RequestingFactionGuid = entity.FactionOwnerID,
             _type = OrderTypes.SetBaseItems,
             _baseChanges = changes
+        };
+
+        entity.Manager.Game.OrderHandler.HandleOrder(cmd);
+    }
+
+    /// <summary>
+    /// Set a trade hub's per-item stockpile MIN/MAX targets (<see cref="LogiBaseDB.DesiredLevels"/>) — the write path
+    /// for the "Set Stockpile Min/Max Target" order. The READER is already live: <c>LogisticsCycle.UpdateListings</c>
+    /// prices each item's shortfall/surplus off these levels every hour, so this is the missing half of that lever.
+    /// A <c>(0,0)</c> pair REMOVES the item's target (the hub stops caring about it). The write is deferred into
+    /// <see cref="Execute"/> (the sim thread) ON PURPOSE — <c>DesiredLevels</c> is iterated by the base processor, so a
+    /// UI-thread mutation mid-iteration would throw "collection was modified" (unlike a harmless torn scalar write).
+    /// The AI sets the same targets through this same order (one verb, both seats). Valid on a colony OR a station.
+    /// </summary>
+    public static void CreateCommand_SetDesiredLevels(Entity entity, Dictionary<ICargoable,(int minVal, int maxVal)> changes )
+    {
+        SetLogisticsOrder cmd = new SetLogisticsOrder()
+        {
+            EntityCommandingGuid = entity.Id,
+            RequestingFactionGuid = entity.FactionOwnerID,
+            _type = OrderTypes.SetDesiredLevels,
+            _desiredChanges = changes
         };
 
         entity.Manager.Game.OrderHandler.HandleOrder(cmd);
@@ -133,6 +162,19 @@ public class SetLogisticsOrder : EntityCommand
                     break;
                 }
 
+
+                case OrderTypes.SetDesiredLevels:
+                {
+                    var db = EntityCommanding.GetDataBlob<LogiBaseDB>();
+                    foreach (var item in _desiredChanges)
+                    {
+                        if (item.Value.minVal == 0 && item.Value.maxVal == 0)
+                            db.DesiredLevels.Remove(item.Key);
+                        else
+                            db.DesiredLevels[item.Key] = item.Value;
+                    }
+                    break;
+                }
 
                 case OrderTypes.AddLogiShipDB:
                 {

@@ -112,9 +112,26 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 >   B-S9 Holding detail panel (a colony tax slider).
 > **Recommended first slice: Formation-ops** (completes the battalion command surface the roster already exposes, one
 > cohesive category). The **categorized-menu framework** (organizing all orders by the 9 categories) is the parallel UX
-> deliverable — design it alongside slice 1 or as its own framework slice. Verify each order's engine path before wiring
-> (Prime Directive: some are direct `GroundForces` calls like the existing surface, some are `EntityCommand`s via
-> `Game.OrderHandler.HandleOrder`).
+> deliverable — design it alongside slice 1 or as its own framework slice.
+>
+> **⭐ B-orders recon COMPLETE + source-verified (2026-08-15, `b-orders-recon` workflow, 7 agents, all claims re-checked
+> against HEAD).** Full spec: `docs/BORDERS-RECON-SPEC.md` (below). Headlines — DONE so far: Formation-ops, tax,
+> queue-stance, **Set Target Priority (engine SetTargeting + Combat-tab selector — CONFIRMED built, drop from list)**.
+> **Three file-disjoint ENGINE setters buildable NOW (while `FleetWindow.cs` drains):** ① **RANK 1 `SetLogisticsOrder.
+> CreateCommand_SetDesiredLevels`** (stockpile min/max write path + a `LogiBaseDB.Clone` bug fix — BUILDING NOW); ②
+> **RANK 2 `CargoTransferOrder.CreateRearmFleetCommand`** (fleet ordnance-rearm helper, optional/clean); ③ **RANK 3
+> `DockOrder.cs`** (new EntityCommand over `DockTools` — content-gated: no base-mod hull mounts a `DockBayAtb` yet, so
+> byte-identical until a carrier hull lands). **Client-slice order (FleetWindow lane, serialized): C1 Toggle-Inherit
+> (un-comment the dead wire at `FleetWindow.cs:436-447`, fix stale ids) → C2 Rearm-ground-unit (`GroundForces.
+> ResupplyUnit`) → C3 Set-Formation-Order/replace-queue → C9 categorized-menu first cut → C6 Intercept/Ram (⚖ parked) →
+> C7 Rearm-ordnance → C8 Dock/Undock (needs RANK 3).** `[PARALLEL]` (non-FleetWindow) client: **EP Edit-Production-Job**
+> (`IndustryDisplay.cs`, engine fully built), **C4 Queue-move-to-global-hex** (`PlanetViewWindow`), **C5 Stockpile
+> picker** (`LogisticsWindow`, needs RANK 1). **Corrections:** *Pause-on-Action* already has UI (`OrdersListWindow.cs:119`)
+> — drop it; *Edit-Production-Job* `autoInstall` edit is a silent no-op (`IndustryTools.cs:69-73` commented) — offer
+> count+repeat only. **New parked items → ADJUDICATION QUEUE** (below): the two region-local hex-move orders + Move-
+> Formation-Tree (all M1-deletion-bound + queue-bypassing → AI can't drive → build the queued/global C4 instead), and
+> **Intercept/Ram semantics** (it's a literal kinetic RAM, missile behaviour — ram vs match-orbit-intercept is the
+> developer's call).
 
 ---
 
@@ -157,6 +174,7 @@ ladder row and, once landed, the commit sha.
 | B-orders-qstance | Queue a stance-change waypoint (Standing-Conditional) | `forceswindow.html` §10 Standing-Conditional | ✅ | `fb54aba` (run 31876634046 green); hex-move waypoint deferred (needs picker) |
 | B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | ✅ | `8c4d616` (run 31876849971 green) — `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*` |
 | B-orders-targetui | Set Target Priority — the Combat-tab client selector | `forceswindow.html` §10 Combat | 🔨 | client `FleetWindow.cs` `DisplayTargetPrioritySelector` (mirrors EMCON selector) — `TargetPriority` combo + Set button → `FleetDoctrine.SetTargeting` |
+| B-orders-stockpile-eng | Set Stockpile Min/Max — engine write path (RANK 1) | `forceswindow.html` §10 Logistics | 🔨 | engine `SetLogisticsOrder.CreateCommand_SetDesiredLevels` (sim-thread-safe write of `LogiBaseDB.DesiredLevels`) + `LogiBaseDB.Clone` bug fix + `SetLogisticsOrderTests`; file-disjoint from `FleetWindow.cs`; client picker is the follow-up (prefer LogisticsWindow, `[PARALLEL]`) |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
