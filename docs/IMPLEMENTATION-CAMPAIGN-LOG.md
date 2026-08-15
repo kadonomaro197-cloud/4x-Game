@@ -40,6 +40,15 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > cross-check for the capture-stale-registry gap) + the assign-commander UI; then B-orders + Phase C/D/E. Phase B
 > evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so
 > each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
+>
+> **Phase C recon (2026-08-15, done while B-S8's CI ran — §4 file-disjoint work):** the file-disjoint TIER 3 engine
+> welds are mostly PARK items, now in the ADJUDICATION QUEUE — **C-guided (#3)** needs the "which ordnance at build"
+> decision (rec: read a representative warhead at build; combat value is cached at build but a launcher's ordnance is a
+> runtime loadout), **C-mobility (#5)** is the developer's call on the frame×drive combine (rec: multiply). **C-sensors
+> (#4)** has a STALE backlog file:line (`SensorTools.cs:147` doesn't exist at HEAD) and is behaviour-changing (detection
+> band re-tune) → its own focused slice, not a fill. So the clean next BUILD stays **B-S9** once B-S8 is green; the
+> larger file-disjoint BUILDs (C-run-cost / C-staffing / C-civic, D-units, E-env) each want their own focused slice + CI
+> cycle.
 
 ---
 
@@ -82,9 +91,9 @@ ladder row and, once landed, the commit sha.
 |-------|------|----------------------|--------|--------|
 | C-run-cost | TIER 2.5 run-cost vector (power/jobs/food/upkeep) | ENGINE-WIRING-BACKLOG TIER 2.5 | ⬜ | |
 | C-staffing | TIER 2.6 workforce→production staffing model | ENGINE-WIRING-BACKLOG TIER 2.6 | ⬜ | |
-| C-guided | Guided-weapon real warhead (item #3) | `entityassembler.html` / TIER 3 #3 | ⬜ | |
-| C-sensors | Sensors band-match fix (item #4) | `sensorsderived.html` / TIER 3 #4 | ⬜ | |
-| C-mobility | `GroundMobility.SpeedMultForUnit` scale-not-replace (item #5) | `propulsionderived.html` / TIER 3 #5 | ⬜ | |
+| C-guided | Guided-weapon real warhead (item #3) | `entityassembler.html` / TIER 3 #3 | ⚖ parked | ordnance-at-build decision — ADJUDICATION QUEUE (rec: Option A) |
+| C-sensors | Sensors band-match fix (item #4) | `sensorsderived.html` / TIER 3 #4 | ⬜ | ⚠ backlog file:line STALE + behaviour-changing (band re-tune) — needs a focused slice |
+| C-mobility | `GroundMobility.SpeedMultForUnit` scale-not-replace (item #5) | `propulsionderived.html` / TIER 3 #5 | ⚖ parked | combine = developer's call — ADJUDICATION QUEUE (rec: multiply) |
 | C-deadknobs | TIER 4 dead-knob adjudication (items 6–11 — most are STOP items) | ENGINE-WIRING-BACKLOG TIER 4 | ⬜ | |
 | C-civic | New civic dials (Jobs / Amenity / PublicOrder / Commerce) per IO census | `civicderived.html` / 02-IO-MATRIX | ⬜ | |
 
@@ -214,6 +223,51 @@ ambiguous:
 menu until finished, I can pull them from the client's order list — your call (I recommend finishing #1 instead).
 
 ---
+
+### ⚖ C-GUIDED — which ordnance does a missile ship's auto-resolve firepower assume? (parked 2026-08-15, §6 #3)
+**Plain English:** Right now the auto-resolver rates every missile/torpedo launcher at a flat stub (100 kJ/s) instead
+of the real warhead, so torpedo ships read far weaker than they are (`entityassembler.html` flags this outright; TIER 3
+#3). The obvious fix — "read the mounted warhead" — hits a wrinkle: a launcher's ordnance
+(`MissileLauncherAtb.AssignedOrdnance`) is a **runtime loadout** the player/AI assigns later, but a ship's combat value
+(`ShipCombatValueDB`) is computed **once at build**, when no ordnance is loaded yet. So at the one read site there is
+nothing to read.
+
+**The decision (needs the developer):** which warhead should a missile ship's firepower use?
+- **Option A (recommended): read a REPRESENTATIVE warhead at build** — the faction's default/available ordnance design
+  for that launcher size — as a proxy for "what this launcher fires." Simple, one read site, no recalc machinery, and it
+  fixes the under-count immediately. Downside: it doesn't track a mid-game loadout swap.
+- **Option B: recalc combat value when ordnance is assigned** — honest per-loadout, but needs the parked
+  "recalc-`ShipCombatValueDB`-on-change" hook (Combat gotcha #2), a bigger wire touching the whole combat-value caching
+  model.
+- Either way, warhead ENERGY = TNT-equiv mass × ~4.184e6 J/kg, then divided down to the beam kJ–MJ scale (the same open
+  calibration `MissileImpactProcessor` carries — I'd mirror its divisor, not invent one).
+
+**Recommendation:** Option A now (a representative-ordnance read at build, calibrated off the impact processor's scale),
+with Option B flagged as the v2 loadout-accurate follow-up. Gauge: a torpedo ship's `ShipCombatValueDB.Firepower` scales
+with its warhead choice, not the constant. Say the word and I build A.
+
+### ⚖ C-MOBILITY — how should a designed drive combine with the frame's locomotion mode? (parked 2026-08-15, §6 #3)
+**Plain English:** The propulsion door sells the four frame locomotion modes (Foot ×1 / Tracked ×2 / Walker ×1.5 /
+Hover ×3) as "modes the simulation already reads." But `GroundMobility.SpeedMultForUnit` **replaces** the frame mode with
+a mounted drive's `SpeedFactor` outright — so the moment a unit carries a designed drive, whether its frame is Foot or
+Hover stops affecting speed at all (the four modes become dead weight; flagged in `GroundCombat/CLAUDE.md` + TIER 3 #5).
+The backlog names the fix as **the developer's call on the exact combine.**
+
+**The decision (needs the developer):** how do the frame mode and the designed `SpeedFactor` combine?
+- **Option A (recommended): MULTIPLY** — `speed = frameMode × SpeedFactor`. A Hover chassis with a good drive is faster
+  than a Foot chassis with the same drive; the frame choice stays a real decision. Simplest, matches "the frame matters."
+- **Option B: a weighted blend** (e.g. `frameMode × (1 + w·(SpeedFactor−1))`) — lets the designed drive dominate but not
+  erase the frame. More dials, needs a weight.
+
+**Recommendation:** Option A (multiply). It's the smallest change (one line), makes frame choice matter again, and is
+the natural reading of "modes the sim reads." Behavior change → re-baseline the mobility gauges. Say multiply (or a blend
+weight) and I build it.
+
+> **Note on TIER 3 #4 (sensors band-match):** the backlog cites `SensorTools.cs:147`, but that path/line is STALE — the
+> band-match code isn't there at HEAD (grep before you trust). It's also a *behaviour-changing* detection fix (the ⚠:
+> "expect to re-tune emitter/receiver bands so detection works by design not by bug"), so it warrants its own focused
+> slice with a sensor-band data pass, not a rushed fill. Locating the real band-match site + checking whether the base
+> data relies on the bug is the first step when Phase C reaches it.
 
 *(Other slices with genuine ambiguity — two HTMLs contradict, a save-break with no safe pattern, a DECISION-PENDING
 with no default, or an HTML number impossible without a redesign — will park here the same way.)*
