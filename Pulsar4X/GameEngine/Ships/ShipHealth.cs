@@ -29,7 +29,11 @@ namespace Pulsar4X.Ships
         /// </summary>
         public static double HealthFraction(Entity ship)
         {
-            if (ship == null || !ship.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 1.0;
+            // null OR an UNMANAGED entity (no Manager — e.g. a bare Entity.Create()) has no reachable components → 1.0.
+            // The Manager guard is what makes "never throws" true: Entity.TryGetDataBlob delegates to Manager, so a
+            // Manager-less entity would NRE without it (the roster only ever passes valid managed ships, but the
+            // accessor honours its defensive contract for any caller).
+            if (ship == null || ship.Manager == null || !ship.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return 1.0;
 
             double sum = 0;
             int live = 0;
