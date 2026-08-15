@@ -389,6 +389,11 @@ run it — these need the local Windows build.
         individual units" — it appears as a `•` row).
       - A single-formation / single-unit battalion just shows fewer controls (no crash, no empty combo).
 
+- [ ] **B-orders — Set Colony Tax Rate (Holding detail).** Select a **colony** in the All Forces roster → the detail
+      panel has a **Tax rate** slider (0–100%). Drag it → the rate changes; over the next monthly tick the colony's tax
+      income + morale respond (cross-check in Colony Management ▸ Society). A **station** shows no tax slider (no colony
+      economy).
+
 ---
 
 ## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)

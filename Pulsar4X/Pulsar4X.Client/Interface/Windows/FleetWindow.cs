@@ -2239,6 +2239,19 @@ namespace Pulsar4X.Client
             if(holding.TryGetDataBlob<StationInfoDB>(out var st2))
                 ImGui.TextUnformatted($"Structural integrity: {st2.StructuralIntegrity:N0} / {StationInfoDB.BaseStructuralIntegrity:N0}");
 
+            // B-orders (Special) — Set Colony Tax Rate. A colony's ColonyEconomyDB.TaxRate (0..1) is the income-vs-morale
+            // lever; it had a Society-tab READOUT but no setter here. A direct public setter (the pattern the DevTools
+            // society levers use — a torn write of a double read monthly is harmless). Percent slider for readability.
+            if(holding.TryGetDataBlob<ColonyEconomyDB>(out var econ))
+            {
+                float taxPct = (float)(econ.TaxRate * 100.0);
+                ImGui.SetNextItemWidth(200f);
+                if(ImGui.SliderFloat("Tax rate##holdtax", ref taxPct, 0f, 100f, "%.0f%%"))
+                    econ.TaxRate = Math.Clamp(taxPct / 100.0, 0.0, 1.0);
+                ImGui.SameLine();
+                ImGui.TextDisabled("(more income, less morale)");
+            }
+
             // Installed infrastructure — reuse the engine's own components panel (ComponentInstancesDBDisplay.Display,
             // the panel PlanetaryWindow renders). It needs the holding's client-side EntityState, resolved by the B-S7
             // ResolveEntityState walk (degrades to a note if the holding isn't in the active system view).
