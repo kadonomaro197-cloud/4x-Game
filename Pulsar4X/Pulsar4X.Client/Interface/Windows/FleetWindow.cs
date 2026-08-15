@@ -41,6 +41,7 @@ namespace Pulsar4X.Client
             JPSurvey,
             Jump,
             RefuelAt,
+            RearmAt,  // B-orders C7 — top up the fleet's ships with ordnance (missiles) from a base's stock
             Troops,   // Earthfall C5.1 — embark ground units onto a troop-bay ship / land them on a target world
         }
 
@@ -1787,6 +1788,8 @@ namespace Pulsar4X.Client
             {
                 if(ImGui.Selectable("Refuel at ...", selectedIssueOrderType == IssueOrderType.RefuelAt))
                     selectedIssueOrderType = IssueOrderType.RefuelAt;
+                if(ImGui.Selectable("Rearm ordnance at ...", selectedIssueOrderType == IssueOrderType.RearmAt))
+                    selectedIssueOrderType = IssueOrderType.RearmAt;
 
                 // Earthfall C5.1 — the troop lift, now DIMMED (not hidden) when no ship in the fleet carries a bay.
                 bool bay = HasAnyTroopBay(fleet);
@@ -1923,6 +1926,49 @@ namespace Pulsar4X.Client
                                 //_uiState.Game.OrderHandler.HandleOrder(order2);
 
                             }
+                        }
+                        break;
+                    case IssueOrderType.RearmAt:
+                        // C7 (B-orders) — top up the fleet's ships with ORDNANCE from a base's stock. Two-stage model:
+                        // this fills each ship's ordnance-storage HOLD (OrdnanceDesign is an ICargoable, CargoTypeID
+                        // "ordnance-storage"); the launcher's internal magazine then reloads from that hold
+                        // (GenericFiringWeaponsProcessor). The player picks the BASE *and* the ORDNANCE — a base can stock
+                        // several missile types, and a magazine shouldn't be filled with rounds the launchers can't fire —
+                        // so the choice stays the player's. Mirrors the Refuel-at flow; reuses the existing
+                        // CargoTransferOrder.CreateCommands (WaitTillFull), no engine change. Stations as bases: a follow-up.
+                        ImGui.TextDisabled("Top up ordnance from a base's stock (fills the ships' magazine holds):");
+                        colonyList = _uiState.StarSystemStates[SelectedFleet.Manager.ManagerID].GetFilteredEntities(
+                            EntityFilter.Friendly | EntityFilter.Neutral,
+                            _uiState.Faction.Id,
+                            typeof(ColonyInfoDB));
+                        foreach(var colony in colonyList)
+                        {
+                            if(!colony.Entity.TryGetDataBlob<CargoStorageDB>(out var baseStore)) continue;
+                            var ordnanceInStock = baseStore.GetCargoables().Values
+                                .OfType<OrdnanceDesign>()
+                                .Where(o => baseStore.GetUnitsStored(o, false) > 0)
+                                .ToList();
+                            if(ordnanceInStock.Count == 0) continue;
+
+                            ImGui.TextUnformatted(colony.Name);
+                            ImGui.Indent();
+                            foreach(var ord in ordnanceInStock)
+                            {
+                                long stock = baseStore.GetUnitsStored(ord, false);
+                                if(ImGui.Button($"Load {ord.Name} ({stock} in stock)###rearm-{colony.Entity.Id}-{ord.UniqueID}"))
+                                {
+                                    var warp = WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, colony.Entity);
+                                    _uiState.Game.OrderHandler.HandleOrder(warp);
+                                    foreach(var ship in FleetTools.AllShipsRecursive(SelectedFleet))
+                                    {
+                                        if(ship.TryGetDataBlob<CargoStorageDB>(out var shipStore)
+                                           && shipStore.GetFreeUnitSpace(ord) > 0)
+                                            CargoTransferOrder.CreateCommands(_uiState.Faction.Id, ship, colony.Entity, ord,
+                                                CargoTransferOrder.Conditionals.WaitTillFull);
+                                    }
+                                }
+                            }
+                            ImGui.Unindent();
                         }
                         break;
                     case IssueOrderType.Troops:

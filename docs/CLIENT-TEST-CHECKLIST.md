@@ -408,6 +408,12 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Rearm ordnance at a base (Fleets ▸ Issue Orders ▸ Logistics & Cargo).** Select a fleet with a
+      missile ship → Issue Orders ▸ **Logistics & Cargo** ▸ **"Rearm ordnance at ..."**. The right panel lists your
+      colonies in-system that hold ordnance in stock; under each, a **"Load \<missile\> (N in stock)"** button per
+      ordnance type. Click one: the fleet warps to that base and each ship with magazine room pulls that ordnance
+      (WaitTillFull). Expected: the fleet moves to the base and its ships' ordnance holds fill from base stock (watch the
+      cargo panel); a base with no ordnance shows nothing. (Fills the hold; the launcher magazine then reloads from it.)
 - [ ] **B-orders — Categorized order menu (Fleets ▸ Issue Orders).** Select a fleet → **Issue Orders** tab. The left
       "Available Orders" list is now grouped into **Movement** (open by default: Move to / Jump), **Survey** (Geo / Grav),
       and **Logistics & Cargo** (Refuel at / Embark-land troops) CollapsingHeaders. A capability the fleet lacks (no
