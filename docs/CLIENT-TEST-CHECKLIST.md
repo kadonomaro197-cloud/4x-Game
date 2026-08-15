@@ -343,6 +343,16 @@ run it — these need the local Windows build.
       - **Survey vessel** — a note if it's a survey ship (its actual per-target survey progress shows on the surveyed
         body, not here — a later slice).
       A **warship** (Mil/Civ = Military) is unchanged — it still shows only the firepower/toughness/evasion combat sheet.
+- [ ] **B-S8 — the roster shows a real Health column, and ship detail shows Health % + Fuel %.** In **Force Management ▸
+      All Forces**, the table now has a **Health** column (8th column). Confirm:
+      - Every row shows a health **%** (colour-banded green→amber→red): a ship (from the new engine accessor), a
+        battalion (its formation health), and — with "Show individual units" on — each unit (its Health/MaxHealth). A row
+        with no health notion shows "—".
+      - Select a **ship** → its detail panel shows a **"Health N%"** line, and **"Fuel N%"** appended if the ship burns
+        fuel (a freighter/warship with a thruster). A ship with no fuel type shows just Health.
+      - **Damage check (optional):** bombard/attack a ship in combat so it loses/damages components → its Health % drops
+        in the roster (and reads lower than a pristine sister ship). A destroyed component should pull it down honestly
+        (not stay near 100% by averaging only the survivors).
 
 ---
 

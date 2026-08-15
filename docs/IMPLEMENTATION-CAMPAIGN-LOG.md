@@ -25,22 +25,21 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1..S5 are CI-verified; B-S6 + B-S7 are pushed (⏳ CI in flight).** The Forces-window foundation is
-> fully in place through the All-Forces roster (S5 green on `42d01c7`; adversarially re-verified — compile + design
-> clean, one runtime `%`-printf hardening folded into B-S6). **B-S6** (`0e0faaa`, per-individual ground-unit rows +
-> engine `GroundFormationTools.AllUnitsFor` — the unit-level twin of `AllFormationsFor` that reaches loose/unformed
-> units, gauged by `EfGroundFormUpTests.AllUnitsFor_…`): **6/7 shards + build-client GREEN; the `rest` shard (its new
-> engine test) was still in flight at push** — flip B-S6 → ✅ once `rest` confirms. **B-S7 — civilian-ship detail — is
-> now pushed** (client-only; B-S6's build-client was green so a client slice doesn't build on a broken compile, and
-> B-S7's own run re-runs `rest`): in the roster's ship detail, a **civilian** ship (Freighter/Hauler/Tender/Transport/
-> Survey/Utility — `ShipRoleTools.IsMilitary == false`) now shows a **cargo manifest** (reusing `CargoStorageDBDisplay`,
-> the exact call `EntityWindow` uses), its **trade route + state** (`LogiShipperDB.StateString` + `ActiveCargoTasks`
-> From→To), and a **survey-vessel** note (per-target survey progress on the surveyed body is a flagged follow-up); a
-> warship keeps just the combat sheet. Thin/defensive, `TextUnformatted` for every user-renamable name.
-> **NEXT (once B-S6/B-S7 are green): B-S8** — aggregate Health + Fuel accessors (BUILD-grade, engine + client) so those
-> roster columns show real numbers instead of `—`. Phase B evolves `FleetWindow.cs` (keep the class name) and is
-> client-heavy — CI compile-checks it but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md`
-> row. (S9 stations/colonies + assign-commander, B-orders follow.)
+> **Phase A + B-S1..S6 are CI-verified; B-S7 + B-S8 are pushed (⏳ CI in flight).** The Forces-window foundation is
+> fully in place through the All-Forces roster. **B-S6** (`0e0faaa`, per-unit ground rows + engine `AllUnitsFor`): run
+> `31852230485` **fully GREEN** (all 7 shards + build-client — the `AllUnitsFor` engine test passed) → ✅. **B-S7**
+> (`e894b12`, civilian-ship detail — cargo manifest via reused `CargoStorageDBDisplay` + `LogiShipperDB` route/state +
+> a survey note): build-client + 6/7 shards green, its `rest` shard (the same engine suite B-S6 already passed) still
+> finishing → flip ✅ when its run completes. **B-S8 — aggregate Health + Fuel gauges — is now pushed** (client-only
+> compile risk; B-S7's build-client was green): a NEW engine accessor **`ShipHealth.HealthFraction(entity)`** (sums a
+> ship's living-component `HealthPercent` over its ORIGINAL design count, so a destroyed/removed component honestly
+> counts as 0 — not hidden by a mean-of-survivors), CI-gauged by `ShipHealthTests`; the roster gained a real **Health
+> column** (ship via that accessor, battalion via `FormationHealth`, ground unit via `Health/MaxHealth`, colour-banded);
+> and the ship detail shows **Health % + Fuel %** (Fuel reuses the existing `EntityExtensions.GetFuelInfo` fill
+> fraction). **NEXT (once B-S7/B-S8 are green): B-S9** — stations + colonies as roster rows (with the live-owner
+> cross-check for the capture-stale-registry gap) + the assign-commander UI; then B-orders + Phase C/D/E. Phase B
+> evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so
+> each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
 
 ---
 
@@ -71,9 +70,9 @@ ladder row and, once landed, the commit sha.
 | B-S3 | Make ship-combat-row + battalion-row reusable | FORCES-WINDOW S3 | ✅ | `d0f9df6` (build-client green) |
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ✅ | `42d01c7` (all 7 shards + build-client green, run 31692300418) |
-| B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⏳CI | (engine `AllUnitsFor` + test + client unit rows) |
+| B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ✅ | `0e0faaa` (all 7 shards + build-client green, run 31852230485) |
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⏳CI | (client reuse of CargoStorageDBDisplay + LogiShipperDB) |
-| B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⬜ | |
+| B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⏳CI | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout |
 | B-S9 | Stations + colonies as rows (live-owner cross-check) + assign-commander UI | FORCES-WINDOW S9 | ⬜ | |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
@@ -231,7 +230,35 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### B-S7 — civilian-ship detail panel — ⏳ CI in flight
+### B-S8 — aggregate Health + Fuel gauges — ⏳ CI in flight
+**What it does (plain English):** the All Forces roster gets a real **Health** column, and the ship detail panel shows a
+ship's **Health %** and **Fuel %**. Before this, the roster had no health readout for ships at all — the game tracked a
+ship's damage down at the individual-component level, but nothing added it up into a single "how beat-up is this ship"
+number the window could show. This slice builds that number and wires it in. A ground battalion's health and a ground
+unit's health already existed (the ground side computes them), so those show too — now every row has a health reading.
+
+**Why it matters:** it's the design's decision #4 (`FORCES-WINDOW-DESIGN.md` §7 / §S8) — *"build the missing aggregate
+ship accessors (they don't exist — a gauge-before-UI job) so those columns show real numbers."* The important discipline
+here: **the gauge is built in the ENGINE first, where CI can test it**, then the client just reads it. And it's built
+*honestly* — a ship's health = the summed integrity of its living components divided by the number the ship was **built
+with**, so a component that got blown off in battle (which the damage system deletes) correctly counts as 0 rather than
+being quietly ignored by an average of the survivors (which would make a half-wrecked ship read as pristine). Fuel needed
+no new engine work — an accessor already existed (`GetFuelInfo`), it was just never surfaced in the roster.
+
+**Files:** `Pulsar4X/GameEngine/Ships/ShipHealth.cs` (NEW) — `ShipHealth.HealthFraction(Entity)`, pure/defensive, reads
+`ComponentInstancesDB.AllComponents` + the design's original component count. `Pulsar4X/Pulsar4X.Tests/ShipHealthTests.cs`
+(NEW) — pristine = 1.0, a half-damaged component drops it by 0.5/count, a destroyed (removed) component counts as 0, and
+null/component-less entities read 1.0 without throwing. `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — a **Health**
+column on the roster table (8th column; `RowHealthFraction` dispatches by row kind, `HealthColor` green→red band) + a
+**Health % / Fuel %** line in the ship detail (Fuel via the reused `GetFuelInfo`, faction/library read `TryGet`-guarded).
+Docs: campaign log, Tests CLAUDE.md (ShipHealthTests row), CLIENT-TEST-CHECKLIST (B-S8 row). (No `GameEngine/Ships/CLAUDE.md`
+exists, so the accessor is documented in its own XML docs + here + the Tests inventory.)
+
+**Gauge:** engine `ShipHealth.HealthFraction` → `ShipHealthTests` (CI, `rest` shard). Client Health column + Fuel readout
+→ the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-S8"): the roster's Health column shows a % per row (colour-banded),
+and a ship's detail shows Health % + Fuel %. Fuel only appears for a ship that burns fuel.
+
+### B-S7 — civilian-ship detail panel — ⏳ CI in flight (rest shard) → flip ✅ when green
 **What it does (plain English):** in the All Forces roster, clicking a **civilian** ship (a freighter, hauler, tender,
 troop transport, survey ship — anything that isn't a warship) now shows what that ship is actually *carrying and doing*,
 not just a combat line that reads "Firepower 0" for a ship with no guns. The detail panel gains: its **cargo manifest**

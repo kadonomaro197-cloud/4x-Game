@@ -17,6 +17,7 @@ using Pulsar4X.Names;
 using Pulsar4X.Ships;
 using Pulsar4X.Storage;
 using Pulsar4X.Logistics;
+using Pulsar4X.Factions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Combat;
@@ -1854,15 +1855,16 @@ namespace Pulsar4X.Client
             RosterEntry selected = default;
             bool haveSelected = false;
 
-            if(ImGui.BeginTable("AllForcesTable", 7, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
+            if(ImGui.BeginTable("AllForcesTable", 8, Styles.TableFlags | ImGuiTableFlags.SizingStretchProp))
             {
-                ImGui.TableSetupColumn("Unit", ImGuiTableColumnFlags.None, 0.24f);
-                ImGui.TableSetupColumn("Domain", ImGuiTableColumnFlags.None, 0.10f);
-                ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.None, 0.11f);
-                ImGui.TableSetupColumn("Class", ImGuiTableColumnFlags.None, 0.13f);
-                ImGui.TableSetupColumn("Mil/Civ", ImGuiTableColumnFlags.None, 0.10f);
-                ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.None, 0.20f);
-                ImGui.TableSetupColumn("Strength", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("Unit", ImGuiTableColumnFlags.None, 0.22f);
+                ImGui.TableSetupColumn("Domain", ImGuiTableColumnFlags.None, 0.09f);
+                ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.None, 0.10f);
+                ImGui.TableSetupColumn("Class", ImGuiTableColumnFlags.None, 0.12f);
+                ImGui.TableSetupColumn("Mil/Civ", ImGuiTableColumnFlags.None, 0.09f);
+                ImGui.TableSetupColumn("Location", ImGuiTableColumnFlags.None, 0.16f);
+                ImGui.TableSetupColumn("Strength", ImGuiTableColumnFlags.None, 0.11f);
+                ImGui.TableSetupColumn("Health", ImGuiTableColumnFlags.None, 0.11f);
                 ImGui.TableHeadersRow();
 
                 foreach(var e in rows)
@@ -1883,6 +1885,12 @@ namespace Pulsar4X.Client
                     // a printf specifier by ImGui.Text (the verify-lens finding). Kind/Class/Domain are fixed literals.
                     ImGui.TableNextColumn(); ImGui.TextUnformatted(e.Location);
                     ImGui.TableNextColumn(); ImGui.Text($"{e.Strength:N0}");
+                    // Health (S8) — real now: ship via ShipHealth.HealthFraction, battalion via FormationHealth, unit via
+                    // Health/MaxHealth. Colour-banded (green→red); "—" when a row has no health notion.
+                    ImGui.TableNextColumn();
+                    double hf = RowHealthFraction(e);
+                    if(hf >= 0) ImGui.TextColored(HealthColor(hf), $"{hf * 100:0}%");
+                    else ImGui.TextDisabled("—");
 
                     if(isSel) { selected = e; haveSelected = true; }
                 }
@@ -1928,6 +1936,19 @@ namespace Pulsar4X.Client
                 ImGui.TextUnformatted($"Firepower {cv.Firepower:N0} J/s    Toughness {cv.Toughness:N0} J    Evasion {cv.Evasion:F2}");
             else
                 ImGui.TextDisabled("No combat value computed for this ship yet.");
+
+            // S8 — Health + Fuel gauges. Health from the new engine accessor; Fuel from the existing GetFuelInfo (fill
+            // fraction). Both %-bearing → TextUnformatted. Fuel only shows for a ship that actually burns fuel. The
+            // faction/library read is TryGet-guarded (no throw on a missing blob — L10/L11 discipline).
+            double shipHf = ShipHealth.HealthFraction(ship);
+            string fuelStr = "";
+            var facEnt = _uiState.PlayerFaction ?? _uiState.Faction;
+            if(facEnt != null && facEnt.TryGetDataBlob<FactionInfoDB>(out var facInfo) && facInfo.Data?.CargoGoods != null)
+            {
+                var (fuelType, fuelFrac) = ship.GetFuelInfo(facInfo.Data.CargoGoods);
+                if(fuelType != null) fuelStr = $"    Fuel {fuelFrac * 100:0}%";
+            }
+            ImGui.TextUnformatted($"Health {shipHf * 100:0}%{fuelStr}");
 
             // S7 — a CIVILIAN ship (Freighter/Hauler/Tender/Transport/Survey/Utility) gets a cargo/logistics/survey
             // readout below the combat line; a warship keeps just the combat sheet. e.Military is the same
@@ -2048,6 +2069,31 @@ namespace Pulsar4X.Client
                 ForceRef.OfGroundUnit(body, u), ForceDomain.Ground,
                 name, "Unit", GroundRoleComposer.ClassifyRole(u).ToString(), u.Attack > 0,
                 loc, u.Attack, null, body, forces, null, u);
+        }
+
+        // S8 — a roster row's Health as a fraction 0..1 (-1 = no health notion). Ship → the new engine accessor
+        // ShipHealth.HealthFraction (summed component HealthPercent over the design count); battalion →
+        // FormationHealth (cur/max); ground unit → Health/MaxHealth. Computed at render time off the entry's kind, so
+        // no RosterEntry field is needed.
+        private double RowHealthFraction(RosterEntry e)
+        {
+            if(e.GUnit != null) return e.GUnit.MaxHealth > 0 ? e.GUnit.Health / e.GUnit.MaxHealth : -1;
+            if(e.Formation != null && e.Forces != null)
+            {
+                var (cur, max) = GroundFormationTools.FormationHealth(e.Forces, e.Formation);
+                return max > 0 ? cur / max : -1;
+            }
+            if(e.Ship != null && e.Ship.IsValid) return ShipHealth.HealthFraction(e.Ship);
+            return -1;
+        }
+
+        // Green (full) → amber → red (near-dead), for the Health column.
+        private static Vector4 HealthColor(double frac)
+        {
+            float f = (float)(frac < 0 ? 0 : (frac > 1 ? 1 : frac));
+            // 1.0 → green (0.4,1,0.4); 0.5 → amber (1,0.8,0.3); 0.0 → red (1,0.35,0.35).
+            if(f >= 0.5f) { float t = (f - 0.5f) / 0.5f; return new Vector4(0.4f + (1f - 0.4f) * (1f - t), 0.8f + 0.2f * t, 0.3f + 0.1f * t, 1f); }
+            else { float t = f / 0.5f; return new Vector4(1f, 0.35f + 0.45f * t, 0.35f - 0.05f * t, 1f); }
         }
 
         // Recurse the faction's fleet tree, returning every SHIP (a non-FleetDB leaf). Cycle-guarded by fleet id
