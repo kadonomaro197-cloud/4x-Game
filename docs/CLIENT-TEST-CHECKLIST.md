@@ -379,6 +379,16 @@ run it — these need the local Windows build.
         crashing; the seat should fill without one. (The holding has an `OrderableDB`, so the order enqueues + executes —
         this is expected to work, not silently no-op.)
 
+- [ ] **B-orders — Formation-ops (Nest / Set Leader / Detach) in the battalion surface.** Select a **battalion** (All
+      Forces roster or the Battalions tab) → the order panel has a new **"Organize"** section. Confirm (needs ≥2
+      formations + a multi-unit battalion — raise units and form a couple of battalions via the planet view / DevTools):
+      - **Nest under** dropdown of your other formations + button → the battalion becomes a **sub-formation** of the
+        chosen one (a self/cycle pick is refused with a status note, not a crash).
+      - **Make leader** on a non-leader member → the **★** moves to that unit.
+      - **Detach** on a member → it leaves the formation and shows as a **loose unit** in the roster (turn on "Show
+        individual units" — it appears as a `•` row).
+      - A single-formation / single-unit battalion just shows fewer controls (no crash, no empty combo).
+
 ---
 
 ## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)

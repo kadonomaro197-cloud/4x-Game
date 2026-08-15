@@ -151,7 +151,8 @@ ladder row and, once landed, the commit sha.
 | B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ✅ | engine `FactionAssets` + `FactionAssetsTests` (all 7 shards + build-client green, run 31857203852) |
 | B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ✅ | `271f987` (all 7 shards + build-client green, run 31858039704) |
 | B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ✅ | `21b164f` (all 7 shards + build-client green, run 31859301590) |
-| B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | ledger in NEXT ACTION: ~19 real DATA orders (4 A4-stubs EXCLUDED) across 9 categories; slice by category (Formation-ops first), serialized behind CI (shares `FleetWindow.cs`) |
+| B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | 🔨 | ledger in NEXT ACTION: ~19 real DATA orders (4 A4-stubs EXCLUDED) across 9 categories; slice by category, serialized behind CI (shares `FleetWindow.cs`) |
+| B-orders-fops | Formation-ops (Nest / Set Leader / Detach) into the battalion surface | `forceswindow.html` §10 Formation-ops | 🔨 | client `FleetWindow.cs` `DrawBattalionFormationOps` — routes `SetParentFormation`/`SetLeader`/`UnassignUnit`; Move-Formation-Tree deferred (needs hex picker) |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
@@ -351,6 +352,31 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-orders-fops — Formation-ops orders (Nest / Set Leader / Detach) — 🔨 built
+**What it does (plain English):** the battalion command surface (the panel you get when you pick a battalion in the roster
+or the Battalions tab) gains three "organize" actions it was missing: **Nest** this battalion under another (make it a
+sub-formation), **make a chosen member the leader**, and **detach a unit** (pop it out of the formation to a loose unit).
+Before this, those engine verbs existed but had no button — you could only rename / march / queue / set stance.
+
+**Why it matters:** it's the first slice of **B-orders** — routing the design's DATA-graded orders (the ones where the
+engine can do it but no screen let you). The Force-Management design (`forceswindow.html`) lists 123 orders; 23 are DATA
+(engine-exists, no-UI). This wires the **Formation-ops** category's three real ones. It rounds out the battalion surface so
+you can actually reorganize your ground order-of-battle from the window, the same way the fleet side lets you reparent
+fleets.
+
+**Files:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — new `DrawBattalionFormationOps(body, forces, f)`
+(called from `DrawBattalionOrders`, before the region-map gate since these don't need it): a **Nest under** combo of the
+faction's other formations → `GroundForces.SetParentFormation` (returns false on a cycle → safe no-op), and per member unit
+a **Make leader** (`SetLeader`) + **Detach** (`UnassignUnit`) button. A `_formNestPick` dict holds the nest combo index.
+Thin/defensive: direct CI-tested `GroundForces` calls on a click (like the existing march/stance surface), reads only,
+`TextUnformatted` for user-renamable names, no hard-index; `MembersOf` returns a snapshot so detaching mid-loop is safe.
+**Engine byte-identical** (client-only). **Deferred:** Move Formation Tree (`OrderFormationTreeMoveToHex`) needs a hex
+target picker — a follow-up. Docs: campaign log, Client CLAUDE.md, CLIENT-TEST-CHECKLIST (B-orders row).
+
+**Gauge:** client-only → the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-orders — Formation-ops"): pick a battalion,
+Nest it under another (it becomes a sub-formation), Make-leader a member (★ moves), Detach a member (it becomes loose and
+shows in the roster's loose-unit list). Runtime is the developer's build.
 
 ### B-S9b-1 — colonies + stations as roster rows — 🔨 built (push gated on B-S9a green)
 **What it does (plain English):** the All Forces roster now lists your **colonies and stations** as rows, alongside your

@@ -1232,6 +1232,7 @@ namespace Pulsar4X.Client
         }
         private ForceRef _selRoster = ForceRef.None;          // the roster's current selection (distinct from _selBattalion)
         private readonly Dictionary<string, int> _seatCommanderPick = new();  // S9b-2 — per-holding-seat assign-combo index
+        private readonly Dictionary<string, int> _formNestPick = new();       // B-orders — per-formation "nest under" combo index
         private int _rosterDomainFilter = 0;                  // 0 = all · 1 = Space · 2 = Ground
         private int _rosterRoleFilter = 0;                    // 0 = Mil+Civ · 1 = Military · 2 = Civilian
         private readonly byte[] _rosterSearch = new byte[64];
@@ -1417,6 +1418,10 @@ namespace Pulsar4X.Client
             ImGui.SameLine();
             ImGui.TextDisabled("(opens the surface tactical map for this world)");
 
+            // ── B-orders (Formation-ops): Nest / Set Leader / Detach — the org orders the surface lacked. Placed BEFORE
+            //    the region-map gate below because they don't need the region graph. ──
+            DrawBattalionFormationOps(body, forces, f);
+
             // March + queue need the region graph.
             if(!body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB) || regionsDB.Regions == null)
             {
@@ -1453,6 +1458,66 @@ namespace Pulsar4X.Client
             ImGui.Separator();
             DrawBattalionStance(body, f);
             DrawBattalionRoe(f);
+        }
+
+        // B-orders (Formation-ops) — the sub-formation + membership orders the battalion surface lacked, routing three
+        // DATA-graded `GroundForces` verbs that had no client UI: **Nest Sub-Formation** (`SetParentFormation` — make this
+        // formation a child of another), **Set Formation Leader** (`SetLeader`), and **Detach Unit** (`UnassignUnit` — pop a
+        // unit out to a loose unit). Direct CI-tested engine calls on an explicit click, exactly like the march/stance
+        // surface. Thin/defensive: reads only + a click, `TextUnformatted` for user-renamable formation/unit names (the `%`
+        // trap), no hard-index. (Move Formation Tree — `OrderFormationTreeMoveToHex` — needs a hex target picker and is a
+        // follow-up.)
+        private void DrawBattalionFormationOps(Entity body, GroundForcesDB forces, GroundFormation f)
+        {
+            ImGui.Separator();
+            ImGui.TextDisabled("Organize:");
+
+            // Nest THIS formation under another of the faction's formations on this body (SetParentFormation returns false
+            // on a cycle / invalid parent, so a bad pick is a safe no-op).
+            var others = forces.Formations?
+                .Where(o => o != null && o.FormationId != f.FormationId && o.FactionOwnerID == f.FactionOwnerID)
+                .ToList() ?? new List<GroundFormation>();
+            if(others.Count > 0)
+            {
+                var onames = others.Select(o => string.IsNullOrEmpty(o.Name) ? $"Formation {o.FormationId}" : o.Name).ToArray();
+                string nkey = $"{body.Id}_{f.FormationId}";
+                int npick = _formNestPick.TryGetValue(nkey, out var np) ? np : 0;
+                if(npick < 0 || npick >= others.Count) npick = 0;
+                ImGui.SetNextItemWidth(180f);
+                if(ImGui.Combo($"##nestpick{nkey}", ref npick, onames, onames.Length)) _formNestPick[nkey] = npick;
+                ImGui.SameLine();
+                if(ImGui.Button($"Nest under##nest{nkey}") && npick >= 0 && npick < others.Count)
+                {
+                    _battStatus = GroundForces.SetParentFormation(forces, f, others[npick].FormationId)
+                        ? $"'{f.Name}' nested under '{others[npick].Name}'"
+                        : "nest ignored (would cycle / invalid parent)";
+                }
+            }
+
+            // Member-unit ops — Set Leader (★) + Detach, per the formation's own units.
+            var mem = GroundFormationTools.MembersOf(forces, f);
+            if(mem.Count > 0)
+            {
+                ImGui.TextDisabled("Members:");
+                foreach(var u in mem)
+                {
+                    bool isLeader = f.LeaderUnitId == u.UnitId;
+                    string un = string.IsNullOrEmpty(u.Name) ? u.UnitType.ToString() : u.Name;
+                    ImGui.TextUnformatted($"  {(isLeader ? "★ " : "  ")}{un}");
+                    if(!isLeader)
+                    {
+                        ImGui.SameLine();
+                        if(ImGui.Button($"Make leader##ldr{f.FormationId}_{u.UnitId}") && GroundForces.SetLeader(f, u))
+                            _battStatus = $"'{un}' is now leading";
+                    }
+                    ImGui.SameLine();
+                    if(ImGui.Button($"Detach##det{f.FormationId}_{u.UnitId}"))
+                    {
+                        GroundForces.UnassignUnit(forces, f, u);
+                        _battStatus = $"'{un}' detached (now a loose unit)";
+                    }
+                }
+            }
         }
 
         // PW.2 (C5b) — INFRASTRUCTURE COMBAT buttons: raze / seize the footprint building(s) on the region this battalion

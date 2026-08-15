@@ -295,6 +295,17 @@ render/feel is the developer's build.**
 > `PlanetViewWindow` formation panel + city-zoom got the twins (see the PlanetViewWindow section). Engine surface pinned
 > by `EfPwInfraButtonContractTests` (rename + factory field wire + the QUEUE-path resolve). Runtime is the developer's
 > local build (CLIENT-TEST-CHECKLIST "OPERATION EARTHFALL — PW.2").
+>
+> **+ B-orders Formation-ops (2026-08-15) — the first B-orders slice.** `DrawBattalionOrders` now also calls
+> `DrawBattalionFormationOps(body, forces, f)` (an **"Organize"** section, before the region-map gate since these don't
+> need it): **Nest under** — a combo of the faction's other formations → `GroundForces.SetParentFormation` (false on a
+> cycle → safe no-op); and per member unit a **Make leader** (`SetLeader`) + **Detach** (`UnassignUnit` → the unit becomes
+> a loose unit). These route three DATA-graded `GroundForces` verbs (`forceswindow.html` §10 Formation-ops) that had no
+> client UI. Same thin/defensive discipline as the rest of the surface (direct CI-tested calls on a click, `TextUnformatted`
+> names, `MembersOf` snapshot so a mid-loop detach is safe, `_formNestPick` holds the combo index). Reaches BOTH the
+> Battalions tab and the All-Forces roster (both call `DrawBattalionOrders`). **Move Formation Tree**
+> (`OrderFormationTreeMoveToHex`) is deferred — it needs a hex-target picker. Engine byte-identical (client-only). Runtime
+> is the developer's build (CLIENT-TEST-CHECKLIST "B-orders — Formation-ops").
 
 ### All Forces tab (FleetWindow) — BUILT Operation Blueprint-to-Steel B-S5 (2026-08-13) — the unified roster
 
