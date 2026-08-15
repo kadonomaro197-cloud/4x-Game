@@ -34,8 +34,8 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > detail panel reusing `ComponentInstancesDBDisplay`). **B-S9b-2** (`21b164f`, build-client GREEN) — the assign-commander
 > UI (`DrawHoldingAdminPosts`: per-`AdminSpaceDB.CommanderSeats` combo of `FactionInfoDB.Commanders` →
 > `AssignAdministratorOrder`/`UnassignAdministratorOrder`; verified the order actually seats the officer — the holding
-> carries `OrderableDB`, `HandleOrder` is try/catch-wrapped, `Clone()` never called). **NEXT: flip B-S9b-1 ✅ + B-S9b-2 ✅
-> when their runs go fully green (271f987 + 21b164f), then B-orders** (route the 23 button-only DATA orders + the deep
+> carries `OrderableDB`, `HandleOrder` is try/catch-wrapped, `Clone()` never called). All four (B-S8/B-S9a/B-S9b-1/B-S9b-2)
+> are flipped ✅ on the board. **NEXT: B-orders** (route the 23 button-only DATA orders + the deep
 > categorized order menu — Phase B's last item, evolves `FleetWindow.cs`, whose compile is green through B-S9b-2), then
 > Phase C/D/E per the slice board. B-orders shares `FleetWindow.cs` with B-S9b → build it once B-S9b is fully green.
 >
@@ -86,6 +86,35 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > (`PlanetViewWindow.cs:581` `OrderMoveToGlobalHex`, `:1172` `OrderMove`) bypass the queue, but the AI's queued verb is
 > a per-FORMATION `GroundOrder`, so D-units is knotted into the half-migrated M-track "one movement layer" collapse
 > (M1/M9) — its own focused slice, needing the full movement rulings read first.
+>
+> **B-orders execute-ready ledger (2026-08-15, from `docs/combat/forceswindow.html`'s `ORDERS` array — 123 orders: 71
+> LIVE / 23 DATA / 29 BUILD).** B-orders = **route the 23 DATA orders** (the engine order EXISTS with a file:line but has
+> NO client UI) into the Force-Management window under a **deep categorized order menu** (by the HTML's 9 categories). ⚠
+> **EXCLUDE the ~4 A4-parked STUBS** — routing them exposes no-op behavior: `RefuelAction.cs:26` (Refuel Self-Action),
+> `ResupplyAction.cs:25` (Resupply Self-Action), `ServeyAnomalyAction.cs:19` (Survey Anomaly), `ShipLogisticsOrders.cs:7`
+> (Ship Logistics State) — these were de-fanged in A4, their behavior parked in the ADJUDICATION QUEUE. The **~19 real
+> DATA orders to route**, by category (slice by category, smallest/most-cohesive first — all share `FleetWindow.cs`, so
+> slices SERIALIZE behind CI):
+> • **Formation-ops (4)** — Nest Sub-Formation (`GroundForcesDB.cs:938` `SetParentFormation`), Detach Unit (`:989`
+>   `UnassignUnit`), Set Formation Leader (`:999` `SetLeader`), Move Formation Tree (`:966` `OrderFormationTreeMoveToHex`)
+>   → slot into `DrawBattalionOrders` (the battalion surface the roster already shows); needs a unit-picker + parent-picker.
+> • **Standing-Conditional (4)** — Queue Waypoint: Move to Planetary Hex (`:342`), Queue Waypoint: Set Stance (`:345`),
+>   Set Formation Order/Replace Queue (`:1060`), Pause-on-Action/Auto-Halt (`EntityCommand.cs:90`) → extend the existing
+>   battalion queue panel.
+> • **Movement (3)** — Intercept/Ram (`NewtonThrustCommand.cs:252`), Move Unit to Hex (`GroundForcesDB.cs:785`), Move
+>   Formation to Region-Hex (`:864`).
+> • **Logistics-Cargo (real ones only)** — Set Stockpile Min/Max (`LogiBaseDB.cs:17`), Resupply/Rearm Unit (`:670`
+>   `ResupplyUnit`), Reload/Rearm Ordnance (via `CargoTransferOrder`).
+> • **Fleet-ops (2)** — Toggle Inherit Orders (`FleetOrder.cs:121`), Dock/Undock Vessel (`DockTools.cs:148` — the new
+>   Docking system).
+> • **Combat (1)** — Set Target Priority (`FleetDoctrine.cs:33`).  • **Construction (1)** — Edit Production Job
+>   (`IndustryOrder.cs:97`).  • **Special (1)** — Set Colony Tax Rate (`ColonyEconomyDB` TaxRate) → slots into the new
+>   B-S9 Holding detail panel (a colony tax slider).
+> **Recommended first slice: Formation-ops** (completes the battalion command surface the roster already exposes, one
+> cohesive category). The **categorized-menu framework** (organizing all orders by the 9 categories) is the parallel UX
+> deliverable — design it alongside slice 1 or as its own framework slice. Verify each order's engine path before wiring
+> (Prime Directive: some are direct `GroundForces` calls like the existing surface, some are `EntityCommand`s via
+> `Game.OrderHandler.HandleOrder`).
 
 ---
 
@@ -122,7 +151,7 @@ ladder row and, once landed, the commit sha.
 | B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ✅ | engine `FactionAssets` + `FactionAssetsTests` (all 7 shards + build-client green, run 31857203852) |
 | B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ✅ | `271f987` (all 7 shards + build-client green, run 31858039704) |
 | B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ✅ | `21b164f` (all 7 shards + build-client green, run 31859301590) |
-| B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
+| B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | ledger in NEXT ACTION: ~19 real DATA orders (4 A4-stubs EXCLUDED) across 9 categories; slice by category (Formation-ops first), serialized behind CI (shares `FleetWindow.cs`) |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
