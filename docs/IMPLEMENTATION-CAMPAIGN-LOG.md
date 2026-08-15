@@ -25,9 +25,9 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **🏁 PHASE B ROSTER LADDER S1→S9 IS CODE-COMPLETE (2026-08-15).** B-S8 + B-S9a are CI-verified green; B-S9b-1 +
-> B-S9b-2 are pushed with **build-client green** (both compile) — their test shards are the *unchanged* engine suite
-> (client-only slices add no engine test), finishing under runner contention. **B-S9 (all three parts) closes §S9:**
+> **🏁 PHASE B ROSTER LADDER S1→S9 IS COMPLETE + CI-VERIFIED GREEN (2026-08-15).** B-S8, B-S9a, B-S9b-1 (`271f987`, run
+> 31858039704) and B-S9b-2 (`21b164f`, run 31859301590) are ALL fully green (7 shards + build-client). **B-S9 (all three
+> parts) closes §S9:**
 > **B-S9a** (`e2b10f7`, run 31857203852 GREEN) — engine `FactionAssets.OwnedColonies`/`OwnedStations`, the live-owner
 > cross-check that filters the capture-stale colony/station registry by live `FactionOwnerID` (`FactionAssetsTests`).
 > **B-S9b-1** (`271f987`) — colonies + stations as **Holding** roster rows (host/population/station-integrity + a Holding
@@ -120,8 +120,8 @@ ladder row and, once landed, the commit sha.
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ✅ | `e894b12` (all 7 shards + build-client green, run 31853742806) |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ✅ | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout; `d369ebb` rest RED (defensive test NRE on unmanaged `Entity.Create()`) → guarded `Manager == null` in `5e42d87` (all 7 shards + build-client green, run 31856896871) |
 | B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ✅ | engine `FactionAssets` + `FactionAssetsTests` (all 7 shards + build-client green, run 31857203852) |
-| B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ⏳CI | `271f987` — build-client + 5/7 shards green (run 31858039704), rest shard (unchanged engine suite) finishing |
-| B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | 🔨 | client `FleetWindow.cs` `DrawHoldingAdminPosts` — per-seat commander combo → `AssignAdministratorOrder`/`UnassignAdministratorOrder`; verified the order path (holding has `OrderableDB`) |
+| B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ✅ | `271f987` (all 7 shards + build-client green, run 31858039704) |
+| B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ✅ | `21b164f` (all 7 shards + build-client green, run 31859301590) |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
