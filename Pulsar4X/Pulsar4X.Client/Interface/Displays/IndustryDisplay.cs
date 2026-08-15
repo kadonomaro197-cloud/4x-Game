@@ -601,6 +601,34 @@ namespace Pulsar4X.Client
             }
             if(ImGui.IsItemHovered())
                 ImGui.SetTooltip("Cancel the job.");
+
+            // EP (OPERATION BLUEPRINT-TO-STEEL B-orders) — EDIT the queued job in place: change how many to build + toggle
+            // repeat, via the fully-built IndustryOrder2.CreateEditJobOrder. Inline (PushID(jobID) scopes the widget ids):
+            // a compact count field + a repeat checkbox, each issuing the edit on change. autoInstall editing is a no-op
+            // (IndustryTools.EditExsistingJob ignores it), so only count + repeat are offered.
+            ImGui.SameLine();
+            int newCount = matchingJob.NumberOrdered;
+            ImGui.SetNextItemWidth(64);
+            if (ImGui.InputInt("##epcount", ref newCount)
+                && newCount >= 1 && newCount <= ushort.MaxValue
+                && newCount != matchingJob.NumberOrdered && Entity != null)
+            {
+                var cmd = IndustryOrder2.CreateEditJobOrder(_factionID, Entity, productionLineID, jobID, (ushort)newCount, matchingJob.Auto);
+                state.Game.OrderHandler.HandleOrder(cmd);
+            }
+            if(ImGui.IsItemHovered())
+                ImGui.SetTooltip("Edit how many to build.");
+
+            ImGui.SameLine();
+            bool repeat = matchingJob.Auto;
+            if (ImGui.Checkbox("repeat##eprepeat", ref repeat) && Entity != null)
+            {
+                var cmd = IndustryOrder2.CreateEditJobOrder(_factionID, Entity, productionLineID, jobID, matchingJob.NumberOrdered, repeat);
+                state.Game.OrderHandler.HandleOrder(cmd);
+            }
+            if(ImGui.IsItemHovered())
+                ImGui.SetTooltip("Repeat this job when it completes.");
+
             ImGui.PopID();
         }
     }

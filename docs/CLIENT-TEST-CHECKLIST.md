@@ -398,6 +398,11 @@ run it — these need the local Windows build.
       dropdown + "+ Queue stance"** button (beside the ROE waypoint buttons). Pick a stance, click it → it appears in the
       **Plan** list as a sequenced waypoint (runs in order like the march/hold/ROE waypoints); "Clear plan" removes it.
 
+- [ ] **B-orders — Edit a queued production job.** Colony Management ▸ **Production** (or a station's window) → each queued
+      job row now has, beside the ▲/▼/✕ buttons, a **count field** and a **repeat** checkbox. Change the count → the job's
+      "number to build" updates; toggle repeat → the job loops on completion (cross-check the job re-queues). No target
+      picker; works on a colony AND a deployed station (same `IndustryDisplay`).
+
 - [ ] **B-orders — Set Target Priority (Combat tab).** Select a fleet → **Combat** tab → a new **Target Priority**
       section (below Engagement Posture): shows **Current: Balanced**, a dropdown (Balanced / FinishWounded / BiggestThreat
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line

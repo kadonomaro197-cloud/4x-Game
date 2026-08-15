@@ -175,6 +175,7 @@ ladder row and, once landed, the commit sha.
 | B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | ✅ | `8c4d616` (run 31876849971 green) — `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*` |
 | B-orders-targetui | Set Target Priority — the Combat-tab client selector | `forceswindow.html` §10 Combat | 🔨 | client `FleetWindow.cs` `DisplayTargetPrioritySelector` (mirrors EMCON selector) — `TargetPriority` combo + Set button → `FleetDoctrine.SetTargeting` |
 | B-orders-stockpile-eng | Set Stockpile Min/Max — engine write path (RANK 1) | `forceswindow.html` §10 Logistics | 🔨 | engine `SetLogisticsOrder.CreateCommand_SetDesiredLevels` (sim-thread-safe write of `LogiBaseDB.DesiredLevels`) + `LogiBaseDB.Clone` bug fix + `SetLogisticsOrderTests`; file-disjoint from `FleetWindow.cs`; client picker is the follow-up (prefer LogisticsWindow, `[PARALLEL]`) |
+| B-orders-editjob | Edit Production Job (count + repeat) | `forceswindow.html` §10 Construction | 🔨 | client `IndustryDisplay.cs` per-job row — inline count field + repeat toggle → `IndustryOrder2.CreateEditJobOrder` (engine fully built); `[PARALLEL]` (not `FleetWindow.cs`); autoInstall edit is a no-op (engine gap), so count+repeat only |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
