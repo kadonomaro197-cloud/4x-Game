@@ -45,6 +45,19 @@ namespace Pulsar4X.Combat
                 fleet.SetDataBlob(new FleetDoctrineDB { Posture = posture });
         }
 
+        /// <summary>Set a fleet's target-selection priority (the "Set Target Priority" order) — a DIRECT call, the exact
+        /// sibling of <see cref="SetEngagementPosture"/>: mutates the existing doctrine blob in place (preserving its
+        /// multipliers/posture) or creates a neutral one carrying just the targeting. Works mid-battle; the resolver's
+        /// casualty step reads it via <see cref="TargetingOf"/> next salvo. Byte-identical until called (additive).</summary>
+        public static void SetTargeting(Entity fleet, TargetPriority targeting)
+        {
+            if (fleet == null) return;
+            if (fleet.TryGetDataBlob<FleetDoctrineDB>(out var d))
+                d.Targeting = targeting;
+            else
+                fleet.SetDataBlob(new FleetDoctrineDB { Targeting = targeting });
+        }
+
         /// <summary>
         /// Set a fleet's posture from a catalog blueprint, honouring the switch cooldown. Returns false (no
         /// change) if the fleet is still within its cooldown window. <paramref name="now"/> is the current game time.

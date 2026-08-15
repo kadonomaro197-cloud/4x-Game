@@ -97,5 +97,31 @@ namespace Pulsar4X.Tests
             Assert.That(CombatEngagement.GetFleetShips(enemyFleet).Count, Is.EqualTo(0), "the doctrine-boosted fleet should win");
             Assert.That(CombatEngagement.GetFleetShips(playerFleet).Count, Is.GreaterThan(0), "and survive (it out-damaged an identical hull)");
         }
+
+        [Test]
+        [Description("SetTargeting (the 'Set Target Priority' order) is the direct target-priority setter — the sibling of SetEngagementPosture: an un-doctrined fleet reads Balanced; the first set creates a doctrine blob carrying just the targeting; a later set updates it in place and preserves an existing posture; a null fleet is a no-op.")]
+        public void SetTargeting_SetsCreatesAndPreservesPosture()
+        {
+            var s = TestScenario.CreateWithColony();
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Targeting Test Fleet");
+
+            // No doctrine yet → the legacy default (nothing changes until a lever is set).
+            Assert.That(FleetDoctrine.TargetingOf(fleet), Is.EqualTo(TargetPriority.Balanced), "un-doctrined fleet targets Balanced");
+            Assert.That(fleet.HasDataBlob<FleetDoctrineDB>(), Is.False, "no doctrine blob until a lever is set");
+
+            // First set creates a neutral doctrine blob carrying just the targeting.
+            FleetDoctrine.SetTargeting(fleet, TargetPriority.BiggestThreat);
+            Assert.That(FleetDoctrine.TargetingOf(fleet), Is.EqualTo(TargetPriority.BiggestThreat));
+            Assert.That(fleet.HasDataBlob<FleetDoctrineDB>(), Is.True, "the setter creates the doctrine blob");
+
+            // A posture set alongside must survive a later targeting change (in-place mutation, not replacement).
+            FleetDoctrine.SetEngagementPosture(fleet, EngagementPosture.WeaponsHold);
+            FleetDoctrine.SetTargeting(fleet, TargetPriority.Heaviest);
+            Assert.That(FleetDoctrine.TargetingOf(fleet), Is.EqualTo(TargetPriority.Heaviest));
+            Assert.That(FleetDoctrine.PostureOf(fleet), Is.EqualTo(EngagementPosture.WeaponsHold), "a targeting change preserves the posture");
+
+            Assert.DoesNotThrow(() => FleetDoctrine.SetTargeting(null, TargetPriority.Closest), "null fleet is a safe no-op");
+            Log("SetTargeting: Balanced default → create → in-place update preserves posture → null-safe");
+        }
     }
 }

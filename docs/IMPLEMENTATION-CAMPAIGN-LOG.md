@@ -155,6 +155,7 @@ ladder row and, once landed, the commit sha.
 | B-orders-fops | Formation-ops (Nest / Set Leader / Detach) into the battalion surface | `forceswindow.html` §10 Formation-ops | 🔨 | client `FleetWindow.cs` `DrawBattalionFormationOps` — routes `SetParentFormation`/`SetLeader`/`UnassignUnit`; Move-Formation-Tree deferred (needs hex picker) |
 | B-orders-tax | Set Colony Tax Rate — a tax slider on the Holding detail panel | `forceswindow.html` §10 Special | 🔨 | client `FleetWindow.cs` `DrawHoldingDetail` — `ColonyEconomyDB.TaxRate` percent slider (direct setter, the DevTools society-lever pattern) |
 | B-orders-qstance | Queue a stance-change waypoint (Standing-Conditional) | `forceswindow.html` §10 Standing-Conditional | 🔨 | client `FleetWindow.cs` `DrawBattalionOrderQueue` — `GroundOrder.Stance(UniqueID)` from the moddable GroundStances catalog; hex-move waypoint deferred (needs picker) |
+| B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | 🔨 | engine `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*` (file-disjoint from the client stack); the Combat-tab selector is the client follow-up once the FleetWindow.cs stack is CI-green |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
