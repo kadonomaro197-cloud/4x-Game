@@ -85,7 +85,8 @@ ladder row and, once landed, the commit sha.
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ✅ | `0e0faaa` (all 7 shards + build-client green, run 31852230485) |
 | B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ✅ | `e894b12` (all 7 shards + build-client green, run 31853742806) |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⏳CI | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout; `d369ebb` rest RED (defensive test NRE on unmanaged `Entity.Create()`) → guarded `Manager == null` in `5e42d87`, re-gating (run 31856896871) |
-| B-S9 | Stations + colonies as rows (live-owner cross-check) + assign-commander UI | FORCES-WINDOW S9 | ⬜ | |
+| B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ⏳CI | engine `FactionAssets` + `FactionAssetsTests` (file-disjoint prep, built while B-S8 re-gated) |
+| B-S9b | Stations + colonies as roster ROWS (Domain "Holding") + assign-commander UI | FORCES-WINDOW S9 | ⬜ | client `FleetWindow.cs` — blocked on B-S8 green (shares the file) |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
@@ -286,6 +287,37 @@ Known future parks (from the backlog, not yet reached):
 
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
+
+### B-S9a — engine live-owner cross-check — ⏳ CI (built file-disjoint while B-S8 re-gated)
+**What it does (plain English):** the next roster slice (B-S9b) will add a faction's **colonies and stations** as rows in
+the All Forces window. Before wiring any UI, this slice builds the engine number that tells the roster *which* holdings a
+faction actually owns — and it fixes a real trap. A faction keeps a running list of its colonies and its stations (a
+"registry"), but that list is **written once, at creation, and never cleaned up when a planet is captured**. When someone
+takes a planet by ground invasion, the engine flips the planet's live owner flag but leaves it sitting in the *old*
+faction's colony list. So the raw list can name a colony the faction has **lost**. `FactionAssets.OwnedColonies(faction)`
+/ `OwnedStations(faction)` read the list as *candidates* but return only the ones whose **live owner** still matches — the
+honest "what do you actually hold right now."
+
+**Why it matters:** it's the "live-owner cross-check" the design (`FORCES-WINDOW-DESIGN.md` §S9) explicitly calls for, and
+it's the **gauge-before-UI** discipline again (same as B-S8's Health accessor): build the number in the engine where CI
+can test it, then the client just reads it. Building it now — as a **new file**, touching neither `ShipHealth.cs` (B-S8)
+nor `FleetWindow.cs` (B-S9b) — was the file-disjoint work to do while B-S8's fix re-gated (§4: don't idle, don't stack on
+an unverified base). It de-risks B-S9b: when B-S8 goes green, the client rows just call this already-CI-verified helper.
+
+**Files:** `Pulsar4X/GameEngine/Factions/FactionAssets.cs` (NEW) — `OwnedColonies`/`OwnedStations`, pure/read-only/defensive
+(the `Manager == null` guard is the same "never throws on an unmanaged entity" lesson B-S8 learned).
+`Pulsar4X/Pulsar4X.Tests/FactionAssetsTests.cs` (NEW). Docs: Factions CLAUDE.md (FactionAssets row), Tests CLAUDE.md
+(FactionAssetsTests row), this log.
+
+**KNOWN LIMIT (flagged, deliberate):** the filter catches a **lost** colony (still in the registry, owner flipped away). It
+does NOT catch a **gained** colony — capture also never *adds* the taken world to the captor's registry, so a colony you
+just captured won't appear in *your* list for this filter to return. Surfacing a captured world for its new owner is a
+**capture-side** fix (register the asset with the new owner at `GroundForcesProcessor.cs`, where the ownership flip's
+comment already says "deeper transfer later"), a separate behaviour-changing slice — out of scope for this read-only check.
+
+**Gauge:** `FactionAssetsTests` (CI, `rest` shard): a live-owned colony is returned; a **captured-away** colony is dropped
+even though the registry still names it (the filter reads live ownership, not the stale list); restoring the owner
+re-includes it; a station-less faction reads empty; null / unmanaged inputs return empty without throwing.
 
 ### B-S8 — aggregate Health + Fuel gauges — ⏳ CI (fix re-gating)
 
