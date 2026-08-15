@@ -433,18 +433,26 @@ namespace Pulsar4X.Client
                     {
                         var sizeAvailable = ImGui.GetContentRegionAvail();
                         DisplayHelpers.Header("Order List");
-                        // if(selectedFleet.GetDataBlob<FleetDB>().Parent.Guid != factionID)
-                        // {
-                        //     if(ImGui.Checkbox("Inherit Orders###fleet-inherit-orders", ref selectedFleetInheritOrders))
-                        //     {
-                        //         var order = FleetOrder.ToggleInheritOrders(factionID, selectedFleet);
-                        //         StaticRefLib.OrderHandler.HandleOrder(order);
-                        //     }
-                        //     if(ImGui.IsItemHovered())
-                        //     {
-                        //         ImGui.SetTooltip("If checked the fleet will inherit it's orders from the fleet above it in the command heirarchy.");
-                        //     }
-                        // }
+                        // C1 (OPERATION BLUEPRINT-TO-STEEL B-orders) — Inherit Orders toggle, un-commented + repaired (the
+                        // dead code assumed a `FleetDB.Parent.Guid` that no longer exists; entities key by int Id now, and
+                        // the parent lives on the TreeHierarchyDB base). Only meaningful for a SUB-fleet (parented to another
+                        // fleet, NOT the faction root) — replicates the CI-tested CombatEngagement.IsSubFleet check off the
+                        // public TreeHierarchyDB.Parent (that helper is engine-internal, unreachable from the client).
+                        // InheritOrders defaults true, so the first toggle turns it OFF. The checkbox state is seeded from
+                        // FleetDB.InheritOrders on selection (SetSelectedFleet).
+                        var inheritParent = selectedFleetDB?.Parent;
+                        bool isSubFleet = inheritParent != null && inheritParent.IsValid
+                            && inheritParent.HasDataBlob<FleetDB>() && !inheritParent.HasDataBlob<FactionInfoDB>();
+                        if(isSubFleet && SelectedFleet != null)
+                        {
+                            if(ImGui.Checkbox("Inherit Orders###fleet-inherit-orders", ref selectedFleetInheritOrders))
+                            {
+                                var order = FleetOrder.ToggleInheritOrders(factionID, SelectedFleet);
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+                            }
+                            if(ImGui.IsItemHovered())
+                                ImGui.SetTooltip("If checked, this sub-fleet inherits its orders from the fleet above it in the command hierarchy.");
+                        }
                         if(selectedFleetDB?.StandingOrders.Count > 0)
                         {
                             var count = selectedFleetDB.StandingOrders.Count;

@@ -408,6 +408,12 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Toggle Inherit Orders (sub-fleet).** Build a **sub-fleet** (in Force Management ▸ Fleets, drag a fleet
+      onto another fleet so it nests under a parent that is NOT the faction root). Select the sub-fleet → **Issue Orders**
+      tab ▸ *Order List* — a **"Inherit Orders"** checkbox appears ONLY for a sub-fleet (a top-level fleet parented to the
+      faction root shows no checkbox). Toggle it: the sub-fleet stops/starts inheriting its parent's orders. Expected: the
+      checkbox reflects the fleet's current `InheritOrders` (default ON) and flips on click; selecting a non-sub-fleet
+      hides it entirely.
 
 ---
 
