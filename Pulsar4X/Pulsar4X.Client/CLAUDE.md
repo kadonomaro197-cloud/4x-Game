@@ -599,10 +599,15 @@ navigate units on, plot where I'll make military bases, use topography to my adv
   zero definitions), and `KeyShift` appears only in `WarpOrderWindow.cs:639,658` (a space-side feature) and the
   ImGui plumbing. **Worse, the UI advertises it to the player anyway:** `PlanetViewWindow.cs:1433` prints
   *"or Shift-click a hex (Hex view) to add a move waypoint"* — a hint for a control with no handler behind it.
-  What DOES work: the ring-neighbour `MoveToRegion` waypoint buttons, and a plain click moves-now. **Fixing the
-  false hint (either implement the handler or delete the sentence) is a behaviour change, so it belongs in
-  `docs/ground/PLANETARY-FUNCTIONAL-PLAN-2026-07-27.md` slice S6 (movement rework), not in a doc pass.** So you build "move → move → dig in" plans
-  visually. All thin callers over the CI-tested `GroundForces.QueueFormationOrder`/`SetFormationOrder`/`ClearFormationOrders`.
+  What DOES work: the ring-neighbour `MoveToRegion` waypoint buttons, and a plain click moves-now. **✅ RESOLVED (B-orders
+  C4, 2026-08-15) — the false hint is fixed AND the real queued-hex-move it promised now exists.** `DrawOrderQueue` gained
+  a **"+ Move to hex (Q,R)"** button (gated on `_selGQ >= 0`, i.e. after you've clicked a hex on the globe) that queues
+  `GroundOrder.MoveHex(_selGQ, _selGR)` via `GroundForces.QueueFormationOrder` — the **queued GLOBAL** path
+  (`TargetQ/R` are cylinder coords per G6b-2a; the processor pops it to `OrderFormationMoveToGlobalHex`, the SAME verb the
+  AI issues → One-Verb-Both-Seats-compliant). The region-local `OrderMoveToHex` is deliberately NOT used (it's the layer
+  slated for deletion under the M1 one-movement-layer ruling). The stale "Shift-click a hex" empty-plan hint at
+  `:1433` is replaced with an accurate one ("click a hex on the globe, then + Move to hex"). So you build "move → move →
+  dig in" plans visually. All thin callers over the CI-tested `GroundForces.QueueFormationOrder`/`SetFormationOrder`/`ClearFormationOrders`.
 
 Built to the CI-blind discipline: a thin draw over CI-tested engine blobs, all orders through CI-tested engine paths
 (`GroundForces.OrderMove` / `OrderFormationMove` / `PlaceInstallationInRegionOrder`), the whole body wrapped so a throw logs

@@ -1430,7 +1430,7 @@ namespace Pulsar4X.Client
             }
             else
             {
-                ImGui.TextDisabled("No queued plan. Add orders below, or Shift-click a hex (Hex view) to add a move waypoint.");
+                ImGui.TextDisabled("No queued plan. Click a hex on the globe, then use \"+ Move to hex\" below to add a move waypoint.");
             }
 
             // Queue MOVE-to-region waypoints (visible ring neighbours of the formation's rally region).
@@ -1444,6 +1444,18 @@ namespace Pulsar4X.Client
                 if (rallyRegion.Neighbors.Contains(right) && ImGui.Button($"+ March → R{right + 1}##oq{f.FormationId}"))
                 { GroundForces.QueueFormationOrder(f, GroundOrder.MoveRegion(right)); _status = $"queued → region {right + 1}"; }
                 if (rallyRegion.Neighbors.Contains(right)) ImGui.SameLine();
+            }
+
+            // C4 (OPERATION BLUEPRINT-TO-STEEL B-orders) — queue a MOVE to the last-clicked GLOBAL hex. This is the
+            // One-Verb-Both-Seats-compliant path: GroundOrder.MoveHex(TargetQ,TargetR) carries CYLINDER (global) coords
+            // (G6b-2a), which is exactly what _selGQ/_selGR hold (set in the globe click handler), and the processor pops
+            // it to OrderFormationMoveToGlobalHex — the SAME queued verb the AI issues. The region-local OrderMoveToHex
+            // is deliberately NOT used here (it's the layer slated for deletion under the M1 one-movement-layer ruling).
+            if (_selGQ >= 0)
+            {
+                if (ImGui.Button($"+ Move to hex ({_selGQ},{_selGR})##oqhex{f.FormationId}"))
+                { GroundForces.QueueFormationOrder(f, GroundOrder.MoveHex(_selGQ, _selGR)); _status = $"queued → hex ({_selGQ},{_selGR})"; }
+                ImGui.SameLine();
             }
 
             // Queue non-spatial orders (a timed hold + ROE switches — "then dig in / then stand off").

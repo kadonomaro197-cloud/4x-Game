@@ -408,6 +408,11 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Queue "Move to hex" waypoint (PlanetViewWindow).** Open a planet's surface (globe). Select one of your
+      formations → its order panel. **Click a hex on the globe** (remembered as `_selGQ/_selGR`), then in the formation's
+      queue section a **"+ Move to hex (Q,R)"** button appears → click it. Expected: the plan readout gains a `→ hex (Q,R)`
+      line; when the clock advances the formation marches along the global cylinder toward that hex (the queued global
+      path — same verb the AI uses). The old false "Shift-click a hex" hint is gone (there was never a handler).
 - [ ] **B-orders — Toggle Inherit Orders (sub-fleet).** Build a **sub-fleet** (in Force Management ▸ Fleets, drag a fleet
       onto another fleet so it nests under a parent that is NOT the faction root). Select the sub-fleet → **Issue Orders**
       tab ▸ *Order List* — a **"Inherit Orders"** checkbox appears ONLY for a sub-fleet (a top-level fleet parented to the
