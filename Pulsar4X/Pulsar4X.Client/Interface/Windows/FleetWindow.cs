@@ -1233,6 +1233,7 @@ namespace Pulsar4X.Client
         private ForceRef _selRoster = ForceRef.None;          // the roster's current selection (distinct from _selBattalion)
         private readonly Dictionary<string, int> _seatCommanderPick = new();  // S9b-2 — per-holding-seat assign-combo index
         private readonly Dictionary<string, int> _formNestPick = new();       // B-orders — per-formation "nest under" combo index
+        private readonly Dictionary<string, int> _queueStancePick = new();     // B-orders — per-formation "queue stance" combo index
         private int _rosterDomainFilter = 0;                  // 0 = all · 1 = Space · 2 = Ground
         private int _rosterRoleFilter = 0;                    // 0 = Mil+Civ · 1 = Military · 2 = Civilian
         private readonly byte[] _rosterSearch = new byte[64];
@@ -1594,6 +1595,23 @@ namespace Pulsar4X.Client
             if(ImGui.Button($"+ ROE Stand-off##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.StandOff)); _battStatus = "queued ROE stand-off"; }
             ImGui.SameLine();
             if(ImGui.Button($"+ ROE Close##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.CloseToEngage)); _battStatus = "queued ROE close"; }
+
+            // B-orders (Standing-Conditional) — queue a STANCE-change waypoint (GroundOrder.Stance). Reuses the moddable
+            // GroundStances catalog; the queued waypoint applies the stance in sequence like the ROE waypoints above.
+            var scat = _uiState.Game?.StartingGameData?.GroundStances;
+            if(scat != null && scat.Count > 0)
+            {
+                var sbps = scat.Values.ToArray();
+                var snames = sbps.Select(s => s.DisplayName).ToArray();
+                string skey = $"{f.FormationId}";
+                int spick = _queueStancePick.TryGetValue(skey, out var sp) ? sp : 0;
+                if(spick < 0 || spick >= sbps.Length) spick = 0;
+                ImGui.SetNextItemWidth(130f);
+                if(ImGui.Combo($"##qstance{skey}", ref spick, snames, snames.Length)) _queueStancePick[skey] = spick;
+                ImGui.SameLine();
+                if(ImGui.Button($"+ Queue stance##qst{skey}"))
+                { GroundForces.QueueFormationOrder(f, GroundOrder.Stance(sbps[spick].UniqueID)); _battStatus = $"queued stance {sbps[spick].DisplayName}"; }
+            }
         }
 
         // The stance selector — the ground echo of the Fleet-window doctrine selector (copies PlanetViewWindow.DrawStanceSelector).

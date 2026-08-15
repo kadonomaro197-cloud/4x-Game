@@ -394,6 +394,10 @@ run it — these need the local Windows build.
       income + morale respond (cross-check in Colony Management ▸ Society). A **station** shows no tax slider (no colony
       economy).
 
+- [ ] **B-orders — queue a stance-change waypoint.** In a battalion's order panel, the queue section now has a **stance
+      dropdown + "+ Queue stance"** button (beside the ROE waypoint buttons). Pick a stance, click it → it appears in the
+      **Plan** list as a sequenced waypoint (runs in order like the march/hold/ROE waypoints); "Clear plan" removes it.
+
 ---
 
 ## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)
