@@ -155,7 +155,8 @@ ladder row and, once landed, the commit sha.
 | B-orders-fops | Formation-ops (Nest / Set Leader / Detach) into the battalion surface | `forceswindow.html` §10 Formation-ops | ✅ | `0e04c9b` (run 31876370261 green); Move-Formation-Tree deferred (needs hex picker) |
 | B-orders-tax | Set Colony Tax Rate — a tax slider on the Holding detail panel | `forceswindow.html` §10 Special | ✅ | `188f3b9` (run 31876531200 green) |
 | B-orders-qstance | Queue a stance-change waypoint (Standing-Conditional) | `forceswindow.html` §10 Standing-Conditional | ✅ | `fb54aba` (run 31876634046 green); hex-move waypoint deferred (needs picker) |
-| B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | ✅ | `8c4d616` (run 31876849971 green) — `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*`; Combat-tab client selector now unblocked |
+| B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | ✅ | `8c4d616` (run 31876849971 green) — `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*` |
+| B-orders-targetui | Set Target Priority — the Combat-tab client selector | `forceswindow.html` §10 Combat | 🔨 | client `FleetWindow.cs` `DisplayTargetPrioritySelector` (mirrors EMCON selector) — `TargetPriority` combo + Set button → `FleetDoctrine.SetTargeting` |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 

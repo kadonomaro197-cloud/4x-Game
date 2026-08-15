@@ -662,6 +662,8 @@ namespace Pulsar4X.Client
                     ImGui.Separator();
                     DisplayEngagementPostureSelector();
                     ImGui.Separator();
+                    DisplayTargetPrioritySelector();
+                    ImGui.Separator();
                     DisplayEngageButton();
                     ImGui.Separator();
                     DisplayFleetCombatSheet();
@@ -669,6 +671,38 @@ namespace Pulsar4X.Client
                 ImGui.EndChild();
             }
             ImGui.EndTabItem();
+        }
+
+        // B-orders (Combat) — the Set Target Priority lever. Reads FleetDoctrine.TargetingOf (default Balanced) and sets
+        // it via FleetDoctrine.SetTargeting (a DIRECT call like doctrine/EMCON — no cooldown, works mid-battle). The
+        // resolver's casualty step reads it next salvo, so the fleet can be told to finish cripples / focus the biggest
+        // threat / shoot the toughest, etc. Mirrors DisplayEmconSelector. The engine setter is CI-gauged
+        // (FleetDoctrineTests.SetTargeting_SetsCreatesAndPreservesPosture).
+        private int _targetPriorityChoice = 0;
+        private string _targetPriorityStatus = "";
+        private void DisplayTargetPrioritySelector()
+        {
+            if (SelectedFleet == null) return;
+            DisplayHelpers.Header("Target Priority", "Which enemy the fleet shoots first. Applied at read-time by the casualty step — reversible, switchable mid-battle.");
+
+            var currentPriority = FleetDoctrine.TargetingOf(SelectedFleet);
+            ImGui.Text($"Current: {currentPriority}");
+
+            var names = Enum.GetNames(typeof(TargetPriority));
+            _targetPriorityChoice = Math.Clamp(_targetPriorityChoice, 0, names.Length - 1);
+            ImGui.SetNextItemWidth(Math.Max(ImGui.GetContentRegionAvail().X * 0.5f, 160f));
+            ImGui.Combo("###targetpriority-combo", ref _targetPriorityChoice, names, names.Length);
+            ImGui.SameLine();
+            if (ImGui.Button("Set Targeting"))
+            {
+                var pick = (TargetPriority)_targetPriorityChoice;
+                FleetDoctrine.SetTargeting(SelectedFleet, pick);
+                _targetPriorityStatus = $"Targeting: {pick}";
+                Console.WriteLine($"[FleetCombat] Set targeting '{pick}' on fleet {SelectedFleet.Id}");
+                Console.Out.Flush();
+            }
+            if (!string.IsNullOrEmpty(_targetPriorityStatus))
+                ImGui.TextColored(new Vector4(0.4f, 1f, 0.4f, 1f), _targetPriorityStatus);
         }
 
         // The ATTACK lever — the player's "go get them" when two fleets sit in range doing nothing (one holding fire,

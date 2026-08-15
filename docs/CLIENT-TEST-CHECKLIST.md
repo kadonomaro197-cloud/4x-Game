@@ -398,6 +398,12 @@ run it — these need the local Windows build.
       dropdown + "+ Queue stance"** button (beside the ROE waypoint buttons). Pick a stance, click it → it appears in the
       **Plan** list as a sequenced waypoint (runs in order like the march/hold/ROE waypoints); "Clear plan" removes it.
 
+- [ ] **B-orders — Set Target Priority (Combat tab).** Select a fleet → **Combat** tab → a new **Target Priority**
+      section (below Engagement Posture): shows **Current: Balanced**, a dropdown (Balanced / FinishWounded / BiggestThreat
+      / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
+      shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
+      watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+
 ---
 
 ## 🎯 ADDED 2026-08-13 — employment→morale turned ON (A1-CALIBRATION)
