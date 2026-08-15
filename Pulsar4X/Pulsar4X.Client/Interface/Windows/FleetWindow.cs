@@ -387,35 +387,7 @@ namespace Pulsar4X.Client
                     var secondChildSize = new Vector2(size.X * 0.73f - (size.X * 0.01f), size.Y);
                     if(ImGui.BeginChild("IssueOrders-List", firstChildSize, ImGuiChildFlags.Borders))
                     {
-                        DisplayHelpers.Header("Available Orders");
-
-                        if(ImGui.Selectable("Move to ...", selectedIssueOrderType == IssueOrderType.MoveTo))
-                        {
-                            selectedIssueOrderType = IssueOrderType.MoveTo;
-                        }
-                        if(ImGui.Selectable("Refuel at ...", selectedIssueOrderType == IssueOrderType.RefuelAt))
-                        {
-                            selectedIssueOrderType = IssueOrderType.RefuelAt;
-                        }
-                        if(SelectedFleet.HasGeoSurveyAbility() && ImGui.Selectable("Geo Survey ...", selectedIssueOrderType == IssueOrderType.GeoSurvey))
-                        {
-                            selectedIssueOrderType = IssueOrderType.GeoSurvey;
-                        }
-                        if(SelectedFleet.HasJPSurveyAbililty() && ImGui.Selectable("Grav Survey ...", selectedIssueOrderType == IssueOrderType.JPSurvey))
-                        {
-                            selectedIssueOrderType = IssueOrderType.JPSurvey;
-                        }
-                        if(ImGui.Selectable("Jump...", selectedIssueOrderType == IssueOrderType.Jump))
-                        {
-                            selectedIssueOrderType = IssueOrderType.Jump;
-                        }
-                        // Earthfall C5.1 — only offered when a ship in the fleet actually carries a troop/vehicle bay
-                        // (mirrors the HasGeoSurveyAbility/HasJPSurveyAbililty gating above), so the order doesn't
-                        // clutter the list for a fleet that can't lift ground units.
-                        if(HasAnyTroopBay(SelectedFleet) && ImGui.Selectable("Embark / land troops ...", selectedIssueOrderType == IssueOrderType.Troops))
-                        {
-                            selectedIssueOrderType = IssueOrderType.Troops;
-                        }
+                        DrawCategorizedOrderList(SelectedFleet);
                     }
                     ImGui.EndChild();
                     ImGui.SameLine();
@@ -1769,6 +1741,61 @@ namespace Pulsar4X.Client
                 _battStatus = "couldn't open planet view (body not in a known system)";
             }
             catch(Exception ex) { _battStatus = "open planet view failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow jump-to-planet threw: {ex}"); }
+        }
+
+        // C9 (B-orders) — the categorized-order menu, smallest first cut (recon Section 3 / FORCES-WINDOW-DESIGN §10).
+        // Reorganizes the Fleets-tab Issue-Orders LEFT list from a flat 6-item list into CollapsingHeader categories
+        // (Movement / Survey / Logistics & Cargo). The Selectables set the SAME `selectedIssueOrderType` values, so
+        // IssueOrdersDisplay (the right detail panel) is byte-identical — this is an organization layer, not a rewrite.
+        // The deliberate change from the old flat list: a capability-gated order (Geo/Grav survey, troop lift) is now
+        // DIMMED (BeginDisabled) with a greyed reason, instead of HIDDEN — so the player learns the order exists and what
+        // unlocks it (cradle-to-grave made legible). Uses the guard-call BeginDisabled form the rest of the window uses.
+        // Follow-ups (recon F2/F3): re-shelve the battalion orders under headers + route every force kind through a tree.
+        private void DrawCategorizedOrderList(Entity fleet)
+        {
+            DisplayHelpers.Header("Available Orders");
+
+            // ── Movement (always applicable to a fleet) — open by default, the common case ──
+            if(ImGui.CollapsingHeader("Movement###ordcatMove", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                if(ImGui.Selectable("Move to ...", selectedIssueOrderType == IssueOrderType.MoveTo))
+                    selectedIssueOrderType = IssueOrderType.MoveTo;
+                if(ImGui.Selectable("Jump ...", selectedIssueOrderType == IssueOrderType.Jump))
+                    selectedIssueOrderType = IssueOrderType.Jump;
+            }
+
+            // ── Survey — DIM (not hide) when the fleet carries no survey sensor ──
+            if(ImGui.CollapsingHeader("Survey###ordcatSurvey"))
+            {
+                bool geo = fleet.HasGeoSurveyAbility();
+                if(!geo) ImGui.BeginDisabled();
+                if(ImGui.Selectable("Geo Survey ...", selectedIssueOrderType == IssueOrderType.GeoSurvey))
+                    selectedIssueOrderType = IssueOrderType.GeoSurvey;
+                if(!geo) ImGui.EndDisabled();
+                if(!geo) ImGui.TextDisabled("   — needs a geo-survey sensor in this fleet");
+
+                bool grav = fleet.HasJPSurveyAbililty();
+                if(!grav) ImGui.BeginDisabled();
+                if(ImGui.Selectable("Grav Survey ...", selectedIssueOrderType == IssueOrderType.JPSurvey))
+                    selectedIssueOrderType = IssueOrderType.JPSurvey;
+                if(!grav) ImGui.EndDisabled();
+                if(!grav) ImGui.TextDisabled("   — needs a grav (jump-point) survey sensor");
+            }
+
+            // ── Logistics & Cargo ──
+            if(ImGui.CollapsingHeader("Logistics & Cargo###ordcatLog"))
+            {
+                if(ImGui.Selectable("Refuel at ...", selectedIssueOrderType == IssueOrderType.RefuelAt))
+                    selectedIssueOrderType = IssueOrderType.RefuelAt;
+
+                // Earthfall C5.1 — the troop lift, now DIMMED (not hidden) when no ship in the fleet carries a bay.
+                bool bay = HasAnyTroopBay(fleet);
+                if(!bay) ImGui.BeginDisabled();
+                if(ImGui.Selectable("Embark / land troops ...", selectedIssueOrderType == IssueOrderType.Troops))
+                    selectedIssueOrderType = IssueOrderType.Troops;
+                if(!bay) ImGui.EndDisabled();
+                if(!bay) ImGui.TextDisabled("   — needs a ship with a troop/vehicle bay");
+            }
         }
 
         private void IssueOrdersDisplay(Vector2 size)

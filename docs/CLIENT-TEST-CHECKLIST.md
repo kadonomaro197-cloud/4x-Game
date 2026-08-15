@@ -408,6 +408,12 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Categorized order menu (Fleets ▸ Issue Orders).** Select a fleet → **Issue Orders** tab. The left
+      "Available Orders" list is now grouped into **Movement** (open by default: Move to / Jump), **Survey** (Geo / Grav),
+      and **Logistics & Cargo** (Refuel at / Embark-land troops) CollapsingHeaders. A capability the fleet lacks (no
+      survey sensor, no troop bay) now shows the order **greyed/disabled** with a "— needs …" hint (instead of being
+      hidden). Picking any order still drives the right-hand detail panel exactly as before. Expected: the right panel
+      behaves identically; only the left list's grouping + the dimmed-vs-hidden gating changed.
 - [ ] **B-orders — Resupply a battalion (Force Management ▸ Battalions or All Forces).** Select one of your battalions
       that has fired (ammo below full) while it stands on a region your faction owns → its order panel has a **"Resupply
       battalion"** button. Click it: the status line reads "resupplied N kg of ammo". On contested/enemy ground (or when
