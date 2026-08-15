@@ -133,6 +133,16 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > **Intercept/Ram semantics** (it's a literal kinetic RAM, missile behaviour — ram vs match-orbit-intercept is the
 > developer's call).
 
+> **🟢 SESSION BATCH PUSHED (2026-08-15) — B-orders slices in flight.** Since resuming, seven B-orders slices are pushed
+> and in CI (heavy runner contention — 7 runs queued, `rest` shards ~33 min): **RANK 1** `1736552` (stockpile write path,
+> engine) · **EP** `fda7bd6` (edit-production-job) · **C1** `c8112be` Toggle-Inherit (build-client GREEN + 6/7 shards; rest
+> pending) · **C4** `e57b39e` queued Move-to-hex (PlanetViewWindow) · **RANK 3** `adf189f` `DockOrder.cs` + `DockOrderTests`
+> (engine) · **C2+C3** `e33487a` battalion resupply + replace-plan · **C9** `f22b419` categorized order-menu first cut.
+> **NEXT (gated):** C7 Rearm-ordnance (FleetWindow — stack after C9 build-client greens) · C8 Dock/Undock (needs RANK 3
+> green) · C5 Stockpile picker (LogisticsWindow — needs RANK 1 green). **C6 Intercept/Ram is PARKED** (ADJUDICATION QUEUE →
+> B-ORDERS-MOVEMENT). RANK 2 (`CreateRearmFleetCommand`) judged optional + under-specified → **not built** (scope-guard;
+> C7 uses the existing `CargoTransferOrder.CreateCommands`). Flip each 🔨→✅ on its green run.
+
 ---
 
 ## HOW TO READ THE SLICE BOARD
@@ -366,6 +376,32 @@ weight) and I build it.
 > "expect to re-tune emitter/receiver bands so detection works by design not by bug"), so it warrants its own focused
 > slice with a sensor-band data pass, not a rushed fill. Locating the real band-match site + checking whether the base
 > data relies on the bug is the first step when Phase C reaches it.
+
+### ⚖ B-ORDERS-MOVEMENT — Intercept/Ram semantics + the region-local hex-move orders (parked 2026-08-15, §6)
+**Plain English:** three B-orders from `forceswindow.html` §10 have no safe default, so they're parked instead of guessed:
+
+1. **Intercept / Ram Target** (C6, `NewtonThrustCommand.cs:252`). The existing engine verb is a **literal kinetic RAM** —
+   it drives a ship at another to *collide*, missile-style. "Intercept" in most 4X games means *match orbits / close to
+   weapons range and hold*, which is a different order entirely. **The decision:** does the player-facing "Intercept" wire
+   to (a) the literal ram (a suicide/kinetic-weapon order — rare, needs a confirm), (b) a NEW match-orbit-and-hold intercept
+   (close to a chosen range, stay there — the common meaning, needs a small new order), or (c) both, as two distinct
+   buttons? **Recommendation:** build (b) match-orbit intercept as the default "Intercept", and expose the literal ram only
+   as an explicit, confirm-gated "Ram" (it destroys your ship too). Don't wire the bare ram to a button labelled
+   "Intercept" — that mislabels a suicide order. Say which and I build it.
+
+2. **Move Unit to Hex within Region** (`OrderMoveToHex`, `GroundForcesDB.cs:785`) and **Move Formation to Region-Hex**
+   (`OrderFormationMoveToHex`, `:864`). Both drive the **region-LOCAL hex layer slated for DELETION** under the 2026-07-28
+   M1 "one movement layer" ruling, and both are **direct calls that bypass the order queue → the AI cannot issue them**
+   (One-Verb-Both-Seats violation). **Practical resolution already taken:** C4 built the *queued GLOBAL* hex move
+   (`GroundOrder.MoveHex` → `OrderFormationMoveToGlobalHex`), which both seats can drive. **The decision:** given M1 deletes
+   the region-local layer, do you want *any* per-region hex-move UI, or should hex moves route **exclusively** through the
+   queued global path (C4)? **Recommendation:** global-only (C4); leave the region-local orders unwired for the M1 deletion.
+
+3. **Move Formation Tree** (`OrderFormationTreeMoveToHex`, `GroundForcesDB.cs:966`) — a **direct, immediate, non-queued**
+   whole-tree march in **region-LOCAL** coords, so it both bypasses the queue (AI can't issue) AND uses a different
+   coordinate space than the global queued MoveHex. **The decision:** is an immediate whole-tree march wanted at all, and
+   if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
+   queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
 
 *(Other slices with genuine ambiguity — two HTMLs contradict, a save-break with no safe pattern, a DECISION-PENDING
 with no default, or an HTML number impossible without a redesign — will park here the same way.)*
