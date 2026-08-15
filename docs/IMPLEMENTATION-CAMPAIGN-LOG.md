@@ -107,7 +107,7 @@ ladder row and, once landed, the commit sha.
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ✅ | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout; `d369ebb` rest RED (defensive test NRE on unmanaged `Entity.Create()`) → guarded `Manager == null` in `5e42d87` (all 7 shards + build-client green, run 31856896871) |
 | B-S9a | Engine live-owner cross-check (`FactionAssets.OwnedColonies`/`OwnedStations`) + gauge | FORCES-WINDOW S9 | ✅ | engine `FactionAssets` + `FactionAssetsTests` (all 7 shards + build-client green, run 31857203852) |
 | B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ⏳CI | `271f987` — build-client + 5/7 shards green (run 31858039704), rest shard (unchanged engine suite) finishing |
-| B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ⬜ | engine complete; client dropdown per `AdminSpaceDB.CommanderSeats` |
+| B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | 🔨 | client `FleetWindow.cs` `DrawHoldingAdminPosts` — per-seat commander combo → `AssignAdministratorOrder`/`UnassignAdministratorOrder`; verified the order path (holding has `OrderableDB`) |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
@@ -335,9 +335,37 @@ the `RosterEntry.Ship` field with dispatch keyed on `Domain==Holding` FIRST so n
 byte-identical** (client-only; new draw methods + enum values). Docs: campaign log, Client CLAUDE.md (All Forces §S9),
 CLIENT-TEST-CHECKLIST (B-S9 row).
 
-**Split:** the **assign-commander** UI (a per-`AdminSpaceDB.CommanderSeats` dropdown of `FactionInfoDB.Commanders` →
-`AssignAdministratorOrder`) is the **B-S9b-2** follow-up — the engine for it is already complete; the detail panel notes
-it as coming. Kept B-S9b-1 to the rows + live-owner check per the mission's "prioritise the rows" guidance.
+**Split:** the **assign-commander** UI is **B-S9b-2** (below).
+
+### B-S9b-2 — assign-commander UI — 🔨 built (stacks on B-S9b-1's `FleetWindow.cs`)
+**What it does (plain English):** in a holding's detail panel, you can now **put an officer in charge** of it. A colony or
+station that has an **admin complex** built on it has one or more administrator "seats." The panel lists each seat, shows
+who's in it (or "empty"), and gives you a **dropdown of your commanders + an Assign button** to seat one — and an
+**Unassign** button to clear it. Assigning an officer who's already running another post automatically moves them (the
+engine handles that).
+
+**Why it matters:** it's the last piece of §S9 (§4.4) and it closes a real gap — the engine has had the whole
+assign-an-administrator machinery for a while (`AssignAdministratorOrder`), but **no screen ever let a player use it**.
+Now the Force-Management roster does. It's the "play at your own altitude" delegation lever made reachable: hand a colony
+to a governor from the same window you review your forces in.
+
+**Files:** `Pulsar4X/Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — new `DrawHoldingAdminPosts(holding)` (called from
+`DrawHoldingDetail`): reads the holding's `AdminSpaceDB.CommanderSeats`, gathers `FactionInfoDB.Commanders` (name + type),
+and per seat renders a commander combo + **Assign** (`AssignAdministratorOrder.Create(holding, commanderId,
+seat.ComponentName)`) + **Unassign** (`UnassignAdministratorOrder.Create(...)`), both issued through
+`_uiState.Game.OrderHandler.HandleOrder`. A `_seatCommanderPick` dict holds each seat's combo index. `+ using
+GameEngine.People` / `Pulsar4X.People` / `Pulsar4X.People.Orders`.
+
+**Verified the wire actually works (not just compiles):** the order's `EntityCommanding` is the holding, and both
+`ColonyFactory` and `StationFactory` attach an `OrderableDB` to every colony/station — so `HandleOrder` enqueues the
+order and `OrderableProcessor` runs `Execute` (the seat is really filled). The whole `HandleOrder` is try/catch-wrapped
+(`[OrderError]`), so a bad click can never crash the client, and the order's `Clone()` (which throws `NotImplementedException`)
+is **never called** on this path (no cloning — it executes directly). Engine byte-identical (client-only). Docs: campaign
+log, Client CLAUDE.md (All Forces §S9), CLIENT-TEST-CHECKLIST (B-S9 row).
+
+**Gauge:** client-only → the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-S9"): select a colony/station with an
+admin complex, pick a commander, click Assign → the seat shows that officer's name; Unassign clears it. A holding with no
+admin post shows "build an admin complex to seat a governor"; with no commanders, "train officers at an academy."
 
 **Gauge:** client-only → the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-S9"): the roster shows a Holding row per
 colony/station with population + (station) health; selecting one shows its host, population, installed infrastructure, and

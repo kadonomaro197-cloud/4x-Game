@@ -26,6 +26,9 @@ using Pulsar4X.Sensors;
 using Pulsar4X.Weapons;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Stations;
+using Pulsar4X.People;              // CommanderDB
+using Pulsar4X.People.Orders;       // AssignAdministratorOrder / UnassignAdministratorOrder
+using GameEngine.People;            // AdminSpaceDB / AdminSpaceAbilityState (admin seats)
 
 namespace Pulsar4X.Client
 {
@@ -1228,6 +1231,7 @@ namespace Pulsar4X.Client
               Strength = strength; Ship = ship; Body = body; Forces = forces; Formation = formation; GUnit = gunit; }
         }
         private ForceRef _selRoster = ForceRef.None;          // the roster's current selection (distinct from _selBattalion)
+        private readonly Dictionary<string, int> _seatCommanderPick = new();  // S9b-2 — per-holding-seat assign-combo index
         private int _rosterDomainFilter = 0;                  // 0 = all · 1 = Space · 2 = Ground
         private int _rosterRoleFilter = 0;                    // 0 = Mil+Civ · 1 = Military · 2 = Civilian
         private readonly byte[] _rosterSearch = new byte[64];
@@ -2182,11 +2186,76 @@ namespace Pulsar4X.Client
                 else ImGui.TextDisabled("   (infrastructure list unavailable — holding not in the active system view)");
             }
 
-            ImGui.Separator();
-            ImGui.TextDisabled("Assign a commander to this post: coming in B-S9b-2 (AdminSpaceDB seats + AssignAdministratorOrder).");
+            DrawHoldingAdminPosts(holding);
 
             if(haveHost && ImGui.Button($"Open planet view##rosthold{holding.Id}"))
                 JumpToPlanetView(host);
+        }
+
+        // B-S9b-2 (§4.4) — the assign-commander control. A holding with an admin component (an admin-complex) carries an
+        // AdminSpaceDB whose CommanderSeats are the postable seats; each can be filled from the faction's commanders via
+        // the CI-tested AssignAdministratorOrder (which auto-unassigns the officer from any prior post) or cleared with
+        // UnassignAdministratorOrder — both issued through the same Game.OrderHandler path the rest of the window uses.
+        // Thin/defensive: reads only + orders on an explicit click, TextUnformatted for user-renamable officer/seat names,
+        // no hard-index. A holding with no admin post (nothing built) just shows a note.
+        private void DrawHoldingAdminPosts(Entity holding)
+        {
+            ImGui.Separator();
+            if(!holding.TryGetDataBlob<AdminSpaceDB>(out var admin) || admin.CommanderSeats == null || admin.CommanderSeats.Count == 0)
+            {
+                ImGui.TextDisabled("No administrator posts here — build an admin complex to seat a governor.");
+                return;
+            }
+
+            // Gather the faction's commanders once (entity + a name/type label) for the per-seat assign dropdown.
+            var faction = _uiState.PlayerFaction ?? _uiState.Faction;
+            var commanders = new List<(Entity ent, string label)>();
+            if(faction != null && faction.TryGetDataBlob<FactionInfoDB>(out var finfo) && finfo.Commanders != null)
+                foreach(var ce in finfo.Commanders)
+                    if(ce != null && ce.IsValid && ce.TryGetDataBlob<CommanderDB>(out var cd))
+                        commanders.Add((ce, $"{cd.Name} ({cd.Type})"));
+            var names = commanders.Select(c => c.label).ToArray();
+
+            ImGui.TextDisabled("Administrator posts:");
+            for(int i = 0; i < admin.CommanderSeats.Count; i++)
+            {
+                var seat = admin.CommanderSeats[i];
+                string seatName = string.IsNullOrEmpty(seat.ComponentName) ? "post" : seat.ComponentName;
+                string current = seat.TryGetCommander(out var seated) ? seated.Name : "(empty)";
+                ImGui.TextUnformatted($"  {seatName}: {current}");
+
+                if(commanders.Count > 0)
+                {
+                    string key = $"{holding.Id}_{i}";
+                    int pick = _seatCommanderPick.TryGetValue(key, out var p) ? p : 0;
+                    if(pick < 0 || pick >= commanders.Count) pick = 0;
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(200f);
+                    if(ImGui.Combo($"##seatpick{key}", ref pick, names, names.Length))
+                        _seatCommanderPick[key] = pick;
+                    ImGui.SameLine();
+                    if(ImGui.Button($"Assign##seat{key}") && pick >= 0 && pick < commanders.Count)
+                    {
+                        var order = AssignAdministratorOrder.Create(holding, commanders[pick].ent.Id, seat.ComponentName);
+                        _uiState.Game.OrderHandler.HandleOrder(order);
+                    }
+                }
+                else
+                {
+                    ImGui.SameLine();
+                    ImGui.TextDisabled("(no commanders — train officers at an academy)");
+                }
+
+                if(seat.CommanderID >= 0)
+                {
+                    ImGui.SameLine();
+                    if(ImGui.Button($"Unassign##seat{holding.Id}_{i}"))
+                    {
+                        var order = UnassignAdministratorOrder.Create(holding, seat.CommanderID, seat.ComponentName);
+                        _uiState.Game.OrderHandler.HandleOrder(order);
+                    }
+                }
+            }
         }
 
         // Green (full) → amber → red (near-dead), for the Health column.

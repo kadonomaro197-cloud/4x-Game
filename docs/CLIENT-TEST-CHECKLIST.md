@@ -368,7 +368,16 @@ run it — these need the local Windows build.
         flips), it should **drop off** your roster — even though the engine's internal colony list still names it. (The
         reverse — a colony you *capture* showing up as yours — is a known follow-up; capture doesn't yet add it to your
         list.)
-      - **Not yet:** assigning a commander to the holding is the B-S9b-2 follow-up (the panel says so).
+- [ ] **B-S9b-2 — assign a commander to a holding.** Select a colony/station that has an **admin complex** built on it →
+      the detail panel shows an **"Administrator posts"** section listing each seat and who's in it (or "(empty)"). Confirm:
+      - A **commander dropdown + "Assign" button** per seat: pick a commander, click **Assign** → the seat now shows that
+        officer's name. An **"Unassign"** button appears for a filled seat and clears it. Assigning an officer who already
+        runs another post moves them (no duplicate).
+      - A holding with **no admin complex** shows "No administrator posts here — build an admin complex to seat a
+        governor." A faction with **no commanders** shows "(no commanders — train officers at an academy)."
+      - **Watch `game_logs/` for `[OrderError]`** — the order path is try/catch-wrapped, so a failure logs rather than
+        crashing; the seat should fill without one. (The holding has an `OrderableDB`, so the order enqueues + executes —
+        this is expected to work, not silently no-op.)
 
 ---
 
