@@ -25,22 +25,22 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1/S3/S4/S5 are CI-verified; B-S6 is BUILT (⏳ CI in flight).** The Forces-window foundation is fully
-> in place through the All-Forces roster (S5 — one common-column table over ships + battalions, kind-swapping detail,
-> all 7 shards + build-client green on `42d01c7`; adversarially re-verified — compile + design clean, one runtime
-> `%`-printf hardening folded into B-S6). **B-S6 — per-individual ground-unit rows — is now written**: an engine
-> sibling **`GroundFormationTools.AllUnitsFor(game, factionId)`** (the unit-level twin of `AllFormationsFor`, and the
-> piece it CAN'T reach — it INCLUDES formation-less "loose" units, closing "list *every* unit"), CI-gauged by
-> `EfGroundFormUpTests.AllUnitsFor_EnumeratesAcrossBodies_IncludesUnformed_FactionFiltered`; and the client half — a
-> **"Show individual units"** checkbox on the roster that expands each battalion into its member unit rows
-> (`GroundFormationTools.MembersOf`) + lists the loose units (`AllUnitsFor` where `FormationId < 0`), each a `Unit`-kind
-> row (Class via `GroundRoleComposer.ClassifyRole`, Mil/Civ = has offensive punch) selecting a new **ground-unit detail
-> panel** (`ForceKind.GroundUnit` + `ForceRef.OfGroundUnit`) that shows the unit's own stats (type/class/health/attack/
-> defense/range/veterancy/location) + an Open-planet-view jump. Default off → byte-identical to the S5 formation-level
-> view. **NEXT after B-S6 goes green: B-S7** (civilian-ship detail — promote the logistics manifest/routes/dV into the
-> roster; DATA-grade). Phase B evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it
-> but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row. (S8 aggregate Health/Fuel gauges,
-> S9 stations/colonies + assign-commander, B-orders follow.)
+> **Phase A + B-S1..S5 are CI-verified; B-S6 + B-S7 are pushed (⏳ CI in flight).** The Forces-window foundation is
+> fully in place through the All-Forces roster (S5 green on `42d01c7`; adversarially re-verified — compile + design
+> clean, one runtime `%`-printf hardening folded into B-S6). **B-S6** (`0e0faaa`, per-individual ground-unit rows +
+> engine `GroundFormationTools.AllUnitsFor` — the unit-level twin of `AllFormationsFor` that reaches loose/unformed
+> units, gauged by `EfGroundFormUpTests.AllUnitsFor_…`): **6/7 shards + build-client GREEN; the `rest` shard (its new
+> engine test) was still in flight at push** — flip B-S6 → ✅ once `rest` confirms. **B-S7 — civilian-ship detail — is
+> now pushed** (client-only; B-S6's build-client was green so a client slice doesn't build on a broken compile, and
+> B-S7's own run re-runs `rest`): in the roster's ship detail, a **civilian** ship (Freighter/Hauler/Tender/Transport/
+> Survey/Utility — `ShipRoleTools.IsMilitary == false`) now shows a **cargo manifest** (reusing `CargoStorageDBDisplay`,
+> the exact call `EntityWindow` uses), its **trade route + state** (`LogiShipperDB.StateString` + `ActiveCargoTasks`
+> From→To), and a **survey-vessel** note (per-target survey progress on the surveyed body is a flagged follow-up); a
+> warship keeps just the combat sheet. Thin/defensive, `TextUnformatted` for every user-renamable name.
+> **NEXT (once B-S6/B-S7 are green): B-S8** — aggregate Health + Fuel accessors (BUILD-grade, engine + client) so those
+> roster columns show real numbers instead of `—`. Phase B evolves `FleetWindow.cs` (keep the class name) and is
+> client-heavy — CI compile-checks it but can't runtime-test, so each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md`
+> row. (S9 stations/colonies + assign-commander, B-orders follow.)
 
 ---
 
@@ -72,7 +72,7 @@ ladder row and, once landed, the commit sha.
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ✅ | `42d01c7` (all 7 shards + build-client green, run 31692300418) |
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ⏳CI | (engine `AllUnitsFor` + test + client unit rows) |
-| B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⬜ | |
+| B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⏳CI | (client reuse of CargoStorageDBDisplay + LogiShipperDB) |
 | B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⬜ | |
 | B-S9 | Stations + colonies as rows (live-owner cross-check) + assign-commander UI | FORCES-WINDOW S9 | ⬜ | |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
@@ -231,7 +231,34 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### B-S6 — per-individual ground-unit rows + engine `AllUnitsFor` — ⏳ CI in flight
+### B-S7 — civilian-ship detail panel — ⏳ CI in flight
+**What it does (plain English):** in the All Forces roster, clicking a **civilian** ship (a freighter, hauler, tender,
+troop transport, survey ship — anything that isn't a warship) now shows what that ship is actually *carrying and doing*,
+not just a combat line that reads "Firepower 0" for a ship with no guns. The detail panel gains: its **cargo manifest**
+(what's in the holds, and how full each is), its **trade route + state** if it's running an automated logistics route
+(what it's hauling, from where to where, and whether it's loading / en route / unloading), and a note if it's a **survey
+vessel**. A warship is unchanged — it still shows its firepower/toughness/evasion combat sheet.
+
+**Why it matters:** the design (`FORCES-WINDOW-DESIGN.md` §4.3) calls for the detail panel to *swap by kind* — a warship
+shows combat, a civilian ship shows its manifest/route. This is graded **DATA** (not BUILD) because the numbers already
+exist — the Logistics window renders them, they were just never surfaced in the roster. So this slice is almost pure
+**reuse**: the cargo manifest is the *same* `CargoStorageDBDisplay` panel `EntityWindow` already draws (the exact call,
+verbatim), and the route/state come straight off `LogiShipperDB.StateString` + `ActiveCargoTasks`. It makes the roster a
+real order-of-battle for the *civilian* half of your fleet, not just the fighting ships.
+
+**Files:** `Pulsar4X.Client/Interface/Windows/FleetWindow.cs` — `using Pulsar4X.Logistics`; in `DrawRosterDetail`'s ship
+branch, `if(!e.Military) DrawCivilianShipReadout(ship)` (after the combat line, so a warship is untouched);
+`DrawCivilianShipReadout` (cargo manifest via the reused `CargoStorageDBDisplay.Display` + a resolved `EntityState`;
+`LogiShipperDB` route/state + active From→To tasks; a Survey-vessel note); `ResolveEntityState` (the `JumpToPlanetView`
+walk-the-system-states idiom). Docs: campaign log, Client CLAUDE.md (All Forces §S7), CLIENT-TEST-CHECKLIST (B-S7 row).
+
+**Gauge:** client-only → the developer's PC play-test (CLIENT-TEST-CHECKLIST "B-S7"): select a civilian ship (a start
+freighter) in the roster and confirm its cargo manifest shows, plus route/state if it's on a logistics run; a warship
+still shows only the combat sheet. Compile is gated by `build-client` (the reuse call is verbatim from `EntityWindow`).
+Thin/defensive: reads only, `TextUnformatted` for user-renamable names (the `%` printf trap), no hard-index, and the
+manifest degrades to a one-line note if the ship isn't in the active system view.
+
+### B-S6 — per-individual ground-unit rows + engine `AllUnitsFor` — ⏳ CI in flight (rest shard) → flip ✅ when green
 **What it does (plain English):** the All Forces roster (from B-S5) lists your battalions as single rows. This slice lets
 you drill into a battalion to see the *individual soldiers/vehicles* inside it — and, importantly, it also surfaces the
 **loose units** that aren't in any battalion yet (a freshly-raised garrison unit, a just-landed invader), which the old

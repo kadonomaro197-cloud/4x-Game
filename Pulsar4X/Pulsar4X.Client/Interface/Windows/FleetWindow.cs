@@ -16,6 +16,7 @@ using Pulsar4X.JumpPoints;
 using Pulsar4X.Names;
 using Pulsar4X.Ships;
 using Pulsar4X.Storage;
+using Pulsar4X.Logistics;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Combat;
@@ -1928,6 +1929,12 @@ namespace Pulsar4X.Client
             else
                 ImGui.TextDisabled("No combat value computed for this ship yet.");
 
+            // S7 — a CIVILIAN ship (Freighter/Hauler/Tender/Transport/Survey/Utility) gets a cargo/logistics/survey
+            // readout below the combat line; a warship keeps just the combat sheet. e.Military is the same
+            // ShipRoleTools.IsMilitary the row's Mil/Civ column shows.
+            if(!e.Military)
+                DrawCivilianShipReadout(ship);
+
             if(ImGui.Button($"Select on map##rostpick{ship.Id}"))
             {
                 if(ship.TryGetDataBlob<PositionDB>(out var pos) && pos.OwningEntity?.Manager is StarSystem sys)
@@ -1935,6 +1942,62 @@ namespace Pulsar4X.Client
             }
             ImGui.SameLine();
             ImGui.TextDisabled("(ship movement + fleet orders live in the Fleets tab — select its fleet there)");
+        }
+
+        // The CIVILIAN-ship readout (§4.3 "manifest / route / trade-space / survey progress") — promotes the data the
+        // LogisticsWindow already renders (LogiShipperDB.StateString / ActiveCargoTasks) + the reusable
+        // CargoStorageDBDisplay manifest panel into the roster, so a freighter/hauler/tender/survey ship shows what it's
+        // CARRYING and DOING, not just a bare (0-firepower) combat line. Thin + defensive: reuses the CI-blind-hardened
+        // cargo panel (locked/id fallback for a foreign cargo type — though the roster only lists own ships), reads only,
+        // TextUnformatted for every user-renamable name (the % printf trap).
+        private void DrawCivilianShipReadout(Entity ship)
+        {
+            int myFaction = (_uiState.PlayerFaction ?? _uiState.Faction)?.Id ?? -1;
+
+            // Cargo manifest — reuse the existing CargoStorageDBDisplay panel (needs the ship's EntityState).
+            if(ship.TryGetDataBlob<CargoStorageDB>(out var storage))
+            {
+                ImGui.Separator();
+                ImGui.TextDisabled("Cargo manifest:");
+                var es = ResolveEntityState(ship);
+                if(es != null) storage.Display(es, _uiState, ImGuiTreeNodeFlags.None);
+                else ImGui.TextDisabled("   (manifest unavailable — ship not in the active system view)");
+            }
+
+            // Logistics route + state — only for an independent trade ship (carries a LogiShipperDB).
+            if(ship.TryGetDataBlob<LogiShipperDB>(out var logi))
+            {
+                ImGui.Separator();
+                ImGui.TextUnformatted("Trade route: "
+                    + (string.IsNullOrEmpty(logi.StateString) ? logi.CurrentState.ToString() : logi.StateString));
+                if(logi.ActiveCargoTasks != null)
+                    foreach(var t in logi.ActiveCargoTasks)
+                        ImGui.TextUnformatted($"   {t.item?.Name} x{t.NumberOfItems}"
+                            + $"    {t.Source?.GetName(myFaction)} -> {t.Destination?.GetName(myFaction)}");
+            }
+
+            // Survey vessel — carries a survey sensor. Per-TARGET survey progress lives on the surveyed body (a deeper
+            // wire); this notes the capability so a survey ship reads as one (flagged follow-up).
+            if(ShipRoleTools.ClassifyRole(ship) == ShipRole.Survey)
+            {
+                ImGui.Separator();
+                ImGui.TextDisabled("Survey vessel — carries a survey sensor. Target survey progress: see the surveyed body.");
+            }
+        }
+
+        // Resolve a ship's client-side EntityState by id — the JumpToPlanetView idiom (walk StarSystemStates, first hit
+        // wins). Defensive: null if the ship isn't in any active system view (mid-warp / a system not in the current
+        // faction view), which the caller degrades on rather than throwing.
+        private EntityState ResolveEntityState(Entity e)
+        {
+            if(e == null) return null;
+            foreach(var (_, sysState) in _uiState.StarSystemStates)
+            {
+                if(sysState?.StarSystem == null) continue;
+                var es = sysState.GetEntityById(e.Id);
+                if(es != null) return es;
+            }
+            return null;
         }
 
         // A printf-SAFE section header (the DisplayHelpers.Header look — descriptive colour + [?] tooltip + separator —

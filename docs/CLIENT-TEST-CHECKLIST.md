@@ -331,6 +331,18 @@ run it — these need the local Windows build.
       - **Click a unit row →** the detail panel shows THAT unit's stats (Type / Class / Health / Attack / Defense /
         Range / a "Veteran ×N" line if trained / location) + an **Open planet view** button (per-unit orders are a
         later slice — command via its battalion for now).
+- [ ] **B-S7 — a civilian ship shows its cargo/route in the roster detail.** In **Force Management ▸ All Forces**, select
+      a **civilian** ship (a start freighter/hauler — anything with Mil/Civ = Civilian). Below the combat line the detail
+      panel now shows:
+      - **Cargo manifest** — the ship's holds (per cargo type, collapsible, with % full + an item table). This is the
+        same panel the entity/cargo windows use. *(If it reads "manifest unavailable — ship not in the active system
+        view", the ship is mid-warp or its system isn't in the current view — expected; it fills in when the ship is in
+        a viewed system.)*
+      - **Trade route + state** — only if the ship is an independent trade ship (has a logistics route): a "Trade route:
+        <state>" line + each active haul as "item xN  Source -> Destination".
+      - **Survey vessel** — a note if it's a survey ship (its actual per-target survey progress shows on the surveyed
+        body, not here — a later slice).
+      A **warship** (Mil/Civ = Military) is unchanged — it still shows only the firepower/toughness/evasion combat sheet.
 
 ---
 
