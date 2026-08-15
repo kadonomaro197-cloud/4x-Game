@@ -25,7 +25,21 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1..S7 are CI-verified; B-S8's fix is re-gating.** The Forces-window foundation is fully in place
+> **🏁 PHASE B ROSTER LADDER S1→S9 IS CODE-COMPLETE (2026-08-15).** B-S8 + B-S9a are CI-verified green; B-S9b-1 +
+> B-S9b-2 are pushed with **build-client green** (both compile) — their test shards are the *unchanged* engine suite
+> (client-only slices add no engine test), finishing under runner contention. **B-S9 (all three parts) closes §S9:**
+> **B-S9a** (`e2b10f7`, run 31857203852 GREEN) — engine `FactionAssets.OwnedColonies`/`OwnedStations`, the live-owner
+> cross-check that filters the capture-stale colony/station registry by live `FactionOwnerID` (`FactionAssetsTests`).
+> **B-S9b-1** (`271f987`) — colonies + stations as **Holding** roster rows (host/population/station-integrity + a Holding
+> detail panel reusing `ComponentInstancesDBDisplay`). **B-S9b-2** (`21b164f`, build-client GREEN) — the assign-commander
+> UI (`DrawHoldingAdminPosts`: per-`AdminSpaceDB.CommanderSeats` combo of `FactionInfoDB.Commanders` →
+> `AssignAdministratorOrder`/`UnassignAdministratorOrder`; verified the order actually seats the officer — the holding
+> carries `OrderableDB`, `HandleOrder` is try/catch-wrapped, `Clone()` never called). **NEXT: flip B-S9b-1 ✅ + B-S9b-2 ✅
+> when their runs go fully green (271f987 + 21b164f), then B-orders** (route the 23 button-only DATA orders + the deep
+> categorized order menu — Phase B's last item, evolves `FleetWindow.cs`, whose compile is green through B-S9b-2), then
+> Phase C/D/E per the slice board. B-orders shares `FleetWindow.cs` with B-S9b → build it once B-S9b is fully green.
+>
+> **Phase A + B-S1..S7 are CI-verified.** The Forces-window foundation is fully in place
 > through the All-Forces roster. **B-S6** (`0e0faaa`, per-unit ground rows + engine `AllUnitsFor`): run `31852230485`
 > **fully GREEN** → ✅. **B-S7** (`e894b12`, civilian-ship detail — cargo manifest via reused `CargoStorageDBDisplay` +
 > `LogiShipperDB` route/state + a survey note): run `31853742806` **fully GREEN** (all 7 shards + build-client) → ✅.
