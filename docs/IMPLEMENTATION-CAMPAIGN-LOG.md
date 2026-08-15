@@ -25,18 +25,21 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > +15 snap**, `JobsPerCapita = 7.0e-6` confirmed); the flag-on run (`7ea23f4`) build-client is green (NewGameMenu
 > compiles). The live morale feel is the developer's PC play-test (CLIENT-TEST-CHECKLIST). **NOW BUILDING: B-S5.**
 >
-> **Phase A + B-S1..S6 are CI-verified; B-S7 + B-S8 are pushed (⏳ CI in flight).** The Forces-window foundation is
-> fully in place through the All-Forces roster. **B-S6** (`0e0faaa`, per-unit ground rows + engine `AllUnitsFor`): run
-> `31852230485` **fully GREEN** (all 7 shards + build-client — the `AllUnitsFor` engine test passed) → ✅. **B-S7**
-> (`e894b12`, civilian-ship detail — cargo manifest via reused `CargoStorageDBDisplay` + `LogiShipperDB` route/state +
-> a survey note): build-client + 6/7 shards green, its `rest` shard (the same engine suite B-S6 already passed) still
-> finishing → flip ✅ when its run completes. **B-S8 — aggregate Health + Fuel gauges — is now pushed** (client-only
-> compile risk; B-S7's build-client was green): a NEW engine accessor **`ShipHealth.HealthFraction(entity)`** (sums a
-> ship's living-component `HealthPercent` over its ORIGINAL design count, so a destroyed/removed component honestly
-> counts as 0 — not hidden by a mean-of-survivors), CI-gauged by `ShipHealthTests`; the roster gained a real **Health
-> column** (ship via that accessor, battalion via `FormationHealth`, ground unit via `Health/MaxHealth`, colour-banded);
-> and the ship detail shows **Health % + Fuel %** (Fuel reuses the existing `EntityExtensions.GetFuelInfo` fill
-> fraction). **NEXT (once B-S7/B-S8 are green): B-S9** — stations + colonies as roster rows (with the live-owner
+> **Phase A + B-S1..S7 are CI-verified; B-S8's fix is re-gating.** The Forces-window foundation is fully in place
+> through the All-Forces roster. **B-S6** (`0e0faaa`, per-unit ground rows + engine `AllUnitsFor`): run `31852230485`
+> **fully GREEN** → ✅. **B-S7** (`e894b12`, civilian-ship detail — cargo manifest via reused `CargoStorageDBDisplay` +
+> `LogiShipperDB` route/state + a survey note): run `31853742806` **fully GREEN** (all 7 shards + build-client) → ✅.
+> **B-S8 — aggregate Health + Fuel gauges**: the first push (`d369ebb`) went RED on the `rest` shard — the
+> `HealthFraction_Defensive_NullAndComponentless` test fed a bare `Entity.Create()` (an UNMANAGED entity, `Manager ==
+> null`), and `TryGetDataBlob` delegates to `Manager`, so it NRE'd instead of returning 1.0. The core invariant test
+> (pristine → damaged → destroyed) PASSED, so the accessor's math was right; only the defensive edge was uncovered.
+> Fixed in **`5e42d87`** with a `ship.Manager == null` guard (an unmanaged entity now returns 1.0 without throwing,
+> honouring the "never throws" contract) — re-gating as run `31856896871`. The NEW engine accessor
+> **`ShipHealth.HealthFraction(entity)`** sums a ship's living-component `HealthPercent` over its ORIGINAL design count
+> (a destroyed/removed component honestly counts as 0 — not hidden by a mean-of-survivors), CI-gauged by
+> `ShipHealthTests`; the roster gained a real **Health column** (ship via that accessor, battalion via `FormationHealth`,
+> ground unit via `Health/MaxHealth`, colour-banded); and the ship detail shows **Health % + Fuel %** (Fuel reuses the
+> existing `EntityExtensions.GetFuelInfo` fill fraction). **NEXT (once B-S8 is green): B-S9** — stations + colonies as roster rows (with the live-owner
 > cross-check for the capture-stale-registry gap) + the assign-commander UI; then B-orders + Phase C/D/E. Phase B
 > evolves `FleetWindow.cs` (keep the class name) and is client-heavy — CI compile-checks it but can't runtime-test, so
 > each behavior gets a `docs/CLIENT-TEST-CHECKLIST.md` row.
@@ -80,8 +83,8 @@ ladder row and, once landed, the commit sha.
 | B-S4 | One "selected unit" selection abstraction (the load-bearing refactor) | FORCES-WINDOW S4 | ✅ | `edd32d8` (build-client green) |
 | B-S5 | New **All Forces** flat roster tab (filters + kind-swapping detail panel) | FORCES-WINDOW S5 | ✅ | `42d01c7` (all 7 shards + build-client green, run 31692300418) |
 | B-S6 | Per-individual ground-unit rows + engine `AllUnitsFor` | FORCES-WINDOW S6 | ✅ | `0e0faaa` (all 7 shards + build-client green, run 31852230485) |
-| B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ⏳CI | (client reuse of CargoStorageDBDisplay + LogiShipperDB) |
-| B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⏳CI | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout |
+| B-S7 | Civilian-ship detail panel (promote logistics manifest/routes) | FORCES-WINDOW S7 | ✅ | `e894b12` (all 7 shards + build-client green, run 31853742806) |
+| B-S8 | Aggregate Health + Fuel accessors (the missing ship gauges) | FORCES-WINDOW S8 | ⏳CI | engine `ShipHealth` + `ShipHealthTests` + roster Health column + Fuel readout; `d369ebb` rest RED (defensive test NRE on unmanaged `Entity.Create()`) → guarded `Manager == null` in `5e42d87`, re-gating (run 31856896871) |
 | B-S9 | Stations + colonies as rows (live-owner cross-check) + assign-commander UI | FORCES-WINDOW S9 | ⬜ | |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | ⬜ | |
 
@@ -284,7 +287,15 @@ Known future parks (from the backlog, not yet reached):
 *(Each landed slice gets a short plain-English entry here: what it does, the files touched, the gauge added,
 and the CI run that turned it green.)*
 
-### B-S8 — aggregate Health + Fuel gauges — ⏳ CI in flight
+### B-S8 — aggregate Health + Fuel gauges — ⏳ CI (fix re-gating)
+
+> **CI note (red → fixed):** first push `d369ebb` went RED on the `rest` shard —
+> `HealthFraction_Defensive_NullAndComponentless` fed a bare `Entity.Create()`, which is an **unmanaged** entity
+> (`Manager == null`); `Entity.TryGetDataBlob` delegates to `Manager`, so it NRE'd instead of returning 1.0. The core
+> invariant test (pristine → damaged → destroyed) passed, confirming the accessor's math. Fixed in **`5e42d87`** by
+> adding a `ship.Manager == null` guard — an unmanaged entity now returns 1.0 without throwing, honouring the accessor's
+> "never throws" contract. Re-gating as run `31856896871`.
+
 **What it does (plain English):** the All Forces roster gets a real **Health** column, and the ship detail panel shows a
 ship's **Health %** and **Fuel %**. Before this, the roster had no health readout for ships at all — the game tracked a
 ship's damage down at the individual-component level, but nothing added it up into a single "how beat-up is this ship"
