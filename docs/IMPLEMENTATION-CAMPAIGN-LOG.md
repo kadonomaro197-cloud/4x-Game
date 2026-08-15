@@ -52,6 +52,26 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > band re-tune) → its own focused slice, not a fill. So the clean next BUILD stays **B-S9** once B-S8 is green; the
 > larger file-disjoint BUILDs (C-run-cost / C-staffing / C-civic, D-units, E-env) each want their own focused slice + CI
 > cycle.
+>
+> **B-S9 SPLIT + B-S9b execute-ready ledger (2026-08-15).** B-S9a (engine live-owner cross-check `FactionAssets`) is
+> built + pushed (`e2b10f7`, file-disjoint, re-gating alongside B-S8's fix). **B-S9b is the CLIENT half — purely
+> `FleetWindow.cs` + the `ForceRef` selection struct, so it's blocked on B-S8 green (shares `FleetWindow.cs`).** Its
+> reads are all confirmed to exist (EXISTS ledger): (1) **rows** — gather point is `DisplayAllForces()` (`:1756`, builds
+> `List<RosterEntry>`); add a new `ForceDomain.Holding` + `ForceKind.Colony`/`.Station` (extend the `ForceRef` struct +
+> `RosterEntry`/`ForceDomain`), iterate `FactionAssets.OwnedColonies(forceFaction)` / `OwnedStations(forceFaction)`
+> (B-S9a), name via `Entity.GetDefaultName()`, location via the existing `ResolveEntityState` (B-S7), population via
+> `ColonyInfoDB.Population` (Dict speciesId→count, summed) as the "strength" proxy; Health column = N/A for a holding
+> (holdings aren't whole-or-dead combat units — show population, not a health %). (2) **assign-commander** — the ENGINE
+> IS COMPLETE (no new engine work): a holding carrying an `admin-complex` has `AdminSpaceDB.CommanderSeats` (each an
+> `AdminSpaceAbilityState` with `ComponentName` + seated `CommanderDB`/`CommanderID`, -1 = empty); the faction's
+> commanders are `FactionInfoDB.Commanders` (`SafeList<Entity>`); the order is
+> `AssignAdministratorOrder.Create(holdingEntity, commanderId, seat.ComponentName)` issued via
+> `Game.OrderHandler.HandleOrder` (it auto-unassigns from a prior post). So B-S9b's detail panel adds a colony/station
+> branch: population + installed components (reuse `componentsDB.Display`) + a per-seat commander dropdown. May split
+> (rows first, assign-commander second). **D-units is NOT a CI-window fill** — the client's per-unit ground-move calls
+> (`PlanetViewWindow.cs:581` `OrderMoveToGlobalHex`, `:1172` `OrderMove`) bypass the queue, but the AI's queued verb is
+> a per-FORMATION `GroundOrder`, so D-units is knotted into the half-migrated M-track "one movement layer" collapse
+> (M1/M9) — its own focused slice, needing the full movement rulings read first.
 
 ---
 
