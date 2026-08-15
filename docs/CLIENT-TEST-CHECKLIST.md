@@ -408,6 +408,12 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Set stockpile min/max targets (Logistics window).** Open the Logistics window for a colony with a
+      logistics installation. A new **"Stockpile Targets (min / max)"** panel sits above the Imports/Available/Exports
+      columns. Pick a resource, set min + max, click **Set target** → it appears in the list. Click the **x** to remove
+      it (sets it to 0/0). Expected: the target persists (it writes `LogiBaseDB.DesiredLevels`) and drives the base to
+      keep that item between min and max; a colony with no logistics installation shows the "need a Logistics component"
+      message instead.
 - [ ] **B-orders — Rearm ordnance at a base (Fleets ▸ Issue Orders ▸ Logistics & Cargo).** Select a fleet with a
       missile ship → Issue Orders ▸ **Logistics & Cargo** ▸ **"Rearm ordnance at ..."**. The right panel lists your
       colonies in-system that hold ordnance in stock; under each, a **"Load \<missile\> (N in stock)"** button per

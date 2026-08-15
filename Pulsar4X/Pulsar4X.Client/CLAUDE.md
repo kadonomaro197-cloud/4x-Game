@@ -100,7 +100,7 @@ internal override void Display()
 | `FireControlWindow` | `FireControlWindow.cs` | ✅ Functional | Weapon and fire control assignment |
 | `OrdnanceDesignWindow` | `OrdnanceDesignWindow.cs` | ⛔ **UNREACHABLE — DEAD UI (corrected 2026-07-28)** | Missile design. **No toolbar entry, no hotkey, no `NamesForMenus` — a repo-wide grep returns only self-references.** The ✅ on this row was wrong. It also builds its own `ComponentDesigner` and calls `CreateDesign` on it, minting a component design + a research tech each time "Create Design" is pressed. See `docs/COMBAT-DESIGNER-GROUND-TRUTH-2026-07-28.md` §5.5. |
 | `ResearchWindow` | `ResearchWindow.cs` | ✅ Functional | Research queue and tech tree |
-| `LogisticsWindow` | `LogisticsWindow.cs` | ✅ Partial | Automated cargo routes |
+| `LogisticsWindow` | `LogisticsWindow.cs` | ✅ Partial | Automated cargo routes. **+ Stockpile Targets min/max (B-orders C5, 2026-08-15)** — `ColonyLogisticsDisplay` gained a "Stockpile Targets (min / max)" panel (above the Imports/Available/Exports columns) that lists `LogiBaseDB.DesiredLevels` (Remove = set (0,0)) + a resource combo + min/max `InputInt`s + Set → `SetLogisticsOrder.CreateCommand_SetDesiredLevels` (the CI-green RANK-1 write path; submits the order internally). Placed as a fixed strip so the columns auto-shrink via `GetContentRegionAvail` — no height math. |
 | `NavWindow` | `NavWindow.cs` | ✅ Functional | Navigation planning |
 | `WarpOrderWindow` | `WarpOrderWindow.cs` | ✅ Functional | Warp order issuance |
 | `NewtonOrderWindow` | `NewtonOrderWindow.cs` | ✅ Functional | Newtonian thrust orders |

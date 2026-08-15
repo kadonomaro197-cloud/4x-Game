@@ -23,6 +23,9 @@ namespace Pulsar4X.Client
         private string[] _allResourceNames;
         private List<int> _allResourceID;
         private int _allResourceIndex = 0;
+        private int _spResIndex = 0;   // C5 (B-orders) — stockpile-target resource-picker index
+        private int _spMin = 0;        // C5 — stockpile min target (units)
+        private int _spMax = 100;      // C5 — stockpile max target (units)
         private Dictionary<string, Dictionary<ICargoable, (int count, int demandSupplyWeight)>> _displayedStoredResources = new ();
         private Dictionary<string, Dictionary<ICargoable, (int count, int demandSupplyWeight)>> _displayedUnstored = new ();
         private EntityState _entityState;
@@ -158,6 +161,15 @@ namespace Pulsar4X.Client
                 ImGui.Text(Stringify.Quantity(_logisticsDB.ItemsWaitingPickup.Count));
                 ImGui.PopStyleColor();
 
+                ImGui.EndChild();
+            }
+
+            // C5 (B-orders) — STOCKPILE TARGETS (min/max). A fixed strip above the import/export columns so the columns
+            // (which size off GetContentRegionAvail below) auto-shrink to fit — no manual height math. Writes
+            // LogiBaseDB.DesiredLevels via the CI-green RANK-1 SetDesiredLevels order path.
+            if(ImGui.BeginChild("ColonyLogisticsStockpile", new Vector2(ImGui.GetContentRegionAvail().X, 138f), ImGuiChildFlags.Borders))
+            {
+                DrawStockpileTargets();
                 ImGui.EndChild();
             }
 
@@ -451,6 +463,67 @@ namespace Pulsar4X.Client
                 ImGui.EndChild();
             }
             */
+        }
+
+        // C5 (B-orders) — the stockpile min/max target editor. Lists the base's current LogiBaseDB.DesiredLevels (each
+        // with a Remove that sets (0,0) — which the RANK-1 SetDesiredLevels Execute treats as "remove that key"), plus a
+        // resource-picker + min/max InputInts + a Set button that writes a target via CreateCommand_SetDesiredLevels
+        // (RANK-1, CI-green — it submits the order internally, so no HandleOrder here). Mirrors this file's own idioms.
+        private void DrawStockpileTargets()
+        {
+            DisplayHelpers.Header("Stockpile Targets (min / max)");
+            if(_logisticsDB == null) return;
+
+            if(_logisticsDB.DesiredLevels.Count > 0)
+            {
+                if(ImGui.BeginTable("StockpileTargetsTable", 4, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg))
+                {
+                    ImGui.TableSetupColumn("Item", ImGuiTableColumnFlags.None, 1f);
+                    ImGui.TableSetupColumn("Min", ImGuiTableColumnFlags.None, 0.5f);
+                    ImGui.TableSetupColumn("Max", ImGuiTableColumnFlags.None, 0.5f);
+                    ImGui.TableSetupColumn("", ImGuiTableColumnFlags.None, 0.4f);
+                    ImGui.TableHeadersRow();
+
+                    // Snapshot so a Remove (which reissues the order) can't mutate the dictionary mid-enumeration.
+                    var rows = new List<KeyValuePair<ICargoable, (int minVal, int maxVal)>>(_logisticsDB.DesiredLevels);
+                    foreach(var kvp in rows)
+                    {
+                        ImGui.TableNextColumn(); ImGui.Text(kvp.Key.Name);
+                        ImGui.TableNextColumn(); ImGui.Text(kvp.Value.minVal.ToString());
+                        ImGui.TableNextColumn(); ImGui.Text(kvp.Value.maxVal.ToString());
+                        ImGui.TableNextColumn();
+                        if(ImGui.SmallButton("x##sptgt" + kvp.Key.ID))
+                        {
+                            var remove = new Dictionary<ICargoable, (int minVal, int maxVal)> { { kvp.Key, (0, 0) } };
+                            SetLogisticsOrder.CreateCommand_SetDesiredLevels(_selectedEntity, remove);
+                        }
+                    }
+                    ImGui.EndTable();
+                }
+            }
+            else
+            {
+                ImGui.TextDisabled("No stockpile targets. Pick a resource + min/max below to keep a level maintained.");
+            }
+
+            // Add / update a target.
+            if(_allResourceNames != null && _allResourceNames.Length > 0)
+            {
+                if(_spResIndex < 0 || _spResIndex >= _allResourceNames.Length) _spResIndex = 0;
+                ImGui.SetNextItemWidth(160f);
+                ImGui.Combo("##spres", ref _spResIndex, _allResourceNames, 12);
+                ImGui.SameLine(); ImGui.SetNextItemWidth(80f); ImGui.InputInt("min##sp", ref _spMin);
+                ImGui.SameLine(); ImGui.SetNextItemWidth(80f); ImGui.InputInt("max##sp", ref _spMax);
+                ImGui.SameLine();
+                if(ImGui.Button("Set target##sp"))
+                {
+                    if(_spMin < 0) _spMin = 0;
+                    if(_spMax < _spMin) _spMax = _spMin;
+                    var resource = _allResources[_spResIndex];
+                    var changes = new Dictionary<ICargoable, (int minVal, int maxVal)> { { resource, (_spMin, _spMax) } };
+                    SetLogisticsOrder.CreateCommand_SetDesiredLevels(_selectedEntity, changes);
+                }
+            }
         }
 
         private void DisplayDisabledMessage()
