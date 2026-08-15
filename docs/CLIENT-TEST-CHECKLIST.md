@@ -408,6 +408,14 @@ run it — these need the local Windows build.
       / Closest / Backfield / Heaviest) + **Set Targeting**. Pick one, click → "Current" updates and a green status line
       shows it. In a live battle it changes who the fleet shoots first (finish cripples vs focus the biggest threat) —
       watch `game_logs/` for the `[FleetCombat] Set targeting` line.
+- [ ] **B-orders — Resupply a battalion (Force Management ▸ Battalions or All Forces).** Select one of your battalions
+      that has fired (ammo below full) while it stands on a region your faction owns → its order panel has a **"Resupply
+      battalion"** button. Click it: the status line reads "resupplied N kg of ammo". On contested/enemy ground (or when
+      already full) it reads "no resupply here (need friendly-held ground, or already full)".
+- [ ] **B-orders — Replace-plan toggle (battalion order queue).** In a battalion's queue section, tick **"Replace plan"**
+      then click a plan button (March / Hold / ROE / stance): the plan becomes JUST that one order (replaces the whole
+      queue). Untick it and the buttons append as before (build a "move → hold → dig in" sequence). The status line reads
+      "plan set: …" when replacing, "queued …" when appending.
 - [ ] **B-orders — Queue "Move to hex" waypoint (PlanetViewWindow).** Open a planet's surface (globe). Select one of your
       formations → its order panel. **Click a hex on the globe** (remembered as `_selGQ/_selGR`), then in the formation's
       queue section a **"+ Move to hex (Q,R)"** button appears → click it. Expected: the plan readout gains a `→ hex (Q,R)`

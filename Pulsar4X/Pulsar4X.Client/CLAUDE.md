@@ -306,6 +306,15 @@ render/feel is the developer's build.**
 > Battalions tab and the All-Forces roster (both call `DrawBattalionOrders`). **Move Formation Tree**
 > (`OrderFormationTreeMoveToHex`) is deferred — it needs a hex-target picker. Engine byte-identical (client-only). Runtime
 > is the developer's build (CLIENT-TEST-CHECKLIST "B-orders — Formation-ops").
+>
+> **+ B-orders C2/C3 (2026-08-15) — Resupply + Replace-plan.** `DrawBattalionOrders` gained a **"Resupply battalion"**
+> button (C2): iterates `GroundFormationTools.MembersOf` → `GroundForces.ResupplyUnit(body, u)` (tops each member's ammo
+> pool to full when it stands on FRIENDLY-held ground; a unit on contested ground or already-full refills 0), summed +
+> reported. `DrawBattalionOrderQueue` gained a **"Replace plan"** checkbox (C3, `_battReplaceMode`): every plan button now
+> routes through one `Plan()` dispatcher that calls `GroundForces.SetFormationOrder` (replace the whole queue) when ticked
+> vs `QueueFormationOrder` (append) when not — so "Replace" starts a fresh single-order plan, unchecked builds a sequence.
+> Both reach the Battalions tab + the All-Forces roster (`DrawBattalionOrders`). Engine byte-identical (client-only).
+> Runtime is the developer's build (CLIENT-TEST-CHECKLIST "B-orders — Resupply / Replace-plan").
 
 ### All Forces tab (FleetWindow) — BUILT Operation Blueprint-to-Steel B-S5 (2026-08-13) — the unified roster
 

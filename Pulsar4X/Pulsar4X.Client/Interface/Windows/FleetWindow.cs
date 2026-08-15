@@ -1276,6 +1276,7 @@ namespace Pulsar4X.Client
         private readonly Dictionary<string, int> _seatCommanderPick = new();  // S9b-2 — per-holding-seat assign-combo index
         private readonly Dictionary<string, int> _formNestPick = new();       // B-orders — per-formation "nest under" combo index
         private readonly Dictionary<string, int> _queueStancePick = new();     // B-orders — per-formation "queue stance" combo index
+        private readonly Dictionary<string, bool> _battReplaceMode = new();    // B-orders C3 — per-formation "replace plan" (SetFormationOrder) vs append toggle
         private int _rosterDomainFilter = 0;                  // 0 = all · 1 = Space · 2 = Ground
         private int _rosterRoleFilter = 0;                    // 0 = Mil+Civ · 1 = Military · 2 = Civilian
         private readonly byte[] _rosterSearch = new byte[64];
@@ -1461,6 +1462,22 @@ namespace Pulsar4X.Client
             ImGui.SameLine();
             ImGui.TextDisabled("(opens the surface tactical map for this world)");
 
+            // ── B-orders C2 (Special): Resupply / rearm the battalion. GroundForces.ResupplyUnit tops each member unit's
+            //    ammo pool to full when it stands on FRIENDLY-held ground (a depot in your own territory); a unit on
+            //    contested/enemy ground — or already full — refills 0. Units aren't entities, so this is a per-unit engine
+            //    call summed across the formation (the CI-tested manual-resupply path). ──
+            if(ImGui.Button($"Resupply battalion##battresup{f.FormationId}"))
+            {
+                double refilled = 0;
+                foreach(var u in GroundFormationTools.MembersOf(forces, f))
+                    refilled += GroundForces.ResupplyUnit(body, u);
+                _battStatus = refilled > 0
+                    ? $"resupplied {refilled:N0} kg of ammo"
+                    : "no resupply here (need friendly-held ground, or already full)";
+            }
+            ImGui.SameLine();
+            ImGui.TextDisabled("(rearms ammo from a depot on friendly-held ground)");
+
             // ── B-orders (Formation-ops): Nest / Set Leader / Detach — the org orders the surface lacked. Placed BEFORE
             //    the region-map gate below because they don't need the region graph. ──
             DrawBattalionFormationOps(body, forces, f);
@@ -1622,24 +1639,37 @@ namespace Pulsar4X.Client
                 ImGui.TextDisabled("No queued plan. Add move/hold/ROE waypoints below (they run in sequence).");
             }
 
+            // C3 (B-orders) — REPLACE-plan toggle. When ON, a plan button SETS the plan to just that ONE order
+            // (GroundForces.SetFormationOrder replaces the whole queue) instead of APPENDING (QueueFormationOrder). So
+            // "Replace" starts a fresh single-order plan; unchecked, you build a multi-step "move → hold → dig in" sequence.
+            string rkey = $"{f.FormationId}";
+            bool replace = _battReplaceMode.TryGetValue(rkey, out var rm) && rm;
+            if(ImGui.Checkbox($"Replace plan##bqrep{rkey}", ref replace)) _battReplaceMode[rkey] = replace;
+            // One dispatcher for every plan button — replace vs append is decided here, so the buttons read the same.
+            void Plan(GroundOrder o, string what)
+            {
+                if(replace) { GroundForces.SetFormationOrder(f, o); _battStatus = $"plan set: {what}"; }
+                else        { GroundForces.QueueFormationOrder(f, o); _battStatus = $"queued {what}"; }
+            }
+
             if(rallyRegion != null && rallyRegion.Neighbors != null)
             {
                 foreach(int n in rallyRegion.Neighbors)
                 {
                     if(n < 0 || n >= regions.Count) continue;
                     if(ImGui.Button($"+ March → R{n + 1}##bq{body.Id}_{f.FormationId}_{n}"))
-                    { GroundForces.QueueFormationOrder(f, GroundOrder.MoveRegion(n)); _battStatus = $"queued → region {n + 1}"; }
+                        Plan(GroundOrder.MoveRegion(n), $"→ region {n + 1}");
                     ImGui.SameLine();
                 }
             }
-            if(ImGui.Button($"+ Hold 6h##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Hold(6 * 3600)); _battStatus = "queued hold 6h"; }
+            if(ImGui.Button($"+ Hold 6h##bq{f.FormationId}")) Plan(GroundOrder.Hold(6 * 3600), "hold 6h");
             ImGui.SameLine();
-            if(ImGui.Button($"+ ROE Stand-off##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.StandOff)); _battStatus = "queued ROE stand-off"; }
+            if(ImGui.Button($"+ ROE Stand-off##bq{f.FormationId}")) Plan(GroundOrder.Roe(GroundEngagementStance.StandOff), "ROE stand-off");
             ImGui.SameLine();
-            if(ImGui.Button($"+ ROE Close##bq{f.FormationId}")) { GroundForces.QueueFormationOrder(f, GroundOrder.Roe(GroundEngagementStance.CloseToEngage)); _battStatus = "queued ROE close"; }
+            if(ImGui.Button($"+ ROE Close##bq{f.FormationId}")) Plan(GroundOrder.Roe(GroundEngagementStance.CloseToEngage), "ROE close");
 
-            // B-orders (Standing-Conditional) — queue a STANCE-change waypoint (GroundOrder.Stance). Reuses the moddable
-            // GroundStances catalog; the queued waypoint applies the stance in sequence like the ROE waypoints above.
+            // B-orders (Standing-Conditional) — a STANCE-change plan step (GroundOrder.Stance). Reuses the moddable
+            // GroundStances catalog; honours the Replace toggle above like every other plan button.
             var scat = _uiState.Game?.StartingGameData?.GroundStances;
             if(scat != null && scat.Count > 0)
             {
@@ -1652,7 +1682,7 @@ namespace Pulsar4X.Client
                 if(ImGui.Combo($"##qstance{skey}", ref spick, snames, snames.Length)) _queueStancePick[skey] = spick;
                 ImGui.SameLine();
                 if(ImGui.Button($"+ Queue stance##qst{skey}"))
-                { GroundForces.QueueFormationOrder(f, GroundOrder.Stance(sbps[spick].UniqueID)); _battStatus = $"queued stance {sbps[spick].DisplayName}"; }
+                    Plan(GroundOrder.Stance(sbps[spick].UniqueID), $"stance {sbps[spick].DisplayName}");
             }
         }
 
