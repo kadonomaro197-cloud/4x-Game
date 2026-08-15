@@ -152,10 +152,10 @@ ladder row and, once landed, the commit sha.
 | B-S9b-1 | Stations + colonies as roster ROWS (Domain "Holding") + Holding detail panel | FORCES-WINDOW S9 | ✅ | `271f987` (all 7 shards + build-client green, run 31858039704) |
 | B-S9b-2 | Assign-commander UI (seats + `AssignAdministratorOrder`) | FORCES-WINDOW S9 §4.4 | ✅ | `21b164f` (all 7 shards + build-client green, run 31859301590) |
 | B-orders | Route the 23 button-only DATA orders + deep categorized menu | `forceswindow.html` §10 | 🔨 | ledger in NEXT ACTION: ~19 real DATA orders (4 A4-stubs EXCLUDED) across 9 categories; slice by category, serialized behind CI (shares `FleetWindow.cs`) |
-| B-orders-fops | Formation-ops (Nest / Set Leader / Detach) into the battalion surface | `forceswindow.html` §10 Formation-ops | 🔨 | client `FleetWindow.cs` `DrawBattalionFormationOps` — routes `SetParentFormation`/`SetLeader`/`UnassignUnit`; Move-Formation-Tree deferred (needs hex picker) |
-| B-orders-tax | Set Colony Tax Rate — a tax slider on the Holding detail panel | `forceswindow.html` §10 Special | 🔨 | client `FleetWindow.cs` `DrawHoldingDetail` — `ColonyEconomyDB.TaxRate` percent slider (direct setter, the DevTools society-lever pattern) |
-| B-orders-qstance | Queue a stance-change waypoint (Standing-Conditional) | `forceswindow.html` §10 Standing-Conditional | 🔨 | client `FleetWindow.cs` `DrawBattalionOrderQueue` — `GroundOrder.Stance(UniqueID)` from the moddable GroundStances catalog; hex-move waypoint deferred (needs picker) |
-| B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | 🔨 | engine `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*` (file-disjoint from the client stack); the Combat-tab selector is the client follow-up once the FleetWindow.cs stack is CI-green |
+| B-orders-fops | Formation-ops (Nest / Set Leader / Detach) into the battalion surface | `forceswindow.html` §10 Formation-ops | ✅ | `0e04c9b` (run 31876370261 green); Move-Formation-Tree deferred (needs hex picker) |
+| B-orders-tax | Set Colony Tax Rate — a tax slider on the Holding detail panel | `forceswindow.html` §10 Special | ✅ | `188f3b9` (run 31876531200 green) |
+| B-orders-qstance | Queue a stance-change waypoint (Standing-Conditional) | `forceswindow.html` §10 Standing-Conditional | ✅ | `fb54aba` (run 31876634046 green); hex-move waypoint deferred (needs picker) |
+| B-orders-targeting | Set Target Priority — engine setter (gauge-before-UI) | `forceswindow.html` §10 Combat | ✅ | `8c4d616` (run 31876849971 green) — `FleetDoctrine.SetTargeting` + `FleetDoctrineTests.SetTargeting_*`; Combat-tab client selector now unblocked |
 
 ### Phase C — the designers + assembler (12 door HTMLs + `entityassembler.html`)
 
