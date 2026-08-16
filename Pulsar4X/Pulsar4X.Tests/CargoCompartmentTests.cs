@@ -687,6 +687,7 @@ namespace Pulsar4X.Tests
         public void Food_IsAShippableGood_AndAnImportedStockpileFeedsAColony()
         {
             var s = TestScenario.CreateWithColony();
+            s.StripFoodProduction();   // the start colony now ships 4 agri-complexes (C-FOOD, 2026-08-16); this test asserts the "absent farms" case (demand-0 draws nothing, and a farmless colony banks no surplus) — strip Earth's farms so those hold
             var data = s.Faction.GetDataBlob<FactionInfoDB>().Data;
 
             var food = data.CargoGoods.GetAny(SustenanceProcessor.FoodGoodID);
