@@ -605,16 +605,45 @@ namespace Pulsar4X.Client
             if (count == 0) return null;
             try
             {
-                // Already ONE formation? Reuse it — don't spawn a duplicate battalion on every march.
+                // REUSE the existing formation ONLY when the selection is its ENTIRE membership — then marching it moves
+                // exactly what's selected AND preserves the battalion's name/continuity. If the selection is a SUBSET
+                // (the formation also holds other types / regions / marching members), commanding the parent would move
+                // units the player didn't pick — so instead SPLIT the selected units off into their own formation (the
+                // developer's b3 ruling: to move a subset, split the formation).
                 int fid = selected[0].FormationId;
-                if (fid >= 0 && selected.All(u => u.FormationId == fid))
+                bool wholeFormation = fid >= 0
+                    && selected.All(u => u.FormationId == fid)
+                    && forcesDB.Units.Count(u => u.FormationId == fid) == selected.Length;
+                if (wholeFormation)
                 {
                     var existing = GroundFormationTools.FormationsFor(forcesDB, myFaction).FirstOrDefault(f => f.FormationId == fid);
                     if (existing != null) return existing;
                 }
-                // Else auto-wrap the loose selection into a new formation (the b1 ruling), exactly as the "Form up" button does.
+
+                // SPLIT: detach each selected unit from its current formation (UnassignUnit cleanly reassigns that
+                // formation's leader), gather them into ONE new formation, then disband any source formation the split
+                // emptied — so no ghost battalions and no dangling leaders (the confirmed-bug fix).
+                var sourceIds = selected.Where(u => u.FormationId >= 0).Select(u => u.FormationId).Distinct().ToList();
+                var formations = GroundFormationTools.FormationsFor(forcesDB, myFaction);
                 var formation = GroundForces.CreateFormation(body, myFaction, "");
-                foreach (var u in selected) GroundForces.AssignUnit(formation, u);
+                foreach (var u in selected)
+                {
+                    if (u.FormationId >= 0)
+                    {
+                        var old = formations.FirstOrDefault(f => f.FormationId == u.FormationId);
+                        if (old != null) GroundForces.UnassignUnit(forcesDB, old, u);
+                    }
+                    GroundForces.AssignUnit(formation, u);
+                }
+                foreach (var sid in sourceIds)
+                {
+                    if (sid == formation.FormationId) continue;
+                    if (!forcesDB.Units.Any(u => u.FormationId == sid))
+                    {
+                        var ghost = formations.FirstOrDefault(f => f.FormationId == sid);
+                        if (ghost != null) GroundForces.DisbandFormation(forcesDB, ghost);
+                    }
+                }
                 return formation;
             }
             catch (Exception ex)
