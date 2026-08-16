@@ -163,8 +163,13 @@ namespace Pulsar4X.Client
                     // If the above condition failed the selectedFleetFlagship needs to be set to null
                     selectedFleetFlagship = null;
                 }
-                selectedFleetInheritOrders = selectedFleetDB.InheritOrders;
             }
+            // C1 fix (review): seed the Inherit-Orders checkbox from the fleet's REAL InheritOrders whenever a fleet is
+            // selected — NOT only when it has a flagship. A flagship-less sub-fleet (FlagShipID == -1: empty, or its
+            // flagship was just unassigned) takes the if-branch above, so seeding inside the else left the field stale —
+            // the checkbox then showed the PREVIOUS fleet's value and a click toggled the engine from the wrong baseline.
+            if(selectedFleetDB != null)
+                selectedFleetInheritOrders = selectedFleetDB.InheritOrders;
         }
 
         private void SelectOrder(ConditionalOrder? order)
@@ -1954,7 +1959,11 @@ namespace Pulsar4X.Client
                         foreach(var colony in colonyList)
                         {
                             if(!colony.Entity.TryGetDataBlob<CargoStorageDB>(out var baseStore)) continue;
-                            var ordnanceInStock = baseStore.GetCargoables().Values
+                            // GetCargoables() lives on the nested TypeStore, NOT on CargoStorageDB — enumerate every
+                            // store's cargoables and filter to ordnance (review fix: the direct baseStore.GetCargoables()
+                            // did not compile). GetUnitsStored/GetFreeUnitSpace below ARE CargoStorageDB extensions.
+                            var ordnanceInStock = baseStore.TypeStores.Values
+                                .SelectMany(ts => ts.GetCargoables().Values)
                                 .OfType<OrdnanceDesign>()
                                 .Where(o => baseStore.GetUnitsStored(o, false) > 0)
                                 .ToList();

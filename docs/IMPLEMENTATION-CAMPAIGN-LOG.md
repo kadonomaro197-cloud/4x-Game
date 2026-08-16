@@ -156,6 +156,14 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > Assembler, so a player can design a carrier → build → dock/undock; content-gated/byte-identical until a hull carries a
 > bay. **B-orders is now DONE except C6** (parked, ADJUDICATION QUEUE → B-ORDERS-MOVEMENT). Next: an adversarial
 > runtime-review pass over the client slices (CI compiles but can't RUN the client), then Phase C.
+>
+> **REVIEW DONE → 2 CONFIRMED bugs fixed (adversarial workflow, 7 reviewers + verify).** **① C7 COMPILE BREAK (crash):**
+> `baseStore.GetCargoables()` doesn't exist on `CargoStorageDB` — `GetCargoables()` is a member of the nested `TypeStore`
+> class (the earlier grep saw the line but missed the enclosing class). C7's build-client was RED. **Fixed:**
+> `baseStore.TypeStores.Values.SelectMany(ts => ts.GetCargoables().Values).OfType<OrdnanceDesign>()`. **② C1 display bug
+> (minor):** `selectedFleetInheritOrders` was seeded only inside the `FlagShipID != -1` branch, so a flagship-less
+> sub-fleet showed a stale checkbox. **Fixed:** seed it whenever `selectedFleetDB != null`. The other 5 reviewers found
+> nothing (empty). Fix commit is FleetWindow.cs-only.
 
 ---
 
