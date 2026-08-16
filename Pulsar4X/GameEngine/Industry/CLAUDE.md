@@ -146,6 +146,18 @@ A **SECOND** multiplier on the production rate, exactly parallel to infrastructu
 
 ---
 
+## Power brownout throttle (TIER 2.5 — flag-gated, 2026-08-16)
+
+A **THIRD** multiplier on the production rate, after `infraEfficiency × staffingEfficiency` (developer ruling 2026-08-16 — "do whatever fits best with what was planned", ADJUDICATION QUEUE C-POWER). `IndustryTools.ConstructStuff` now scales each line's rate by `infraEfficiency × staffingEfficiency × powerEfficiency`, where `powerEfficiency = IndustryTools.PowerEfficiency(entity) = min(1, powerSupply ÷ powerDemand)`:
+- **powerSupply** = the host's `Pulsar4X.Energy.EnergyGenAbilityDB.TotalOutputMax` (reactor + solar, kW) — the SAME supply figure the fuel/warp code reads. EXTENDS the existing energy system; does **not** stand up a parallel colony-power model.
+- **powerDemand** = `ComponentInstancesDB.GetTotalJobs() × PowerDrawPerCrew_kW` — a DERIVED draw (the same operating-crew producer jobs/staffing read; `PowerDrawPerCrew_kW` default 1.0, a mutable static). First-cut proxy: **no new `*Atb`, no template authoring, no L6/L13 landmine.** Upgradeable to an authored per-installation `PowerDrawAtb` later if the developer wants per-building tuning.
+- **INERT (returns 1.0) — and this is the SAFETY invariant, the inverse of the food-supply-0 trap:** flag OFF, host unmanaged, **no `EnergyGenAbilityDB` at all** (a never-powered/legacy colony is not modelled → not throttled), **modelled output 0** (can never BRICK production), or no demand. So the throttle can only ever SLOW a modelled+under-generating colony; it can never zero one out. `EnablePowerThrottle` defaults **OFF** → the engine suite is byte-identical; `NewGameMenu` flips it ON for a menu game (both start paths — the `EnableWorkforceStaffing` pattern).
+- **The new decision it creates:** keep reactor/solar generation ahead of your industrial base — reactors were economically inert on a colony before this. **Grave rung:** damage/destroy generation → generation falls below demand → production browns out.
+- **Distinct from infra and staffing:** the DEMAND correlates with the crew sum (as staffing does), but the SUPPLY is reactor/solar — so the fix is "build power plants," a different lever than housing (staffing) or the utility grid (infra). Gauge: `PowerThrottleTests` (flag-off inert / covered→1.0 / half→0.5 bite / zero-output inert / grave-rung brownout / no-model inert / pristine-start-colony safe).
+- **⚠ LIVE only once a colony GENERATES power.** No base-mod colony installs a reactor/solar yet (`earth.json` `Installations` has none), so the mechanism is inert on the stock start colony until the companion commit installs a fission reactor on Earth (75 MW vs the ~52 MW demand → safe with headroom). Until then this is a correct, tested, byte-identical mechanism waiting on its supply.
+
+---
+
 ## Key Extension Points for Ground Combat
 
 1. **New `IndustryJob` subtype** — add `GroundUnitConstructionJob` to allow colonies to build ground units through the existing production system.

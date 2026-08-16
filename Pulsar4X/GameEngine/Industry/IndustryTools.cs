@@ -8,6 +8,7 @@ using Pulsar4X.DataStructures;
 using Pulsar4X.Factions;
 using Pulsar4X.Engine;
 using Pulsar4X.Storage;
+using Pulsar4X.Energy;
 
 namespace Pulsar4X.Industry
 {
@@ -41,6 +42,57 @@ namespace Pulsar4X.Industry
             long jobsDemand = instances.GetTotalJobs();
             if (jobsDemand <= 0) return 1.0; // nothing to staff → no throttle
             double eff = available / (double)jobsDemand;
+            if (eff < 0.0) eff = 0.0;
+            if (eff > 1.0) eff = 1.0;
+            return eff;
+        }
+
+        /// <summary>
+        /// TIER 2.5 colony POWER run-cost (developer ruling 2026-08-16 — "do whatever fits best with what was planned",
+        /// docs/IMPLEMENTATION-CAMPAIGN-LOG.md ADJUDICATION QUEUE C-POWER). Default OFF → the engine test suite is
+        /// byte-identical; <c>NewGameMenu</c> flips it ON for a menu game (the <c>EnableWorkforceStaffing</c> pattern).
+        /// When on, a colony whose installed power GENERATION cannot cover its installations' power DEMAND browns out and
+        /// builds proportionally slower — a THIRD factor on the production rate, exactly parallel to infrastructure and
+        /// staffing. The new player decision it creates: keep reactor/solar generation ahead of your industrial base
+        /// (reactors were previously economically inert on a colony). EXTENDS the existing energy system rather than
+        /// standing up a parallel model — supply reads the same <see cref="EnergyGenAbilityDB.TotalOutputMax"/>
+        /// (reactor + solar) the fuel/warp code already uses.
+        /// </summary>
+        public static bool EnablePowerThrottle = false;
+
+        /// <summary>
+        /// The derived power DRAW per unit of operating crew, in kilowatts. First-cut proxy (no new <c>*Atb</c>, no
+        /// template authoring, no L6/L13 landmine): an installation's power demand is its operating crew × this, so the
+        /// SAME operating-crew dial the door designers already set (fed through <c>GetTotalJobs</c>, one producer) drives
+        /// power draw as well as jobs and staffing. Upgradeable to an authored per-installation <c>PowerDrawAtb</c> later
+        /// if the developer wants per-building tuning. 1.0 kW/crew ≈ "each worker's industrial workstation draws ~1 kW",
+        /// which lands the ~52k-crew start homeworld's demand (~52 MW) safely under one fission reactor's 75 MW. Mutable
+        /// static so it is scenario/DevTools-tunable, like <c>ColonyMoraleDB.JobsPerCapita</c>.
+        /// </summary>
+        public static double PowerDrawPerCrew_kW = 1.0;
+
+        /// <summary>
+        /// The power-brownout multiplier on a host's production rate: <c>min(1, powerSupply ÷ powerDemand)</c> — a THIRD
+        /// factor on the rate, parallel to infrastructure and staffing efficiency. <b>Supply</b> = the host's
+        /// <see cref="EnergyGenAbilityDB.TotalOutputMax"/> (reactor + solar, kW). <b>Demand</b> = <c>Σ installation
+        /// operating-crew × <see cref="PowerDrawPerCrew_kW"/></c> (the same <c>GetTotalJobs</c> producer jobs/staffing
+        /// read). Returns 1.0 (no throttle) when the flag is OFF, when the host is unmanaged, when it carries NO power
+        /// model at all (<see cref="EnergyGenAbilityDB"/> absent — a never-powered/legacy colony is not modeled, so it is
+        /// not throttled), when its modelled output is 0 (can never BRICK production — the food-supply-was-hardcoded-0
+        /// unwinnable trap, inverted: here supply-0 is SAFE), or when it has no power demand. A colony that IS modelled
+        /// and whose generation falls SHORT of demand browns out proportionally (and that is the grave rung — damage or
+        /// destroy a reactor and production suffers). Public so the gauge can measure it without a full production run.
+        /// </summary>
+        public static double PowerEfficiency(Entity industryEntity)
+        {
+            if (!EnablePowerThrottle || industryEntity == null || industryEntity.Manager == null) return 1.0;
+            if (!industryEntity.TryGetDataBlob<EnergyGenAbilityDB>(out var egen)) return 1.0; // no power model → inert (safe)
+            double supply = egen.TotalOutputMax;
+            if (supply <= 0.0) return 1.0;   // modelled but no output → inert; never brick production
+            if (!industryEntity.TryGetDataBlob<ComponentInstancesDB>(out var instances)) return 1.0;
+            double demand = instances.GetTotalJobs() * PowerDrawPerCrew_kW;
+            if (demand <= 0.0) return 1.0;   // nothing drawing power → no throttle
+            double eff = supply / demand;
             if (eff < 0.0) eff = 0.0;
             if (eff > 1.0) eff = 1.0;
             return eff;
@@ -151,11 +203,17 @@ namespace Pulsar4X.Industry
             // man its facilities builds proportionally slower. A SECOND factor on the rate, exactly parallel to infra.
             double staffingEfficiency = StaffingEfficiency(industryEntity);
 
+            // TIER 2.5 (flag-gated; 1.0 when off → byte-identical): the power-brownout throttle — a colony whose reactor/
+            // solar generation can't cover its installations' power demand builds proportionally slower. A THIRD factor on
+            // the rate, parallel to infra and staffing. Inert (1.0) on any colony with no power model, so it can never
+            // brick production (the inverse of the food-supply-0 trap).
+            double powerEfficiency = PowerEfficiency(industryEntity);
+
             foreach (var (prodLineID, prodLine) in industryDB.ProductionLines.ToArray())
             {
                 var industryPointsRemaining = new Dictionary<string, int>();
                 foreach (var rate in prodLine.IndustryTypeRates)
-                    industryPointsRemaining[rate.Key] = (int)(rate.Value * infraEfficiency * staffingEfficiency);
+                    industryPointsRemaining[rate.Key] = (int)(rate.Value * infraEfficiency * staffingEfficiency * powerEfficiency);
 
                 foreach(var batchJob in prodLine.Jobs.ToArray())
                 {

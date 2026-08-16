@@ -573,6 +573,12 @@ public class NewGameMenu : PulsarGuiWindow
         // OFF (engine byte-identical); menu-on so a built world actually drains the treasury (the missing middle of
         // cradle-to-grave). One line to revert. Feel is the PC play-test.
         Pulsar4X.Colonies.ColonyEconomyProcessor.EnableInstallationUpkeep = true;
+        // TIER 2.5 run-cost — colony POWER brownout (the THIRD production-rate factor, after infra × staffing). A colony
+        // whose reactor/solar generation can't cover its installations' power demand builds proportionally slower. Default
+        // OFF (engine byte-identical); menu-on so keeping generation ahead of your industrial base is a real decision
+        // (reactors were economically inert on a colony before). INERT on any colony with no power model, so it can never
+        // brick production. One line to revert. Feel is the PC play-test.
+        Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -1002,6 +1008,9 @@ public class NewGameMenu : PulsarGuiWindow
             // TIER 2.5 colony installation upkeep (same as CreateGameCore): installations cost 1% of build price/month.
             // Default OFF (engine byte-identical); one line to revert.
             Pulsar4X.Colonies.ColonyEconomyProcessor.EnableInstallationUpkeep = true;
+            // TIER 2.5 colony POWER brownout (same as CreateGameCore): production ×= min(1, reactor+solar supply ÷ Σ
+            // installation power demand). Default OFF (engine byte-identical), INERT on a power-less colony; one line to revert.
+            Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

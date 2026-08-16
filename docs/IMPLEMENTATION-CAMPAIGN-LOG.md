@@ -443,6 +443,21 @@ weight) and I build it.
    if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
    queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
 
+### ✅ C-POWER — RESOLVED 2026-08-16 (developer: "do whatever fits best with what was planned") — colony POWER brownout throttle
+**Built the recommendation below (a/b/c).** `IndustryTools.PowerEfficiency(colony)` = a THIRD production-rate factor
+(`ConstructStuff` rate = `infra × staffing × power`), `power = min(1, EnergyGenAbilityDB.TotalOutputMax ÷ (GetTotalJobs ×
+PowerDrawPerCrew_kW))`. (a) EXTENDS the existing energy system — supply reads the SAME `TotalOutputMax` the fuel/warp code
+uses. (b) DERIVES demand from operating crew (the shared `GetTotalJobs` producer × `PowerDrawPerCrew_kW` = 1.0 kW/crew) —
+**no new `*Atb`, no L6/L13 landmine.** (c) DISTINCT from infra (electrical vs utility grid), flag-gated `EnablePowerThrottle`
+OFF (engine byte-identical) → `NewGameMenu`-on both paths. **The hard risk is DISARMED by construction:** the recon
+confirmed the start colony has **no power generation installed** (`earth.json` `Installations` has no reactor/solar), so
+`TotalOutputMax` reads 0 → the throttle is **INERT** (returns 1.0, the inverse of the food-supply-0 trap — supply-0 is SAFE,
+never bricks). Commit 1 (this) = the byte-identical mechanism + gauge `PowerThrottleTests`. **Commit 2 (next) = install one
+fission reactor on Earth** (75 MW vs the ~52 MW demand the A1 note pins — "~52k-job start homeworld" — so 1.44× headroom,
+safe at start, bites once industry grows ~44%) + a gauge asserting Earth-powered-and-safe on the REAL numbers (CI is the
+calibration safety net). Files: `IndustryTools.cs` · `NewGameMenu.cs` (both paths) · `PowerThrottleTests.cs` · Industry
+CLAUDE.md · connection map (Power → production RATE row). *(Original recon + three-question adjudication preserved below.)*
+
 ### ⚖ C-POWER — the colony POWER run-cost needs a design call against the EXISTING energy system (parked 2026-08-15, TIER 2.5)
 **Plain English:** the backlog calls Power "the only real build" of the run-cost vector — a generic component power draw
 + a colony power total vs reactor/solar supply → a brownout that throttles production, "same shape as infra." But the
