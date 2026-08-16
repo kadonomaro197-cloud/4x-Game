@@ -78,7 +78,8 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var faction = s.Faction;
-            var fData = faction.GetDataBlob<FactionInfoDB>().Data;
+            var factionInfo = faction.GetDataBlob<FactionInfoDB>();
+            var fData = factionInfo.Data;
             fData.Unlock("food-production");   // the DevTest/NPC scenarios unlock this via StartingItems; the default start doesn't
 
             // Pull the design blueprints from a fresh base-mod load (same data the game reads).
@@ -92,7 +93,13 @@ namespace Pulsar4X.Tests
             })
             {
                 Assert.That(baseMod.ComponentDesigns.ContainsKey(id), Is.True, $"{id} is a defined base-mod design");
-                var design = ComponentDesignFromJson.Create(faction, fData, baseMod.ComponentDesigns[id]);
+                // agri-complex is now a START design (earth.json registers it via CreateWithColony → the C-FOOD make-live
+                // slice), so re-Creating it here would double-register its tech (ArgumentException on tech-…). Fetch the
+                // already-registered design instead; hydroponics-arcology isn't a start design, so it's still Created.
+                // Either path binds the design from the SAME base-mod JSON, so the atb assertions below verify it identically.
+                var design = factionInfo.ComponentDesigns.TryGetValue(id, out var existing)
+                    ? existing
+                    : ComponentDesignFromJson.Create(faction, fData, baseMod.ComponentDesigns[id]);
 
                 Assert.That(design.HasAttribute<FoodProductionAtbDB>(), Is.True,
                     $"{id}: the JSON food-atb bound a FoodProductionAtbDB (gotcha-10 template→atb path works)");
@@ -111,6 +118,7 @@ namespace Pulsar4X.Tests
         public void InstalledArcology_EndsFoodShortage_AndReportsQuality()
         {
             var s = TestScenario.CreateWithColony();
+            s.StripFoodProduction();   // the start colony now ships 4 agri-complexes (C-FOOD, 2026-08-16); this food-mechanic test needs a food-free baseline
             var faction = s.Faction;
             var fData = faction.GetDataBlob<FactionInfoDB>().Data;
             fData.Unlock("food-production");
@@ -148,6 +156,7 @@ namespace Pulsar4X.Tests
         public void FoodPipeline_EndToEnd_MoraleTracksFoodOverTime()
         {
             var s = TestScenario.CreateWithColony();
+            s.StripFoodProduction();   // the start colony now ships 4 agri-complexes (C-FOOD, 2026-08-16); this food-mechanic test needs a food-free baseline
             var faction = s.Faction;
             var fData = faction.GetDataBlob<FactionInfoDB>().Data;
             fData.Unlock("food-production");
@@ -187,6 +196,7 @@ namespace Pulsar4X.Tests
         public void FoodProduction_GraveRung_DestroyingTheFarmReturnsStarvation()
         {
             var s = TestScenario.CreateWithColony();
+            s.StripFoodProduction();   // the start colony now ships 4 agri-complexes (C-FOOD, 2026-08-16); this grave-rung test needs a food-free baseline so destroying THE farm drops output to 0
             var faction = s.Faction;
             var fData = faction.GetDataBlob<FactionInfoDB>().Data;
             fData.Unlock("food-production");

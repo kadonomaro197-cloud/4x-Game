@@ -52,6 +52,7 @@ namespace Pulsar4X.Tests
         public void Recalc_ComputesShortage_WhenDemandSet()
         {
             var s = TestScenario.CreateWithColony();
+            s.StripFoodProduction();   // the start colony now ships 4 agri-complexes (C-FOOD, 2026-08-16); this "zero supply" test needs a food-free baseline
             var sust = s.Colony.GetDataBlob<ColonySustenanceDB>();
 
             sust.PerCapitaFoodDemand = 0.001;   // now food demand = pop × 0.001 > 0, with no food good → no supply

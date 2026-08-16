@@ -6,6 +6,7 @@ using Pulsar4X.Modding;
 using Pulsar4X.Factions;
 using Pulsar4X.People;
 using Pulsar4X.Colonies;
+using Pulsar4X.Datablobs;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Industry;
 using Pulsar4X.Interfaces;
@@ -192,6 +193,21 @@ namespace Pulsar4X.Tests
             if (installOnColony)
                 job.InstallOn = Colony;
             IndustryTools.AddJob(Colony, lineId, job);
+        }
+
+        /// <summary>
+        /// Remove every installed FOOD-production component from the colony, restoring a food-free baseline.
+        /// The start colony (earth.json) now ships 4 agri-complexes (the C-FOOD make-live slice, 2026-08-16), so a
+        /// food-SYSTEM test that needs "no farm ⇒ starvation" as its clean starting point strips them first. This
+        /// preserves each test's intent exactly — it exercises the food mechanic on a food-free colony — while
+        /// FoodDemandTests separately asserts the REAL start colony IS food-positive with its farms.
+        /// </summary>
+        public void StripFoodProduction()
+        {
+            var comps = Colony.GetDataBlob<ComponentInstancesDB>();
+            foreach (var design in comps.GetDesignsByType(typeof(FoodProductionAtbDB)).ToList())
+                foreach (var inst in comps.GetComponentsBySpecificDesign(design.UniqueID).ToList())
+                    comps.RemoveComponentInstance(inst);
         }
     }
 }
