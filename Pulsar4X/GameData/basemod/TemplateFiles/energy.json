@@ -21,7 +21,7 @@
         "fissile-fuels": "PropertyValue('Fuel Consumption') * PropertyValue('Fuel Load Seconds')"
       },
       "ComponentType": "Facility",
-      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit, Station",
+      "MountType": "ShipComponent, ShipCargo, Fighter, GroundUnit, Station, PlanetInstallation",
       "CargoTypeID": "general-storage",
       "IndustryTypeID": "component-construction",
       "Properties": [

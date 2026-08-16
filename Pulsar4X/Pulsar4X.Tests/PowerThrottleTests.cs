@@ -104,5 +104,29 @@ namespace Pulsar4X.Tests
             Assert.That(IndustryTools.PowerEfficiency(bare), Is.EqualTo(1.0).Within(1e-9),
                 "no power model / unmanaged → inert (no throttle, no throw)");
         }
+
+        [Test]
+        [Description("THE MAKE-LIVE GAUGE (C-POWER-LIVE): the start colony now installs a fission reactor (energy.json reactor mount gains PlanetInstallation + earth.json Installations), so its REAL power supply (75 MW) covers its installations' power demand (~52 MW) with headroom — the throttle reads exactly 1.0 on the real New-Game colony. Proves the menu-game start is powered AND safe; CI is the calibration net (if demand ever exceeds supply this REDs before it ships).")]
+        public void PowerEfficiency_StartColony_IsPoweredAndSafe()
+        {
+            var s = TestScenario.CreateWithColony();
+            var colony = s.Colony;
+
+            Assert.That(colony.TryGetDataBlob<EnergyGenAbilityDB>(out var egen), Is.True,
+                "the start colony now installs a fission reactor → it carries an EnergyGenAbilityDB");
+            double supply = egen.TotalOutputMax;
+            long jobs = colony.GetDataBlob<ComponentInstancesDB>().GetTotalJobs();
+            double demand = jobs * IndustryTools.PowerDrawPerCrew_kW;
+            Log($"start colony power: supply {supply:N0} kW (reactor+solar) vs demand {demand:N0} kW " +
+                $"(jobs {jobs:N0} × {IndustryTools.PowerDrawPerCrew_kW} kW/crew) → margin {(demand > 0 ? supply / demand : 0):0.00}×");
+
+            Assert.That(supply, Is.GreaterThan(0.0), "the installed reactor gives real power output (75 MW)");
+            Assert.That(supply, Is.GreaterThanOrEqualTo(demand),
+                "the start colony's generation covers its installations' power demand → menu-game safe");
+
+            IndustryTools.EnablePowerThrottle = true;
+            Assert.That(IndustryTools.PowerEfficiency(colony), Is.EqualTo(1.0).Within(1e-9),
+                "supply ≥ demand → the throttle does NOT throttle the real start colony (full production rate)");
+        }
     }
 }

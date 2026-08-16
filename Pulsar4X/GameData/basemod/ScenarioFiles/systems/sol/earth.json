@@ -65,7 +65,8 @@
         { "Id": "default-design-research-lab", "Amount": 2 },
         { "id": "default-design-city-hall", "amount": 1 },
         { "Id": "default-design-local-construction", "Amount": 1},
-        { "Id": "default-design-launch-complex", "Amount": 1 }
+        { "Id": "default-design-launch-complex", "Amount": 1 },
+        { "Id": "default-design-fission-reactor", "Amount": 1 }
       ],
       "Cargo": [
         { "Id": "iron", "Amount": 1000000 },
