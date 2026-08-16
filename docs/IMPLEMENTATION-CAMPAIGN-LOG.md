@@ -279,7 +279,7 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| E-env | `CombatConditions` read into the shared kernel (space combat stops being env-blind) | `resolversim.html` / ENVIRONMENT-CONDITIONS-DESIGN | ⬜ | |
+| E-env | `CombatConditions` read into the shared kernel (space combat stops being env-blind) | `resolversim.html` / ENVIRONMENT-CONDITIONS-DESIGN | 🔨 | **Design-LOCKED (accepted resolver hooks). Slice 1 DONE 2026-08-16:** `Combat/CombatConditions.cs` — the value struct (Detection/Accuracy/Closing/Firepower/ShieldRegen/Cover ×mults + ambient DoT) + `FromHazard(HazardModifiers)` pure translation of the live `SpaceHazardTools` query + `ReadAt(system, position)` (the "wire" the design Part 2 named as the gap). **NO combat caller yet → byte-identical** (buildable-not-installed pattern). Gauge `CombatConditionsTests` (pure translation + a real gas cloud end-to-end). **NEXT (slice 2):** store on `FleetCombatStateDB` + read the Accuracy coefficient into the shared `CombatKernel.HitFraction` (the keystone — one edit moves BOTH ship + ground resolvers), flag-gated OFF + `NewGameMenu`-on; then slice 3 the space firepower/shield hooks (`CombatEngagement.cs:759`/`ApplyShield`) |
 
 ---
 
