@@ -15,17 +15,14 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **🧭 CURRENT NEXT ACTION (2026-08-16) — Phase C continues with the civic BUILD dials.** Phase A + B are DONE. Phase C
-> **run-cost vector:** Jobs (A1), **Staffing** (`7cdce65`), **Upkeep** (`77c8411`) LANDED + CI-GREEN. **Power** (`C-POWER`)
-> — the developer said "do whatever fits best with what was planned," so the **THROTTLE MECHANISM is LANDED** (`d2ac424`,
-> `IndustryTools.PowerEfficiency` = the 3rd rate factor, flag-gated, supply-0-inert, gauge `PowerThrottleTests`, byte-
-> identical). But making it (and Food) BITE hit a **shared structural wall discovered in recon: the start colony's SUPPLY
-> side isn't built.** Earth installs no power plant (and the reactor/turbine can't even mount on a colony — only ~10 kW
-> solar can) and no farms (and the farm designs aren't even unlocked). So **C-POWER-LIVE** + **C-FOOD-DEMAND** are PARKED
-> TOGETHER as the twin "install supply-side infra on Earth" slice (each with a concrete safe make-live plan — see the
-> ADJUDICATION QUEUE; food's failure is catastrophic so it especially needs the developer's nod, and both change the
-> deliberately-BAREBONES start). **On a "go" I build both supply slices; otherwise they wait.** **The next buildable Phase C
-> slice (no supply-wall) = the two civic BUILD dials from `01-IO-civic.md`:**
+> **🧭 CURRENT NEXT ACTION (2026-08-16) — the run-cost vector is COMPLETE; Phase C continues with the civic BUILD dials.**
+> Phase A + B are DONE. Phase C **run-cost vector — ALL FIVE RUNGS LANDED:** Jobs (A1), **Staffing** (`7cdce65`), **Upkeep**
+> (`77c8411`), **Power** (mechanism `d2ac424` + make-live `927deef` — reactor on Earth, throttle bites at 75 MW vs ~52 MW),
+> **Food** (make-live `<this>` — 4 agri-complexes on Earth + demand on, food-positive 2.44×). The developer re-issued "for 1
+> do whatever fits best / for 2 do your rec" → I un-parked both and BUILT the supply side onto the (formerly barebones)
+> start colony, gauge-verified (`PowerThrottleTests` + `FoodDemandTests` assert Earth powered+fed on the real numbers; CI is
+> the calibration net). **⏳ AWAITING CI on `927deef` (power) + the food commit before treating them green.** **The next
+> buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md`:**
 > **(1) Medical → health → morale** (a new morale input) and **(2) Security → unrest → legitimacy** (a new legitimacy
 > input). Each is a real BUILD (like A1's employment term): a NEW component attribute (`MedicalAtb`/`SecurityAtb` — use the
 > L13 `[JsonConstructor] private XAtb(){}` pattern + the L6 SIX-POINT registration + author a value on the medical/security
@@ -522,6 +519,22 @@ grid) but flag-gate it OFF by default so it can't break the economy, and only tu
 colonies carry real power supply. This is a genuine multi-file extension of a live system + three design calls, so it is
 parked rather than rushed. Confirm the three calls (or say "your recommendation") and I build it as the next run-cost
 slice. The other three rungs (jobs/staffing/upkeep) needed no such call — they had clean existing bases.
+
+### ✅ C-FOOD-DEMAND — RESOLVED 2026-08-16 (developer re-issued "for 2 do your rec" → BUILD it): farms on Earth + demand on
+**Built the safe-by-construction make-live plan.** The recon (below) found the food loop built but Earth had NO food
+supply — so turning on demand would starve it. Fix taken: **(1) registered + installed 4 `default-design-agri-complex` on
+Earth** (`earth.json`: added `default-design-agri-complex` to ComponentDesigns + `food-production` to StartingItems + 4 to
+Installations — the PROVEN DevTest recipe copied verbatim; food-production shares the same cost shape as `mine`/`factory`, so
+it's buildable with no template surgery) → 20,000 food/day; **(2) added `SustenanceProcessor.EnableFoodDemand` flag +
+`DefaultPerCapitaFoodDemand` = 1.0e-6** (a colony that hasn't authored its own demand uses the default; a DevTest strain
+node keeps its own) → Earth demand = `8.2e9 × 1e-6` = 8,200/day, so supply/demand = **2.44×** (food-POSITIVE by
+construction — both are constants, so supply > demand is an INVARIANT; `Shortage()` returns 0 when supply ≥ demand); **(3)
+`NewGameMenu`-on both paths**; **(4) gauge** `FoodDemandTests` (asserts Earth food-positive on the real numbers; flag-off
+byte-identical; the grave rung — a farmless colony fully starves). Morale-neutral: agri-complex quality is exactly 1.0
+(`ColonyMoraleDB` only lifts morale when quality > 1.0). Blast radius verified clear (food byte-identical when off; +400 farm
+crew stays inside the employment band `(-9,0)`; the DevTest self-sufficiency sim uses its own colonies, not `colony-earth`).
+Files: `earth.json` · `SustenanceProcessor.cs` · `NewGameMenu.cs` (both paths) · `FoodDemandTests.cs` · Colonies CLAUDE.md ·
+connection map. *(Original recon preserved below.)*
 
 ### ⚖ C-FOOD-DEMAND — TWIN OF C-POWER-LIVE: the food loop is built, but the start colony has NO food supply (parked 2026-08-15, findings updated 2026-08-16, TIER 2.5)
 **Plain English:** the food loop is fully built (`SustenanceProcessor` reads farm output vs `pop × PerCapitaFoodDemand`,

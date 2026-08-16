@@ -579,6 +579,11 @@ public class NewGameMenu : PulsarGuiWindow
         // (reactors were economically inert on a colony before). INERT on any colony with no power model, so it can never
         // brick production. One line to revert. Feel is the PC play-test.
         Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
+        // TIER 2.5 run-cost — colony FOOD demand. People now EAT (demand = pop × per-capita), so a world that can't farm
+        // (or loses its farms to bombardment) starves. Default OFF (engine byte-identical: demand 0). SAFE on the start
+        // colony because Earth now installs 4 agri-complexes (20,000 food/day) vs ~8,200/day demand → food-positive by
+        // construction. One line to revert. Feel is the PC play-test.
+        Pulsar4X.Colonies.SustenanceProcessor.EnableFoodDemand = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -1011,6 +1016,9 @@ public class NewGameMenu : PulsarGuiWindow
             // TIER 2.5 colony POWER brownout (same as CreateGameCore): production ×= min(1, reactor+solar supply ÷ Σ
             // installation power demand). Default OFF (engine byte-identical), INERT on a power-less colony; one line to revert.
             Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
+            // TIER 2.5 colony FOOD demand (same as CreateGameCore): people eat (demand = pop × per-capita); Earth's 4
+            // agri-complexes cover it (food-positive). Default OFF (engine byte-identical); one line to revert.
+            Pulsar4X.Colonies.SustenanceProcessor.EnableFoodDemand = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

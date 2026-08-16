@@ -35,6 +35,27 @@ namespace Pulsar4X.Colonies
         public TimeSpan FirstRunOffset { get; } = TimeSpan.FromDays(30);
         public Type GetParameterType { get; } = typeof(ColonySustenanceDB);
 
+        /// <summary>
+        /// TIER 2.5 FOOD-demand on-switch (developer ruling 2026-08-16 — "for 2 [Food] do your rec"; campaign log
+        /// C-FOOD-DEMAND). Default OFF → the food loop stays neutral-when-absent (byte-identical: <see
+        /// cref="ColonySustenanceDB.PerCapitaFoodDemand"/> is 0 → 0 demand → 0 shortage), so the engine suite is
+        /// unchanged. <c>NewGameMenu</c> flips it ON for a menu game (the <c>EnableEmploymentMorale</c> pattern). When on,
+        /// a colony that has NOT set its own per-capita food demand uses <see cref="DefaultPerCapitaFoodDemand"/> — so
+        /// people actually EAT, and a world that can't farm (or loses its farms) starves. SAFE on the start colony
+        /// because Earth now installs 4 agri-complexes (20,000 food/day) against a demand of ~8,200/day (the make-live
+        /// slice) → food-positive by construction, shortage 0. A colony that authors its own demand (a DevTest strain
+        /// node) keeps it — this default only fills a 0.
+        /// </summary>
+        public static bool EnableFoodDemand = false;
+
+        /// <summary>
+        /// The default per-capita food demand applied (when <see cref="EnableFoodDemand"/> is on) to any colony that
+        /// hasn't set its own. 1.0e-6 food-units/person/day lands the ~8.2e9 start homeworld at ~8,200/day — comfortably
+        /// under its 4 agri-complexes' 20,000/day (2.44× headroom, food-positive invariant), while a farmless colony
+        /// reads a real shortage. A mutable static, scenario/DevTools-tunable, like <see cref="ColonyMoraleDB.JobsPerCapita"/>.
+        /// </summary>
+        public static double DefaultPerCapitaFoodDemand = 1.0e-6;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds) => Recalc(entity);
@@ -63,7 +84,12 @@ namespace Pulsar4X.Colonies
             // Food (M5c): demand = pop × per-capita; supply = the host's installed FOOD PRODUCTION components
             // (agri-domes / hydroponics carrying FoodProductionAtbDB), health-scaled. Was hardcoded 0 — which made ANY
             // food demand an unwinnable 100% shortage. Now a colony that builds enough food output ends the shortage.
-            double foodDemand = pop * sust.PerCapitaFoodDemand;
+            // Flag-gated (default off → byte-identical): when the menu game turns food demand on, a colony that hasn't
+            // authored its own per-capita demand uses the default, so people eat. A colony with its own demand keeps it.
+            double perCapitaFood = (EnableFoodDemand && sust.PerCapitaFoodDemand <= 0.0)
+                ? DefaultPerCapitaFoodDemand
+                : sust.PerCapitaFoodDemand;
+            double foodDemand = pop * perCapitaFood;
             double farmOutput = province.TryGetDataBlob<Pulsar4X.Datablobs.ComponentInstancesDB>(out var comps)
                 ? comps.GetTotalFoodOutput() : 0.0;
             double foodSupply = farmOutput;

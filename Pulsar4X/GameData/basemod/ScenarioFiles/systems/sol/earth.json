@@ -66,7 +66,8 @@
         { "id": "default-design-city-hall", "amount": 1 },
         { "Id": "default-design-local-construction", "Amount": 1},
         { "Id": "default-design-launch-complex", "Amount": 1 },
-        { "Id": "default-design-fission-reactor", "Amount": 1 }
+        { "Id": "default-design-fission-reactor", "Amount": 1 },
+        { "Id": "default-design-agri-complex", "Amount": 4 }
       ],
       "Cargo": [
         { "Id": "iron", "Amount": 1000000 },
@@ -143,6 +144,7 @@
         "stainless-steel-fuel-tank",
         "infrastructure",
         "space-habitat",
+        "food-production",
         "stainless-steel",
         "rp-1",
         "methalox",
@@ -292,6 +294,7 @@
         "default-design-infrastructure",
         "default-design-space-habitat",
         "default-design-city-hall",
+        "default-design-agri-complex",
         "default-design_solarpanel",
         "default-design-battery-25kg",
         "default-design-local-construction",
