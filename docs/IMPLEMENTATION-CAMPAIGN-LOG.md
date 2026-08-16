@@ -16,8 +16,8 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 ## NEXT ACTION
 
 > **🧭 FRESH NEXT ACTION (2026-08-16, end of session) — Phase C run-cost DONE + the CIVIC DOOR IS COMPLETE + CI-green (through `daae8f2`). The "Commerce civic dial" was a mis-derivation — no such dial exists (see the C-civic row: Commerce is an academy leader-domain + the Economy door, not civic). Pick the next FILE-DISJOINT buildable slice:**
-> 1. **Phase D — planetary view (biggest unstarted chunk, north-star-aligned):** D-units (select/read/move one ground unit through the ONE queued verb both seats use — kill the direct-call bypass `PlanetViewWindow.cs:581` `OrderMoveToGlobalHex` + `:1172` `OrderMove`; this is knotted into the half-migrated M-track "one movement layer" collapse M1/M9, so READ the movement rulings first — its own focused slice), then D-stockpile (per-hex stockpile + hex-to-hex haul), then D-planfn.
-> 2. **Phase E — E-env (smaller, self-contained):** `CombatConditions` into the shared combat kernel (space combat stops being environment-blind).
+> 1. **Phase D — planetary view (biggest unstarted chunk, north-star-aligned):** D-units RECON IS DONE (2026-08-16, file:line-verified — see the D-units slice row + ADJUDICATION QUEUE: D-UNITS). The mechanism is buildable NOW with no new engine ruling, but it is **BLOCKED on ONE developer policy call** — how the player moves a LOOSE unit (rec: b1 auto-wrap into a one-member formation = the AI's own `FormUpLoose` pattern; keeps click-to-march, satisfies One-Verb-Both-Seats). Get the b1/b2/b3 ruling, THEN build the smallest slice (route the two bypass sites through the queued verb), then D-stockpile, then D-planfn.
+> 2. **Phase E — E-env (smaller, self-contained, NEEDS NO MOVEMENT RULING):** `CombatConditions` into the shared combat kernel (space combat stops being environment-blind). ⚠ touches the shared damage/auto-resolve kernel (L10) → its own recon first.
 > 3. **C-sensors** — the band-match fix (⚠ backlog file:line STALE + behaviour-changing → own focused slice).
 > **PARKED for the developer (ADJUDICATION QUEUE — do NOT guess):** A4-ORDERS (4 order-stub behaviors) · C-GUIDED (missile ordnance-at-build) · C-MOBILITY (drive×frame combine) · B-ORDERS-MOVEMENT (Intercept/Ram) · C-deadknobs TIER 4 #6–8 + the capture-transfer ruling · **CIVIC space-habitat mass-pricing** (a 1M-colonist station costs the same 1 t as an empty one — price it? `01-IO-civic.md` §D). **Full slice board below reflects this session.** Historical NEXT ACTION detail preserved below.
 >
@@ -271,7 +271,7 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| D-units | U1→T2: select/read/move one unit via the ONE queued verb (kill direct-call bypass `PlanetViewWindow.cs:581`) | `planetview.html` / UNITS-ON-THE-MAP | ⬜ | |
+| D-units | U1→T2: select/read/move one unit via the ONE queued verb (kill direct-call bypass `PlanetViewWindow.cs:581`) | `planetview.html` / UNITS-ON-THE-MAP | ⚖ recon done | **Recon complete (2026-08-16, file:line-verified).** Mechanism BUILDABLE now, no new engine ruling: the queued MOVE verb both seats drive (`GroundFormation.Orders` → `QueueFormationOrder`/`SetFormationOrder` → `GroundForcesProcessor.cs:918-922` → `OrderFormationMoveToGlobalHex`; AI at `GroundTacticalBrain.cs:207`) is **formation-only**. The two bypass sites (`PlanetViewWindow.cs:581` `OrderMoveToGlobalHex`, `:1172` `OrderMove`) march **loose single units** via direct static calls (`GroundForcesDB.cs:755/785/823`). **BLOCKED on the loose-unit-move POLICY ruling** (auto-wrap into a one-member formation = AI's own `FormUpLoose` pattern / real per-unit queue / can't-move-loose) → **ADJUDICATION QUEUE: D-UNITS.** Rec: b1 auto-wrap. |
 | D-stockpile | Per-hex stockpile + hex-to-hex haul (resource-locality ruling) | UNITS-ON-THE-MAP | ⬜ | |
 | D-planfn | Remaining PLANETARY-FUNCTIONAL-PLAN slices the HTML badges call for | PLANETARY-FUNCTIONAL-PLAN-2026-07-27 | ⬜ | |
 
@@ -464,6 +464,38 @@ weight) and I build it.
    coordinate space than the global queued MoveHex. **The decision:** is an immediate whole-tree march wanted at all, and
    if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
    queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
+
+### ⚖ D-UNITS — the loose-unit-move policy (parked 2026-08-16, from the D-units recon)
+**Plain English:** Phase D-units means "move one ground unit through the ONE queued verb both the player and the AI
+use." The recon (file:line-verified) found the mechanism is **buildable now with no new engine ruling** — BUT it turns
+on one policy the locked rulings *imply* yet never state, so it's parked instead of guessed.
+
+**What the recon found.** The queued MOVE verb both seats already drive is **formation-only** — it lives on
+`GroundFormation.Orders` (`GroundForcesDB.cs:416`), issued by `QueueFormationOrder`/`SetFormationOrder`
+(`:1052`/`:1060`), popped by `GroundForcesProcessor` (`:918-922`) to `OrderFormationMoveToGlobalHex`. The AI drives it
+per-battalion (`GroundTacticalBrain.cs:207`, after `FormUpLoose` packs loose units into battalions). A **single loose
+unit has NO queued path** — the only single-unit move APIs (`OrderMove` `:755`, `OrderMoveToHex` `:785`,
+`OrderMoveToGlobalHex` `:823`) are **direct static calls**, which are exactly the two client bypass sites the campaign
+names: `PlanetViewWindow.cs:581` (`OrderMoveToGlobalHex`, loops loose units) and `:1172` (`OrderMove`). A compliant
+queued FORMATION path already exists in that same window (`:1457` `QueueFormationOrder(GroundOrder.MoveHex(...))`).
+
+**The decision:** when the player clicks a LOOSE unit (one not in any formation) and marches it, do we —
+- **(b1) auto-wrap** the selected loose unit(s) into a one-member `GroundFormation`, then issue the existing queued
+  `MoveHex` — keeps the "click a unit → march" UX but routes it through the One-Verb queued path; **this is exactly
+  what the AI already does** (`FormUpLoose` → move battalion); or
+- **(b2)** build a genuine **queued per-unit** `GroundOrder` queue on `GroundUnit` (heavier; cuts against the
+  data-object model and M18's per-battalion order set; "per-unit orders" is already tagged a follow-up in
+  `docs/CLIENT-TEST-CHECKLIST.md` + `forceswindow.html` "units have no such verb"); or
+- **(b3)** the player simply **cannot** march a loose unit — the two bypass buttons are removed, and the player forms
+  up first (exactly the AI's constraint), moving only formations.
+
+**Recommendation: (b1) auto-wrap.** It satisfies One-Verb-Both-Seats (the player and AI now share the identical
+primitive — form up, queue MoveHex), preserves the existing click-to-march feel, reuses live CI-tested code, and is
+the literal application of the developer's own law ("the AI forms loose units into battalions, then moves the
+battalion — the player does the same"). Cost: a march on a loose unit now creates a formation (it shows in the
+Battalions roster and picks up formation stance/ROE) — the same thing that happens to the AI's units, so it's
+consistent, but it *is* a save/roster-visible behavior change, which is why it wants your nod. **Say b1 / b2 / b3 and
+I build it. Alternatively, Phase E (E-env) needs no movement ruling — I can take that first.**
 
 ### ✅ C-POWER (mechanism) — LANDED 2026-08-16 (developer: "do whatever fits best with what was planned") — colony POWER brownout throttle
 **Built the recommendation below (a/b/c) as a byte-identical, tested MECHANISM.** `IndustryTools.PowerEfficiency(colony)` =
