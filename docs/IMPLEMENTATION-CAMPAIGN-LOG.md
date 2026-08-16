@@ -222,7 +222,7 @@ ladder row and, once landed, the commit sha.
 
 | Slice | What | Owning HTML / ladder | Status | Commit |
 |-------|------|----------------------|--------|--------|
-| C-run-cost | TIER 2.5 run-cost vector (power/jobs/food/upkeep) | ENGINE-WIRING-BACKLOG TIER 2.5 | 🔨 | **Jobs** ✅ (A1 employment producer). **Upkeep** 🔨 — `ColonyEconomyProcessor.BillInstallationUpkeep` bills Σ(installed `CreditCost` × health × 1%/mo) as a `ColonyInstallationUpkeep` expense on the faction ledger (mirrors StationUpkeep/GroundUpkeep; derives from existing `CreditCost` → no new atb/landmine); flag `EnableInstallationUpkeep` default OFF, NewGameMenu-on; gauge `ColonyUpkeepTests`. **Food** + **Power** pending (Food needs a calibrated coefficient like A1; Power is the real new subsystem — generic PowerDraw + colony power Σ) |
+| C-run-cost | TIER 2.5 run-cost vector (power/jobs/food/upkeep) | ENGINE-WIRING-BACKLOG TIER 2.5 | 🔨 | **Jobs** ✅ (A1 employment producer). **Upkeep** 🔨 — `ColonyEconomyProcessor.BillInstallationUpkeep` bills Σ(installed `CreditCost` × health × 1%/mo) as a `ColonyInstallationUpkeep` expense on the faction ledger (mirrors StationUpkeep/GroundUpkeep; derives from existing `CreditCost` → no new atb/landmine); flag `EnableInstallationUpkeep` default OFF, NewGameMenu-on; gauge `ColonyUpkeepTests`. **Food** ⚖ parked (calibration coefficient, ADJUDICATION QUEUE C-FOOD-DEMAND). **Power** ⚖ parked (ADJUDICATION QUEUE C-POWER — it's an extension of the EXISTING `EnergyGenAbilityDB` system + 3 design calls, not a greenfield build). So the run-cost vector's clean rungs (Jobs/Staffing/Upkeep) are LANDED; the two remaining need a developer call |
 | C-staffing | TIER 2.6 workforce→production staffing model | ENGINE-WIRING-BACKLOG TIER 2.6 | 🔨 | engine — `IndustryTools.StaffingEfficiency` = `min(1, ManpowerTools.AvailableWorkforce ÷ GetTotalJobs)`, a SECOND multiplier on the production rate at `ConstructStuff` (parallel to infra efficiency); flag `EnableWorkforceStaffing` default OFF (byte-identical) flipped ON by `NewGameMenu` (both start paths, A1 pattern); shares the ONE `GetTotalJobs` producer with the employment term; `ManpowerTools.AvailableWorkforce` (Manager-guarded, −1 = no pool → inert like the crew gate). Gauge `WorkforceStaffingTests` (full/half/zero/flag-off/no-pool). Engine-only; file-disjoint from the B-orders client lane |
 | C-guided | Guided-weapon real warhead (item #3) | `entityassembler.html` / TIER 3 #3 | ⚖ parked | ordnance-at-build decision — ADJUDICATION QUEUE (rec: Option A) |
 | C-sensors | Sensors band-match fix (item #4) | `sensorsderived.html` / TIER 3 #4 | ⬜ | ⚠ backlog file:line STALE + behaviour-changing (band re-tune) — needs a focused slice |
@@ -427,6 +427,39 @@ weight) and I build it.
    coordinate space than the global queued MoveHex. **The decision:** is an immediate whole-tree march wanted at all, and
    if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
    queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
+
+### ⚖ C-POWER — the colony POWER run-cost needs a design call against the EXISTING energy system (parked 2026-08-15, TIER 2.5)
+**Plain English:** the backlog calls Power "the only real build" of the run-cost vector — a generic component power draw
++ a colony power total vs reactor/solar supply → a brownout that throttles production, "same shape as infra." But the
+recon found this is NOT a greenfield build; three things already exist and any Power slice must reconcile with them, and
+none of the three reconciliations has a documented default:
+1. **A power supply+demand system already exists.** `Energy/EnergyGenAbilityDB` carries the SUPPLY
+   (`TotalOutputMax = MaxOutputFromReactor + MaxOutputFromSolar`) AND a `Demand` field, processed by `EnergyGenProcessor`.
+   The start colony already installs reactors + solar (`earth.json`: `reactor`/`solarArray`/`default-design-fission-reactor`/
+   `default-design_solarpanel`). **Question:** does the colony power run-cost EXTEND this blob (populate its `Demand` from
+   installations, read its `TotalOutputMax`) or stand up a parallel colony-power model? Extending it is the honest
+   "don't-duplicate" path, but I don't yet know if colonies even carry `EnergyGenAbilityDB` (ships do) or how its `Demand`
+   is currently fed.
+2. **There is NO generic installation power draw.** Only weapons have `WeaponSupply.PowerDraw_W`; installations have no
+   power-demand value. So this needs EITHER a new `PowerDrawAtb` — which is the L6 six-point-registration + L13
+   save-safe-ctor landmine chain AND authoring a watt number on every installation template (a real data effort) — OR a
+   DERIVED proxy (from `CrewReq`/mass, like infra's `MassPerUnit/1000 + CrewReq`), which is arbitrary. **Question:** new
+   authored dial, or derived proxy?
+3. **Infrastructure already throttles production on a capacity grid** (`InfrastructureProcessor`, "the colony's utility
+   grid: power, roads, comms, water"). A second power-vs-supply throttle risks DUPLICATING it. **Question:** is Power a
+   distinct ELECTRICAL model (vs reactor/solar specifically, separate from the infra utility grid), or does it fold into
+   infra?
+
+**The hard risk:** if power demand is summed but colony supply reads 0 (colonies may not carry `EnergyGenAbilityDB`), the
+throttle drives production to 0 — the exact "food-supply-was-hardcoded-0 → unwinnable" trap this codebase already hit once.
+
+**Recommendation:** (a) EXTEND `EnergyGenAbilityDB` rather than build a parallel model; (b) DERIVE installation power draw
+from `CrewReq` for the first cut (no new atb, no landmine, no template authoring — upgrade to an authored `PowerDrawAtb`
+later if the developer wants per-installation tuning); (c) keep it DISTINCT from infra (electrical vs the general utility
+grid) but flag-gate it OFF by default so it can't break the economy, and only turn it on after a local read confirms
+colonies carry real power supply. This is a genuine multi-file extension of a live system + three design calls, so it is
+parked rather than rushed. Confirm the three calls (or say "your recommendation") and I build it as the next run-cost
+slice. The other three rungs (jobs/staffing/upkeep) needed no such call — they had clean existing bases.
 
 ### ⚖ C-FOOD-DEMAND — the per-capita FOOD demand coefficient needs calibrating (parked 2026-08-15, TIER 2.5)
 **Plain English:** the food loop is fully built (`SustenanceProcessor` reads farm output vs `pop × PerCapitaFoodDemand`,
