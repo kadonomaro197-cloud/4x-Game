@@ -414,6 +414,13 @@ run it — these need the local Windows build.
       it (sets it to 0/0). Expected: the target persists (it writes `LogiBaseDB.DesiredLevels`) and drives the base to
       keep that item between min and max; a colony with no logistics installation shows the "need a Logistics component"
       message instead.
+- [ ] **B-orders — Dock / undock vessels (Fleets ▸ Issue Orders ▸ Logistics & Cargo).** First DESIGN a carrier in the
+      Entity Assembler (a chassis + a **DockBay** component) and build/spawn it into a fleet with a small ship. The
+      **"Dock / undock vessels ..."** entry is greyed ("— needs a ship with a docking bay") for a fleet with no carrier,
+      and active once one is present. Its panel lists each carrier with its berth used/door size, an **Undock** button per
+      docked ship, and a **Dock** button per other fleet ship (greyed with the reason — "too large for the biggest berth
+      …" / "not enough free berth …" — when a gate refuses). Dock one: the ship berths, travels with the carrier, and
+      shows under "docked"; Undock returns it. (This exercises the RANK-3 `DockOrder` engine path end-to-end.)
 - [ ] **B-orders — Rearm ordnance at a base (Fleets ▸ Issue Orders ▸ Logistics & Cargo).** Select a fleet with a
       missile ship → Issue Orders ▸ **Logistics & Cargo** ▸ **"Rearm ordnance at ..."**. The right panel lists your
       colonies in-system that hold ordnance in stock; under each, a **"Load \<missile\> (N in stock)"** button per

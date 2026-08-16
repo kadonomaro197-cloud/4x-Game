@@ -24,6 +24,7 @@ using Pulsar4X.Combat;
 using Pulsar4X.Blueprints;
 using Pulsar4X.Sensors;
 using Pulsar4X.Weapons;
+using Pulsar4X.Docking;
 using Pulsar4X.GroundCombat;
 using Pulsar4X.Stations;
 using Pulsar4X.People;              // CommanderDB
@@ -42,6 +43,7 @@ namespace Pulsar4X.Client
             Jump,
             RefuelAt,
             RearmAt,  // B-orders C7 — top up the fleet's ships with ordnance (missiles) from a base's stock
+            Dock,     // B-orders C8 — dock/undock whole vessels into a carrier ship (gated on a docking bay)
             Troops,   // Earthfall C5.1 — embark ground units onto a troop-bay ship / land them on a target world
         }
 
@@ -1791,6 +1793,14 @@ namespace Pulsar4X.Client
                 if(ImGui.Selectable("Rearm ordnance at ...", selectedIssueOrderType == IssueOrderType.RearmAt))
                     selectedIssueOrderType = IssueOrderType.RearmAt;
 
+                // Dock / undock vessels (B-orders C8) — DIM (not hide) when no ship in the fleet has a docking bay.
+                bool anyCarrier = HasAnyCarrier(fleet);
+                if(!anyCarrier) ImGui.BeginDisabled();
+                if(ImGui.Selectable("Dock / undock vessels ...", selectedIssueOrderType == IssueOrderType.Dock))
+                    selectedIssueOrderType = IssueOrderType.Dock;
+                if(!anyCarrier) ImGui.EndDisabled();
+                if(!anyCarrier) ImGui.TextDisabled("   — needs a ship with a docking bay");
+
                 // Earthfall C5.1 — the troop lift, now DIMMED (not hidden) when no ship in the fleet carries a bay.
                 bool bay = HasAnyTroopBay(fleet);
                 if(!bay) ImGui.BeginDisabled();
@@ -1971,6 +1981,62 @@ namespace Pulsar4X.Client
                             ImGui.Unindent();
                         }
                         break;
+                    case IssueOrderType.Dock:
+                    {
+                        // C8 (B-orders) — dock / undock whole vessels inside a carrier. Content-gated: appears only when
+                        // the fleet has a ship with a docking bay (DockTools.Capacity > 0). No DEFAULT hull carries one,
+                        // so this is byte-identical/hidden until the player DESIGNS a carrier (the Entity Assembler already
+                        // offers the DockBay component) — which is what makes docking reachable cradle-to-grave. Reads the
+                        // registry via DockTools.DockedShips; issues DockOrder.Dock/Undock (RANK 3, the one verb both seats
+                        // share). CanDock's human-readable reason is surfaced beside a greyed button, not hidden.
+                        ImGui.TextDisabled("Berth whole vessels inside a carrier (a docked ship travels with it):");
+                        var carrierShips = FleetTools.AllShipsRecursive(SelectedFleet)
+                            .Where(s => DockTools.Capacity(s) > 0).ToList();
+                        if(carrierShips.Count == 0)
+                            ImGui.TextDisabled("No ship in this fleet has a docking bay.");
+                        foreach(var carrier in carrierShips)
+                        {
+                            ImGui.TextUnformatted(carrier.GetName(factionID));
+                            ImGui.SameLine();
+                            ImGui.TextDisabled($"— berth {DockTools.Used(carrier):N0}/{DockTools.Capacity(carrier):N0} kg, door {DockTools.LargestBerth(carrier):N0} kg");
+                            ImGui.Indent();
+
+                            // Currently docked → Undock (the return trip).
+                            foreach(var docked in DockTools.DockedShips(carrier))
+                            {
+                                if(ImGui.SmallButton($"Undock##undock-{carrier.Id}-{docked.Id}"))
+                                {
+                                    var order = DockOrder.Undock(factionID, carrier, docked);
+                                    _uiState.Game.OrderHandler.HandleOrder(order);
+                                }
+                                ImGui.SameLine();
+                                ImGui.TextUnformatted(docked.GetName(factionID));
+                            }
+
+                            // Other ships in the fleet → Dock (greyed with the reason when a gate refuses).
+                            foreach(var ship in FleetTools.AllShipsRecursive(SelectedFleet))
+                            {
+                                if(ship.Id == carrier.Id || DockTools.IsDockedIn(carrier, ship)) continue;
+                                bool can = DockTools.CanDock(carrier, ship, out string why);
+                                if(!can) ImGui.BeginDisabled();
+                                if(ImGui.SmallButton($"Dock##dock-{carrier.Id}-{ship.Id}") && can)
+                                {
+                                    var order = DockOrder.Dock(factionID, carrier, ship);
+                                    _uiState.Game.OrderHandler.HandleOrder(order);
+                                }
+                                if(!can) ImGui.EndDisabled();
+                                ImGui.SameLine();
+                                ImGui.TextUnformatted(ship.GetName(factionID));
+                                if(!can)
+                                {
+                                    ImGui.SameLine();
+                                    ImGui.TextUnformatted("(" + why + ")");
+                                }
+                            }
+                            ImGui.Unindent();
+                        }
+                        break;
+                    }
                     case IssueOrderType.Troops:
                         DisplayTroopOrders();
                         break;
@@ -2593,6 +2659,17 @@ namespace Pulsar4X.Client
             foreach(var ship in fdb.GetChildren().Where(c => c.IsValid && !c.HasDataBlob<FleetDB>()))
                 if(GroundTransport.BayCapacity(ship, GroundCarryClass.Personnel) > 0
                     || GroundTransport.BayCapacity(ship, GroundCarryClass.Vehicle) > 0)
+                    return true;
+            return false;
+        }
+
+        // B-orders C8 — true if any ship under the fleet (recursively, so a carrier in a sub-fleet counts) has a docking
+        // bay (DockTools.Capacity > 0). Gates the Dock/Undock order the same way HasAnyTroopBay gates the troop lift.
+        private bool HasAnyCarrier(Entity? fleet)
+        {
+            if(fleet == null) return false;
+            foreach(var ship in FleetTools.AllShipsRecursive(fleet))
+                if(DockTools.Capacity(ship) > 0)
                     return true;
             return false;
         }
