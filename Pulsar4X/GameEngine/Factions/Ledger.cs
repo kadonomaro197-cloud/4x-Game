@@ -25,7 +25,11 @@ public enum TransactionCategory
     // faction's populated stations. Previously borrowed the ColonyTax bucket (which conflated station income with
     // real colony tax); its own category lets a station-owning faction's ledger read honestly. Added at the END so
     // existing integer values stay save-stable.
-    StationIncome
+    StationIncome,
+    // Colony INSTALLATION upkeep (TIER 2.5 run-cost, the colony echo of StationUpkeep/GroundForceUpkeep) — billed
+    // monthly by ColonyEconomyProcessor as a fraction of each installed component's build price. Added at the END so
+    // existing integer values stay save-stable.
+    ColonyInstallationUpkeep
 }
 
 public class Transaction

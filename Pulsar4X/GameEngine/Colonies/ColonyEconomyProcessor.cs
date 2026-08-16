@@ -24,19 +24,82 @@ namespace Pulsar4X.Colonies
         public TimeSpan FirstRunOffset { get; } = TimeSpan.FromDays(30);
         public Type GetParameterType { get; } = typeof(ColonyEconomyDB);
 
+        /// <summary>
+        /// TIER 2.5 run-cost — the colony INSTALLATION UPKEEP throttle (the colony echo of StationUpkeep /
+        /// GroundForceUpkeep). Default OFF → the engine suite is byte-identical (no colony is billed); NewGameMenu flips
+        /// it ON for a menu game (the EnableEmploymentMorale pattern). When on, a colony's installations cost a small
+        /// fraction of their build price to KEEP each month — the missing "middle" of the cradle-to-grave chain (a
+        /// component costs to build and to lose, but nothing to keep).
+        /// </summary>
+        public static bool EnableInstallationUpkeep = false;
+
+        /// <summary>Monthly upkeep as a fraction of an installation's build price (credits). 1% keeps the number
+        /// sensible against the existing tax income; tunable in one place.</summary>
+        public const decimal UpkeepRatePerMonth = 0.01m;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
             CollectTax(entity);
+            BillInstallationUpkeep(entity);
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
         {
             var colonies = manager.GetAllEntitiesWithDataBlob<ColonyEconomyDB>();
             foreach (var colony in colonies)
+            {
                 CollectTax(colony);
+                BillInstallationUpkeep(colony);
+            }
             return colonies.Count;
+        }
+
+        /// <summary>The colony's total monthly installation upkeep = Σ over installed, enabled components of
+        /// (build price × health × <see cref="UpkeepRatePerMonth"/>). Derived from the existing component
+        /// <c>CreditCost</c> — needs NO new dial/atb (no exact-arity save landmine), and is 0 (byte-identical) for a
+        /// colony whose installations have no credit cost. Health-scaled like GetTotalJobs.</summary>
+        public static decimal InstallationUpkeep(ComponentInstancesDB comps)
+        {
+            if (comps == null) return 0m;
+            decimal total = 0m;
+            foreach (var byDesign in comps.GetComponentsByDesigns())
+            {
+                if (!comps.AllDesigns.TryGetValue(byDesign.Key, out var design)) continue;
+                if (design.CreditCost <= 0) continue;
+                foreach (var component in byDesign.Value)
+                {
+                    if (!component.IsEnabled) continue;
+                    total += (decimal)design.CreditCost * (decimal)component.HealthPercent * UpkeepRatePerMonth;
+                }
+            }
+            return total;
+        }
+
+        /// <summary>Bill this colony's installation upkeep as a monthly EXPENSE on the owning faction's ledger. Mirrors
+        /// StationUpkeepProcessor.BillUpkeep (defensive: capture-mutated FactionOwnerID → TryGetValue, never a hard index
+        /// that would freeze the sim clock; unowned/neutral colony pays no one).</summary>
+        internal static void BillInstallationUpkeep(Entity colony)
+        {
+            if (!EnableInstallationUpkeep) return;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return;
+
+            decimal upkeep = InstallationUpkeep(comps);
+            if (upkeep <= 0m) return;
+
+            int factionId = colony.FactionOwnerID;
+            if (factionId < 0) return;
+            var game = colony.Manager?.Game;
+            if (game == null) return;
+            if (!game.Factions.TryGetValue(factionId, out var faction)) return;
+            if (!faction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
+
+            factionInfo.Money.AddExpense(
+                colony.Manager.StarSysDateTime,
+                TransactionCategory.ColonyInstallationUpkeep,
+                $"Installation upkeep at {colony.GetName(factionId)}",
+                upkeep);
         }
 
         internal static void CollectTax(Entity colony)
