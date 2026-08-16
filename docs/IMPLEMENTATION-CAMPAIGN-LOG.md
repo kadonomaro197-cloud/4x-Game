@@ -15,10 +15,17 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
-> **🧭 CURRENT NEXT ACTION (2026-08-15) — Phase C continues with the civic BUILD dials.** Phase A + B are DONE. Phase C
-> **run-cost vector is complete**: Jobs (A1), **Staffing** (`7cdce65`, CI-GREEN), **Upkeep** (`77c8411`, CI in flight) are
-> LANDED; **Power** (`C-POWER`) + **Food** (`C-FOOD-DEMAND`) are PARKED in the ADJUDICATION QUEUE with recommendations
-> (each needs one developer call). **The next buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md`:**
+> **🧭 CURRENT NEXT ACTION (2026-08-16) — Phase C continues with the civic BUILD dials.** Phase A + B are DONE. Phase C
+> **run-cost vector:** Jobs (A1), **Staffing** (`7cdce65`), **Upkeep** (`77c8411`) LANDED + CI-GREEN. **Power** (`C-POWER`)
+> — the developer said "do whatever fits best with what was planned," so the **THROTTLE MECHANISM is LANDED** (`d2ac424`,
+> `IndustryTools.PowerEfficiency` = the 3rd rate factor, flag-gated, supply-0-inert, gauge `PowerThrottleTests`, byte-
+> identical). But making it (and Food) BITE hit a **shared structural wall discovered in recon: the start colony's SUPPLY
+> side isn't built.** Earth installs no power plant (and the reactor/turbine can't even mount on a colony — only ~10 kW
+> solar can) and no farms (and the farm designs aren't even unlocked). So **C-POWER-LIVE** + **C-FOOD-DEMAND** are PARKED
+> TOGETHER as the twin "install supply-side infra on Earth" slice (each with a concrete safe make-live plan — see the
+> ADJUDICATION QUEUE; food's failure is catastrophic so it especially needs the developer's nod, and both change the
+> deliberately-BAREBONES start). **On a "go" I build both supply slices; otherwise they wait.** **The next buildable Phase C
+> slice (no supply-wall) = the two civic BUILD dials from `01-IO-civic.md`:**
 > **(1) Medical → health → morale** (a new morale input) and **(2) Security → unrest → legitimacy** (a new legitimacy
 > input). Each is a real BUILD (like A1's employment term): a NEW component attribute (`MedicalAtb`/`SecurityAtb` — use the
 > L13 `[JsonConstructor] private XAtb(){}` pattern + the L6 SIX-POINT registration + author a value on the medical/security
@@ -513,20 +520,36 @@ colonies carry real power supply. This is a genuine multi-file extension of a li
 parked rather than rushed. Confirm the three calls (or say "your recommendation") and I build it as the next run-cost
 slice. The other three rungs (jobs/staffing/upkeep) needed no such call — they had clean existing bases.
 
-### ⚖ C-FOOD-DEMAND — the per-capita FOOD demand coefficient needs calibrating (parked 2026-08-15, TIER 2.5)
+### ⚖ C-FOOD-DEMAND — TWIN OF C-POWER-LIVE: the food loop is built, but the start colony has NO food supply (parked 2026-08-15, findings updated 2026-08-16, TIER 2.5)
 **Plain English:** the food loop is fully built (`SustenanceProcessor` reads farm output vs `pop × PerCapitaFoodDemand`,
-banks a surplus, starves on a shortfall → morale), but `ColonySustenanceDB.PerCapitaFoodDemand` **defaults to 0**, so
-food demand is 0 and nothing is ever eaten (the deliberate "neutral-when-absent" guard). Turning it on is "one
-coefficient" — BUT the VALUE is a real calibration decision, exactly like A1's `JobsPerCapita`: set it so the homeworld's
-farm output roughly covers `pop × coefficient` (a mild deficit → build-more pressure, like A1's near-neutral), and set it
-**too high → the homeworld STARVES on New Game** (a −40 morale floor + population die-off). I can't derive the right value
-without the homeworld's actual farm-output-vs-population numbers, and guessing it risks mass starvation — the same reason
-A1's denominator was a developer-authorized call. **The decision (needs the developer):** what per-capita food demand
-(and do we want it on for a menu game at all)? **Recommendation:** treat it like A1 — pick a coefficient that lands the
-fully-built homeworld near food-balance (I'll compute it from a local farm-output readout, or you name it), add a
-`SustenanceProcessor.EnableFoodDemand` flag + a static default coefficient, flag-gate + baseline `FoodProductionTests`,
-NewGameMenu-on. Say the value (or "read it off my build and pick") and I build it. Upkeep + staffing (the other two
-run-cost rungs) needed no such call — money/rate have soft failure modes; food starves.
+banks a surplus, starves on a shortfall → morale), and turning it on is "one coefficient." But the 2026-08-16 recon (done
+while resolving C-POWER) found this is the **SAME structural gap as C-POWER-LIVE — the start colony's SUPPLY side isn't
+built:**
+- Earth installs **NO food production** (`earth.json` `Installations` has no `agri-complex`/`hydroponics`), and stocks
+  **NO `food` cargo** (the `Cargo` block has 20 minerals + fuels, no food). So its food supply is **zero.**
+- So turning on ANY positive `PerCapitaFoodDemand` gives Earth an immediate **100% food shortage → −40 morale floor +
+  population die-off.** Unlike C-POWER's throttle (supply-0 is INERT/safe), the food loop treats demand>supply as a REAL
+  shortage — there is no inert guard. **Food's failure mode is CATASTROPHIC, not soft.**
+- And installing farms is **not a 3-line data add** — the farm designs (`default-design-agri-complex`, 5000 food/day,
+  `PlanetInstallation`-mountable) are **not in Earth's `ComponentDesigns` NOR is `food-production` in `StartingItems`**, and
+  the `food-production` template has **no `ResourceCost` formula** (no base-mod colony builds a farm, so the build path is
+  untested). So making it live is the full gotcha-10 six-point registration (unlock template + register design + install +
+  verify materials + possibly author a ResourceCost) — landmine-dense (L6/L8), with `BaseModIntegrityTests` as the sensor.
+
+**Why parked, not built autonomously:** the failure is catastrophic (starvation), the make-live is a real economy change
+that changes Earth's start composition — which runs **counter to the developer's deliberate BAREBONES-New-Game philosophy**
+(they stripped the start to minimal on purpose) — and it's landmine-dense + calibration-sensitive through 33-min CI. Exactly
+the §6 park case, and the original adjudication's own conclusion ("guessing risks mass starvation — a developer-authorized
+call").
+
+**Recommendation (safe-by-construction make-live plan, ready on a "go"):** (1) unlock + register + install ~4 stock
+`agri-complex` on Earth (4 × 5000 = 20,000 food/day); (2) add `SustenanceProcessor.EnableFoodDemand` + a static
+`DefaultPerCapitaFoodDemand` = **1.0e-6** → demand = `8.2e9 × 1e-6` = 8,200/day, so supply/demand = **2.44×** (food-POSITIVE
+by construction — `foodDemand = pop × coeff` and `farmOutput` are both constants, so supply > demand is an INVARIANT, never
+a dynamic starvation; grave rung — destroy the farms — still returns the shortage); (3) NewGameMenu-on both paths; (4) a
+gauge that asserts Earth is food-positive on the REAL numbers (CI is the safety net — a mis-size REDs before it ships) + the
+flag-off byte-identity + the shortage/grave-rung math. Say "go — install farms + coeff 1e-6" (or name a coefficient) and I
+build it as the make-C-FOOD-live slice, paired with C-POWER-LIVE (the two supply-side slices belong together).
 
 *(Other slices with genuine ambiguity — two HTMLs contradict, a save-break with no safe pattern, a DECISION-PENDING
 with no default, or an HTML number impossible without a redesign — will park here the same way.)*
