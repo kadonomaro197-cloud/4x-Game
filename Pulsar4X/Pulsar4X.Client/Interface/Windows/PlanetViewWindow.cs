@@ -24,7 +24,8 @@ namespace Pulsar4X.Client
     ///   • **Units** — every <see cref="GroundUnit"/> in <see cref="GroundForcesDB"/>, grouped per region by faction
     ///     and type into a token ("I ×3" + a health bar), coloured by owner (cyan = yours, red = hostile). Click a
     ///     token to SELECT that group; with a group selected, click an adjacent region (or a March button) to order
-    ///     the march (<see cref="GroundForces.OrderMove"/> — one ring-hop, validated engine-side).
+    ///     the march — the selection AUTO-WRAPS into a formation and marches through the ONE QUEUED verb both the player
+    ///     and the AI use (<see cref="GroundForces.SetFormationOrder"/>, the developer's One-Verb-Both-Seats ruling).
     ///   • **Hazards** — the region's <see cref="PlanetEnvironmentsDB"/> environments as coloured chips (fire = red,
     ///     corrosive = green, storm/jam = amber) so you can read where the ground itself is deadly.
     ///   • **Terrain class** — Open / Cover / Rough (<see cref="GroundTerrain.Classify"/>), the cover/affinity dial.
@@ -33,7 +34,7 @@ namespace Pulsar4X.Client
     ///     installation at the centre region via <see cref="PlaceInstallationInRegionOrder"/> on the real order path.
     ///
     /// THIN + DEFENSIVE by the client discipline: every value is read off CI-tested engine blobs, orders go through
-    /// the CI-tested <see cref="GroundForces.OrderMove"/> / <c>Game.OrderHandler.HandleOrder</c> paths (no new client
+    /// the CI-tested <see cref="GroundForces.SetFormationOrder"/> / <c>Game.OrderHandler.HandleOrder</c> paths (no new client
     /// logic), the whole body is wrapped so a throw logs <c>[RenderError]</c> once and still runs <see cref="Window.End"/>,
     /// and nothing is hard-indexed. Per-entity (keyed by the planet body id). Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md
     /// (slice 5e). **CI compiles the client but cannot RUN it — the live render/feel is the developer's local build.**
@@ -259,8 +260,8 @@ namespace Pulsar4X.Client
         // It's centred on a longitude column (_centerCol) and shows a slice ~2 region-bands wide — the centre band in
         // full, the neighbouring bands bleeding in at the margins — and WRAPS at the seam, so any place shows up in
         // every window whose longitude reaches it. Terrain is continuous by construction; a faint seam line + label
-        // marks each region-band boundary. Units draw at their GLOBAL (Q,R); click a hex to select/march
-        // (GroundForces.OrderMoveToGlobalHex — no edge gates).
+        // marks each region-band boundary. Units draw at their GLOBAL (Q,R); click a hex to select/march (the selection
+        // AUTO-WRAPS into a formation → the queued MoveHex verb both seats use — see MoveSelectedToGlobalHex).
         /// <summary>Resolve mineral id → name for the deposit labels, defensively (never throws; tolerates a viewed
         /// faction with no/locked mineral data — gotcha #10/#11). Cheap (~15 entries), rebuilt per frame.</summary>
         private Dictionary<int, string> BuildMineralNames()
@@ -570,19 +571,53 @@ namespace Pulsar4X.Client
         }
 
         /// <summary>March every orderable unit in the selected group to a target GLOBAL hex (wrapping A* per unit).</summary>
+        // D-units (ONE VERB, BOTH SEATS — the developer's ruling 2026-08-16): the player marches units the SAME way the
+        // AI does — as a FORMATION through the QUEUED verb — NOT the direct GroundForces.OrderMoveToGlobalHex call the AI
+        // can't issue and that carries no issuer marker. A loose selection AUTO-WRAPS into a formation (b1: the battalion
+        // is how you move units; to move a subset, split the formation).
         private void MoveSelectedToGlobalHex(Entity body, GroundForcesDB forcesDB, int destQ, int destR)
         {
-            if (forcesDB == null || _selFaction != (_uiState.Faction?.Id ?? -1)) { _status = "those aren't your units"; return; }
-            int moved = 0;
-            foreach (var u in forcesDB.Units.ToArray())
+            var formation = WrapSelectionIntoFormation(body, forcesDB, _uiState.Faction?.Id ?? -1, out int count);
+            if (formation == null) { _status = count == 0 ? "those aren't your units (or none idle here)" : "form-up failed (logged)"; return; }
+            GroundForces.SetFormationOrder(formation, GroundOrder.MoveHex(destQ, destR));   // replace = "march now"
+            _status = $"'{formation.Name}' ({count} unit(s)) → march ordered to hex ({destQ},{destR})";
+        }
+
+        /// <summary>
+        /// D-units auto-wrap (the b1 ruling): turn the current region+type selection into a FORMATION so a move can go
+        /// through the ONE queued verb both seats use. Reuses the formation the selection already shares (so a repeated
+        /// march doesn't spawn a duplicate battalion); otherwise forms a new one from the selection. Returns the
+        /// formation to issue the queued MoveHex/MoveRegion on, or null when nothing is selected / it isn't yours (with
+        /// <paramref name="count"/> = the number selected, so the caller can tell "none" from "form-up threw").
+        /// </summary>
+        private GroundFormation WrapSelectionIntoFormation(Entity body, GroundForcesDB forcesDB, int myFaction, out int count)
+        {
+            count = 0;
+            if (forcesDB == null || _selFaction != myFaction) return null;
+            var selected = forcesDB.Units
+                .Where(u => u.RegionIndex == _selRegion && u.FactionOwnerID == myFaction && u.UnitType == _selType && u.MovingToRegion < 0)
+                .ToArray();
+            count = selected.Length;
+            if (count == 0) return null;
+            try
             {
-                if (u.RegionIndex != _selRegion || u.FactionOwnerID != _selFaction || u.UnitType != _selType) continue;
-                if (u.MovingToRegion >= 0) continue;
-                if (GroundForces.OrderMoveToGlobalHex(body, u, destQ, destR)) moved++;
+                // Already ONE formation? Reuse it — don't spawn a duplicate battalion on every march.
+                int fid = selected[0].FormationId;
+                if (fid >= 0 && selected.All(u => u.FormationId == fid))
+                {
+                    var existing = GroundFormationTools.FormationsFor(forcesDB, myFaction).FirstOrDefault(f => f.FormationId == fid);
+                    if (existing != null) return existing;
+                }
+                // Else auto-wrap the loose selection into a new formation (the b1 ruling), exactly as the "Form up" button does.
+                var formation = GroundForces.CreateFormation(body, myFaction, "");
+                foreach (var u in selected) GroundForces.AssignUnit(formation, u);
+                return formation;
             }
-            _status = moved > 0
-                ? $"marched {moved}× {_selType} → global hex ({destQ},{destR})"
-                : "no march (unreachable / impassable water / already there)";
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[RenderError] PlanetViewWindow auto-wrap-to-formation threw: {ex}");
+                return null;
+            }
         }
 
         /// <summary>Recentre the globe window on a region's band-centre column (keeps ◀/▶ + the region panels in sync).</summary>
@@ -1156,22 +1191,17 @@ namespace Pulsar4X.Client
         }
 
         /// <summary>March every orderable unit in the selected group to <paramref name="target"/> (one ring-hop).</summary>
+        // D-units (ONE VERB, BOTH SEATS): the region march also routes the selection through the queued FORMATION verb
+        // (auto-wrapping into a formation), NOT the direct GroundForces.OrderMove the AI can't issue.
         private void MarchSelectedTo(List<Region> regions, int target)
         {
             var body = _lookedAtEntity.Entity;
             if (!body.TryGetDataBlob<GroundForcesDB>(out var forcesDB)) return;
             int myFaction = _uiState.Faction?.Id ?? -1;
-            if (_selFaction != myFaction) { _status = "those aren't your units"; return; }
-
-            int moved = 0;
-            // Snapshot to array: OrderMove mutates unit fields; the roster list itself isn't resized here.
-            foreach (var u in forcesDB.Units.ToArray())
-            {
-                if (u.RegionIndex != _selRegion || u.FactionOwnerID != _selFaction || u.UnitType != _selType) continue;
-                if (u.MovingToRegion >= 0) continue;   // already marching
-                if (GroundForces.OrderMove(body, u, target)) moved++;
-            }
-            _status = moved > 0 ? $"marched {moved}× {_selType} to Region {target + 1}" : "no units could march (adjacency/transit)";
+            var formation = WrapSelectionIntoFormation(body, forcesDB, myFaction, out int count);
+            if (formation == null) { _status = count == 0 ? "those aren't your units (or none idle here)" : "form-up failed (logged)"; return; }
+            GroundForces.SetFormationOrder(formation, GroundOrder.MoveRegion(target));   // replace = "march now"
+            _status = $"'{formation.Name}' ({count} unit(s)) → march ordered to Region {target + 1}";
         }
 
         // ── Build panel — the LOCKED PRINCIPLE: place a real building on the ground ──────

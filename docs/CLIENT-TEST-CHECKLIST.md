@@ -467,3 +467,22 @@ CI can't run the client, so the live morale feel is a local run.
       visibly bleed population. Read the `[a1-employment] HOMEWORLD …` line in `game_logs/` for the exact jobs/ratio.
       If the homeworld is too depressed or grows too fast, tune `ColonyMoraleDB.JobsPerCapita` (raise → more deficit,
       lower → nearer full employment). If it feels wrong entirely, one line in `NewGameMenu` reverts the on-switch.
+
+## 🎯 ADDED 2026-08-16 — OPERATION BLUEPRINT-TO-STEEL (D-units: click-march goes through the queued formation verb)
+
+Source: `docs/IMPLEMENTATION-CAMPAIGN-LOG.md` (ADJUDICATION QUEUE: D-UNITS RESOLVED). The developer ruled the FORMATION
+is the unit of movement (like a fleet): the two loose-unit bypass methods in `PlanetViewWindow` now auto-wrap the
+selection into a formation and march it through the ONE queued verb both the player and the AI use
+(`GroundForces.SetFormationOrder`). Client-only, engine byte-identical. CI compiles it; the live feel is a local run.
+
+- [ ] **D-units — a loose unit you march becomes a formation and moves.** Open a planet surface (globe) that has some of
+      your loose ground units (DevTools ▸ "Raise Ground Unit" for your faction if needed). Click a unit token to SELECT
+      the group, then click a destination hex (or a "March to Region N" button). Expected: the status line reads
+      `'<name>' (N unit(s)) → march ordered to …`, a NEW formation appears in the Formations panel / the Force
+      Management ▸ Battalions tab holding those units, and — once you press play so a ground tick runs — the formation
+      marches to the destination. Marching the SAME selection again should reuse that formation, not spawn a duplicate
+      battalion. (This is the One-Verb-Both-Seats fix: the player now moves units the same way the AI does.)
+- [ ] **D-units — the move is queued, not instant (expected).** Because it routes through the order queue, the march
+      starts on the next ground tick (like every fleet/formation order), not the instant you click. If it feels too
+      laggy in practice, tell me and I'll look at the ground hotloop cadence. (This is by design — the direct/instant
+      call was the bypass the AI couldn't use.)
