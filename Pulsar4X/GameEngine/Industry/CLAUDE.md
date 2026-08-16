@@ -136,6 +136,16 @@ i.e., 1 unit per tonne of installation mass + 1 unit per crew member.
 
 ---
 
+## Workforce Staffing throttle (TIER 2.6 — flag-gated, 2026-08-15)
+
+A **SECOND** multiplier on the production rate, exactly parallel to infrastructure efficiency (developer ruling 2026-08-10 — population should *pace* production, not only gate it). `IndustryTools.ConstructStuff` now scales each line's rate by `infraEfficiency × staffingEfficiency`, where `staffingEfficiency = IndustryTools.StaffingEfficiency(entity) = min(1, availableWorkforce ÷ Σ facility CrewReq)`:
+- **availableWorkforce** = `ManpowerTools.AvailableWorkforce(entity)` = `ColonyManpowerDB.AvailableBulk` (population × 0.5 − committed crew/officers). Returns **−1 for a host with no manpower pool** (a station) → the throttle reads that as "unenforced" and stays **1.0** (inert, exactly like the crew gate). Manager-guarded (safe on an unmanaged entity).
+- **Σ facility CrewReq** = `ComponentInstancesDB.GetTotalJobs()` — the SAME producer the employment→morale term reads (one producer, two consumers; do NOT invent a second demand sum).
+- **Flag `IndustryTools.EnableWorkforceStaffing`** defaults **OFF** → the engine suite is byte-identical (a fully-manned colony reads 1.0). `NewGameMenu` flips it ON for a menu game (both start paths — the `EnableEmploymentMorale` pattern).
+- **Why it "plugs into the designers":** every building's `CrewReq` (set in the industrial/civic door designers) is now a live staffing DEMAND — turning a mine's crew up costs build rate if the colony can't man it. Gauge: `WorkforceStaffingTests` (full / half / zero / flag-off / no-pool-inert). The distinct crew GATE (`ManpowerTools.ResolveBuild`, ship-hull-only, yes/no) is unchanged and separate.
+
+---
+
 ## Key Extension Points for Ground Combat
 
 1. **New `IndustryJob` subtype** — add `GroundUnitConstructionJob` to allow colonies to build ground units through the existing production system.

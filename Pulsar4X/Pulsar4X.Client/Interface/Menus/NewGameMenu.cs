@@ -562,6 +562,12 @@ public class NewGameMenu : PulsarGuiWindow
         // deficit → migration pressure to build industry. One line to revert. Morale → migration → tax → legitimacy, so
         // the homeworld morale/pop feel is the PC live-test (CI can't run the client).
         Pulsar4X.Colonies.PopulationProcessor.EnableEmploymentMorale = true;
+        // TIER 2.6 workforce→production STAFFING throttle (developer ruling 2026-08-10): population PACES production, not
+        // just gates it — a colony that can't man its facilities builds proportionally slower (rate ×= min(1, available
+        // workforce ÷ Σ facility CrewReq)). Defaults OFF so the ENGINE suite is byte-identical (a fully-manned colony
+        // reads 1.0); a menu game runs it LIVE so the door designers' CrewReq dials become a real build-rate lever. Shares
+        // the ONE jobs producer (GetTotalJobs) with the employment term above. One line to revert. Feel is the PC live-test.
+        Pulsar4X.Industry.IndustryTools.EnableWorkforceStaffing = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -985,6 +991,9 @@ public class NewGameMenu : PulsarGuiWindow
             // A1-CALIBRATION on-switch (same as CreateGameCore): the employment→morale term LIVE — jobs vs a per-capita
             // job demand move morale. Default OFF (engine byte-identical); one line to revert.
             Pulsar4X.Colonies.PopulationProcessor.EnableEmploymentMorale = true;
+            // TIER 2.6 workforce→production staffing throttle (same as CreateGameCore): population paces production
+            // (rate ×= min(1, available workforce ÷ Σ facility CrewReq)). Default OFF (engine byte-identical); one line to revert.
+            Pulsar4X.Industry.IndustryTools.EnableWorkforceStaffing = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

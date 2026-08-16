@@ -13,6 +13,39 @@ namespace Pulsar4X.Industry
 {
     public static class IndustryTools
     {
+        /// <summary>
+        /// TIER 2.6 workforce→production STAFFING throttle (developer ruling 2026-08-10,
+        /// docs/assembler/ENGINE-WIRING-BACKLOG-2026-08-06.md). Default OFF → the engine test suite is byte-identical;
+        /// <c>NewGameMenu</c> flips it ON for a menu game (the same default-off/menu-on pattern as
+        /// <c>PopulationProcessor.EnableEmploymentMorale</c>). When on, a colony whose available workforce cannot cover
+        /// its facilities' total job demand builds proportionally slower — population PACES production instead of only
+        /// gating it.
+        /// </summary>
+        public static bool EnableWorkforceStaffing = false;
+
+        /// <summary>
+        /// The workforce-staffing multiplier on a host's production rate: <c>min(1, availableWorkforce ÷ Σ facility
+        /// CrewReq)</c> — a second factor on the rate, exactly parallel to infrastructure efficiency. Returns 1.0 (no
+        /// throttle) when the flag is OFF, when the host has no manpower pool (a station — inert, exactly as the crew gate
+        /// is), or when it has no job demand. Shares ONE producer with the employment→morale term
+        /// (<see cref="Pulsar4X.Extensions.ComponentInstancesDBExtensions.GetTotalJobs"/>) — the same jobs total feeds both
+        /// consumers, per the backlog's "one producer, two consumers." Public so the gauge can measure it without driving
+        /// a full production run.
+        /// </summary>
+        public static double StaffingEfficiency(Entity industryEntity)
+        {
+            if (!EnableWorkforceStaffing || industryEntity == null) return 1.0;
+            long available = Pulsar4X.Colonies.ManpowerTools.AvailableWorkforce(industryEntity);
+            if (available < 0) return 1.0;   // -1 sentinel = no manpower pool (a station) → unenforced, full rate
+            if (!industryEntity.TryGetDataBlob<ComponentInstancesDB>(out var instances)) return 1.0;
+            long jobsDemand = instances.GetTotalJobs();
+            if (jobsDemand <= 0) return 1.0; // nothing to staff → no throttle
+            double eff = available / (double)jobsDemand;
+            if (eff < 0.0) eff = 0.0;
+            if (eff > 1.0) eff = 1.0;
+            return eff;
+        }
+
         public static void AddJob(Entity industryEntity, string plineID, IndustryJob job)
         {
             var industryDB = industryEntity.GetDataBlob<IndustryAbilityDB>();
@@ -114,11 +147,15 @@ namespace Pulsar4X.Industry
             // buildings exceed its infrastructure capacity, every production rate is scaled down.
             double infraEfficiency = InfrastructureProcessor.GetEfficiency(industryEntity);
 
+            // TIER 2.6 (flag-gated; 1.0 when off → byte-identical): the workforce-staffing throttle — a colony that can't
+            // man its facilities builds proportionally slower. A SECOND factor on the rate, exactly parallel to infra.
+            double staffingEfficiency = StaffingEfficiency(industryEntity);
+
             foreach (var (prodLineID, prodLine) in industryDB.ProductionLines.ToArray())
             {
                 var industryPointsRemaining = new Dictionary<string, int>();
                 foreach (var rate in prodLine.IndustryTypeRates)
-                    industryPointsRemaining[rate.Key] = (int)(rate.Value * infraEfficiency);
+                    industryPointsRemaining[rate.Key] = (int)(rate.Value * infraEfficiency * staffingEfficiency);
 
                 foreach(var batchJob in prodLine.Jobs.ToArray())
                 {

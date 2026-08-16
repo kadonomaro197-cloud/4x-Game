@@ -31,6 +31,22 @@ namespace Pulsar4X.Colonies
         }
 
         /// <summary>
+        /// TIER 2.6 read side (developer ruling 2026-08-10): the bulk workforce currently AVAILABLE to staff a host's
+        /// facilities — <see cref="ColonyManpowerDB.AvailableBulk"/> = population × workforce fraction − already-committed
+        /// crew/officers. This is the SAME pool the crew gate (<see cref="ResolveBuild"/>) commits against, now exposed so
+        /// production can PACE on it, not just gate on it. Returns <b>-1 for a host with no manpower pool</b> — the sentinel
+        /// the staffing throttle reads as "unenforced" (a station builds at full rate, exactly as the crew gate is inert
+        /// there). Never negative except that sentinel.
+        /// </summary>
+        public static long AvailableWorkforce(Entity host)
+        {
+            // Manager == null guard: an UNMANAGED entity (e.g. Entity.Create() before AddEntity) NREs on TryGetDataBlob;
+            // a production host is always managed, but this stays safe for any caller (the ShipHealth landmine class).
+            if (host == null || host.Manager == null || !host.TryGetDataBlob<ColonyManpowerDB>(out var manpower)) return -1L;
+            return manpower.AvailableBulk(PopulationOf(host));
+        }
+
+        /// <summary>
         /// Decide whether <paramref name="host"/> may build a unit needing <paramref name="crewRequired"/> bulk
         /// manpower right now, applying the owning government's <see cref="CrewShortagePolicy"/> (Block by
         /// default; a high-authority regime conscripts = BuildUnderstaffed). Returns a proceed-decision with
