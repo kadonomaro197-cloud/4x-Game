@@ -76,6 +76,25 @@ namespace Pulsar4X.Extensions
         }
 
         /// <summary>
+        /// Total SECURITY (order strength) provided by installed components carrying
+        /// <see cref="Pulsar4X.Colonies.SecurityAtbDB"/>, scaled by component health (a bomb-damaged precinct provides
+        /// less order). Fed into the legitimacy security term (LegitimacyProcessor, behind
+        /// <see cref="Pulsar4X.Colonies.LegitimacyProcessor.EnableSecurityLegitimacy"/>). Zero when no installation
+        /// provides security — so it's neutral until a colony builds a precinct (the grave rung: bombard it, this drops).
+        /// </summary>
+        public static double GetTotalSecurity(this ComponentInstancesDB componentInstances)
+        {
+            double security = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.SecurityAtbDB)))
+            {
+                double perComponent = design.GetAttribute<Pulsar4X.Colonies.SecurityAtbDB>().SecurityRating;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    security += perComponent * component.HealthPercent;
+            }
+            return security;
+        }
+
+        /// <summary>
         /// The colony's average food QUALITY — the OUTPUT-WEIGHTED mean quality across installed food components (so a
         /// tiny gourmet dome doesn't outweigh the bulk farms that actually feed everyone). Health-scaled like the output.
         /// Returns 0 when there is no food production (the caller reads that as "no quality bonus"). M5c.

@@ -15,6 +15,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-security-precinct",
+      "Name": "Security Precinct",
+      "TemplateId": "security-precinct",
+      "Properties": [
+        { "Key": "Security Rating", "Value": 10 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-hydroponics-arcology",
       "Name": "Hydroponics Arcology",
       "TemplateId": "food-production",

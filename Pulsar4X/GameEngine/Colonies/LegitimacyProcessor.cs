@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
+using Pulsar4X.Extensions;   // GetTotalSecurity (security supply) extension on ComponentInstancesDB
 using Pulsar4X.Interfaces;
 
 namespace Pulsar4X.Colonies
@@ -71,6 +72,19 @@ namespace Pulsar4X.Colonies
         /// <see cref="EnableRebellionDebounce"/>. // FLAGGED balance value — the developer sets the debounce depth.</summary>
         public const int RebellionDebounceReads = 2;
 
+        /// <summary>
+        /// The SECURITY civic dial's live consumer (docs/assembler/01-IO-civic.md — the Security option's "-N unrest").
+        /// When true, a province's installed SECURITY institutions (precincts carrying <see cref="SecurityAtbDB"/>,
+        /// summed via <see cref="Pulsar4X.Extensions.ComponentInstancesDBExtensions.GetTotalSecurity"/>) add a positive
+        /// term to its legitimacy (capped by <see cref="LegitimacyDB.MaxSecurityBonus"/>) — so building precincts can
+        /// hold a restless province above the collapse/rebellion band. Defaults <b>false</b> so the whole existing
+        /// suite stays byte-identical (no colony ships a precinct, and the term adds no factor at 0) — a SIBLING of
+        /// <see cref="EnablePopularDemands"/>, flippable alone; <c>NewGameMenu</c> flips it on for a menu game (the A1
+        /// employment-morale pattern). Cradle-to-grave grave rung: bombard the precinct → its health falls →
+        /// GetTotalSecurity drops → legitimacy falls.
+        /// </summary>
+        public static bool EnableSecurityLegitimacy = false;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
@@ -112,6 +126,10 @@ namespace Pulsar4X.Colonies
 
             var inputs = LegitimacyInputs.FromMorale(morale);
             inputs.WarOutcome = WarTermFor(province);   // 0 in peace; while at war, gated by militarism
+            // Security civic dial (flag-gated OFF → byte-identical): a province's installed precincts add order that
+            // props up legitimacy. Left at the neutral 0 unless opted in, so an unpoliced colony is unchanged.
+            if (EnableSecurityLegitimacy)
+                inputs.SecurityStrength = SecurityTermFor(province);
             legitimacy.Legitimacy = LegitimacyDB.ComputeLegitimacy(inputs, legitimacy.Factors);
 
             // Popular-demands pillar (F-C2, docs/society/GOVERNMENT-AND-POLITICS-DESIGN.md): the demand engine's UNANSWERED
@@ -199,6 +217,20 @@ namespace Pulsar4X.Colonies
             if (faction.TryGetDataBlob<Pulsar4X.Factions.GovernmentDB>(out var gov))
                 return gov.WarMoraleFactor();
             return new Pulsar4X.Factions.GovernmentDB().WarMoraleFactor();   // no regime set → neutral Mid default
+        }
+
+        /// <summary>
+        /// The security term feeding legitimacy: the total order strength the province's installed precincts provide
+        /// (health-scaled sum of <see cref="SecurityAtbDB.SecurityRating"/> via
+        /// <see cref="Pulsar4X.Extensions.ComponentInstancesDBExtensions.GetTotalSecurity"/>). 0 when the province has
+        /// no <see cref="ComponentInstancesDB"/> or no precinct — the neutral case. Only read under
+        /// <see cref="EnableSecurityLegitimacy"/>. Defensive (no throw in the monthly hotloop, gotcha L4).
+        /// </summary>
+        private static double SecurityTermFor(Entity province)
+        {
+            if (province.TryGetDataBlob<ComponentInstancesDB>(out var comps))
+                return comps.GetTotalSecurity();
+            return 0.0;
         }
 
         /// <summary>

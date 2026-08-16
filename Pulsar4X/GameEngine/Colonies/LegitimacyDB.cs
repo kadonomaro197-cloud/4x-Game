@@ -38,6 +38,9 @@ namespace Pulsar4X.Colonies
         public const double MaxGovernorBonus = 15.0;
         /// <summary>Cap on the penalty for a far, poorly-connected province (harder to hold — ties to logistics/gates).</summary>
         public const double MaxDistancePenalty = 20.0;
+        /// <summary>Cap on the legitimacy bonus a colony's SECURITY institutions (precincts) can give — order holds a
+        /// restless province, but no amount of policing manufactures loyalty on its own (the Security civic dial).</summary>
+        public const double MaxSecurityBonus = 15.0;
         /// <summary>Below this, the province is collapsing → it enters the REBELLION state (#38, the grave rung).</summary>
         public const double CollapseThreshold = 20.0;
 
@@ -109,6 +112,17 @@ namespace Pulsar4X.Colonies
             legitimacy += distance;
             factorsOut?.Add("connectivity", distance);
 
+            // Security — a colony's ORDER institutions (precincts) prop up local legitimacy: the designer's "-N unrest"
+            // as legitimacy points, capped by MaxSecurityBonus. 0 (the default / flag-off / no precinct) contributes
+            // nothing and adds NO factor, so it's byte-identical until a province is actually policed. The factor is
+            // only recorded when it fires, so an unwired colony's breakdown is unchanged.
+            double security = Clamp(inp.SecurityStrength, 0.0, MaxSecurityBonus);
+            if (security > 0.0)
+            {
+                legitimacy += security;
+                factorsOut?.Add("security", security);
+            }
+
             legitimacy = Clamp0100(legitimacy);
             return legitimacy;
         }
@@ -139,6 +153,9 @@ namespace Pulsar4X.Colonies
         public double GovernorCompetence;
         /// <summary>Connectivity to the capital 0..1 (1 = well-connected). NEGATIVE = unknown → neutral.</summary>
         public double Connectivity;
+        /// <summary>Total SECURITY (order strength) the province's installed precincts provide — a positive legitimacy
+        /// term, capped by <see cref="LegitimacyDB.MaxSecurityBonus"/>. 0 (the default) = no policing → no bonus.</summary>
+        public double SecurityStrength;
 
         /// <summary>The neutral-everything input except a supplied morale — the common v1 call (morale-only driver).</summary>
         public static LegitimacyInputs FromMorale(double averageMorale) => new LegitimacyInputs
@@ -147,7 +164,8 @@ namespace Pulsar4X.Colonies
             DemandSatisfaction = -1.0,
             WarOutcome = 0.0,
             GovernorCompetence = -1.0,
-            Connectivity = -1.0
+            Connectivity = -1.0,
+            SecurityStrength = 0.0
         };
     }
 }

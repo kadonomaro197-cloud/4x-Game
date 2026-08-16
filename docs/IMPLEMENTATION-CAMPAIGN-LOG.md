@@ -23,14 +23,21 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > start colony, gauge-verified (`PowerThrottleTests` + `FoodDemandTests` assert Earth powered+fed on the real numbers; CI is
 > the calibration net). **⏳ AWAITING CI on `927deef` (power) + the food commit before treating them green.** **The next
 > buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md`:**
-> **(1) Medical → health → morale** (a new morale input) and **(2) Security → unrest → legitimacy** (a new legitimacy
-> input). Each is a real BUILD (like A1's employment term): a NEW component attribute (`MedicalAtb`/`SecurityAtb` — use the
-> L13 `[JsonConstructor] private XAtb(){}` pattern + the L6 SIX-POINT registration + author a value on the medical/security
-> installation templates + `StartingItems`) → summed via a `ComponentInstancesDBExtensions` helper (the `GetTotalJobs`
-> pattern) → read as a NEW input into `ColonyMoraleDB.ComputeMorale` (health) / `LegitimacyProcessor` (unrest). **⚠ These
-> touch the CORE, well-tested morale/legitimacy formulas** — flag-gate OFF by default (byte-identical), baseline against
-> `MoraleTests`/`LegitimacyTests`, NewGameMenu-on (the A1 pattern), and add a gauge. Do the smaller one first (Security→
-> legitimacy has fewer existing inputs to reconcile). After civic: the remaining door DATA dials (per `02-IO-MATRIX.md` —
+> **(1) Medical → health → morale** (a new morale input) and **✅ (2) Security → unrest → legitimacy — DONE 2026-08-16
+> (developer: "start the civic security dial while we wait")**. The Security dial landed as a real BUILD (like A1's
+> employment term): `SecurityAtbDB` (mirrors `FoodProductionAtbDB` — public parameterless + parameterized ctor, round-trips)
+> summed via `ComponentInstancesDBExtensions.GetTotalSecurity` (health-scaled) → a NEW flag-gated `LegitimacyInputs.SecurityStrength`
+> input on `LegitimacyDB.ComputeLegitimacy` (capped `MaxSecurityBonus` 15), behind `LegitimacyProcessor.EnableSecurityLegitimacy`
+> (default OFF → byte-identical, guarded factor add so an unpoliced colony's breakdown is unchanged), `NewGameMenu`-on both
+> paths. L6 six-point registration: `security-precinct` template (`installations.json`, single-dial `Security Rating` → `AtbConstrArgs`
+> binds `SecurityAtbDB`) + `default-design-security-precinct` (rating 10) + Earth StartingItems/ComponentDesigns — **registered
+> BUILDABLE but NOT auto-installed** (a policing decision, not a freebie; and it sidesteps the C-FOOD shared-fixture-baseline
+> trap — nothing installed on Earth, so GetTotalSecurity is 0 pristine and no baseline test moves). Gauge `SecurityLegitimacyTests`
+> (pure math + cradle-to-grave: register→install→flag-gated legitimacy rise→grave-rung destroy). Files: `SecurityAtbDB.cs` ·
+> `ComponentInstancesDBExtensions.cs` · `LegitimacyDB.cs` · `LegitimacyProcessor.cs` · `installations.json` · `componentDesigns.json`
+> · `earth.json` · `NewGameMenu.cs` · `SecurityLegitimacyTests.cs`. **Medical → health → morale is the remaining civic dial**
+> (a new morale input on the CORE `ColonyMoraleDB.ComputeMorale` — health is not one of the six morale inputs, so it's a new
+> consumer; same flag-gate-OFF + `MoraleTests` baseline + NewGameMenu-on pattern). After civic: the remaining door DATA dials (per `02-IO-MATRIX.md` —
 > most left are new-atb BUILDs or dead-knob cuts, the cheap welds are spent), then Phase D (planetview units-on-map) + E
 > (resolver environment). **Resume by re-reading this line + `git log --oneline -20`; do not restart landed work.**
 >
