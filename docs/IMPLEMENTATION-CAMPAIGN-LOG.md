@@ -428,6 +428,21 @@ weight) and I build it.
    if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
    queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
 
+### ⚖ C-FOOD-DEMAND — the per-capita FOOD demand coefficient needs calibrating (parked 2026-08-15, TIER 2.5)
+**Plain English:** the food loop is fully built (`SustenanceProcessor` reads farm output vs `pop × PerCapitaFoodDemand`,
+banks a surplus, starves on a shortfall → morale), but `ColonySustenanceDB.PerCapitaFoodDemand` **defaults to 0**, so
+food demand is 0 and nothing is ever eaten (the deliberate "neutral-when-absent" guard). Turning it on is "one
+coefficient" — BUT the VALUE is a real calibration decision, exactly like A1's `JobsPerCapita`: set it so the homeworld's
+farm output roughly covers `pop × coefficient` (a mild deficit → build-more pressure, like A1's near-neutral), and set it
+**too high → the homeworld STARVES on New Game** (a −40 morale floor + population die-off). I can't derive the right value
+without the homeworld's actual farm-output-vs-population numbers, and guessing it risks mass starvation — the same reason
+A1's denominator was a developer-authorized call. **The decision (needs the developer):** what per-capita food demand
+(and do we want it on for a menu game at all)? **Recommendation:** treat it like A1 — pick a coefficient that lands the
+fully-built homeworld near food-balance (I'll compute it from a local farm-output readout, or you name it), add a
+`SustenanceProcessor.EnableFoodDemand` flag + a static default coefficient, flag-gate + baseline `FoodProductionTests`,
+NewGameMenu-on. Say the value (or "read it off my build and pick") and I build it. Upkeep + staffing (the other two
+run-cost rungs) needed no such call — money/rate have soft failure modes; food starves.
+
 *(Other slices with genuine ambiguity — two HTMLs contradict, a save-break with no safe pattern, a DECISION-PENDING
 with no default, or an HTML number impossible without a redesign — will park here the same way.)*
 
