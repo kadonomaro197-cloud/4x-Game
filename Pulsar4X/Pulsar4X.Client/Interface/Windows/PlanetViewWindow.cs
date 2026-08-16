@@ -218,7 +218,11 @@ namespace Pulsar4X.Client
             if (!string.IsNullOrEmpty(_status))
             {
                 ImGui.SameLine();
-                ImGui.TextColored(new Vector4(0.6f, 0.9f, 0.6f, 1f), "  " + _status);
+                // TextUnformatted (via a pushed colour), NOT TextColored — _status can hold a user-renamable formation
+                // name (GroundForces.RenameFormation), and a literal '%' would be eaten by TextColored's printf format.
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.6f, 0.9f, 0.6f, 1f));
+                ImGui.TextUnformatted("  " + _status);
+                ImGui.PopStyleColor();
             }
 
             ImGui.Separator();
