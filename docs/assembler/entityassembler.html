@@ -1310,13 +1310,15 @@ function renderRunCost(S){
   var part='<span class="mk pend">partial</span>';
   var pShort=S.draw>S.supply;
   // POWER — energy-weapon + warp draw is engine-LIVE; a generic component's draw is the C12 gap (modeled here; the
-  // engine reads 0 for non-weapon parts). JOBS = Σ CrewReq (live as crew; pending as an employment→morale producer,
-  // backlog #2). FOOD — the per-entity provisions loop is modeled; the COLONY per-capita coefficient is 0 (pending).
-  // UPKEEP — a ground unit bills mass×0.1/mo today; ships/installations are pending (the number is "what it would cost").
+  // engine reads 0 for non-weapon parts) — PARKED (extends EnergyGenAbilityDB). JOBS = Σ CrewReq: live as crew, and now
+  // LIVE (flag-gated) as an employment→morale producer (A1) AND a jobs→build-rate staffing throttle (TIER 2.6). FOOD —
+  // the per-entity provisions loop is modeled; the COLONY per-capita coefficient is 0 (PARKED, needs calibration).
+  // UPKEEP — a ground unit bills mass×0.1/mo (live); COLONY INSTALLATIONS now bill Σ CreditCost×1%/mo to the faction
+  // ledger (LIVE, flag-gated, this session); per-SHIP upkeep is still pending (the number is "what it would cost").
   el.innerHTML=
     '<div class="gauge'+(S.draw?'':' muted')+'"><i>Power draw</i><b>'+fmt(S.draw)+' MW</b><s>'+
       (S.draw?(pShort?('short '+fmt(S.draw-S.supply)+' MW'):(fmt(S.supply-S.draw)+' MW spare')):'no powered parts')+' · '+live+' guns / '+pend+' C12</s></div>'+
-    '<div class="gauge'+(jobs?'':' muted')+'"><i>Jobs / crew</i><b>'+fmt(jobs)+'</b><s>watchstanders · '+live+' as crew, '+pend+' as morale (#2)</s></div>'+
+    '<div class="gauge'+(jobs?'':' muted')+'"><i>Jobs / crew</i><b>'+fmt(jobs)+'</b><s>watchstanders · '+live+' as crew · '+live+' as morale + build-rate (A1 employment + TIER 2.6 staffing, flag-gated)</s></div>'+
     '<div class="gauge'+(S.crew>0?'':' muted')+'"><i>Food / day</i><b>'+(S.selfSufficient?'closed loop':fmt(S.foodNet)+' cd')+'</b><s>'+
       (S.crew>0?(S.selfSufficient?'homegrown ≥ crew':fmt(S.foodProd)+' grown vs '+fmt(S.crew)+' eaten')+' · '+part:'no crew')+'</s></div>'+
     '<div class="gauge'+(upkeepMo?'':' muted')+'"><i>Upkeep / mo</i><b>'+fmt(upkeepMo)+' cr</b><s>'+
@@ -1324,8 +1326,9 @@ function renderRunCost(S){
   note.innerHTML='The <b>RUN</b> bill — what this costs every tick it exists, the twin of the <b>build</b> bill above. '+
     'Each line is a <b>Σ over the mounted parts</b>: what you mount is what you pay. '+
     '<span class="mk" style="border-color:var(--ok);color:var(--ok)">live</span> = the engine charges it today · '+
-    '<span class="mk pend">pending</span> = the per-component dial exists but its producer/coefficient isn’t wired yet '+
-    '(jobs→employment = backlog #2 · per-capita food = 0 · generic power draw = C12 · off-ground upkeep). '+
+    '<span class="mk pend">pending</span> = the per-component dial exists but its producer/coefficient isn’t wired yet. '+
+    'LANDED (Operation Blueprint-to-Steel, flag-gated colony-level wires): jobs→employment→morale (A1) · jobs→build-rate staffing (TIER 2.6) · installation upkeep→faction ledger (colony Σ CreditCost×1%/mo). '+
+    'Still pending: per-capita food coefficient (parked, needs calibration) · generic component power draw = C12 (parked, extends the EnergyGenAbilityDB system) · per-SHIP upkeep. '+
     'Build each to the shape the infrastructure grid already proves works — <b>dial → colony Σ → a reader that bites</b>. '+
     'Detail: <span class="mono">docs/economy/CAPITOL-WORLD-INFRASTRUCTURE-2026-08-06.md §8</span>.';
 }

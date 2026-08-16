@@ -15,6 +15,21 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 
 ## NEXT ACTION
 
+> **🧭 CURRENT NEXT ACTION (2026-08-15) — Phase C continues with the civic BUILD dials.** Phase A + B are DONE. Phase C
+> **run-cost vector is complete**: Jobs (A1), **Staffing** (`7cdce65`, CI-GREEN), **Upkeep** (`77c8411`, CI in flight) are
+> LANDED; **Power** (`C-POWER`) + **Food** (`C-FOOD-DEMAND`) are PARKED in the ADJUDICATION QUEUE with recommendations
+> (each needs one developer call). **The next buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md`:**
+> **(1) Medical → health → morale** (a new morale input) and **(2) Security → unrest → legitimacy** (a new legitimacy
+> input). Each is a real BUILD (like A1's employment term): a NEW component attribute (`MedicalAtb`/`SecurityAtb` — use the
+> L13 `[JsonConstructor] private XAtb(){}` pattern + the L6 SIX-POINT registration + author a value on the medical/security
+> installation templates + `StartingItems`) → summed via a `ComponentInstancesDBExtensions` helper (the `GetTotalJobs`
+> pattern) → read as a NEW input into `ColonyMoraleDB.ComputeMorale` (health) / `LegitimacyProcessor` (unrest). **⚠ These
+> touch the CORE, well-tested morale/legitimacy formulas** — flag-gate OFF by default (byte-identical), baseline against
+> `MoraleTests`/`LegitimacyTests`, NewGameMenu-on (the A1 pattern), and add a gauge. Do the smaller one first (Security→
+> legitimacy has fewer existing inputs to reconcile). After civic: the remaining door DATA dials (per `02-IO-MATRIX.md` —
+> most left are new-atb BUILDs or dead-knob cuts, the cheap welds are spent), then Phase D (planetview units-on-map) + E
+> (resolver environment). **Resume by re-reading this line + `git log --oneline -20`; do not restart landed work.**
+>
 > **DEVELOPER-REQUESTED WORK DONE (2026-08-13): the two base-red economy tests are fixed, the morale term is
 > calibrated AND turned ON for the real game.** ✅ The base is greened (cargo + food test fixes, commit `c96dd5f`) —
 > the PRE-EXISTING BASE RED carve-out is **retired**; any red is now real. ✅ The A1 employment→morale calibration
