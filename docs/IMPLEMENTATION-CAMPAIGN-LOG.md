@@ -443,20 +443,42 @@ weight) and I build it.
    if so should it be re-expressed as a *queued global* order so both seats can drive it? **Recommendation:** re-express as
    queued-global (a `GroundOrder.MoveTreeHex` twin) if wanted; don't wire the region-local direct version.
 
-### ✅ C-POWER — RESOLVED 2026-08-16 (developer: "do whatever fits best with what was planned") — colony POWER brownout throttle
-**Built the recommendation below (a/b/c).** `IndustryTools.PowerEfficiency(colony)` = a THIRD production-rate factor
-(`ConstructStuff` rate = `infra × staffing × power`), `power = min(1, EnergyGenAbilityDB.TotalOutputMax ÷ (GetTotalJobs ×
-PowerDrawPerCrew_kW))`. (a) EXTENDS the existing energy system — supply reads the SAME `TotalOutputMax` the fuel/warp code
-uses. (b) DERIVES demand from operating crew (the shared `GetTotalJobs` producer × `PowerDrawPerCrew_kW` = 1.0 kW/crew) —
-**no new `*Atb`, no L6/L13 landmine.** (c) DISTINCT from infra (electrical vs utility grid), flag-gated `EnablePowerThrottle`
-OFF (engine byte-identical) → `NewGameMenu`-on both paths. **The hard risk is DISARMED by construction:** the recon
-confirmed the start colony has **no power generation installed** (`earth.json` `Installations` has no reactor/solar), so
-`TotalOutputMax` reads 0 → the throttle is **INERT** (returns 1.0, the inverse of the food-supply-0 trap — supply-0 is SAFE,
-never bricks). Commit 1 (this) = the byte-identical mechanism + gauge `PowerThrottleTests`. **Commit 2 (next) = install one
-fission reactor on Earth** (75 MW vs the ~52 MW demand the A1 note pins — "~52k-job start homeworld" — so 1.44× headroom,
-safe at start, bites once industry grows ~44%) + a gauge asserting Earth-powered-and-safe on the REAL numbers (CI is the
-calibration safety net). Files: `IndustryTools.cs` · `NewGameMenu.cs` (both paths) · `PowerThrottleTests.cs` · Industry
-CLAUDE.md · connection map (Power → production RATE row). *(Original recon + three-question adjudication preserved below.)*
+### ✅ C-POWER (mechanism) — LANDED 2026-08-16 (developer: "do whatever fits best with what was planned") — colony POWER brownout throttle
+**Built the recommendation below (a/b/c) as a byte-identical, tested MECHANISM.** `IndustryTools.PowerEfficiency(colony)` =
+a THIRD production-rate factor (`ConstructStuff` rate = `infra × staffing × power`), `power = min(1,
+EnergyGenAbilityDB.TotalOutputMax ÷ (GetTotalJobs × PowerDrawPerCrew_kW))`. (a) EXTENDS the existing energy system — supply
+reads the SAME `TotalOutputMax` the fuel/warp code uses. (b) DERIVES demand from operating crew (the shared `GetTotalJobs`
+producer × `PowerDrawPerCrew_kW` = 1.0 kW/crew) — **no new `*Atb`, no L6/L13 landmine.** (c) DISTINCT from infra (electrical
+vs utility grid), flag-gated `EnablePowerThrottle` OFF (engine byte-identical) → `NewGameMenu`-on both paths. **The hard risk
+is DISARMED by construction:** the start colony has **no power generation installed** (`earth.json` `Installations` has no
+reactor/solar), so `TotalOutputMax` reads 0 → the throttle is **INERT** (returns 1.0 — the inverse of the food-supply-0
+trap; supply-0 is SAFE, never bricks). Landed: `IndustryTools.cs` · `NewGameMenu.cs` (both paths) · `PowerThrottleTests.cs`
+(calibration-independent gauge) · Industry CLAUDE.md · connection map (Power → production RATE row). Commit `d2ac424`.
+
+### ⚖ C-POWER-LIVE — the throttle can't BITE: the base mod has NO colony-mountable MW-scale power plant (parked 2026-08-16)
+**Plain English:** the mechanism above is correct and safe, but on the stock start colony it does **nothing** — because
+Earth generates no power, so supply reads 0 and the throttle stays inert. Making it BITE needs a real power plant installed
+on the colony, and the recon found **the base mod has no power source that both (i) mounts on a colony AND (ii) makes
+MW-scale power:**
+- **Fission reactor** = 75 MW (`50 × 1500kg × 1`), but its `MountType` is `ShipComponent, ShipCargo, Fighter, GroundUnit,
+  Station` — **no `PlanetInstallation`.** A colony can't build it.
+- **Steam-turbine reactor** — its description literally says *"the station and colony plant,"* yet its `MountType` is
+  `ShipComponent, ShipCargo, Fighter, GroundUnit` — **no `PlanetInstallation` AND no `Station`.** A mount/description
+  contradiction that looks like a data bug.
+- **Solar array** = the ONLY `PlanetInstallation`-mountable source, but a 100 m² panel makes **~10 kW** at 1 AU (Area 100 ×
+  ~8% × 1361 W/m²). Earth's ~52 MW demand would need **~5,000 panels.** Absurd at start-colony scale. Solar output is also
+  DYNAMIC (0 at install; the solar processor computes it per-tick from star light), so it's not an install-time-fixed number
+  the way a reactor's is.
+
+**So this is a design GAP, not a data flip.** The demand side (~52 MW, pinned by the A1 "~52k-job homeworld" note) is real;
+the SUPPLY side has no colony-scale plant. **Recommendation (needs a developer call — it touches the Component Designer, and
+the developer has strong designer opinions):** the cleanest fix is to **add `PlanetInstallation` (+ `Station`) to the
+steam-turbine-reactor's `MountType`** — its own description says it IS the colony plant, so this aligns the mount with the
+stated intent (a bug-fix, not a new invention) — then install one turbine on Earth's start (sized above ~52 MW) and add a
+gauge asserting Earth-powered-and-safe on the real numbers. Alternatives: add `PlanetInstallation` to the fission reactor
+instead; or bump the solar `Area` cap so a handful of panels reach MW-scale. All are economy/designer changes I did NOT take
+autonomously. Say which (or "your rec — fix the turbine mount") and I install it + the gauge as the make-C-POWER-live slice.
+*(Original recon + three-question adjudication preserved below.)*
 
 ### ⚖ C-POWER — the colony POWER run-cost needs a design call against the EXISTING energy system (parked 2026-08-15, TIER 2.5)
 **Plain English:** the backlog calls Power "the only real build" of the run-cost vector — a generic component power draw
