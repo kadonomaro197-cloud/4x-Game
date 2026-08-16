@@ -68,6 +68,9 @@ namespace Pulsar4X.Colonies
         public const double FoodQualityWeight = 20.0;
         /// <summary>Cap on the food-quality morale bonus — a gourmet food operation can offset a harsh world, no more. M5c.</summary>
         public const double MaxFoodQualityBonus = 40.0;
+        /// <summary>Cap on the health-care morale bonus a colony's MEDICAL institutions (hospitals) can give — good care
+        /// lifts morale, but medicine alone can't make a miserable world happy (the Medical civic dial).</summary>
+        public const double MaxHealthBonus = 20.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -189,6 +192,17 @@ namespace Pulsar4X.Colonies
             morale += foodQuality;
             factorsOut?.Add("food quality", foodQuality);
 
+            // Health (Medical civic dial) — a colony's HOSPITALS lift morale: the designer's "+N health" as morale
+            // points, capped by MaxHealthBonus. 0 (the default / flag-off / no hospital) contributes nothing and adds
+            // NO factor, so it's byte-identical until a colony is actually cared for. The factor is only recorded when
+            // it fires, so an un-hospitalled colony's breakdown is unchanged.
+            double health = Math.Min(MaxHealthBonus, Math.Max(0.0, inp.HealthStrength));
+            if (health > 0.0)
+            {
+                morale += health;
+                factorsOut?.Add("health", health);
+            }
+
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;
             return morale;
@@ -230,5 +244,8 @@ namespace Pulsar4X.Colonies
         public double FoodShortage;
         /// <summary>Colony average food QUALITY (0 = no food; 1.0 = adequate baseline; &gt;1 = a morale bonus). M5c.</summary>
         public double FoodQuality;
+        /// <summary>Total MEDICAL (health-care strength) the colony's installed hospitals provide — a positive morale
+        /// term, capped by <see cref="ColonyMoraleDB.MaxHealthBonus"/>. 0 (the default) = no care → no bonus.</summary>
+        public double HealthStrength;
     }
 }

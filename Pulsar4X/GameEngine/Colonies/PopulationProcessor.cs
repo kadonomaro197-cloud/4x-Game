@@ -34,6 +34,20 @@ namespace Pulsar4X.Colonies
         /// </summary>
         public static bool EnableEmploymentMorale = false;
 
+        /// <summary>
+        /// The MEDICAL civic dial's live consumer (docs/assembler/01-IO-civic.md — the Medical option's "+N health").
+        /// When true, a colony's installed HOSPITALS (components carrying <see cref="MedicalAtbDB"/>, summed via
+        /// <see cref="Pulsar4X.Extensions.ComponentInstancesDBExtensions.GetTotalMedical"/>) add a positive morale term
+        /// (capped by <see cref="ColonyMoraleDB.MaxHealthBonus"/>) — so building hospitals lifts a struggling colony's
+        /// morale, the offset a harsh world needs. HEALTH is a NEW morale consumer (not one of the original six inputs),
+        /// the sibling of the food-QUALITY bonus. Defaults <b>false</b> so the whole existing suite stays byte-identical
+        /// (no colony ships a hospital, and the term adds no factor at 0) — the same default-off/menu-on pattern as
+        /// <see cref="EnableEmploymentMorale"/>; <c>NewGameMenu</c> flips it on. Read by both colony morale gatherings
+        /// below (GrowPopulation + ComputeCurrentMorale); stations use the positional overload so they're byte-identical
+        /// until a station-medical follow-up. Grave rung: bombard the hospital → GetTotalMedical drops → morale falls.
+        /// </summary>
+        public static bool EnableMedicalMorale = false;
+
         internal void GrowPopulation(Entity colony)
         {
             // Get current population
@@ -114,7 +128,9 @@ namespace Pulsar4X.Colonies
                     PowerShortage = powerShortage,
                     FoodShortage = foodShortage,
                     // M5c: the colony's output-weighted average food quality → a morale bonus above "not starving".
-                    FoodQuality = instancesDB.GetAverageFoodQuality()
+                    FoodQuality = instancesDB.GetAverageFoodQuality(),
+                    // Medical civic dial (flag-gated OFF → byte-identical): the colony's installed hospitals lift morale.
+                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0
                 }, moraleDB.Factors);
                 // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
                 // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid
@@ -251,7 +267,9 @@ namespace Pulsar4X.Colonies
                     TaxRate = taxRate,
                     PowerShortage = powerShortage,
                     FoodShortage = foodShortage,
-                    FoodQuality = instancesDB.GetAverageFoodQuality()
+                    FoodQuality = instancesDB.GetAverageFoodQuality(),
+                    // Medical civic dial (flag-gated OFF → byte-identical): keep in sync with GrowPopulation above.
+                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0
                 }, null);
             }
             catch

@@ -26,6 +26,17 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-hospital",
+      "Name": "Hospital",
+      "TemplateId": "medical-hospital",
+      "Properties": [
+        { "Key": "Care Rating", "Value": 10 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-hydroponics-arcology",
       "Name": "Hydroponics Arcology",
       "TemplateId": "food-production",

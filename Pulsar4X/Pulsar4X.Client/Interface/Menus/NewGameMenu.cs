@@ -588,6 +588,10 @@ public class NewGameMenu : PulsarGuiWindow
         // health bar), so a restless world can be policed above the rebellion band. Default OFF (engine byte-identical:
         // no colony ships a precinct). Inert until the player BUILDS a precinct — a decision, not a freebie. One line to revert.
         Pulsar4X.Colonies.LegitimacyProcessor.EnableSecurityLegitimacy = true;
+        // Civic dial — colony MEDICAL → morale. A colony's built hospitals lift its morale (good care, happier people —
+        // the offset a harsh world needs). Default OFF (engine byte-identical: no colony ships a hospital). Inert until
+        // the player BUILDS a hospital — a decision, not a freebie. One line to revert.
+        Pulsar4X.Colonies.PopulationProcessor.EnableMedicalMorale = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -1026,6 +1030,9 @@ public class NewGameMenu : PulsarGuiWindow
             // Civic SECURITY → legitimacy (same as CreateGameCore): built precincts prop up a restless province's
             // legitimacy. Default OFF (engine byte-identical); inert until a precinct is built. One line to revert.
             Pulsar4X.Colonies.LegitimacyProcessor.EnableSecurityLegitimacy = true;
+            // Civic MEDICAL → morale (same as CreateGameCore): built hospitals lift a colony's morale. Default OFF
+            // (engine byte-identical); inert until a hospital is built. One line to revert.
+            Pulsar4X.Colonies.PopulationProcessor.EnableMedicalMorale = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;

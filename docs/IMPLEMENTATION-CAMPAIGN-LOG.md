@@ -22,8 +22,13 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > do whatever fits best / for 2 do your rec" → I un-parked both and BUILT the supply side onto the (formerly barebones)
 > start colony, gauge-verified (`PowerThrottleTests` + `FoodDemandTests` assert Earth powered+fed on the real numbers; CI is
 > the calibration net). **⏳ AWAITING CI on `927deef` (power) + the food commit before treating them green.** **The next
-> buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md`:**
-> **(1) Medical → health → morale** (a new morale input) and **✅ (2) Security → unrest → legitimacy — DONE 2026-08-16
+> buildable Phase C slice = the two civic BUILD dials from `01-IO-civic.md` — **BOTH NOW DONE (2026-08-16):****
+> **✅ (1) Medical → health → morale — DONE 2026-08-16** (`MedicalAtbDB` mirrors `SecurityAtbDB`; summed via
+> `GetTotalMedical` → the flag-gated `MoraleInputs.HealthStrength` term in `ColonyMoraleDB.ComputeMorale`, capped
+> `MaxHealthBonus` 20, behind `PopulationProcessor.EnableMedicalMorale` set in BOTH morale gatherings + `NewGameMenu`-on;
+> `medical-hospital` template + `default-design-hospital` registered buildable-not-installed on Earth; gauge
+> `MedicalMoraleTests`; stations use the positional ComputeMorale overload so station-medical is a noted follow-up) and
+> **✅ (2) Security → unrest → legitimacy — DONE 2026-08-16
 > (developer: "start the civic security dial while we wait")**. The Security dial landed as a real BUILD (like A1's
 > employment term): `SecurityAtbDB` (mirrors `FoodProductionAtbDB` — public parameterless + parameterized ctor, round-trips)
 > summed via `ComponentInstancesDBExtensions.GetTotalSecurity` (health-scaled) → a NEW flag-gated `LegitimacyInputs.SecurityStrength`

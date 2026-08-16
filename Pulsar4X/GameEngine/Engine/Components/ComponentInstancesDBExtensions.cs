@@ -95,6 +95,25 @@ namespace Pulsar4X.Extensions
         }
 
         /// <summary>
+        /// Total MEDICAL (health care) provided by installed components carrying
+        /// <see cref="Pulsar4X.Colonies.MedicalAtbDB"/>, scaled by component health (a bomb-damaged hospital cares for
+        /// fewer). Fed into the morale health term (PopulationProcessor, behind
+        /// <see cref="Pulsar4X.Colonies.PopulationProcessor.EnableMedicalMorale"/>). Zero when no installation provides
+        /// care — so it's neutral until a colony builds a hospital (the grave rung: bombard it, this drops).
+        /// </summary>
+        public static double GetTotalMedical(this ComponentInstancesDB componentInstances)
+        {
+            double medical = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.MedicalAtbDB)))
+            {
+                double perComponent = design.GetAttribute<Pulsar4X.Colonies.MedicalAtbDB>().HealthRating;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    medical += perComponent * component.HealthPercent;
+            }
+            return medical;
+        }
+
+        /// <summary>
         /// The colony's average food QUALITY — the OUTPUT-WEIGHTED mean quality across installed food components (so a
         /// tiny gourmet dome doesn't outweigh the bulk farms that actually feed everyone). Health-scaled like the output.
         /// Returns 0 when there is no food production (the caller reads that as "no quality bonus"). M5c.
