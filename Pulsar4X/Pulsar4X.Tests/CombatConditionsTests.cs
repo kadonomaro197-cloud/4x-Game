@@ -73,13 +73,13 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("A blinding hazard (a solar flare) reads Blind with zero detection and accuracy.")]
+        [Description("A blinding hazard reads Blind with zero detection and accuracy — and Blind FORCES zero even when the raw sensor multiplier is non-zero (so the guard is actually exercised, not masked by an already-0 multiplier).")]
         public void BlindingHazard_ReadsBlindAndZeroDetection()
         {
             var mods = new HazardModifiers
             {
                 InAnyHazard = true,
-                SensorRangeMultiplier = 0.0,
+                SensorRangeMultiplier = 0.5,   // deliberately NON-zero: proves Blind overrides the multiplier to 0
                 MoveSpeedMultiplier = 1.0,
                 WarpSpeedMultiplier = 1.0,
                 DamagePerSecond = 500.0,
@@ -89,9 +89,21 @@ namespace Pulsar4X.Tests
             var c = CombatConditions.FromHazard(mods);
             Assert.IsTrue(c.InHazard);
             Assert.IsTrue(c.Blind);
-            Assert.AreEqual(0.0, c.Detection, 1e-9);
-            Assert.AreEqual(0.0, c.Accuracy, 1e-9);
+            Assert.AreEqual(0.0, c.Detection, 1e-9, "Blind forces detection to 0 over the 0.5 multiplier.");
+            Assert.AreEqual(0.0, c.Accuracy, 1e-9, "Blind forces accuracy to 0 over the 0.5 multiplier.");
             Assert.AreEqual(500.0, c.AmbientDoT_Jps, 1e-9);
+        }
+
+        [Test]
+        [Description("The STRUCT-DEFAULT TRAP (a slice-2 guard): default(CombatConditions) is ALL ZEROS — blind, frozen, gunless — the INVERSE of Clean (all 1.0). A future FleetCombatStateDB field must be SEEDED to Clean at every ctor/deserialize point; an un-seeded field would read blind straight into the shared kernel. This gauge documents the trap so it can't be silently reintroduced.")]
+        public void StructDefault_IsAllZeros_NotClean_TheSlice2SeedingTrap()
+        {
+            var def = default(CombatConditions);
+            Assert.AreEqual(0.0, def.Detection, 1e-9, "default is all-zeros (blind), NOT Clean.");
+            Assert.AreEqual(0.0, def.Closing, 1e-9);
+            Assert.AreEqual(0.0, def.Firepower, 1e-9);
+            Assert.AreNotEqual(CombatConditions.Clean.Detection, def.Detection,
+                "Clean.Detection (1.0) MUST differ from default.Detection (0.0) — seed CombatConditions to Clean, never leave it at default.");
         }
 
         [Test]
