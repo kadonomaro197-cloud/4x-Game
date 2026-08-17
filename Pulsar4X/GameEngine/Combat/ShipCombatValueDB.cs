@@ -4,6 +4,7 @@ using Pulsar4X.Components;
 using Pulsar4X.Damage;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
+using Pulsar4X.Factions;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;
 using Pulsar4X.Weapons;
@@ -45,6 +46,25 @@ namespace Pulsar4X.Combat
 
         /// <summary>v1 stub: a launcher's effective tracks/sec until salvo size + reload are read (v2).</summary>
         public const double MissileSaturationStub = 1.0;
+
+        // ── C-GUIDED (OPERATION BLUEPRINT-TO-STEEL, 2026-08-17) — a missile launcher's firepower from its REAL warhead ──
+        /// <summary>When ON, a missile launcher's firepower is read from a REPRESENTATIVE warhead (the owning faction's
+        /// heaviest loadable ordnance) instead of the flat <see cref="MissileLauncherFirepowerStub"/> — so a torpedo
+        /// ship reads its real striking power (entityassembler.html TIER 3 #3; developer ruling "Option A"). Default
+        /// OFF → the flat stub → byte-identical. The client turns it on; the live scale is the developer's calibration
+        /// (see <see cref="GuidedWarheadDivisor"/>).</summary>
+        public static bool EnableGuidedWarheadFirepower = false;
+
+        /// <summary>Joules per kilogram of TNT-equivalent (the standard 4.184e6). A warhead's energy (J) =
+        /// its TNT-equivalent mass (kg) × this.</summary>
+        public const double TntJoulesPerKg = 4.184e6;
+
+        /// <summary>C-GUIDED calibration knob: a missile launcher's firepower (J/s) = its representative warhead's
+        /// energy (J) ÷ this. A mutable static so the developer can live-tune it once the flag is on, WITHOUT a
+        /// recompile (the <c>JobsPerCapita</c> pattern). The default reads the base-mod ~5 kg-TNT missile as several
+        /// times the old flat stub (torpedo ships read stronger — the design's complaint), and firepower SCALES with
+        /// the warhead chosen — a bigger warhead reads proportionally harder.</summary>
+        public static double GuidedWarheadDivisor = 20.0;
 
         /// <summary>Flak effective range (m) — SHORT. Point-defense: pellets disperse and bleed energy fast, so it
         /// only reaches the close-in screen (catches fighters/missiles at knife-to-near range). The hard cutoff the
@@ -443,7 +463,11 @@ namespace Pulsar4X.Combat
                 {
                     foreach (var comp in launchers)
                     {
-                        double dps = MissileLauncherFirepowerStub * comp.HealthPercent;
+                        // C-GUIDED: read the launcher's real warhead when on; else the flat stub (byte-identical).
+                        double baseDps = EnableGuidedWarheadFirepower
+                            ? RepresentativeLauncherFirepower(ship, comp.Design)
+                            : MissileLauncherFirepowerStub;
+                        double dps = baseDps * comp.HealthPercent;
                         // Range (the authentic-closing pass): missiles are the LONG-range standoff opener (hard cutoff).
                         weapons.Add(new WeaponProfile(dps, MissileVelocityStub_mps, MissileTrackingStub, MissileSaturationStub, MissileRange_m, WeaponNature.Explosive, WeaponDelivery.Guided));
                     }
@@ -566,6 +590,61 @@ namespace Pulsar4X.Combat
         {
             if (recoil <= 0 || chassisMass <= 0) return 1.0;
             return chassisMass / (chassisMass + recoil * RecoilTrackingReference);
+        }
+
+        /// <summary>C-GUIDED: the firepower (J/s) a missile launcher contributes when <see cref="EnableGuidedWarheadFirepower"/>
+        /// is on — read from a REPRESENTATIVE warhead (the heaviest ordnance in the owning faction's library this
+        /// launcher can load). Falls back to <see cref="MissileLauncherFirepowerStub"/> when the launcher, faction, or
+        /// ordnance library is unavailable (a launcher with nothing to fire still rates the stub). Defensive — never
+        /// throws (Calculate must not).</summary>
+        internal static double RepresentativeLauncherFirepower(Entity ship, ComponentDesign launcherDesign)
+        {
+            if (launcherDesign == null || !launcherDesign.TryGetAttribute<MissileLauncherAtb>(out var launcher))
+                return MissileLauncherFirepowerStub;
+            if (ship?.Manager?.Game == null)
+                return MissileLauncherFirepowerStub;
+
+            Entity factionEntity;
+            try { factionEntity = ship.GetFactionOwner; }
+            catch { return MissileLauncherFirepowerStub; }   // faction owner not resolvable (e.g. neutral) → stub
+            if (factionEntity == null
+                || !factionEntity.TryGetDataBlob<FactionInfoDB>(out var faction)
+                || faction.MissileDesigns == null || faction.MissileDesigns.Count == 0)
+                return MissileLauncherFirepowerStub;
+
+            double bestEnergy = 0.0;
+            foreach (var ordnance in faction.MissileDesigns.Values)
+            {
+                if (ordnance == null || !launcher.CanLoadOrdnance(ordnance)) continue;
+                double e = WarheadEnergyJoules(ordnance);
+                if (e > bestEnergy) bestEnergy = e;
+            }
+            return WarheadFirepower(bestEnergy);
+        }
+
+        /// <summary>C-GUIDED: map a warhead's energy (J) to a launcher firepower (J/s). A launcher with no explosive
+        /// warhead to represent (energy ≤ 0) keeps the flat <see cref="MissileLauncherFirepowerStub"/>; otherwise
+        /// firepower scales with the warhead by <see cref="GuidedWarheadDivisor"/>.</summary>
+        internal static double WarheadFirepower(double warheadEnergyJoules)
+        {
+            if (warheadEnergyJoules <= 0.0) return MissileLauncherFirepowerStub;
+            double fp = warheadEnergyJoules / GuidedWarheadDivisor;
+            return fp > 0.0 ? fp : MissileLauncherFirepowerStub;
+        }
+
+        /// <summary>C-GUIDED: the total explosive warhead energy (J) of an ordnance design = Σ over its
+        /// <see cref="Weapons.OrdnanceExplosivePayload"/> components of (TNT-equivalent mass kg × count ×
+        /// <see cref="TntJoulesPerKg"/>). 0 for a kinetic-only missile (no explosive payload).</summary>
+        internal static double WarheadEnergyJoules(OrdnanceDesign ordnance)
+        {
+            if (ordnance?.Components == null) return 0.0;
+            double tntKg = 0.0;
+            foreach (var (design, count) in ordnance.Components)
+            {
+                if (design != null && design.TryGetAttribute<OrdnanceExplosivePayload>(out var payload))
+                    tntKg += payload.ExposiveTnTEQMass * count;
+            }
+            return tntKg * TntJoulesPerKg;
         }
 
         public static double CalculateEvasion(Entity ship)
