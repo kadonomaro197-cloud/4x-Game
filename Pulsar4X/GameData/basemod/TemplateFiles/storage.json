@@ -279,7 +279,7 @@
         },
         {
           "Name": "Console Space",
-          "DescriptionFormula": "'Provides console space for bridge crew'",
+          "DescriptionFormula": "'Bridge console stations for the command watch team — sizes the bridge module mass and its crew requirement. (On a ship this is bridge sizing only; command span-of-control is a planetary-administration mechanic, not a ship one.)'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "20",
           "MinFormula": "1",

@@ -507,14 +507,6 @@
           "PropertyFormula": "PropertyValue('Size') * 0.1"
         },
         {
-          "Name": "Fighter Construction Points",
-          "GuiHint": "GuiSelectionMaxMinInt",
-          "MaxFormula": "1000",
-          "MinFormula": "0",
-          "StepFormula": "1",
-          "PropertyFormula": "0"
-        },
-        {
           "Name": "Ordnance Construction Points",
           "DescriptionFormula": "'Daily production towards ordnance'",
           "GuiHint": "GuiTextDisplay",
