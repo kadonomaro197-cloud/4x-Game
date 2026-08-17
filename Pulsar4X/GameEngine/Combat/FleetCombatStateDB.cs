@@ -80,6 +80,17 @@ namespace Pulsar4X.Combat
         /// aggregate pool per fleet, like the shield and ammo.</summary>
         [JsonProperty] public double HeatPool_kJ { get; internal set; }
 
+        /// <summary>The ENVIRONMENT this fight is in (E-env slice 2) — a bundle of ×multipliers (+ ambient DoT) so the
+        /// resolver isn't blind to WHERE the battle happens (a nebula cuts accuracy/closing, a corona burns). Seeded
+        /// once at engagement start from <see cref="CombatConditions.ReadAt"/> when
+        /// <see cref="Combat.CombatEngagement.EnableCombatConditions"/> is on; left at <see cref="CombatConditions.Clean"/>
+        /// otherwise. <b>Initialised to Clean (all 1.0) — NOT default(struct), which is all-zeros = blind/frozen/gunless</b>
+        /// (the struct-default trap): a C# field initialiser runs for EVERY ctor AND is what an old save lacking this
+        /// field keeps (Newtonsoft never clears a constructed value), so an un-seeded / legacy state reads CLEAN, never
+        /// blind. Only the <see cref="CombatConditions.Accuracy"/> coefficient feeds the kernel today (slice 2);
+        /// firepower / shield-regen / ambient-DoT are later slices.</summary>
+        [JsonProperty] public CombatConditions Conditions { get; internal set; } = CombatConditions.Clean;
+
         // ─── 2D group plane (Operation Earthfall T2.1 / slice S1, docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §13) ───
         // ALL of these are inert unless CombatEngagement.EnableGroupPlane is on — a flag-off fight never seeds them,
         // leaves them at their defaults, and closing runs the unchanged scalar Separation_m path (byte-identical).
@@ -142,6 +153,7 @@ namespace Pulsar4X.Combat
             ShieldPool_J = db.ShieldPool_J;
             AmmoPool_kg = db.AmmoPool_kg;
             HeatPool_kJ = db.HeatPool_kJ;
+            Conditions = db.Conditions;   // CombatConditions is a value struct — assignment is a full copy
             HasFrame = db.HasFrame;
             FrameOrigin = db.FrameOrigin;   // Vector3 is a value type — a straight assignment is a full copy
             FrameXAxis = db.FrameXAxis;

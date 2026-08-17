@@ -192,8 +192,13 @@ namespace Pulsar4X.Combat
         /// engagement separation. Byte-for-byte the ship <see cref="CombatEngagement.HitFraction"/>: fast/guided
         /// weapons defeat evasion (a beam ignores it), high saturation floors the result (flak fills the sky), and
         /// range degrades accuracy for ballistic weapons (guided resists via Tracking). <paramref name="separation_m"/>
-        /// 0 = point blank / closing off → the range term is inert and this equals the pre-closing curve.</summary>
-        public static double HitFraction(WeaponProfile w, double evasion, double separation_m = 0)
+        /// 0 = point blank / closing off → the range term is inert and this equals the pre-closing curve.
+        /// <para><b>E-env visibility/accuracy coefficient</b> (<paramref name="accuracy"/>, E-env slice 2 keystone): the
+        /// FINAL landed fraction is scaled by the environment the fight is in — a nebula/dust/flare makes you hit worse
+        /// what you can barely see (<see cref="CombatConditions.Accuracy"/>). <b>Default 1.0 = clean space → the return
+        /// is byte-identical</b> (x×1.0 is exact). This is the ONE edit that moves BOTH resolvers: the ground path calls
+        /// this too. A value &gt;1 (e.g. deep-space clarity) is clamped so a landed fraction never exceeds 1.</para></summary>
+        public static double HitFraction(WeaponProfile w, double evasion, double separation_m = 0, double accuracy = 1.0)
         {
             double velocityTerm = w.Velocity / (w.Velocity + VelocityReference_mps);                  // beam → ~1, slug → low
             double trackingEffectiveness = velocityTerm > w.Tracking ? velocityTerm : w.Tracking;     // guided tracks even when slow
@@ -214,19 +219,22 @@ namespace Pulsar4X.Combat
             double hit = 1.0 - dodgeChance;
             if (hit < saturationFloor) hit = saturationFloor;
             if (hit > 1.0) hit = 1.0;
+            hit *= accuracy;                                 // E-env: environment visibility cut (1.0 = clean → hit unchanged)
+            if (hit > 1.0) hit = 1.0;                        // deep-space clarity (accuracy > 1) can't push a fraction past 1
+            if (hit < 0.0) hit = 0.0;
             return hit;
         }
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a target with the given
         /// evasion — byte-for-byte the ship <see cref="CombatEngagement"/> LandedFraction. Returns 1.0 for an empty
         /// / zero-damage mix.</summary>
-        public static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0)
+        public static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0, double accuracy = 1.0)
         {
             double total = 0, landed = 0;
             foreach (var w in fire)
             {
                 total += w.DamagePerSecond;
-                landed += w.DamagePerSecond * HitFraction(w, evasion, separation_m);
+                landed += w.DamagePerSecond * HitFraction(w, evasion, separation_m, accuracy);
             }
             return total > 0 ? landed / total : 1.0;
         }

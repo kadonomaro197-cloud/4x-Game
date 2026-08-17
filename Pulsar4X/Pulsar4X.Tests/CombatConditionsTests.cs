@@ -142,5 +142,39 @@ namespace Pulsar4X.Tests
             Assert.AreEqual(1.0, outside.Closing, 1e-9);
             Assert.AreEqual(0.0, outside.AmbientDoT_Jps, 1e-9);
         }
+
+        [Test]
+        [Description("E-env slice 2 — the accuracy coefficient on the shared CombatKernel.HitFraction: accuracy 1.0 (clean space) is byte-identical to omitting it; a lower value scales the landed fraction down (poor visibility = worse hits); 0 lands nothing; >1 is clamped to 1.")]
+        public void HitFraction_AccuracyCoefficient_1IsByteIdentical_LowerReduces()
+        {
+            // A finite-velocity ballistic weapon so evasion bites and the hit sits between the floor and 1.
+            var w = new WeaponProfile(1000, 200000, 0.3, 5);
+            double baseHit = CombatKernel.HitFraction(w, 0.5, 0);
+            Assert.Greater(baseHit, 0.1, "sanity: the test weapon lands above the saturation floor");
+            Assert.Less(baseHit, 1.0, "sanity: and below 1");
+
+            Assert.AreEqual(baseHit, CombatKernel.HitFraction(w, 0.5, 0, 1.0), 1e-12, "accuracy 1.0 must equal clean space (byte-identical hook).");
+            Assert.AreEqual(baseHit * 0.5, CombatKernel.HitFraction(w, 0.5, 0, 0.5), 1e-9, "accuracy 0.5 (nebula-grade cut) halves the landed fraction.");
+            Assert.AreEqual(0.0, CombatKernel.HitFraction(w, 0.5, 0, 0.0), 1e-9, "accuracy 0 (blind) lands nothing.");
+            Assert.LessOrEqual(CombatKernel.HitFraction(w, 0.5, 0, 2.0), 1.0, "accuracy > 1 (deep-space clarity) is clamped — a landed fraction never exceeds 1.");
+        }
+
+        [Test]
+        [Description("E-env slice 2 — the struct-default trap guard: FleetCombatStateDB.Conditions defaults to Clean (all 1.0), NOT default(struct) all-zeros (blind/frozen), and the copy ctor carries a set value.")]
+        public void FleetCombatState_Conditions_DefaultsToClean_AndCopies()
+        {
+            var state = new FleetCombatStateDB();
+            Assert.AreEqual(1.0, state.Conditions.Detection, 1e-9, "a fresh combat state reads CLEAN conditions, not the blind all-zeros default(struct).");
+            Assert.AreEqual(1.0, state.Conditions.Accuracy, 1e-9);
+            Assert.IsFalse(state.Conditions.InHazard);
+
+            state.Conditions = CombatConditions.FromHazard(new HazardModifiers
+            {
+                InAnyHazard = true, SensorRangeMultiplier = 0.4, MoveSpeedMultiplier = 1.0,
+                WarpSpeedMultiplier = 1.0, DamagePerSecond = 0.0, BlindsSensors = false,
+            });
+            var copy = new FleetCombatStateDB(state);
+            Assert.AreEqual(0.4, copy.Conditions.Accuracy, 1e-9, "the copy ctor carries Conditions.");
+        }
     }
 }
