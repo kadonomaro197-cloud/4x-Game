@@ -34,6 +34,15 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > - **E13 (organic / bio chassis substrate) = BUILD IT** — a `Substrate` field on the chassis atb + feed/regen/no-power consequences (unblocks living units).
 > - **E14 (aura door — synapse/buff auras) = BUILD IT** — a per-tick neighbour-sweep buff/debuff pass + `AuraAtb` (most expensive; unblocks commander auras / synapse).
 >
+> **🟢 DEVELOPER ADJUDICATION ANSWERS (2026-08-17) — the 5 remaining parked items RESOLVED (un-parked into the build queue):**
+> - **PHYSICAL-SUPPLY MECHANIC = YES, SPLIT.** Build the real physical separation: a ship's burnable FUEL becomes its own tank (split from general cargo), and a launcher gets its own ORDNANCE MAGAZINE (split from the ordnance cargo hold). This gives `RefuelAction`/`ResupplyAction` (the A4/B6 de-fanged self-supply stubs) something real to top up (Aurora-style depth). NEW subsystem — its own multi-slice run; touches `NewtonThrustAbilityDB`/`CargoStorageDB` (fuel) + `GenericFiringWeaponsDB`/`MissileLauncherAtb` (magazine); L13 save-safe (new overloads, never a new ctor param). Recon-first.
+> - **C-GUIDED = THE PICKED WARHEAD.** Refines the shipped A1 (which reads the faction's *heaviest loadable* ordnance as a proxy): firepower must read the SPECIFIC warhead the design/player PICKED for the launcher, not a faction-wide default. Leans Option B (per-loadout accuracy) — the build slice decides design-time-pick (an assigned-ordnance field on the launcher in the assembler) vs runtime-loadout (needs the recalc-on-change hook, Combat gotcha #2); intent = firepower tracks the actual chosen warhead. Supersedes A1's representative-read.
+> - **C-MOBILITY = MULTIPLY.** `speed = frameMode × SpeedFactor` (`GroundMobility.SpeedMultForUnit` — today it REPLACES). One-line change; re-baseline the mobility gauges. Keeps the frame choice (Foot ×1 / Walker ×1.5 / Tracked ×2 / Hover ×3) a real decision alongside the designed drive; both factors compound. (Developer asked WHY multiply — recorded in the reply: independent factors that compound, like pump-type × motor-horsepower; a blend needs an arbitrary weight and caps how much the frame matters.)
+> - **C7 (CAPTURE-TRANSFER) = A — ALREADY ANSWERED 2026-08-16, re-confirmed.** *"Capture flips the colony + installations + surviving population + stockpiles to the conqueror, with a population/unrest hit."* ⚠ This was resolved on 2026-08-16 (answers block above) but was still carried as "blocked/parked" in a few places (the ADJUDICATION QUEUE line + the ground docs' S12/#21 markers) — that was DOC-DRIFT; C7 is NOT blocked, it is Option A and reconned (RECON DONE block: `GroundForcesProcessor.cs:1073` owner-flip + registry add/remove + `ColonyMoraleDB`/`LegitimacyDB` capture hit; landmines: bare-catch `:116`, async-void L2, cross-manager GlobalManager write). Ground-side S12/#21 "OPEN" markers corrected in the same commit.
+> - **COMMAND AdminLevel = WIRE IT** (not cut). `AdminLevel` (Command door) is currently read by NO rule. Wire it into a real gate — recon-first for the exact rule (candidate per `docs/society/GOVERNANCE-AND-DELEGATION-DESIGN.md`: `AdminLevel` feeds the admin span-of-control that bounds how many colonies/subordinate posts an administrator governs without penalty — the Ship→Empire `AdminSpaceAtb`/`AdminLevel` seat chain). Small slice once the target rule is confirmed.
+>
+> **NET: the ADJUDICATION QUEUE is now EMPTY of open items** — every parked decision has a developer ruling. Remaining work is all BUILD (no more STOP items): C7 (=A) · physical-supply · C-guided (picked-warhead) · C-mobility (multiply) · AdminLevel-wire · C-staffing (finishing) · C-sensors · E-env slice 3 · the big subsystems E12/E13/E14 + the resolver 2D-arena/air-layer · the Phase-D planet-view track (D-stockpile + the planetary-functional-plan ladder) · the deep order-menu verbs (scope-trim candidate). Definition-of-Done now purely a build burndown.
+>
 > **BUILD QUEUE (cheapest-correct first, file-disjoint, ONE CI-gated slice at a time):** ~~(1) **D10+D11** drop the two dead dials + **D9** hide Console-Space on ships [designer/JSON]~~ **✅ LANDED (slice 1, data-only, byte-identical);** ~~(2) **C8** habitat pricing [JSON]~~ **✅ BUILT (slice 2)** — the `space-habitat` `Mass` now reads its capacity + comfort dials (`1000*(1 + Colonists/500*0.5 + Comfort/10)`) so a 1M-colonist module no longer costs the same 1 t as an empty one; build points follow the priced mass (`[Mass]/10`); material/volume already scaled off `[Mass]`. Shipped standard habitat 1000→**2000 kg**; Kithrin hive (200k colonists) ~**201,500**. **Cost-side only — capability (pop support, comfort, crew=10, station operating-cost-by-module-count) unchanged;** blast radius verified safe (Earth unlocks-not-installs it; Kithrin's 40 hive-habitats are PRE-installed → no build-cost hit; `EfStationIncome`/`StationFactory`/`FactionSelfSufficiency`/`BaseModIntegrity` all read capacity/counts/unlock-set, never mass). Gauge: `SpaceHabitatPricingTests` (shipped=2000 + pop-support-preserved; structural mass-formula-reads-the-dials can't-rot guard). ~~(3) **A1** guided warhead [engine]~~ **✅ BUILT (slice 3, flag-gated byte-identical), push-pending;** ~~(4) **A2** mobility assembler-UI [client]~~ **✅ BUILT (slice 4, client annotation), push-pending;** ~~(5) **B6** four order-stubs [engine]~~ **✅ BUILT (2026-08-17) — reshaped: only `ServeyAnomalyAction` (survey-nearest-anomaly) was real; Refuel/Resupply-self are engine no-ops (fuel==cargo, no physical magazine) + Ship-Logistics already exists → left de-fanged, physical-magazine/tank-vs-cargo mechanic surfaced to ADJUDICATION QUEUE;** (6) **B4** match-orbit Intercept + confirm-gated Ram [engine, new order]; (7) **C7** capture-transfer [engine, substantial]; (8) **E12** carrier launch → (9) **E13** organic frames → (10) **E14** auras [big subsystems, each its own multi-slice run]. **E-env slice 2b** (the combat-environment live wire) continues in parallel — it's file-disjoint from all of the above.
 >
 > **🔭 RECON DONE (2026-08-17, Agent-tool fan-out) for the next slices — build them fast off these:**
@@ -47,7 +56,7 @@ HTMLs' own honesty grades (LIVE / DATA / BUILD) are the build orders. Implement 
 > 1. **Phase D — planetary view (biggest unstarted chunk, north-star-aligned):** **D-units loose-unit march is DONE + CI-pending (2026-08-16** — developer ruled the formation is the unit of movement; the two bypass sites now auto-wrap → the queued `SetFormationOrder` verb both seats use). **NEXT:** (a) the flagged D-units follow-up — convert the direct `OrderFormationMove` formation-march buttons (`PlanetViewWindow.cs:1572` + FleetWindow `DrawBattalionOrders`) to the queued verb for full One-Verb consistency (immediate→queued, own slice); then **D-stockpile** (per-hex stockpile + hex-to-hex haul), then **D-planfn**.
 > 2. **Phase E — E-env (smaller, self-contained, NEEDS NO MOVEMENT RULING):** `CombatConditions` into the shared combat kernel (space combat stops being environment-blind). ⚠ touches the shared damage/auto-resolve kernel (L10) → its own recon first.
 > 3. **C-sensors** — the band-match fix (⚠ backlog file:line STALE + behaviour-changing → own focused slice).
-> **PARKED for the developer (ADJUDICATION QUEUE — do NOT guess):** ~~A4-ORDERS (4 order-stub behaviors)~~ **RESOLVED via B6 (2026-08-17): survey-anomaly built; the other 3 are engine no-ops/duplicates → left. NEW question surfaced →** **PHYSICAL-SUPPLY MECHANIC** (do you want a real fuel-tank-vs-cargo separation + a per-launcher ordnance magazine — Aurora-style depth — so Refuel/Resupply have something to actually top up? A new feature, not an order-wire; until answered, Refuel/Resupply stay safe no-ops and the external-source refuel/rearm client buttons remain the way to resupply). · C-GUIDED (missile ordnance-at-build) · C-MOBILITY (drive×frame combine) · B-ORDERS-MOVEMENT (Intercept/Ram) · C-deadknobs TIER 4 #6–8 + the capture-transfer ruling · **CIVIC space-habitat mass-pricing** (a 1M-colonist station costs the same 1 t as an empty one — price it? `01-IO-civic.md` §D). **Full slice board below reflects this session.** Historical NEXT ACTION detail preserved below.
+> **PARKED for the developer (ADJUDICATION QUEUE) — ✅ NOW EMPTY, all resolved 2026-08-17:** ~~A4-ORDERS~~ (B6) · ~~PHYSICAL-SUPPLY MECHANIC~~ **= YES SPLIT** (build fuel-tank-vs-cargo + per-launcher magazine) · ~~C-GUIDED~~ **= the picked warhead** · ~~C-MOBILITY~~ **= multiply** · ~~B-ORDERS-MOVEMENT (Intercept/Ram)~~ **= built (B4a green / B4b in CI)** · ~~C-deadknobs TIER 4 #6–8~~ **= resolved+closed via `c9240b9`** · ~~capture-transfer ruling~~ **= C7 = A, answered 2026-08-16** · ~~CIVIC space-habitat mass-pricing~~ **= priced via C8 `ed5b2d7`** · ~~Command AdminLevel~~ **= wire it.** **No open STOP items remain — the rest of the campaign is a pure BUILD burndown.** Historical NEXT ACTION detail preserved below.
 >
 > **(historical) 🧭 NEXT ACTION (2026-08-16) — the run-cost vector is COMPLETE; Phase C continues with the civic BUILD dials.**
 > Phase A + B are DONE. Phase C **run-cost vector — ALL FIVE RUNGS LANDED:** Jobs (A1), **Staffing** (`7cdce65`), **Upkeep**
@@ -392,7 +401,7 @@ too low snaps to the +15 bonus). One line in `NewGameMenu` reverts it if the liv
 
 ---
 
-### ⚖ A4-ORDERS — what should the four "issue-and-do-nothing" orders actually DO? (parked 2026-08-13)
+### ✅ A4-ORDERS / PHYSICAL-SUPPLY — RESOLVED: B6 built survey-anomaly + de-fanged the rest (2026-08-17); the surfaced physical-supply question is now **ANSWERED 2026-08-17 = YES, SPLIT** — build a real fuel-tank-vs-cargo separation + a per-launcher ordnance magazine so Refuel/Resupply-self have something real to top up (new multi-slice subsystem, recon-first, L13 save-safe). (was parked 2026-08-13)
 
 **Plain English:** the Forces window offers (or will offer) four orders that were never finished — they issue and do
 nothing. A4 made them **SAFE** (they can no longer jam a fleet's order queue or crash the game clock — real bugs
@@ -422,7 +431,7 @@ menu until finished, I can pull them from the client's order list — your call 
 
 ---
 
-### ⚖ C-GUIDED — which ordnance does a missile ship's auto-resolve firepower assume? (parked 2026-08-15, §6 #3)
+### ✅ C-GUIDED — RESOLVED 2026-08-17: **THE PICKED WARHEAD** (firepower reads the specific chosen ordnance, not A1's representative-heaviest proxy; leans Option B / per-loadout — build slice picks design-time-field vs runtime-recalc). (was parked 2026-08-15, §6 #3)
 **Plain English:** Right now the auto-resolver rates every missile/torpedo launcher at a flat stub (100 kJ/s) instead
 of the real warhead, so torpedo ships read far weaker than they are (`entityassembler.html` flags this outright; TIER 3
 #3). The obvious fix — "read the mounted warhead" — hits a wrinkle: a launcher's ordnance
@@ -444,7 +453,7 @@ nothing to read.
 with Option B flagged as the v2 loadout-accurate follow-up. Gauge: a torpedo ship's `ShipCombatValueDB.Firepower` scales
 with its warhead choice, not the constant. Say the word and I build A.
 
-### ⚖ C-MOBILITY — how should a designed drive combine with the frame's locomotion mode? (parked 2026-08-15, §6 #3)
+### ✅ C-MOBILITY — RESOLVED 2026-08-17: **MULTIPLY** (`speed = frameMode × SpeedFactor`; one-line, re-baseline the mobility gauges; frame choice stays a real decision, both factors compound). (was parked 2026-08-15, §6 #3)
 **Plain English:** The propulsion door sells the four frame locomotion modes (Foot ×1 / Tracked ×2 / Walker ×1.5 /
 Hover ×3) as "modes the simulation already reads." But `GroundMobility.SpeedMultForUnit` **replaces** the frame mode with
 a mounted drive's `SpeedFactor` outright — so the moment a unit carries a designed drive, whether its frame is Foot or
@@ -467,7 +476,7 @@ weight) and I build it.
 > slice with a sensor-band data pass, not a rushed fill. Locating the real band-match site + checking whether the base
 > data relies on the bug is the first step when Phase C reaches it.
 
-### ⚖ B-ORDERS-MOVEMENT — Intercept/Ram semantics + the region-local hex-move orders (parked 2026-08-15, §6)
+### ✅ B-ORDERS-MOVEMENT — RESOLVED 2026-08-17: Intercept = the match-orbit "close on a detected hostile" order (**B4a BUILT + CI-GREEN** `d23f936`), Ram = the confirm-gated suicide charge (**B4b BUILT** `4d70df0`, in CI); the region-local hex-move orders stay **unwired** (global-only queued path C4, per the M1 one-movement-layer deletion). (was parked 2026-08-15, §6)
 **Plain English:** three B-orders from `forceswindow.html` §10 have no safe default, so they're parked instead of guessed:
 
 1. **Intercept / Ram Target** (C6, `NewtonThrustCommand.cs:252`). The existing engine verb is a **literal kinetic RAM** —
@@ -670,7 +679,7 @@ with no default, or an HTML number impossible without a redesign — will park h
 Known future parks (from the backlog, not yet reached):
 - **TIER 4 items 6–8** (Console Space on ship bridge · chassis √-law slider · Fighter Construction Points) are
   marked DECISION PENDING — likely STOP items when Phase C reaches them.
-- **What colony capture transfers** (ground-side ruling) — a documented STOP.
+- ~~**What colony capture transfers** (ground-side ruling) — a documented STOP.~~ **RESOLVED — C7 = A (2026-08-16): capture flips colony + installations + surviving population + stockpiles to the conqueror, with a population/unrest hit. Ground-side S12/#21 "OPEN" markers corrected 2026-08-17.**
 
 ---
 

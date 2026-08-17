@@ -26,7 +26,7 @@
 > - **⭐ TRANSITIONAL HEXES at the regional-hex level (M5)** — NEW, not described anywhere below. Connective ground
 >   between the per-regional-hex mini patches so the planet is one seamlessly-connected graph.
 > - **CAPTURE IS PER-HEX (M8).** Region capture is gone. *What victory means is a written deferral until the system is
->   built* — distinct from ruling #21 (what a capture transfers), which stays OPEN.
+>   built* — distinct from ruling #21 (what a capture transfers), which is now **RESOLVED = Option A** (2026-08-17: flip colony+installations+surviving pop+stockpiles, with a pop/unrest hit — build as S12/C7).
 > - **ORDERS ONLY FROM FORCE MANAGEMENT (M9).** Every order surface on the planet view goes.
 > - **Fortification's region-adjacency is deleted (M10); hazards become per-hex from terrain + geography (M11).**
 >

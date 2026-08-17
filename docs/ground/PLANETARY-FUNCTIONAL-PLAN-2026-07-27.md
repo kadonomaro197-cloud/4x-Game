@@ -220,7 +220,7 @@ gauge proves it. **Accessible** = a player reaches it from the normal game, no D
 | Hazard counters as specific gear | **PARTIAL** — 5 hazard types / 8 menaces generated; only Vacuum + ToxicAtmosphere have a designable counter (`GroundSealAtb`). **The developer's own dust-storm example has nothing to counter: ground `SensorJam` is generated and read by NO ground code.** Heat/Corrosive resistance is C#-only, unreachable from the designer. And "one hazard hits several stats" is **not expressible** — `HazardEffect` carries one Type + one Magnitude | MISSING | MISSING | **[V2]** `PlanetEnvironmentFactory.cs:80`, `GroundForcesProcessor.cs:222,1048`, `HazardEffect.cs:54` |
 | Per-mini-tile terrain (M4) | **MISSING** — every mini tile copies its coarse hex's terrain | n/a | drawn (as a copy) | Layer 5 M4 |
 | Hex/tile naming | MISSING (fully specced, Layer 6) | MISSING | MISSING | Layer 6 |
-| Capture transfers substance | **MISSING** — bare owner-ID flip | n/a | MISSING | ruling #21 — **OPEN** |
+| Capture transfers substance | **MISSING** — bare owner-ID flip | n/a | MISSING | ruling #21 — ✅ **RESOLVED = A** (2026-08-17): flip colony+installations+surviving pop+stockpiles, with a pop/unrest hit — build as S12/C7 |
 
 **The shape of it:** almost nothing in that table is *unbuilt machinery*. The failures cluster in the
 **Accessible** and **Observable** columns, and in **data that ships as zero**. That is why this plan front-
@@ -744,7 +744,7 @@ build, don't redesign); **employment jobs + power demand** (#12 — mostly JSON)
     choice · terrain from stellar/orbital physics). **G6 is the one M4 depends on** — *"a rich terrain display
     over a uniform generator is a lie"* — so schedule G6 **with** M4, never before it.
 
-### S12 — What capture transfers (#21) · **BLOCKED ON Q1 — do not start**
+### S12 — What capture transfers (#21) · ✅ **UNBLOCKED 2026-08-17 — Q1/#21 RESOLVED = Option A** (developer, via BLUEPRINT-TO-STEEL C7, answered 2026-08-16): capture flips **colony + installations + surviving population + stockpiles** to the conqueror, **with a population/unrest hit**. Buildable now — recon: `GroundForcesProcessor.cs:1073` owner-flip + `FactionInfoDB.Colonies` registry add/remove + `ColonyMoraleDB`/`LegitimacyDB` capture penalty (landmines: bare-catch `:116`, async-void L2, cross-manager GlobalManager write).
 
 ---
 
@@ -777,7 +777,7 @@ player encounters instead. *(Slices whose body already carries `Reach:`/`See:` a
 | **S9** bombardment joint | **Fleet window → a ship holding orbit → Bombard → pick the target region.** | A bombardment line in the **S1 log**; the colony readout **loses a building**; and the AI softens the beach before it lands. |
 | **S10** designer chain | **Entity Assembler → design a ground unit**: weapon dials carry penetration/per-shot energy; parts cost research; **saving an invalid design is refused**; the 3 prebuilts are gone and the garrison composition replaces them. | The designer's own validity readout **blocks** the save (today it only warns), and a built unit's stats reflect the dials rather than zeros. |
 | **S11** depth | **Per sub-slice — each writes its own Reach when it is scheduled.** S11 is explicitly *not* enterable as one unit (audit §13c: 13 items, one gauge between them). | Per sub-slice. The one pulled forward, `SYSTEM-GENERATION` **G1**, is CI-only: generate → write → reload → assert identical. |
-| **S12** capture transfer | ⚠ **BLOCKED ON Q1 — no path can be written until the ruling says what transfers.** Gauge-blocked, not gauge-missing. | Blocked. |
+| **S12** capture transfer | ✅ **UNBLOCKED (Q1/#21 = Option A, 2026-08-17).** REACH: take an enemy colony (win the surface) → the world flips to you **with its installations + surviving population + stockpiles**, and its morale/legitimacy takes a capture hit. | The colony readout shows the new owner keeps the buildings + stockpiles (not a bare owner-ID flip), the captured colony's morale/legitimacy drops (unrest), and the faction roster/registry updates (no stale-owned ghost). |
 
 **Two honest patterns in this table, stated rather than hidden:**
 1. **Five slices (S1b · S1d · S1e · S1f) have no click-path because they are AI defect fixes** — the player's
