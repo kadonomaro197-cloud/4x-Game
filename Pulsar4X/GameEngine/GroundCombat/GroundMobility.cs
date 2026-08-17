@@ -41,8 +41,14 @@ namespace Pulsar4X.GroundCombat
             }
         }
 
-        /// <summary>The unit's speed multiplier, read off its CHASSIS component (falls out of the backing store). Foot
-        /// (×1.0) if it has no backing / no chassis. Always ≥ 1.0 (safe as a divisor). Never throws.</summary>
+        /// <summary>The unit's speed multiplier, read off its CHASSIS + designed drive (falls out of the backing store).
+        /// The frame's coarse Locomotion MODE is the base (Foot ×1 / Walker ×1.5 / Tracked ×2 / Hover ×3); a designed
+        /// drive MULTIPLIES it — <c>frameMode × SpeedFactor</c> (C-mobility = MULTIPLY, developer ruling 2026-08-17): the
+        /// frame TYPE and the drive POWER are independent factors that compound, so a Hover chassis with a good drive
+        /// beats a Foot chassis with the same drive and the frame choice stays a real decision. Foot (×1.0) if it has no
+        /// backing / no chassis. Always ≥ 1.0 (safe as a divisor). Never throws. <b>Byte-identical for a Foot-frame or
+        /// no-chassis unit</b> (frameMode 1.0 ⇒ 1.0 × SpeedFactor = SpeedFactor, the old "drive wins" result); only a
+        /// designed unit on a NON-Foot frame moves faster now.</summary>
         public static double SpeedMultForUnit(Entity body, GroundUnit unit)
         {
             try
@@ -50,7 +56,17 @@ namespace Pulsar4X.GroundCombat
                 if (GroundUnitEntity.TryGetBacking(body, unit, out var backing)
                     && backing.TryGetDataBlob<ComponentInstancesDB>(out var cidb))
                 {
-                    // A designed, parametric LOCOMOTION component wins — the player's own drive (best mounted).
+                    // The frame's coarse Locomotion mode = the BASE multiplier (Foot 1.0 if there's no chassis component).
+                    double frameMode = 1.0;
+                    if (cidb.TryGetComponentsByAttribute<GroundChassisAtb>(out var chassis) && chassis.Count > 0)
+                    {
+                        var catb = chassis[0].Design?.GetAttribute<GroundChassisAtb>();
+                        if (catb != null) frameMode = SpeedMultFor(catb.Locomotion);
+                    }
+
+                    // A designed, parametric LOCOMOTION component (the player's own drive, best mounted) MULTIPLIES the
+                    // frame mode — both the frame TYPE and the drive POWER count. (Was: returned the drive's SpeedFactor
+                    // outright, which ERASED the frame mode; the developer's MULTIPLY ruling makes the frame matter again.)
                     if (cidb.TryGetComponentsByAttribute<GroundLocomotionAtb>(out var locos) && locos.Count > 0)
                     {
                         double best = 0;
@@ -59,14 +75,11 @@ namespace Pulsar4X.GroundCombat
                             var la = l.Design?.GetAttribute<GroundLocomotionAtb>();
                             if (la != null && la.SpeedFactor > best) best = la.SpeedFactor;
                         }
-                        if (best > 0) return best;
+                        if (best > 0) return frameMode * best;
                     }
-                    // Fallback: the chassis frame's coarse Locomotion enum (slice 4) for units with no locomotion component.
-                    if (cidb.TryGetComponentsByAttribute<GroundChassisAtb>(out var chassis) && chassis.Count > 0)
-                    {
-                        var atb = chassis[0].Design?.GetAttribute<GroundChassisAtb>();
-                        if (atb != null) return SpeedMultFor(atb.Locomotion);
-                    }
+
+                    // No designed drive → the frame mode alone (unchanged fallback).
+                    return frameMode;
                 }
             }
             catch { }

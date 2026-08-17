@@ -395,11 +395,17 @@ Locomotion at `3` would have silently dropped **Hover** off the list. It is now 
 `GroundChassisAtb(double, double, double, double, double)` (the binder widens Int32→double; only ARITY is the trap —
 gotcha 6). JSON only, no C# change.
 
-**Related open finding (NOT fixed):** `GroundMobility.SpeedMultForUnit` returns a mounted `GroundLocomotionAtb`'s
-`SpeedFactor` **outright**, falling back to the chassis mode only when no locomotion component is mounted. So the
-moment a unit carries a designed drive, whether its frame is Foot or Hover **stops affecting speed at all** — the four
-modes are dead weight on any properly-designed unit. The mode should probably SCALE the designed factor rather than be
-replaced by it; that is a behaviour change needing a re-baselined gauge and the developer's call.
+**Related finding — FIXED (C-mobility = MULTIPLY, developer ruling 2026-08-17):** `GroundMobility.SpeedMultForUnit`
+used to return a mounted `GroundLocomotionAtb`'s `SpeedFactor` **outright**, so the moment a unit carried a designed
+drive its frame mode (Foot vs Hover) stopped affecting speed at all — the four modes were dead weight on any properly-
+designed unit. The developer's call was **MULTIPLY**: the method now reads the frame's coarse mode as the BASE and
+returns **`frameMode × best-drive SpeedFactor`** (`GroundMobility.cs:52` — `SpeedMultForUnit`). Both the frame TYPE and
+the drive POWER are independent factors that compound (analogy: a pump's design curve × its motor's horsepower — you
+multiply, you don't pick one), so a Hover chassis with a good drive beats a Foot chassis with the same drive and the
+frame choice stays a real decision. **Byte-identical** for a Foot-frame (mode ×1) or no-chassis unit (mode ×1) —
+`1.0 × SpeedFactor = SpeedFactor`, the old "drive wins" result — so every existing gauge is unchanged; only a designed
+unit on a NON-Foot frame moves faster now. Gauge: `GroundLocomotionTests.DriveOnANonFootFrame_MultipliesTheFrameMode`
+(same ×1.5 drive reads ×4.5 on a Hover frame, ×1.5 on a Foot frame, Hover > Foot).
 
 ## VETERANCY / TRAINING — an elite-unit multiplier baked at raise (litmus follow-up, 2026-07-17)
 
