@@ -619,6 +619,64 @@ namespace Pulsar4X.Combat
             return result;
         }
 
+        /// <summary>Player order: RAM that fleet — a deliberate suicide charge. Unlike <see cref="OrderAttack"/> (where
+        /// the stronger fleet wins with survivors), a ram is MUTUAL kinetic annihilation, ship-for-ship: each ramming
+        /// ship destroys ITSELF and one enemy ship, so both sides lose the SAME number — the smaller fleet is wiped,
+        /// the larger loses an equal count and its surplus survives (they had nothing left to ram). A desperation
+        /// tactic: a weak fleet can guarantee it takes N of a stronger enemy down with it. Casualties are WHOLE-SHIP
+        /// removal via <c>Entity.Destroy()</c> — the auto-resolve casualty model, NOT the per-pixel damage sim (which
+        /// the resolver deliberately avoids and which deposits ~0 for ship hulls; routing a ram through it would be a
+        /// hollow no-op). A DIRECT call (like <see cref="OrderAttack"/>/doctrine/EMCON): bypasses the auto-trigger
+        /// gates — the player is taking the deliberate shot. No-ops on a friendly target, an empty fleet, self, or an
+        /// undetected enemy (the fog gate — you can't ram what you can't see). <b>v1 is an IMMEDIATE resolution</b>; a
+        /// "close physically, then collide on arrival" trigger (a proximity/warp-arrival hook) is a flagged follow-up.
+        /// One verb, both seats — the AI can issue the same order.</summary>
+        public static void OrderRam(Entity attacker, Entity target)
+        {
+            if (attacker == null || !attacker.IsValid || target == null || !target.IsValid || attacker == target) return;
+            if (!AreHostile(attacker, target)) return;              // no ramming your own
+            if (!CanEngageTarget(attacker, target)) return;         // fog: can't ram what you can't see
+
+            var attackerShips = GetFleetShips(attacker);
+            var targetShips = GetFleetShips(target);
+            int n = System.Math.Min(attackerShips.Count, targetShips.Count);   // ship-for-ship collisions
+            if (n == 0) return;
+
+            for (int i = 0; i < n; i++)
+            {
+                attackerShips[i].Destroy();   // the rammer dies…
+                targetShips[i].Destroy();     // …and takes one enemy ship with it
+            }
+
+            CombatLog($"{FleetLabel(attacker)} RAMS {FleetLabel(target)} — {n} ship(s) lost on EACH side");
+            RecordBattleEvent(attacker, BattleEventType.Salvo, n, attackerShips.Count - n, 0,
+                "RAMMED " + FleetLabel(target) + " — " + n + " lost on each side");
+            RecordBattleEvent(target, BattleEventType.Salvo, n, targetShips.Count - n, 0,
+                "RAMMED by " + FleetLabel(attacker) + " — " + n + " lost on each side");
+        }
+
+        /// <summary>The Fleet-window "Ram" convenience: find the NEAREST hostile fleet in the system and
+        /// <see cref="OrderRam"/> it — the ram twin of <see cref="OrderAttackNearestHostile"/> and the primitive the AI
+        /// can call. Returns the fleet it rammed, or null if no detectable hostile fleet with ships is present.</summary>
+        public static Entity OrderRamNearestHostile(Entity fleet)
+        {
+            if (fleet == null || !fleet.IsValid || fleet.Manager == null) return null;
+            Entity best = null;
+            double bestDist = double.MaxValue;
+            foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
+            {
+                if (other == fleet || other == null || !other.IsValid) continue;
+                if (IsSubFleet(other)) continue;   // target the parent fleet, never a sub-fleet component
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                if (!CanEngageTarget(fleet, other)) continue;   // fog: only ram hostiles we actually DETECT
+                double d = FleetSeparation(fleet, other);
+                if (d < bestDist) { bestDist = d; best = other; }
+            }
+            if (best != null) OrderRam(fleet, best);
+            return best;
+        }
+
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
         /// engaged keeps its running state (damage pool, steps, initial count) untouched, so a reinforcement
         /// arriving each tick doesn't reset the fight. Records its starting ship count for the retreat threshold

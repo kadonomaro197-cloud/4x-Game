@@ -493,6 +493,21 @@ the button is a thin call + a `[attack]` SessionLog line + a one-line result mes
 hostile**; picking a SPECIFIC enemy fleet by map-click is the follow-up (needs blip-clickability + enemy ship→fleet
 resolution). See `GameEngine/Combat/CLAUDE.md` → "Order a fleet to ATTACK".
 
+### "Ram" button — a confirm-gated suicide charge (FleetWindow Combat tab, B4b, 2026-08-17)
+
+`FleetWindow.DisplayRamButton` ("Ram nearest hostile fleet", Combat tab, beside the Attack button) is the player's
+**desperation** lever: order the fleet to RAM the nearest detected hostile — a suicide charge where each of your ships
+destroys itself AND one enemy ship, so both fleets lose an equal count (the smaller is wiped). Because it throws your
+fleet away, it is **confirm-gated**: the button picks the nearest detected hostile (`CombatEngagement.
+DetectedHostileFleets`, fog-aware, nearest-first) and opens a **modal** naming that target — the **first caller of
+`ResultModal`'s yes/no `Display(title, onOk, onCancel, contentRenderer, okLabel, cancelLabel)` overload** (zero callers
+before this). Confirming calls `Pulsar4X.Combat.CombatEngagement.OrderRam(SelectedFleet, target)` (a **direct call**,
+CI-tested by `RamOrderTests`) on the specific named fleet, and writes a `[ram]` SessionLog line. Held in three fields
+(`_showRamConfirm` / `_ramTarget` / `_ramMsg`); the modal renders each frame while armed (ImGui immediate-mode;
+`ResultModal` holds its own `IsActive` via the self-registering `PulsarGuiWindow` base ctor). Engine byte-identical
+(a new client method; the engine `OrderRam` is additive). See `GameEngine/Combat/CLAUDE.md` → "Ram — a deliberate
+suicide charge". **Runtime is the developer's local build (CI compiles the client, can't run it).**
+
 ### Fleet-as-one-icon — BUILT 2026-06-27 (the map matches "a fleet is one unit")
 
 The engine treats a fleet as a single unit (moves as one, fights as one, locks orders as one), but the map drew

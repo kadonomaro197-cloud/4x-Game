@@ -195,6 +195,32 @@ Engine byte-identical (an additive read-only helper). Gauge: `InterceptTargeting
 lists hostiles-with-ships / excludes friendly + self / hostility is mutual; `RepresentativeShip` returns a
 positioned own ship, null for empty).
 
+### Ram — a deliberate suicide charge (B4b, Operation Blueprint-to-Steel, 2026-08-17)
+
+`OrderAttack` fights a normal battle (the stronger fleet wins with survivors). **Ram is the opposite bargain: MUTUAL
+annihilation, ship-for-ship.** `CombatEngagement.OrderRam(attacker, target)` (a **direct call**, mirroring
+`OrderAttack`'s guards — null/valid/self, `AreHostile`, `CanEngageTarget` fog gate) is a deliberate suicide charge:
+each ramming ship destroys **itself AND one enemy ship**, so both sides lose `min(A, B)` ships. The smaller fleet is
+wiped; the larger loses an equal count and its **surplus survives** (they had nothing left to ram). It's the
+desperation tactic — a weak fleet can *guarantee* it takes N of a stronger enemy down with it.
+
+- **Whole-ship removal, NOT the per-pixel sim.** Casualties are `Entity.Destroy()` — the exact mechanism the
+  auto-resolver uses for every casualty (whole-or-dead). ⚠ **It does NOT route through
+  `DamageProcessor.OnTakingDamage`** (the recon's first instinct, mirroring `MissileImpactProcessor`): that's the
+  per-pixel `DamageComplex` path the auto-resolver deliberately avoids (gotcha #1) and which deposits **~0 damage for
+  ship hulls** (`CombatReadoutTests`), so a ram through it would be a **hollow no-op** — the very thing this slice
+  exists to avoid. `GetFleetShips` filters `!IsValid`, so `n = min(live A, live B)` counts only live ships and a
+  wiped fleet reads 0.
+- **v1 is IMMEDIATE.** Like `OrderAttack` forcing the fight now, `OrderRam` resolves at once (no closing). A "close
+  physically, then collide on arrival" trigger (a proximity / warp-arrival hook) is a **flagged follow-up**.
+- **One verb, both seats:** `OrderRamNearestHostile(fleet)` (the ram twin of `OrderAttackNearestHostile`) is the
+  convenience the client button + a future AI ram rung both call.
+- **Client:** `FleetWindow.DisplayRamButton` (Combat tab, beside the Attack button) — "Ram nearest hostile fleet" →
+  a **confirm modal** (the first caller of `ResultModal`'s yes/no `Display` overload) naming the target → `OrderRam`.
+- **Connections:** destroys casualty ships (the one side effect); records a `BattleLog` `Salvo` event on both fleets
+  (so the ram shows in the Battle Report). Gauge: `RamOrderTests` (3v3 → both wiped; 2-rammer vs 4 → rammer wiped +
+  enemy loses 2, surplus survives; friendly target → no-op; nearest-hostile finds+rams, null when none).
+
 ## Switchable doctrine
 
 **What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:

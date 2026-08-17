@@ -655,6 +655,8 @@ namespace Pulsar4X.Client
                     ImGui.Separator();
                     DisplayEngageButton();
                     ImGui.Separator();
+                    DisplayRamButton();
+                    ImGui.Separator();
                     DisplayFleetCombatSheet();
                 }
                 ImGui.EndChild();
@@ -715,6 +717,56 @@ namespace Pulsar4X.Client
             }
             if (!string.IsNullOrEmpty(_engageMsg))
                 ImGui.TextWrapped(_engageMsg);
+        }
+
+        // The RAM lever (B4b) — a deliberate SUICIDE CHARGE, confirm-gated. Unlike Attack (the stronger fleet wins with
+        // survivors), a ram is mutual ship-for-ship annihilation: each of your ships destroys itself AND one enemy ship,
+        // so both sides lose min(A,B). A desperation tactic to guarantee kills against a stronger enemy. The button picks
+        // the nearest DETECTED hostile (fog-aware), then a modal confirms the named target before OrderRam commits it —
+        // the FIRST caller of ResultModal's yes/no overload. Engine call is CI-tested (RamOrderTests); this is a thin
+        // call + a confirm gate + a SessionLog line.
+        private bool _showRamConfirm = false;
+        private Entity? _ramTarget = null;
+        private string _ramMsg = "";
+        private void DisplayRamButton()
+        {
+            DisplayHelpers.Header("Ram",
+                "Order this fleet to RAM the nearest hostile fleet — a deliberate SUICIDE CHARGE. Each of your ships destroys itself AND one enemy ship, so both fleets take equal losses (the smaller is wiped). A desperation tactic to guarantee kills against a stronger enemy. Asks for confirmation first.");
+            if (ImGui.Button("Ram nearest hostile fleet"))
+            {
+                // Pick the nearest DETECTED hostile to NAME in the confirm (DetectedHostileFleets is nearest-first + fog-aware).
+                _ramTarget = null;
+                var detected = Pulsar4X.Combat.CombatEngagement.DetectedHostileFleets(SelectedFleet);
+                if (detected.Count > 0) _ramTarget = detected[0];
+                if (_ramTarget != null) { _showRamConfirm = true; _ramMsg = ""; }
+                else _ramMsg = "No detected hostile fleet in this system to ram.";
+            }
+            // Render the confirm modal each frame while armed (ImGui immediate-mode; ResultModal holds its own IsActive).
+            if (_showRamConfirm && _ramTarget != null && _ramTarget.IsValid)
+            {
+                var target = _ramTarget;
+                ResultModal.GetInstance().Display(
+                    "Confirm Ram",
+                    onOk: () =>
+                    {
+                        // Ram the SPECIFIC named fleet the player confirmed (OrderRam re-checks hostility/fog/ships → safe no-op if stale).
+                        Pulsar4X.Combat.CombatEngagement.OrderRam(SelectedFleet, target);
+                        _ramMsg = "Rammed '" + target.GetName(factionID) + "' — mutual losses on both fleets.";
+                        SessionLog.Action($"[ram] {(SelectedFleet != null ? SelectedFleet.GetName(factionID) : "fleet")} -> "
+                            + $"'{target.GetName(factionID)}' #{target.Id} (suicide charge — mutual ship-for-ship losses).");
+                        _showRamConfirm = false; _ramTarget = null;
+                    },
+                    onCancel: () => { _showRamConfirm = false; _ramTarget = null; _ramMsg = "Ram cancelled."; },
+                    contentRenderer: () =>
+                    {
+                        ImGui.TextColored(new Vector4(1f, 0.5f, 0.3f, 1f), "Ram '" + target.GetName(factionID) + "'?");
+                        ImGui.TextWrapped("This is a SUICIDE CHARGE. Each of your ships destroys itself and one enemy ship. "
+                            + "Both fleets take equal losses; the smaller fleet is wiped. This cannot be undone.");
+                    },
+                    okLabel: "RAM", cancelLabel: "Cancel");
+            }
+            if (!string.IsNullOrEmpty(_ramMsg))
+                ImGui.TextWrapped(_ramMsg);
         }
 
         // The live battle readout: is this fleet fighting, who is it fighting, how many ships has it lost, and how
