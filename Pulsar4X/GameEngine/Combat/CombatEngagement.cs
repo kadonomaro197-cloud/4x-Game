@@ -596,6 +596,29 @@ namespace Pulsar4X.Combat
             return best;
         }
 
+        /// <summary>Every hostile fleet in this fleet's system that it can actually ENGAGE — the fog-aware target list
+        /// an "Intercept" order's picker (and a future AI intercept rung) reads to pick an enemy fleet to close with.
+        /// Same filter as <see cref="OrderAttackNearestHostile"/> but returns ALL matches (nearest-first) instead of the
+        /// nearest one: a different non-neutral faction (<see cref="AreHostile"/>, reads DiplomacyDB), with ships, that
+        /// this fleet DETECTS (<see cref="CanEngageTarget"/>: fog off → always, fog on → only detected). Sub-fleets are
+        /// skipped (target the parent, never a component). Read-only, defensive — never throws.</summary>
+        public static List<Entity> DetectedHostileFleets(Entity fleet)
+        {
+            var result = new List<Entity>();
+            if (fleet == null || !fleet.IsValid || fleet.Manager == null) return result;
+            foreach (var other in fleet.Manager.GetAllEntitiesWithDataBlob<FleetDB>())
+            {
+                if (other == fleet || other == null || !other.IsValid) continue;
+                if (IsSubFleet(other)) continue;                 // target the parent fleet, never a sub-fleet component
+                if (!AreHostile(fleet, other)) continue;
+                if (GetFleetShips(other).Count == 0) continue;
+                if (!CanEngageTarget(fleet, other)) continue;    // fog: only list hostiles we actually DETECT
+                result.Add(other);
+            }
+            result.Sort((a, b) => FleetSeparation(fleet, a).CompareTo(FleetSeparation(fleet, b)));   // nearest first
+            return result;
+        }
+
         /// <summary>Put a fleet "in combat" if it isn't already — the JOIN primitive. Idempotent: a fleet already
         /// engaged keeps its running state (damage pool, steps, initial count) untouched, so a reinforcement
         /// arriving each tick doesn't reset the fight. Records its starting ship count for the retreat threshold

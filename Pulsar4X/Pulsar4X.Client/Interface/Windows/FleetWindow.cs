@@ -38,6 +38,7 @@ namespace Pulsar4X.Client
         private enum IssueOrderType
         {
             MoveTo,
+            Intercept, // B4a (Operation Blueprint-to-Steel) — warp the fleet toward a DETECTED hostile fleet to close for battle
             GeoSurvey,
             JPSurvey,
             Jump,
@@ -1768,6 +1769,10 @@ namespace Pulsar4X.Client
             {
                 if(ImGui.Selectable("Move to ...", selectedIssueOrderType == IssueOrderType.MoveTo))
                     selectedIssueOrderType = IssueOrderType.MoveTo;
+                // Intercept (B4a) — close on a DETECTED hostile fleet. Always applicable to a fleet; the detail
+                // panel lists the hostiles it can currently see (fog-aware) and shows "none detected" when empty.
+                if(ImGui.Selectable("Intercept ...", selectedIssueOrderType == IssueOrderType.Intercept))
+                    selectedIssueOrderType = IssueOrderType.Intercept;
                 if(ImGui.Selectable("Jump ...", selectedIssueOrderType == IssueOrderType.Jump))
                     selectedIssueOrderType = IssueOrderType.Jump;
             }
@@ -1848,6 +1853,31 @@ namespace Pulsar4X.Client
                                 _uiState.Game.OrderHandler.HandleOrder(order);
                                 Pulsar4X.Client.SessionLog.Action("move order: fleet #" + SelectedFleet.Id
                                     + " -> '" + bodyState.Name + "' (warp). Watch next heartbeat for teleport check.");
+                            }
+                        }
+                        break;
+                    case IssueOrderType.Intercept:
+                        // B4a — one-click "close on that enemy fleet." The list is FOG-AWARE (only hostile fleets
+                        // this fleet actually detects, per CombatEngagement.DetectedHostileFleets); a FleetDB has no
+                        // PositionDB of its own, so we warp toward the enemy's representative (flag)ship. This is the
+                        // same primitive the AI drives (one verb, both seats) — the closing model then fights it out.
+                        var interceptTargets = CombatEngagement.DetectedHostileFleets(SelectedFleet);
+                        if(interceptTargets.Count == 0)
+                        {
+                            ImGui.TextDisabled("No detected hostile fleets to intercept.");
+                            ImGui.TextWrapped("Send a scout / sensor sweep to detect the enemy, then order the intercept.");
+                        }
+                        foreach(var enemy in interceptTargets)
+                        {
+                            var repShip = FleetTools.RepresentativeShip(enemy);
+                            if(repShip == null) continue; // an empty fleet has nothing to warp toward (defensive)
+                            var enemyName = enemy.GetName(factionID);
+                            if(ImGui.Button(enemyName + "###intercept-button-" + enemy.Id))
+                            {
+                                var order = WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, repShip);
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+                                Pulsar4X.Client.SessionLog.Action("intercept order: fleet #" + SelectedFleet.Id
+                                    + " -> hostile fleet '" + enemyName + "' #" + enemy.Id + " (warp to close for battle).");
                             }
                         }
                         break;

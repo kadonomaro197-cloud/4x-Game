@@ -167,6 +167,34 @@ map-click is the follow-up). **Connections:** writes `FleetCombatStateDB` (engag
 ("Attack nearest hostile fleet", Combat tab). Gauges: `OrderAttackTests` (forces engagement past a hold + retreat;
 no-ops on a friendly; nearest-hostile finds + engages, null when none).
 
+### Intercept — order a fleet to CLOSE on a detected enemy (B4a, Operation Blueprint-to-Steel, 2026-08-17)
+
+`OrderAttack` forces a fight *now* (a direct call that bypasses the closing model). **Intercept is the other half**:
+warp a fleet toward a detected hostile fleet to *close the distance*, then let the normal auto-trigger / closing
+model start the battle when guns come into range. It reuses the EXISTING warp-to-a-moving-target order
+(`Movement.WarpFleetTowardsTargetOrder.CreateCommand(fleet, target)`), so the only NEW engine surface is the
+**target LIST** and the **fleet→ship resolution**:
+- **`CombatEngagement.DetectedHostileFleets(fleet)`** (`:605`, `public static`) — the fog-aware pick list. Same
+  filter as `OrderAttackNearestHostile` (`AreHostile` reads `DiplomacyDB` · `GetFleetShips>0` · `CanEngageTarget`
+  fog gate · skip self + sub-fleets) but returns **ALL** matches **nearest-first** instead of just the nearest one.
+  With fog on (client default), only hostiles this fleet actually detects appear — you can only order an intercept
+  of an enemy you can see. Read-only, defensive.
+- **`FleetTools.RepresentativeShip(fleet)`** (`Fleets/FleetTools.cs`) — a `FleetDB` carries no `PositionDB`, so a
+  fleet-targeting order must warp toward a positioned SHIP: the flagship if it resolves to a live ship in the fleet,
+  else the first ship (recursing sub-fleets), null for an empty fleet.
+- **The warp math already does moving-target intercept.** `WarpFleetTowardsTargetOrder` → per-ship
+  `WarpMoveCommand.CreateCommandEZ` → `WarpMath.GetInterceptPosition` (the `Orbit` case iterates the target's
+  future orbital position — a real intercept). A *warping/thrusting* enemy degrades gracefully to chase-the-
+  destination (no crash); a true warp-vs-warp meet-in-the-middle solver is a flagged v2.
+
+**One verb, both seats:** the AI can issue the identical `WarpFleetTowardsTargetOrder` off `DetectedHostileFleets`
+(a `ConquerResolver` "InterceptFleet" rung behind the default-off `EnableOrderEmission` is the deferred follow-up).
+**Client:** `FleetWindow` Issue-Orders ▸ Movement ▸ "Intercept …" (`IssueOrderType.Intercept`) lists the detected
+hostile fleets, one button each → `WarpFleetTowardsTargetOrder.CreateCommand(SelectedFleet, RepresentativeShip(enemy))`.
+Engine byte-identical (an additive read-only helper). Gauge: `InterceptTargetingTests` (`DetectedHostileFleets`
+lists hostiles-with-ships / excludes friendly + self / hostility is mutual; `RepresentativeShip` returns a
+positioned own ship, null for empty).
+
 ## Switchable doctrine
 
 **What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:

@@ -180,5 +180,21 @@ namespace Pulsar4X.Fleets
                 else if (child.HasDataBlob<FleetDB>()) CollectShipsRecursive(child, into, depth + 1, seen);
             }
         }
+
+        /// <summary>The fleet's representative SHIP — its flagship if that id resolves to a live ship in the fleet, else
+        /// the first ship (recursing sub-fleets). This is the positioned entity a fleet-TARGETING order (e.g. Intercept)
+        /// must warp TOWARD, since a <c>FleetDB</c> carries no <c>PositionDB</c> of its own. Null for an empty/invalid
+        /// fleet. Defensive — never throws.</summary>
+        public static Entity RepresentativeShip(Entity fleet)
+        {
+            var ships = AllShipsRecursive(fleet);
+            if (ships.Count == 0) return null;
+            if (fleet.TryGetDataBlob<FleetDB>(out var fleetDB) && fleetDB.FlagShipID != -1)
+            {
+                foreach (var s in ships)
+                    if (s.Id == fleetDB.FlagShipID) return s;   // the flagship, when it's a live ship in the fleet
+            }
+            return ships[0];   // else the first ship
+        }
     }
 }
