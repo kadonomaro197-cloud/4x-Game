@@ -1242,13 +1242,13 @@
       "Name": "Space Habitat",
       "Formulas": {
         "Description": "A sealed, self-contained habitat module. Provides life support and housing for station crews regardless of the body the station orbits — it carries its own internal environment, so unlike planetary infrastructure it has NO gravity or pressure tolerance limits and supports population anywhere (asteroid, dwarf, deep space).",
-        "Mass": "1000",
+        "Mass": "1000 * (1 + PropertyValue('Support Colonists') / 500 * 0.5 + PropertyValue('Housing Comfort') / 10)",
         "Volume": "[Mass]",
         "HTK": "0.5",
         "CrewReq": "10",
         "ResearchCost": "0",
         "CreditCost": "0",
-        "BuildPointCost": "100"
+        "BuildPointCost": "[Mass] / 10"
       },
       "ResourceCost": {
         "iron": "[Mass] * 0.5",
