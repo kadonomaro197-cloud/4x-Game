@@ -247,6 +247,37 @@ namespace Pulsar4X.Client
             return null;
         }
 
+        /// <summary>The drive PART (a <see cref="Pulsar4X.GroundCombat.GroundLocomotionAtb"/>) mounted in the current
+        /// ground design, or null. A mounted drive REPLACES the frame's built-in locomotion mode outright
+        /// (<c>GroundMobility.SpeedMultForUnit</c> returns the drive's <c>SpeedFactor</c> when one is present) — so the
+        /// two are mutually exclusive and the assembler shows which is actually in play (A2, 2026-08-17).</summary>
+        private Pulsar4X.GroundCombat.GroundLocomotionAtb MountedGroundDrive()
+        {
+            foreach (var (design, count) in SelectedComponents)
+            {
+                if (design == null || count <= 0) continue;
+                foreach (var atb in design.AttributesByType.Values)
+                {
+                    if (atb is Pulsar4X.GroundCombat.GroundLocomotionAtb drive)
+                        return drive;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>The frame's built-in locomotion mode (<c>GroundChassisAtb.Locomotion</c>) as text, or null when the
+        /// frame carries no chassis atb. This is the unit's default drive until a drive part overrides it.</summary>
+        private string FrameLocomotion(ComponentDesign frame)
+        {
+            if (frame == null) return null;
+            foreach (var atb in frame.AttributesByType.Values)
+            {
+                if (atb is Pulsar4X.GroundCombat.GroundChassisAtb chassis)
+                    return chassis.Locomotion.ToString();
+            }
+            return null;
+        }
+
         /// <summary>True when the current design is a GROUND unit (its mounted chassis budgets in carry-strength); else it
         /// is a SHIP (the existing, byte-identical path). With no chassis mounted yet, falls back to the kind combo (which
         /// defaults to Ship), so an empty/hull-only ship design is unchanged.</summary>
@@ -514,6 +545,28 @@ namespace Pulsar4X.Client
                     Row("Damage Type", r.DamageType.ToString());
 
                     ImGui.EndTable();
+                }
+
+                // A2 (mobility mutual-exclusivity, 2026-08-17): the frame has a built-in locomotion mode, but a
+                // mounted drive part (GroundLocomotionAtb) REPLACES it (GroundMobility.SpeedMultForUnit). Show which
+                // one is actually in play so you never think you're setting two conflicting mobility systems — the
+                // frame mode is live only when no drive is mounted. (The frame's Locomotion DIAL lives in the separate
+                // Component Designer, so this readout is where the two meet.)
+                var mountedDrive = MountedGroundDrive();
+                var frameMode = FrameLocomotion(frame);
+                if (mountedDrive != null)
+                {
+                    ImGui.TextUnformatted("Mobility: drive part (speed x" + mountedDrive.SpeedFactor.ToString("0.00") + ")");
+                    if (frameMode != null)
+                    {
+                        ImGui.PushStyleColor(ImGuiCol.Text, Styles.MediocreColor);
+                        ImGui.TextUnformatted("Frame locomotion (" + frameMode + ") is overridden by the mounted drive.");
+                        ImGui.PopStyleColor();
+                    }
+                }
+                else if (frameMode != null)
+                {
+                    ImGui.TextUnformatted("Mobility: frame locomotion " + frameMode + " (mount a drive part to override it).");
                 }
 
                 // Validity — the carry / power / ammo gates the assembler computes. Any problem = not buildable.

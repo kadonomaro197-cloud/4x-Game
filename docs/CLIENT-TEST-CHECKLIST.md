@@ -486,3 +486,18 @@ selection into a formation and march it through the ONE queued verb both the pla
       starts on the next ground tick (like every fleet/formation order), not the instant you click. If it feels too
       laggy in practice, tell me and I'll look at the ground hotloop cadence. (This is by design — the direct/instant
       call was the bypass the AI couldn't use.)
+
+## 🎯 ADDED 2026-08-17 — OPERATION BLUEPRINT-TO-STEEL (A2: mobility — which drive is in play)
+
+Source: `docs/IMPLEMENTATION-CAMPAIGN-LOG.md` (adjudication A2). A ground chassis frame has a built-in speed mode
+(walks/rolls/hovers), and a mounted drive part overrides it. The two settings live in two different screens and never
+show together, so instead of a dial-hide the Entity Assembler now shows a **Mobility** line telling you which of the two
+is actually in play. Client-only, engine byte-identical. CI compiles it; the live feel is a local run.
+
+- [ ] **A2 — the Mobility line reads the frame mode with no drive.** Open the Entity Assembler (ship-design toolbar
+      button), pick "Assembling: Ground Unit", and mount a ground **frame** (chassis) with NO drive part. Expected: the
+      ground stats show `Mobility: frame locomotion <Foot/Tracked/Walker/Hover> (mount a drive part to override it)`.
+- [ ] **A2 — mounting a drive part flips it to "overridden".** Now add a **Locomotion Drive** part to the same design.
+      Expected: the line changes to `Mobility: drive part (speed x N.NN)` plus a greyed `Frame locomotion (<mode>) is
+      overridden by the mounted drive.` — so you can see you are NOT running two conflicting mobility systems (the drive
+      wins). Remove the drive → it reverts to the frame-mode line.
