@@ -6,6 +6,7 @@ using Pulsar4X.Interfaces;
 using Pulsar4X.Colonies;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Hazards;
+using Pulsar4X.Factions;   // FactionInfoDB — C7 capture-transfer registry move
 
 namespace Pulsar4X.GroundCombat
 {
@@ -1053,7 +1054,19 @@ namespace Pulsar4X.GroundCombat
             // unit's EnvResistance (a sealed suit) negates it via the same E4 path — so sealing is a real decision.
             || t == HazardEffectType.Vacuum || t == HazardEffectType.ToxicAtmosphere;
 
-        private static void TryCapturePlanet(Entity body, PlanetRegionsDB regionsDB)
+        // ── OPERATION BLUEPRINT-TO-STEEL C7 — capture-transfer (developer ruling A, 2026-08-16) ──
+        /// <summary>When a planet is taken, ALSO move the colony in the faction registries and take a POPULATION
+        /// casualty — the "capture flips the colony + installations + surviving population + stockpiles to the
+        /// conqueror, with a population/unrest hit" ruling. Default OFF → only the bare owner-flip (byte-identical);
+        /// `NewGameMenu` turns it ON for a menu game (the campaign's flag-off/menu-on pattern).</summary>
+        public static bool EnableCaptureTransfer = false;
+
+        /// <summary>Fraction of a captured colony's population lost in the takeover — the "population hit" (the survivors
+        /// transfer). FLAGGED balance value. Population is a STORED count, so this one-time cut persists (unlike morale,
+        /// which is recomputed each cycle — a durable "conquest unrest" morale/legitimacy penalty is the C7b follow-up).</summary>
+        public static double CaptureCasualtyFraction = 0.15;
+
+        internal static void TryCapturePlanet(Entity body, PlanetRegionsDB regionsDB)
         {
             if (regionsDB == null || regionsDB.Regions.Count == 0) return;
 
@@ -1070,8 +1083,76 @@ namespace Pulsar4X.GroundCombat
                     && info.PlanetEntity != null && info.PlanetEntity.Id == body.Id
                     && colony.FactionOwnerID != owner)
                 {
-                    colony.FactionOwnerID = owner;   // the planet is taken (v1: ownership flip; deeper transfer later)
+                    int oldOwner = colony.FactionOwnerID;
+                    colony.FactionOwnerID = owner;   // the planet is taken — installations/population/stockpiles ride the entity
+                    if (EnableCaptureTransfer)
+                        ApplyCaptureTransfer(colony, info, oldOwner, owner);   // C7: registry move + population casualty
                 }
+            }
+        }
+
+        /// <summary>C7 capture-transfer (ruling A): move the colony between the faction registries + take a population
+        /// casualty. The colony's installations, surviving population and stockpiles ride the entity implicitly (they're
+        /// datablobs on it — the owner-flip already carried them); this adds the two things the bare flip missed.
+        /// Defensive — never throws (it runs inside the L4 ground hotloop under `ProcessBody`'s catch): a missing
+        /// faction/blob just skips that part. Thread-safe registry write (copy-modify-swap under a per-faction lock),
+        /// because `FactionInfoDB.Colonies` is a plain `List` living in the GlobalManager while this runs on a per-system
+        /// sim thread. <b>Deferred (C7b):</b> a durable morale/legitimacy "conquest unrest" penalty — morale/legitimacy
+        /// RECOMPUTE each cycle (`ColonyMoraleDB.ComputeMorale` rebuilds from `Neutral`), so a one-shot decrement is
+        /// erased next tick; that needs a new decaying-input term, its own slice.</summary>
+        private static void ApplyCaptureTransfer(Entity colony, ColonyInfoDB info, int oldOwner, int newOwner)
+        {
+            // (a) POPULATION casualty — the "population hit". Population is a stored count (persists, unlike the
+            //     recomputed morale), so a one-time reduction sticks: some die in the takeover, the survivors transfer.
+            double survive = 1.0 - Math.Max(0.0, Math.Min(1.0, CaptureCasualtyFraction));
+            if (info.Population != null && info.Population.Count > 0)
+            {
+                foreach (var speciesId in new List<int>(info.Population.Keys))
+                {
+                    long before = info.Population[speciesId];
+                    if (before > 0) info.Population[speciesId] = (long)(before * survive);
+                }
+            }
+
+            // (b) REGISTRY move — remove the colony from the loser's FactionInfoDB.Colonies + add it to the captor's,
+            //     so the AI/economy loops that read the RAW registry see the new ownership. (The Force-Management roster
+            //     already reads LIVE ownership via FactionAssets — B-S9a — so this fixes the underlying stale registry
+            //     that filter was built to work around.) A synthetic/unregistered faction id (e.g. a DevTools invader)
+            //     just isn't found → that side is skipped, no throw.
+            var game = colony.Manager?.Game;
+            if (game != null)
+            {
+                if (game.Factions.TryGetValue(oldOwner, out var loserFaction))
+                    RegisterColonyToFaction(loserFaction, colony, add: false);
+                if (game.Factions.TryGetValue(newOwner, out var captorFaction))
+                    RegisterColonyToFaction(captorFaction, colony, add: true);
+            }
+        }
+
+        /// <summary>Add/remove a colony in a faction's `FactionInfoDB.Colonies` via COPY-MODIFY-SWAP under a per-faction
+        /// lock: writers serialize (no lost update if two captures touch the same faction at once), and a concurrent
+        /// reader on the render/AI thread sees either the old or the new COMPLETE list (the ref swap is atomic), never a
+        /// half-mutated list — so it can't throw "collection was modified". Defensive; never throws. ⚠ A capture that
+        /// races a colony-FOUNDING (`ColonyFactory` still `.Add`s in place, unlocked) could lose one update — extremely
+        /// rare (both are infrequent sim-thread events on the same faction) and self-heals on the next capture/founding;
+        /// the FactionAssets live-owner filter is the roster's safety net regardless. Flagged follow-up: route
+        /// `ColonyFactory`'s registry add through this same pattern.</summary>
+        private static void RegisterColonyToFaction(Entity factionEntity, Entity colony, bool add)
+        {
+            if (factionEntity == null || !factionEntity.IsValid) return;
+            if (!factionEntity.TryGetDataBlob<FactionInfoDB>(out var finfo) || finfo.Colonies == null) return;
+            lock (finfo)
+            {
+                var list = new List<Entity>(finfo.Colonies);
+                if (add)
+                {
+                    if (!list.Any(c => c != null && c.Id == colony.Id)) list.Add(colony);
+                }
+                else
+                {
+                    list.RemoveAll(c => c == null || c.Id == colony.Id);
+                }
+                finfo.Colonies = list;   // atomic ref swap — readers always see a complete list
             }
         }
     }

@@ -617,6 +617,10 @@ public class NewGameMenu : PulsarGuiWindow
         // both ON so a real game gets real distances on-by-default. One-line revert each. Runtime feel is the PC live-test.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;
+        // C7 capture-transfer (ruling A): taking a planet moves the colony between faction registries + costs a
+        // population casualty (installations/stockpiles/survivors ride the entity). OFF in the engine suite
+        // (byte-identical — nothing captures a whole colony there); ON so a menu game gets the real transfer.
+        Pulsar4X.GroundCombat.GroundForcesProcessor.EnableCaptureTransfer = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -1043,6 +1047,7 @@ public class NewGameMenu : PulsarGuiWindow
             // in the engine suite (byte-identical); ON here so the DevTest sandbox fights on real distances.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;               // real-metre range gate (K3)
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // spread + close on the continuous field
+            Pulsar4X.GroundCombat.GroundForcesProcessor.EnableCaptureTransfer = true;             // C7: registry move + population casualty on capture
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)
