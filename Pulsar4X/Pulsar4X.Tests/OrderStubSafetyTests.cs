@@ -50,8 +50,9 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        [Description("ServeyAnomalyAction is inert (unregistered, behavior parked): Execute/IsFinished are a safe no-op "
-                   + "completion and never throw.")]
+        [Description("A BARE ServeyAnomalyAction (no commanding fleet) is a safe no-op: Execute/IsFinished complete and "
+                   + "never throw. (ServeyAnomalyAction gained real 'survey the nearest anomaly' behaviour in B6 when "
+                   + "properly constructed — see ServeyAnomalyActionTests; a fleet-less instance still no-ops safely.)")]
         public void SurveyAnomaly_IsAnInertSafeShell()
         {
             var survey = new ServeyAnomalyAction();

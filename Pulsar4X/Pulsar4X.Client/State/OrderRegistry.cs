@@ -13,6 +13,7 @@ public static class OrderRegistry
         { "Move to Nearest Colony", (factionId, fleet) => MoveToNearestColonyAction.CreateCommand(factionId, fleet) },
         { "Move to Nearest Geo Survey", (factionId, fleet) => MoveToNearestGeoSurveyAction.CreateCommand(factionId, fleet) },
         { "Move to Nearest Anomaly", (factionId, fleet) =>  MoveToNearestAnomalyAction.CreateCommand(factionId, fleet) },
+        { "Survey Nearest Anomaly", (factionId, fleet) => ServeyAnomalyAction.CreateCommand(factionId, fleet) },
         { "Refuel", (factionId, fleet) => new RefuelAction() },
         { "Resupply", (factionId, fleet) => new ResupplyAction() }
     };
@@ -22,6 +23,7 @@ public static class OrderRegistry
         { typeof(MoveToNearestColonyAction), "Move to Nearest Colony" },
         { typeof(MoveToNearestGeoSurveyAction), "Move to Nearest Geo Survey" },
         { typeof(MoveToNearestAnomalyAction), "Move to Nearest Anomaly" },
+        { typeof(ServeyAnomalyAction), "Survey Nearest Anomaly" },
         { typeof(RefuelAction), "Refuel" },
         { typeof(ResupplyAction), "Resupply" },
     };
