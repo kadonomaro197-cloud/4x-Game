@@ -113,6 +113,13 @@ namespace Pulsar4X.Client
             Pulsar4X.Combat.CombatEngagement.RequireWeaponRangeToEngage = true;
             Pulsar4X.Combat.CombatEngagement.RequireWeaponsReleaseToEngage = true;
 
+            // Environment-aware combat (E-env slice 2b, 2026-08-17): a battle is fought in the environment where it
+            // happens — a fight INSIDE a nebula / gas cloud / hazard reads reduced accuracy, so fewer shots land (a
+            // nebula is cover). Each fleet's conditions are read from its position at engagement start; in CLEAN space
+            // accuracy is 1.0, so this is byte-identical everywhere except inside a hazard. Off by default in the engine
+            // (combat fixtures fight in clean space); ON for the game so a nebula actually matters.
+            Pulsar4X.Combat.CombatEngagement.EnableCombatConditions = true;
+
             // DIAGNOSTIC (2026-07-16, the SensorScan freeze hunt): record per-entity scan counts so that if the sim
             // stalls in SensorScan, the SIM-STALL watchdog can NAME the storming ship/colony (see SessionLog). A cheap
             // ConcurrentDictionary increment per scan — remove once the scan-storm cause is found + fixed.

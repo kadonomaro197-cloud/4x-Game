@@ -412,6 +412,15 @@ namespace Pulsar4X.Combat
         /// <see cref="EnableClosingRange"/>; seeding is gated on this flag alone so it can be tested in isolation.</summary>
         public static bool EnableGroupPlane = false;
 
+        /// <summary>E-env slice 2b (OPERATION BLUEPRINT-TO-STEEL, 2026-08-17): when ON, a battle is fought in the
+        /// ENVIRONMENT where it happens — each fleet's <see cref="FleetCombatStateDB.Conditions"/> is seeded from
+        /// <see cref="CombatConditions.ReadAt"/> (a nebula/hazard cuts accuracy), and the DEFENDER's
+        /// <c>Conditions.Accuracy</c> is threaded into <see cref="LandedFraction"/> → the shared kernel so poor
+        /// visibility lands less fire. Default FALSE → conditions stay <see cref="CombatConditions.Clean"/>
+        /// (accuracy 1.0, <c>hit *= 1.0</c> exact → byte-identical); the client (NewGameMenu) turns it on. Design:
+        /// docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md Part 4 steps 2-3.</summary>
+        public static bool EnableCombatConditions = false;
+
         /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
         /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
         /// Tunable like <see cref="SalvoDamageScale"/>; set 0 to FREEZE the gap (gauge use). RAISED 10× 2026-06-27: at
@@ -519,6 +528,12 @@ namespace Pulsar4X.Combat
             }
             if (EnableGroupPlane)   // Slice S1: lay the 2D battle plane down from BOTH fleets' real positions and freeze it
                 SeedPlaneForPair(fleetA, sa, fleetB, sb);
+            if (EnableCombatConditions)   // E-env 2b: seed each fleet's battle conditions from WHERE it fights (hazard-aware)
+            {
+                var sys = fleetA.Manager as StarSystem;                     // ReadAt is null-safe (null system => Clean)
+                if (TryGetFleetPosition(fleetA, out var posA)) sa.Conditions = CombatConditions.ReadAt(sys, posA);
+                if (TryGetFleetPosition(fleetB, out var posB)) sb.Conditions = CombatConditions.ReadAt(sys, posB);
+            }
             fleetA.SetDataBlob(sa);
             fleetB.SetDataBlob(sb);
             CombatLog($"{FleetLabel(fleetA)} vs {FleetLabel(fleetB)} — engaged");
@@ -613,6 +628,8 @@ namespace Pulsar4X.Combat
             }
             if (EnableGroupPlane)   // Slice S1: copy the frozen plane from an engaged sibling, or seed a fresh one (join path)
                 SeedPlaneForJoiner(fleet, st, representativeOpponentId);
+            if (EnableCombatConditions && TryGetFleetPosition(fleet, out var condPos))   // E-env 2b: seed from WHERE it fights
+                st.Conditions = CombatConditions.ReadAt(fleet.Manager as StarSystem, condPos);
             fleet.SetDataBlob(st);
             CombatLog($"{FleetLabel(fleet)} enters combat ({GetFleetShips(fleet).Count} ship(s))");
             RecordBattleEvent(fleet, BattleEventType.Engaged, 0, GetFleetShips(fleet).Count, 0, "enters combat");
@@ -894,7 +911,9 @@ namespace Pulsar4X.Combat
                 var key = (cs.ToughnessMult, cv.Evasion, cv.Toughness, cv.RoleWeight);
                 if (!buckets.TryGetValue(key, out var b))
                 {
-                    double landed = LandedFraction(incomingFire, cv.Evasion, separation_m);
+                    // E-env 2b: the environment's visibility/accuracy coefficient — flag-off => 1.0 => byte-identical.
+                    double accuracy = EnableCombatConditions ? state.Conditions.Accuracy : 1.0;
+                    double landed = LandedFraction(incomingFire, cv.Evasion, separation_m, accuracy);
                     b = new CasualtyBucket
                     {
                         RoleWeight = cv.RoleWeight,
@@ -1639,8 +1658,8 @@ namespace Pulsar4X.Combat
 
         /// <summary>The damage-weighted fraction of an incoming fire mix that LANDS on a ship with the given
         /// evasion. Beams (≈light-speed) land fully; ballistic slugs are dodged by the evasive; flak floors it.</summary>
-        private static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0)
-            => CombatKernel.LandedFraction(fire, evasion, separation_m);
+        private static double LandedFraction(List<WeaponProfile> fire, double evasion, double separation_m = 0, double accuracy = 1.0)
+            => CombatKernel.LandedFraction(fire, evasion, separation_m, accuracy);
 
         /// <summary>Fraction of one weapon's shots that land on a target with the given evasion, at the given
         /// engagement separation. Fast/guided weapons defeat evasion (a beam ignores it); high saturation floors the
