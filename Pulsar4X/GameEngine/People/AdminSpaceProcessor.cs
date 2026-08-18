@@ -4,6 +4,7 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Datablobs;
 using Pulsar4X.Engine;
 using Pulsar4X.Interfaces;
+using Pulsar4X.People;
 
 namespace GameEngine.People;
 
@@ -143,4 +144,33 @@ public class AdminSpaceProcessor : IInstanceProcessor
 
         return false;
     }
+
+    // ── v1 SPAN-OF-CONTROL: AdminLevel is now READ by a real gate (Operation Blueprint-to-Steel, "wire it") ──
+    // AdminLevel used to be carried onto each seat as a label that NO rule read. The gate below turns it into a real
+    // decision: a broader command scope needs a more SENIOR officer, so the AdminLevel you built into a command seat
+    // now bounds WHO can be seated there. Pure/unit-testable; consumed by AssignAdministratorOrder behind its flag.
+
+    /// <summary>How many RANK points a seat's AdminLevel is discounted before it starts requiring seniority. With the
+    /// default 5, every routine post (Ship … Colony, ordinals 0–5) is UNGATED (required rank 0 = any officer), and only
+    /// the broader STRATEGIC scopes need a progressively more senior officer: Planet 1, SOI 2, System 3, Sector 4,
+    /// Empire 5. ⚠ FLAGGED tunable — start officers are rank 1–6 (<see cref="CommanderFactory"/>), so this shape lets a
+    /// green officer run a colony but reserves an empire-wide command for a senior one. Move to per-level JSON once tuned.</summary>
+    public static int AdminRankLevelOffset = 5;   // FLAGGED
+
+    /// <summary>v1 SPAN-OF-CONTROL RANK GATE (pure): the minimum officer <see cref="CommanderDB.Rank"/> required to hold
+    /// a command seat of the given <see cref="AdminLevel"/>. Monotonic — a broader scope demands a more senior officer.
+    /// = <c>max(0, (int)level − <see cref="AdminRankLevelOffset"/>)</c>, so routine posts are ungated (0) and only the
+    /// strategic scopes bite. Pure/unit-testable.</summary>
+    public static int AdminRankRequired(AdminLevel seatLevel)
+    {
+        int req = (int)seatLevel - AdminRankLevelOffset;
+        return req < 0 ? 0 : req;
+    }
+
+    /// <summary>Can this officer hold a command seat of the given <see cref="AdminLevel"/>? True iff the commander
+    /// exists and their <see cref="CommanderDB.Rank"/> clears <see cref="AdminRankRequired"/> — the rule
+    /// <see cref="Pulsar4X.People.Orders.AssignAdministratorOrder"/> reads when its rank gate is on. Pure — a null
+    /// commander can hold nothing.</summary>
+    public static bool CanOfficerHoldSeat(CommanderDB commander, AdminLevel seatLevel)
+        => commander != null && commander.Rank >= AdminRankRequired(seatLevel);
 }

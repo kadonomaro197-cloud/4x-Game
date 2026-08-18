@@ -17,6 +17,15 @@ public class AssignAdministratorOrder : EntityCommand
 
     public override string Details => "Instantly assigns an administrator to an admin post";
 
+    /// <summary>v1 SPAN-OF-CONTROL gate (Operation Blueprint-to-Steel — "wire it", 2026-08-18). When ON, an officer may
+    /// only be seated in a command post their RANK qualifies them for — a broader <see cref="AdminLevel"/> scope needs a
+    /// more senior officer (<see cref="AdminSpaceProcessor.CanOfficerHoldSeat"/>). This is the first rule to READ the
+    /// AdminLevel a command seat carries. Default OFF → every assignment is valid → byte-identical; leave it off until
+    /// the rank map (<see cref="AdminSpaceProcessor.AdminRankLevelOffset"/>) is tuned against the live officer scale
+    /// (the developer's call — flip to true in the client to activate). A post/officer that doesn't resolve falls
+    /// through to VALID (Execute already no-ops on it), so ONLY a genuine under-ranked assignment is refused.</summary>
+    public static bool EnableAdminRankGate = false;
+
     internal override Entity EntityCommanding => _adminEntity;
 
     private Entity _adminEntity;
@@ -108,6 +117,31 @@ public class AssignAdministratorOrder : EntityCommand
 
     internal override bool IsValidCommand(Game game)
     {
-        return true;
+        if (!EnableAdminRankGate)
+            return true;   // byte-identical — no span-of-control gate
+
+        // Resolve the target post + the officer the SAME way Execute does; refuse ONLY a genuine under-ranked seating.
+        if (_adminEntity == null || !_adminEntity.TryGetDataBlob<AdminSpaceDB>(out var adminSpaceDB))
+            return true;   // nothing to gate (no admin space) — Execute no-ops anyway
+
+        AdminSpaceAbilityState? post = null;
+        foreach (var seat in adminSpaceDB.CommanderSeats)
+        {
+            if (seat.ComponentName == _postComponentName)
+            {
+                post = seat;
+                break;
+            }
+        }
+        if (post == null)
+            return true;   // unknown post → let Execute no-op on it
+
+        if (_adminEntity.Manager == null
+            || !_adminEntity.Manager.TryGetGlobalEntityById(_administratorId, out var administrator)
+            || !administrator.TryGetDataBlob<CommanderDB>(out var commanderDB))
+            return true;   // officer doesn't resolve → Execute no-ops
+
+        // The one real refusal: this officer isn't senior enough for this post's AdminLevel scope.
+        return AdminSpaceProcessor.CanOfficerHoldSeat(commanderDB, post.SeatType);
     }
 }

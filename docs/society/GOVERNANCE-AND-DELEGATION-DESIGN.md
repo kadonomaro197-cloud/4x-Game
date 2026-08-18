@@ -59,6 +59,8 @@ This is the limiter that makes delegation a **decision** instead of a free "dele
 
 So the anti-"feels like a job" valve cuts **both ways**: micro isn't mandatory (delegate it), but total hands-off isn't free either (you must build the command structure, spend the officers, and pay the overhead). That tension is the gameplay.
 
+> **BUILD STATE (2026-08-18) — v1 SPAN-OF-CONTROL gate landed (OPERATION BLUEPRINT-TO-STEEL "wire it").** `AdminLevel` used to be a seat label NO rule read; it is now READ by a real gate: `AssignAdministratorOrder.IsValidCommand` refuses seating an officer whose `CommanderDB.Rank` is below what the seat's `AdminLevel` scope demands (`AdminSpaceProcessor.CanOfficerHoldSeat` / `AdminRankRequired = max(0,(int)level − AdminRankLevelOffset)`, offset 5 → routine posts ungated, only Planet…Empire bite). **v1 is the "right seniority for the scope" half** — NOT yet the subordinate-COUNT cap this section's "higher seats nest lower ones" describes (that needs an administrators-hold-many-posts model `CommanderDB.AssignedTo` — one int — doesn't have; a later slice). Flag `EnableAdminRankGate` default OFF (byte-identical), left un-activated until the rank map is tuned to the live officer scale. Gauge `AdminRankGateTests`.
+
 ---
 
 ## The agency spectrum — the same game at three altitudes
