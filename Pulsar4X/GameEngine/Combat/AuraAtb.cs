@@ -67,8 +67,49 @@ namespace Pulsar4X.Combat
 
         public override object Clone() => new AuraAtb(Radius_m, Magnitude, (double)(int)Effect, (double)(int)Target);
 
-        public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance) { }
-        public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance) { }
+        /// <summary>Install snapshots this projector's field onto the host's <see cref="AuraProjectorDB"/> marker
+        /// (seeding it if absent) so <see cref="AuraSweepProcessor"/> wakes for the entity — the exact
+        /// <c>CommandBerthAtb.OnComponentInstallation</c> shape. Never throws (it runs inside ship construction, L4).</summary>
+        public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance)
+        {
+            if (parentEntity == null)
+                return;
+
+            var field = new AuraProjectorField
+            {
+                Radius_m = Radius_m,
+                Magnitude = Magnitude,
+                Effect = Effect,
+                Target = Target,
+                ComponentName = componentInstance?.Name ?? "",
+            };
+
+            if (parentEntity.TryGetDataBlob<AuraProjectorDB>(out var roster))
+            {
+                roster.Projectors.Add(field);
+            }
+            else
+            {
+                roster = new AuraProjectorDB();
+                roster.Projectors.Add(field);
+                parentEntity.SetDataBlob(roster);
+            }
+        }
+
+        /// <summary>Uninstall removes THIS component's field by name (matching survives save/load, unlike a held
+        /// reference); the last projector torn down drops the marker so the sweep sleeps for this entity again (the
+        /// grave rung — a destroyed projector stops projecting). Mirrors <c>CommandBerthAtb.OnComponentUninstallation</c>.</summary>
+        public void OnComponentUninstallation(Entity parentEntity, ComponentInstance componentInstance)
+        {
+            if (parentEntity == null || !parentEntity.TryGetDataBlob<AuraProjectorDB>(out var roster))
+                return;
+
+            string name = componentInstance?.Name ?? "";
+            roster.Projectors.RemoveAll(p => p.ComponentName == name);
+
+            if (roster.Projectors.Count == 0)
+                parentEntity.RemoveDataBlob<AuraProjectorDB>();
+        }
 
         public string AtbName() => "Aura Projector";
         public string AtbDescription() => $"Projects a {Effect} field ({Target}) out to {Radius_m:0} m at strength {Magnitude:0.##}.";
