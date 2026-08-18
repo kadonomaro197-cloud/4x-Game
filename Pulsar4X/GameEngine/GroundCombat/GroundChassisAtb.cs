@@ -16,6 +16,18 @@ namespace Pulsar4X.GroundCombat
         Hover       // repulsor / grav — skimmers
     }
 
+    /// <summary>E13 — what a chassis is MADE OF, which decides how it sustains itself. <see cref="Mechanical"/> is the
+    /// default (= today, byte-identical): steel + reactors, no self-repair. <see cref="Organic"/> is a living/bio hull
+    /// (Zerg / Leviathan / bio-tech) that knits its own wounds back up over time (self-repair) and later feeds instead
+    /// of drawing raw electrical power. <see cref="Synthetic"/> is a designed reservation (nanite/self-assembling) for a
+    /// later slice. v1 wires ONE consequence — Organic self-repair — behind a flag; Mechanical/Synthetic never regen.</summary>
+    public enum GroundSubstrate : byte
+    {
+        Mechanical = 0,   // steel + power — the default, no self-repair (byte-identical)
+        Organic,          // living/bio — self-repairs; later feeds instead of drawing electrical power
+        Synthetic         // reserved (nanite/self-assembling) — no consequence yet
+    }
+
     /// <summary>
     /// The FRAME a ground unit is built on — the first part you pick in the assembler, the ground echo of a ship's hull.
     /// It is NOT a rigid class (no "Human type" / "Titan type"); it's a set of continuous numbers, so a Guardsman, a

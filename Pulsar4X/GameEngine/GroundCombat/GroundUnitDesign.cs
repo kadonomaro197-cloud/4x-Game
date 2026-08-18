@@ -113,6 +113,16 @@ namespace Pulsar4X.GroundCombat
         /// developer's constraint). Its COST (elite units are dearer to build/train) rides the costed training-component
         /// slice (B); this slice (A) is the multiplier mechanism + gauge.</summary>
         [JsonProperty] public double TrainingMultiplier { get; set; } = 1.0;
+        /// <summary>E13 — the chassis SUBSTRATE (what this unit is made of): <see cref="GroundSubstrate.Mechanical"/>
+        /// (default = today), <see cref="GroundSubstrate.Organic"/> (living/bio — self-repairs), or
+        /// <see cref="GroundSubstrate.Synthetic"/> (reserved). Carried as a DESIGN-LEVEL dial (not a chassis-atb ctor
+        /// arg) so it needs no lockstep frame-template change and no exact-arity binder break (the same save-safe path
+        /// <see cref="UpkeepCredits"/>/<see cref="TrainingMultiplier"/> use). Snapshotted onto each raised
+        /// <see cref="GroundUnit.Substrate"/>. <b>Mechanical (0) = byte-identical</b> — the <c>= Mechanical</c>
+        /// initializer is the load-bearing fallback for an old save whose JSON lacks the field (Newtonsoft keeps the
+        /// ctor value for an absent property). v1 consequence = Organic self-repair (flagged); the feed/no-power
+        /// consequences are later slices.</summary>
+        [JsonProperty] public GroundSubstrate Substrate { get; set; } = GroundSubstrate.Mechanical;
         /// <summary>ENVIRONMENTAL GEAR (E4) — per-hazard protection this design's units carry, keyed by the shared
         /// <see cref="Pulsar4X.Hazards.HazardEffectType"/>. Value 0..1 = fraction of that hazard's attrition negated
         /// (a "heat-shielded" design has <c>{HeatDamage: 0.8}</c>). Snapshotted onto each raised <see cref="GroundUnit"/>.

@@ -100,6 +100,34 @@ namespace Pulsar4X.GroundCombat
         /// deterministic (no RNG) so fast-forward == watch.</summary>
         public static bool EnableInitialEngagementSpread = false;
 
+        /// <summary>E13 ORGANIC SELF-REPAIR — default OFF (byte-identical). When ON, a unit whose
+        /// <see cref="GroundUnit.Substrate"/> is <see cref="GroundSubstrate.Organic"/> knits health back up each tick
+        /// (<see cref="OrganicRegenTick"/>) — a living/bio hull healing its wounds. Mechanical/Synthetic units (every
+        /// existing design) never regen, so the wire is byte-identical twice over (flag off, and nothing is Organic by
+        /// default). The menu turns it on.</summary>
+        public static bool EnableOrganicRegen = false;
+
+        /// <summary>⚠ FLAGGED — the fraction of its <see cref="GroundUnit.MaxHealth"/> an Organic unit self-repairs per
+        /// game-hour (mirrors the shield-recharge dial shape). 0.05 = ~full heal in ~20 game-hours. Tunable; a per-design
+        /// regen dial is the follow-up.</summary>
+        public static double OrganicRegenFraction = 0.05;
+
+        /// <summary>E13 ORGANIC SELF-REPAIR (pure): a living/bio unit knits <paramref name="fraction"/> of its MaxHealth
+        /// back per game-hour (× the tick). ONLY an Organic, alive (Health &gt; 0), wounded (Health &lt; MaxHealth) unit
+        /// regens — a Mechanical/Synthetic, dead, or already-full unit is unchanged. Capped at MaxHealth. Mutates the
+        /// unit; returns the health gained (0 if none). Pure w.r.t. globals (the rate is passed in) → unit-testable.</summary>
+        public static double OrganicRegenTick(GroundUnit unit, double fraction, double dtSeconds)
+        {
+            if (unit == null || unit.Substrate != GroundSubstrate.Organic) return 0.0;
+            if (unit.Health <= 0 || unit.Health >= unit.MaxHealth || fraction <= 0) return 0.0;
+            double gain = unit.MaxHealth * fraction * (dtSeconds / 3600.0);
+            if (gain <= 0) return 0.0;
+            double before = unit.Health;
+            unit.Health += gain;
+            if (unit.Health > unit.MaxHealth) unit.Health = unit.MaxHealth;
+            return unit.Health - before;
+        }
+
         // Shield pool regeneration is now a PER-UNIT designed rate (GroundUnit.ShieldRegenFraction, ⚙3), defaulting to
         // 0.34/game-hour (≈ full recharge in ~3 hours) for every unit until a ward dials it — see the recharge step in
         // ProcessBody. The old global ShieldRegenPerHourFraction constant was removed (2026-07-11): it was dead (the
@@ -239,6 +267,14 @@ namespace Pulsar4X.GroundCombat
                     }
                 }
             }
+
+            // 0c) ORGANIC SELF-REPAIR (E13) — a living/bio hull knits its wounds back up over time: the sign-flip of the
+            //     environmental-attrition step above (same MaxHealth×fraction×(dt/3600) shape as the shield recharge).
+            //     Gated on EnableOrganicRegen (default OFF → byte-identical) AND per-unit Substrate == Organic (every
+            //     existing design is Mechanical → no regen → byte-identical twice over).
+            if (EnableOrganicRegen)
+                foreach (var unit in forces.Units)
+                    OrganicRegenTick(unit, OrganicRegenFraction, deltaSeconds);
 
             body.TryGetDataBlob<PlanetRegionsDB>(out var regionsDB);
 

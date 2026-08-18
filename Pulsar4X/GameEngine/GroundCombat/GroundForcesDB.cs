@@ -62,6 +62,11 @@ namespace Pulsar4X.GroundCombat
         /// <see cref="Attack"/> and <see cref="MaxHealth"/> at raise; do NOT re-apply it in the resolver. 1.0 = green/
         /// untrained (byte-identical). Lets the UI show "Veteran ×1.3" without recomputing.</summary>
         [JsonProperty] public double TrainingMultiplier { get; internal set; } = 1.0;
+        /// <summary>E13 — the chassis SUBSTRATE (Mechanical / Organic / Synthetic), snapshot of the design's
+        /// <see cref="GroundUnitDesign.Substrate"/>. Decides how the unit sustains itself: an <c>Organic</c> unit
+        /// self-repairs over time (<see cref="GroundForcesProcessor.OrganicRegenTick"/>, flagged), a Mechanical/Synthetic
+        /// one does not. <b>Mechanical (0, the default) = byte-identical</b>; the initializer is the old-save fallback.</summary>
+        [JsonProperty] public GroundSubstrate Substrate { get; internal set; } = GroundSubstrate.Mechanical;
         /// <summary>AMMO pool (kg) — the mass of ammunition this unit carries, snapshot of the design's Σ magazine
         /// capacity (weapon-unification B). 0 = no ammo weapons / no magazine. The ground echo of a magazine on a ship.</summary>
         [JsonProperty] public double MaxAmmo_kg { get; internal set; }
@@ -241,7 +246,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             Range_m = o.Range_m; Speed_kmh = o.Speed_kmh;
-            UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier;
+            UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier; Substrate = o.Substrate;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             if (o.WeaponLoadout != null) { WeaponLoadout = new List<GroundWeaponMount>(); foreach (var m in o.WeaponLoadout) WeaponLoadout.Add(new GroundWeaponMount(m)); }
@@ -629,6 +634,7 @@ namespace Pulsar4X.GroundCombat
                 Penetration = design.Penetration,   // armour-crack (W1c) — 0 for a normal unit, high for an AP design
                 PerShotEnergy = design.PerShotEnergy,   // alpha-vs-chip (W2c) — 0 = single lump, big = one alpha shot
                 UpkeepCredits = design.UpkeepCredits,   // standing monthly upkeep — 0 = free (byte-identical)
+                Substrate = design.Substrate,   // E13 — Mechanical (default) = byte-identical; Organic self-repairs (flagged)
                 // Armour NATURE tuning (⚙3): how well this unit's plating soaks each incoming nature. 1.0 = plain plate
                 // (every unit until a nature-tuned plating is fitted → resolver passes natureFactor 1.0 → byte-identical).
                 ArmourVsKinetic = design.ArmourVsKinetic,
