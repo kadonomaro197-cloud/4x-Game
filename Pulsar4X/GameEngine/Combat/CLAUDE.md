@@ -221,6 +221,23 @@ desperation tactic — a weak fleet can *guarantee* it takes N of a stronger ene
   (so the ram shows in the Battle Report). Gauge: `RamOrderTests` (3v3 → both wiped; 2-rammer vs 4 → rammer wiped +
   enemy loses 2, surplus survives; friendly target → no-op; nearest-hostile finds+rams, null when none).
 
+### Carrier sortie — undock = launch, dock = recover (E12 slice 1, Operation Blueprint-to-Steel, 2026-08-18)
+
+A carrier LAUNCHES a carried craft by UNDOCKING it and RECOVERS it by DOCKING it — reusing the existing `Docking/`
+verbs (`DockOrder`/`DockTools`), **no new order**. The whole engine wire is ONE filter: the two ship-collect walks
+(`CollectShips` for `GetFleetShips`, `CollectCombatShips` for `GetCombatShips`) now SKIP a ship for which
+`DockTools.IsDocked(ship)` is true, gated on **`CombatEngagement.EnableCarrierSortie` (default OFF)**. So a docked
+fighter is **held in the hangar** (not a combatant) and rejoins the fight the instant it undocks. **Why this is all it
+takes:** docking never touches fleet membership — `DockTools.TryDock` only re-parents the craft's `PositionDB` to the
+carrier — so a docked craft stays a `FleetDB` child and *would* still be enrolled; the skip is what makes "held in
+reserve" real. `DockTools.IsDocked(ship)` is the new O(1) helper: a docked ship's position-parent IS its carrier (set
+by `TryDock`), so it checks `IsDockedIn(ship.PositionDB.Parent, ship)` — no scan of every carrier. **Byte-identical
+off** (and even on, no stock ship mounts a bay, so `DockedShipsDB` is absent and `IsDocked` reads false everywhere).
+**Deferred to E12 slice 2:** the rearm/refuel-on-recovery hook in `DockTools.TryDock` (pull fuel + ordnance from the
+carrier's `CargoStorageDB` into the recovered craft — needs a parasite design WITH holds, since the stock Wasp carries
+neither). Gauge: `CarrierSortieTests` (a docked fighter is skipped flag-ON, still enrolled flag-OFF; undock relaunches
+it; the carrier always fights).
+
 ## Switchable doctrine
 
 **What it is.** Each fleet can fly an active **combat posture** — its doctrine — set by the player (or NPC). The auto-resolver reads it as a read-time multiplier on that fleet's strength and toughness, so the *same* fleet fights differently under a different posture. Two pieces:

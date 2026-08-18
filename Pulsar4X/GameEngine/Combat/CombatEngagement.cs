@@ -7,6 +7,7 @@ using Pulsar4X.Orbital;
 using Pulsar4X.People;
 using Pulsar4X.Ships;
 using Pulsar4X.Names;
+using Pulsar4X.Docking;   // E12 carrier sortie — DockTools.IsDocked keeps a docked craft out of the fight
 
 namespace Pulsar4X.Combat
 {
@@ -370,6 +371,14 @@ namespace Pulsar4X.Combat
         /// is always true, so the resolver is exactly the old symmetric exchange. The client turns it on when
         /// detection is live, next to <see cref="NarrateToLog"/> / <see cref="InterruptTimeOnNewEngagement"/>.</summary>
         public static bool RequireDetectionToEngage = false;
+
+        /// <summary>E12 CARRIER SORTIE — when true, a craft that is DOCKED inside a carrier is held in the hangar and
+        /// NOT enrolled as a combatant (the ship-collect walks skip it). So with a carrier's fighters docked,
+        /// <b>undock = launch</b> (the craft joins the fight) and <b>dock = recover</b> (it leaves it) — the existing
+        /// Dock/Undock verbs become the carrier's launch/recovery, no new order needed. Default FALSE → byte-identical:
+        /// no stock ship mounts a dock bay, so <c>DockedShipsDB</c> is absent everywhere and <c>DockTools.IsDocked</c>
+        /// reads false for every ship. The client turns it on. (Rearm/refuel-on-recovery is E12 slice 2.)</summary>
+        public static bool EnableCarrierSortie = false;
 
         /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
         /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
@@ -1901,7 +1910,12 @@ namespace Pulsar4X.Combat
                 if (child == null || !child.IsValid) continue;
                 if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
+                {
+                    // E12 carrier sortie: a DOCKED craft is held in the hangar, not a combatant (undock = launch). Flag
+                    // off (default) OR not docked → enrolled exactly as before → byte-identical.
+                    if (EnableCarrierSortie && DockTools.IsDocked(child)) continue;
                     into.Add(child);
+                }
                 else if (child.HasDataBlob<FleetDB>())
                     CollectShips(child, into, depth + 1, seen); // sub-fleet (fleet component)
             }
@@ -1943,7 +1957,10 @@ namespace Pulsar4X.Combat
                 if (child == null || !child.IsValid) continue;
                 if (child.Id == fleet.Id) continue;            // a fleet that lists itself as a child — skip the cycle
                 if (child.HasDataBlob<ShipInfoDB>())
+                {
+                    if (EnableCarrierSortie && DockTools.IsDocked(child)) continue;   // E12: a docked craft is held in the hangar (undock = launch)
                     into.Add(new CombatShip(child, fpMult, toughMult));
+                }
                 else if (child.HasDataBlob<FleetDB>())
                     CollectCombatShips(child, into, cmdrFire, cmdrTough, depth + 1, seen); // sub-component → own doctrine, same commander
             }

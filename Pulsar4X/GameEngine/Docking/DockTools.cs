@@ -103,6 +103,19 @@ namespace Pulsar4X.Docking
             => carrier != null && ship != null
                && carrier.TryGetDataBlob<DockedShipsDB>(out var d) && d.DockedShipIds.Contains(ship.Id);
 
+        /// <summary>True if <paramref name="ship"/> is currently docked in ANY carrier — the O(1) "held in a hangar"
+        /// check the combat resolver reads to keep a docked craft out of the fight (E12 carrier sortie: undock =
+        /// launch, dock = recover). A docked ship's <see cref="PositionDB"/> is re-parented to its carrier by
+        /// <see cref="TryDock"/> (<c>pos.SetParent(carrier)</c>), so its position-parent IS its carrier iff docked — no
+        /// scan of every carrier is needed. Defensive: false for a null ship, a ship with no position, or a
+        /// position-parent that doesn't actually list the ship as docked.</summary>
+        public static bool IsDocked(Entity ship)
+        {
+            if (ship == null || !ship.TryGetDataBlob<PositionDB>(out var pos)) return false;
+            var carrier = pos.Parent;
+            return carrier != null && IsDockedIn(carrier, ship);
+        }
+
         /// <summary>
         /// Both gates, as one readable answer. <paramref name="reason"/> says which gate refused, so the client and the
         /// AI get the same explanation rather than a bare false (the Visibility Gate: a refusal nobody can read is a bug
