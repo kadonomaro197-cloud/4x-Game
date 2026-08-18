@@ -27,19 +27,22 @@ namespace Pulsar4X.Combat
     }
 
     /// <summary>
-    /// An AURA PROJECTOR — a component that projects a per-tick buff/debuff onto nearby units within a RADIUS
-    /// (a commander's rally, a synapse/psionic ward, a jamming bubble). A component (<see cref="IComponentDesignAttribute"/>,
-    /// CONVENTIONS §6) so it's designed / researched / built / mounted / lost like any part — cradle to grave. Mirrors
-    /// <see cref="ShipMagazineAtb"/>'s save-safe shape exactly (parameterless ctor + one NCalc double-arg ctor +
-    /// <c>[JsonProperty]</c> dials + a real <c>Clone</c>).
+    /// An AURA PROJECTOR — a component that projects a command buff/debuff (a commander's rally, a synapse/psionic
+    /// ward, a jamming bubble). A component (<see cref="IComponentDesignAttribute"/>, CONVENTIONS §6) so it's designed
+    /// / researched / built / mounted / lost like any part — cradle to grave. Mirrors <see cref="ShipMagazineAtb"/>'s
+    /// save-safe shape exactly (parameterless ctor + one NCalc double-arg ctor + <c>[JsonProperty]</c> dials + a real
+    /// <c>Clone</c>).
     ///
-    /// <para><b>Phase A (this) = the component + the pure aura math (<see cref="AuraTools"/>), byte-identical and NOT
-    /// yet swept.</b> Nothing reads it: there is no per-tick neighbour sweep yet. Phase B adds that sweep as its OWN
-    /// <c>IHotloopProcessor</c> on its OWN marker blob (gotcha L9), mirroring <c>SpaceHazardProcessor</c>, and the field
-    /// feeds <c>People.BonusesDB</c> with the guard-rails <b>take-the-best-not-sum</b> (<see cref="AuraTools.BestOf"/>)
-    /// and <b>a destroyed projector drops its field that tick</b> (health-scaled read = the grave rung). ⚠ Rally/Dread
-    /// need a unit-morale field that doesn't exist yet — Phase A wires no effect, so that blocker doesn't bite here.
-    /// Inert on install; never throws.</para>
+    /// <para><b>Delivery = FLEET-WIDE (the developer's call, 2026-08-18 — "flagship/fleet-wide command buff which also
+    /// applies to planetary combat").</b> On install the field is snapshotted onto the host's
+    /// <see cref="AuraProjectorDB"/> roster; the combat resolver's <see cref="CombatEngagement.FleetAuraMult"/> scans a
+    /// fleet's ships for that roster and folds the STRONGEST projector's magnitude into the fleet-wide
+    /// firepower/toughness multiplier (Command→Firepower, Ward→Toughness) — the take-the-best-not-sum guard-rail
+    /// (<see cref="AuraTools.BestOf"/>). NOT a per-ship radius sweep (an earlier slice built one; the developer's
+    /// fleet-wide call superseded it). A destroyed projector is simply not found on the next combat-collect (the grave
+    /// rung, for free); the last projector torn down drops the roster (the uninstall hook). ⚠ Rally/Dread need a
+    /// unit-morale field that doesn't exist yet, and Jamming a detection channel — so only Command/Ward are wired.
+    /// The battalion-wide GROUND fold is the next slice. Inert on install; never throws.</para>
     /// </summary>
     public class AuraAtb : BaseDataBlob, IComponentDesignAttribute
     {
@@ -67,9 +70,10 @@ namespace Pulsar4X.Combat
 
         public override object Clone() => new AuraAtb(Radius_m, Magnitude, (double)(int)Effect, (double)(int)Target);
 
-        /// <summary>Install snapshots this projector's field onto the host's <see cref="AuraProjectorDB"/> marker
-        /// (seeding it if absent) so <see cref="AuraSweepProcessor"/> wakes for the entity — the exact
-        /// <c>CommandBerthAtb.OnComponentInstallation</c> shape. Never throws (it runs inside ship construction, L4).</summary>
+        /// <summary>Install snapshots this projector's field onto the host's <see cref="AuraProjectorDB"/> roster
+        /// (seeding it if absent) so the combat resolver's fleet-wide read (<see cref="CombatEngagement.FleetAuraMult"/>)
+        /// finds it — the exact <c>CommandBerthAtb.OnComponentInstallation</c> shape. Never throws (it runs inside ship
+        /// construction, L4).</summary>
         public void OnComponentInstallation(Entity parentEntity, ComponentInstance componentInstance)
         {
             if (parentEntity == null)

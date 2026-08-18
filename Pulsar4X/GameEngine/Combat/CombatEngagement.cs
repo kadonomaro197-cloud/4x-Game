@@ -380,6 +380,11 @@ namespace Pulsar4X.Combat
         /// reads false for every ship. The client turns it on. (Rearm/refuel-on-recovery is E12 slice 2.)</summary>
         public static bool EnableCarrierSortie = false;
 
+        /// <summary>E14 auras (Fork B, 2026-08-18) — off by default so a fleet with no aura projector (every stock
+        /// fleet, since no base-mod ship mounts an <see cref="AuraAtb"/>) is byte-identical: <see cref="FleetAuraMult"/>
+        /// returns 1.0 whenever this is off. The client turns it on once an aura projector is buildable + designed.</summary>
+        public static bool EnableAuraCommandBuff = false;
+
         /// <summary>When true, a battle only ERUPTS if someone will release a shot — the first-shot trigger (Phase 3,
         /// docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md §14.4). Two hostile fleets that are BOTH non-WeaponsFree (weapons-hold /
         /// return-fire) sit in a tense STANDOFF — proximity no longer auto-starts a fight. At least one WeaponsFree
@@ -1932,8 +1937,8 @@ namespace Pulsar4X.Combat
             // rung-4 "a person's skill modifies an outcome" wire. 1.0 (no effect) when there's no flagship, no
             // commander, or no combat bonus, so this is BYTE-IDENTICAL to pre-commander combat until a commander
             // actually carries a Firepower/Toughness bonus (every existing combat fixture is the tripwire).
-            double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower);
-            double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness);
+            double cmdrFire = FleetCommanderMult(fleet, BonusCategory.Firepower) * FleetAuraMult(fleet, BonusCategory.Firepower);
+            double cmdrTough = FleetCommanderMult(fleet, BonusCategory.Toughness) * FleetAuraMult(fleet, BonusCategory.Toughness);
             CollectCombatShips(fleet, result, cmdrFire, cmdrTough, 0, new HashSet<int>());
             return result;
         }
@@ -1986,6 +1991,42 @@ namespace Pulsar4X.Combat
             if (!commander.TryGetDataBlob<BonusesDB>(out var bonuses))
                 return 1.0;
             return CommanderBonuses.CombatMultiplier(bonuses, category);
+        }
+
+        /// <summary>
+        /// The FLEET-WIDE aura command-buff multiplier for a combat category (E14 Fork B — "a flagship/fleet-wide
+        /// command buff"). An <see cref="AuraAtb"/> projector mounted ANYWHERE in the fleet buffs the WHOLE fleet,
+        /// exactly as the flagship commander's competence does (<see cref="FleetCommanderMult"/>): Firepower reads a
+        /// <c>Command</c> projector, Toughness reads a <c>Ward</c> projector, and the STRONGEST single projector of
+        /// that kind wins (take-the-best-not-sum — overlapping auras don't stack). Returns 1.0 (no effect) when the
+        /// flag is off or no friendly projector is present, so combat is byte-identical until an aura is built and the
+        /// flag flipped. A destroyed/uninstalled projector simply isn't found (the grave rung, for free). A
+        /// <c>Foes</c>-targeted field does not buff the fleet it sits in. Defensive; never throws.
+        /// </summary>
+        internal static double FleetAuraMult(Entity fleet, BonusCategory category)
+        {
+            if (!EnableAuraCommandBuff || fleet == null || !fleet.IsValid)
+                return 1.0;
+
+            // Firepower ← a Command aura; Toughness ← a Ward aura. Any other category has no aura sink.
+            AuraEffect want;
+            if (category == BonusCategory.Firepower) want = AuraEffect.Command;
+            else if (category == BonusCategory.Toughness) want = AuraEffect.Ward;
+            else return 1.0;
+
+            double best = 0.0;
+            foreach (var ship in GetFleetShips(fleet))
+            {
+                if (ship == null || !ship.IsValid || !ship.TryGetDataBlob<AuraProjectorDB>(out var roster))
+                    continue;
+                foreach (var f in roster.Projectors)
+                {
+                    if (f.Effect != want) continue;
+                    if (f.Target == AuraTarget.Foes) continue;   // a hostile-only field doesn't buff its own fleet
+                    if (f.Magnitude > best) best = f.Magnitude;
+                }
+            }
+            return 1.0 + best;
         }
 
         internal static bool AreHostile(Entity a, Entity b)

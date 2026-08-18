@@ -4,16 +4,15 @@ using Pulsar4X.Orbital;
 namespace Pulsar4X.Combat
 {
     /// <summary>
-    /// The PURE aura math (E14 auras, Phase A) — a radius test + a magnitude falloff, with no <c>Entity</c>, no cargo,
-    /// no processor — so it's unit-testable on its own even though the per-tick neighbour SWEEP that will call it
-    /// (Phase B) rides live game state.
+    /// The PURE aura math (E14 auras) — a take-the-best combiner plus a radius test + magnitude falloff, with no
+    /// <c>Entity</c> and no processor, so it's unit-testable on its own.
     ///
-    /// <para>An "aura" is a field a component projects onto nearby units: a commander's rally, a synapse/psionic ward,
-    /// a jamming bubble. Phase B walks the units near each projector and applies the buff, mirroring the hazard
-    /// region-effect pattern (<see cref="Pulsar4X.Hazards.SpaceHazardTools"/> — "a region of space that affects ships
-    /// inside it"). This class is just the geometry + magnitude those helpers hand each unit; the two guard-rails the
-    /// SWEEP must enforce (take-the-BEST of overlapping auras, never SUM — <see cref="BestOf"/>; and a destroyed
-    /// projector drops its field that tick, a health-scaled read = the grave rung) are noted here but applied there.</para>
+    /// <para><b><see cref="BestOf"/> is the load-bearing one under the current FLEET-WIDE design</b> — the combat
+    /// resolver's <c>CombatEngagement.FleetAuraMult</c> uses it to take the STRONGEST projector in a fleet (overlapping
+    /// auras don't stack). <see cref="InRange"/> / <see cref="MagnitudeAt"/> (the radius test + linear distance taper)
+    /// are LATENT: a fleet is co-located in the auto-resolve model, so a fleet-wide command buff has no distance to
+    /// taper. They're kept — pure, tested — for a future per-proximity refinement (e.g. which fleets are close enough
+    /// to a projector to benefit).</para>
     /// </summary>
     public static class AuraTools
     {

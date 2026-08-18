@@ -6,8 +6,8 @@ namespace Pulsar4X.Combat
 {
     /// <summary>ONE installed aura projector's field, snapshotted from its <see cref="AuraAtb"/> when the component
     /// is installed (the same "snapshot the atb dials onto a host roster" shape <c>CommandBerth</c> uses). Carrying a
-    /// snapshot — not a live atb reference — is what makes the sweep gaugeable without a full component harness and
-    /// what survives save/load; the grave rung is the uninstall hook removing this entry by <see cref="ComponentName"/>.</summary>
+    /// snapshot — not a live atb reference — survives save/load; the grave rung is the uninstall hook removing this
+    /// entry by <see cref="ComponentName"/>.</summary>
     public class AuraProjectorField
     {
         [JsonProperty] public double Radius_m { get; internal set; }
@@ -33,18 +33,20 @@ namespace Pulsar4X.Combat
     }
 
     /// <summary>
-    /// MARKER DB — an entity that mounts one or more aura projectors carries this, listing each projector's field
-    /// (radius/magnitude/effect/target). Its two jobs (E14 auras, slice 2):
-    /// <list type="number">
-    /// <item>it is the DataBlob type <see cref="AuraSweepProcessor"/> keys to — a fresh marker so it collides with no
-    /// other hotloop (gotcha L9; the same reason <c>StarFlareSourceDB</c> is its own marker off <c>StarInfoDB</c>);</item>
-    /// <item>its presence wakes the sweep for this entity and its absence lets the sweep sleep (the empty-system
-    /// optimisation, gotcha L5) — so <see cref="AuraAtb.OnComponentUninstallation"/> drops it when the last projector
-    /// leaves (the grave rung).</item>
-    /// </list>
-    /// Mirrors <c>CommandBerthDB</c> exactly (a host roster of snapshotted component records). <c>[JsonProperty]</c> +
-    /// deep-copy <c>Clone()</c> (gotcha L12 — a DB that forgets Clone silently becomes a bare object when its entity
-    /// moves managers).
+    /// ROSTER DB — a ship that mounts one or more aura projectors carries this, listing each projector's field
+    /// (radius/magnitude/effect/target). It is the per-ship record the COMBAT RESOLVER reads: an aura is a
+    /// FLEET-WIDE command buff (the developer's call, 2026-08-18 — "flagship/fleet-wide command buff which also
+    /// applies to planetary combat"), so <see cref="CombatEngagement.FleetAuraMult"/> scans a fleet's ships for this
+    /// roster and folds the strongest projector's magnitude into the fleet-wide firepower/toughness multiplier —
+    /// NOT a per-ship radius sweep. A destroyed projector is simply not found on the next combat-collect (the grave
+    /// rung, for free); a torn-down last projector drops the roster via
+    /// <see cref="AuraAtb.OnComponentUninstallation"/>. Mirrors <c>CommandBerthDB</c> exactly (a host roster of
+    /// snapshotted component records). <c>[JsonProperty]</c> + deep-copy <c>Clone()</c> (gotcha L12 — a DB that
+    /// forgets Clone silently becomes a bare object when its entity moves managers).
+    ///
+    /// <para>The <c>Radius_m</c> dial on each field is LATENT under the fleet-wide v1 (a fleet is co-located in the
+    /// auto-resolve model, so distance does not gate a fleet-wide buff); it is kept for a future per-proximity
+    /// refinement and does not affect combat today.</para>
     /// </summary>
     public class AuraProjectorDB : BaseDataBlob
     {
