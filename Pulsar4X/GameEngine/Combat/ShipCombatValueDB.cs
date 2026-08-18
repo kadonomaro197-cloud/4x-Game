@@ -47,12 +47,14 @@ namespace Pulsar4X.Combat
         /// <summary>v1 stub: a launcher's effective tracks/sec until salvo size + reload are read (v2).</summary>
         public const double MissileSaturationStub = 1.0;
 
-        // ── C-GUIDED (OPERATION BLUEPRINT-TO-STEEL, 2026-08-17) — a missile launcher's firepower from its REAL warhead ──
-        /// <summary>When ON, a missile launcher's firepower is read from a REPRESENTATIVE warhead (the owning faction's
-        /// heaviest loadable ordnance) instead of the flat <see cref="MissileLauncherFirepowerStub"/> — so a torpedo
-        /// ship reads its real striking power (entityassembler.html TIER 3 #3; developer ruling "Option A"). Default
-        /// OFF → the flat stub → byte-identical. The client turns it on; the live scale is the developer's calibration
-        /// (see <see cref="GuidedWarheadDivisor"/>).</summary>
+        // ── C-GUIDED (OPERATION BLUEPRINT-TO-STEEL, 2026-08-17) — a missile launcher's firepower from its PICKED warhead ──
+        /// <summary>When ON, a missile launcher's firepower is read from the warhead the player actually LOADED on it
+        /// (<see cref="Weapons.MissileLauncherAtb.AssignedOrdnance"/>) instead of the flat
+        /// <see cref="MissileLauncherFirepowerStub"/> — so a torpedo ship reads the striking power of the ordnance it
+        /// carries (entityassembler.html TIER 3 #3; developer ruling <b>"the picked warhead"</b>, 2026-08-17 — NOT the
+        /// faction's heaviest). Default OFF → the flat stub → byte-identical. The client turns it on; the live scale is
+        /// the developer's calibration (see <see cref="GuidedWarheadDivisor"/>). Because the combat value is cached at
+        /// build (nothing loaded yet), <c>SetOrdinanceToWpnOrder.Execute</c> recomputes it on assignment when this is on.</summary>
         public static bool EnableGuidedWarheadFirepower = false;
 
         /// <summary>Joules per kilogram of TNT-equivalent (the standard 4.184e6). A warhead's energy (J) =
@@ -463,9 +465,9 @@ namespace Pulsar4X.Combat
                 {
                     foreach (var comp in launchers)
                     {
-                        // C-GUIDED: read the launcher's real warhead when on; else the flat stub (byte-identical).
+                        // C-GUIDED: read the launcher's PICKED warhead when on; else the flat stub (byte-identical).
                         double baseDps = EnableGuidedWarheadFirepower
-                            ? RepresentativeLauncherFirepower(ship, comp.Design)
+                            ? PickedWarheadFirepower(comp.Design)
                             : MissileLauncherFirepowerStub;
                         double dps = baseDps * comp.HealthPercent;
                         // Range (the authentic-closing pass): missiles are the LONG-range standoff opener (hard cutoff).
@@ -593,33 +595,22 @@ namespace Pulsar4X.Combat
         }
 
         /// <summary>C-GUIDED: the firepower (J/s) a missile launcher contributes when <see cref="EnableGuidedWarheadFirepower"/>
-        /// is on — read from a REPRESENTATIVE warhead (the heaviest ordnance in the owning faction's library this
-        /// launcher can load). Falls back to <see cref="MissileLauncherFirepowerStub"/> when the launcher, faction, or
-        /// ordnance library is unavailable (a launcher with nothing to fire still rates the stub). Defensive — never
-        /// throws (Calculate must not).</summary>
-        internal static double RepresentativeLauncherFirepower(Entity ship, ComponentDesign launcherDesign)
+        /// is on — read from the launcher's ACTUALLY-PICKED ordnance (<see cref="Weapons.MissileLauncherAtb.AssignedOrdnance"/>,
+        /// the warhead the player loaded through the fire-control screen), NOT the heaviest warhead in the faction's
+        /// library (the developer's ruling: <b>"the picked warhead"</b>, 2026-08-17). A launcher with nothing loaded —
+        /// or a design that isn't a missile launcher — rates the flat <see cref="MissileLauncherFirepowerStub"/>: there
+        /// is no warhead to represent. Because <see cref="Calculate"/> runs ONCE at build (when no ordnance is loaded
+        /// yet), the ship's cached value is recomputed when the player assigns ordnance
+        /// (<c>Weapons.SetOrdinanceToWpnOrder.Execute</c>, also flag-gated) — that recompute is what makes a picked
+        /// warhead actually bite. Defensive — never throws (Calculate must not).</summary>
+        internal static double PickedWarheadFirepower(ComponentDesign launcherDesign)
         {
             if (launcherDesign == null || !launcherDesign.TryGetAttribute<MissileLauncherAtb>(out var launcher))
                 return MissileLauncherFirepowerStub;
-            if (ship?.Manager?.Game == null)
-                return MissileLauncherFirepowerStub;
-
-            Entity factionEntity;
-            try { factionEntity = ship.GetFactionOwner; }
-            catch { return MissileLauncherFirepowerStub; }   // faction owner not resolvable (e.g. neutral) → stub
-            if (factionEntity == null
-                || !factionEntity.TryGetDataBlob<FactionInfoDB>(out var faction)
-                || faction.MissileDesigns == null || faction.MissileDesigns.Count == 0)
-                return MissileLauncherFirepowerStub;
-
-            double bestEnergy = 0.0;
-            foreach (var ordnance in faction.MissileDesigns.Values)
-            {
-                if (ordnance == null || !launcher.CanLoadOrdnance(ordnance)) continue;
-                double e = WarheadEnergyJoules(ordnance);
-                if (e > bestEnergy) bestEnergy = e;
-            }
-            return WarheadFirepower(bestEnergy);
+            // The warhead the player actually loaded on this launcher — its striking power, not the library's heaviest.
+            if (launcher.TryGetOrdnance(out var picked) && picked != null)
+                return WarheadFirepower(WarheadEnergyJoules(picked));
+            return MissileLauncherFirepowerStub;   // nothing loaded → the flat stub (no warhead to read)
         }
 
         /// <summary>C-GUIDED: map a warhead's energy (J) to a launcher firepower (J/s). A launcher with no explosive

@@ -7,6 +7,7 @@ using Pulsar4X.Components;
 using Pulsar4X.Factions;
 using Pulsar4X.Sensors;
 using Pulsar4X.Engine.Orders;
+using Pulsar4X.Combat;
 
 namespace Pulsar4X.Weapons
 {
@@ -373,6 +374,12 @@ namespace Pulsar4X.Weapons
             {
                 var wpnState = _weaponInstance.GetAbilityState<WeaponState>();
                 wpnState.FireWeaponInstructions.AssignOrdnance(_ordnanceAssigned);
+                // C-GUIDED (Operation Blueprint-to-Steel, 2026-08-17): the ship's cached ShipCombatValueDB rates a
+                // missile launcher off its PICKED warhead, but the value is computed once at build (when nothing is
+                // loaded). Recompute it now so the just-assigned warhead's firepower reaches the auto-resolver. Flag-
+                // gated → byte-identical when off (no recompute). Calculate is defensive (never throws).
+                if (ShipCombatValueDB.EnableGuidedWarheadFirepower && _entityCommanding != null)
+                    _entityCommanding.SetDataBlob(ShipCombatValueDB.Calculate(_entityCommanding));
                 IsRunning = true;
             }
         }

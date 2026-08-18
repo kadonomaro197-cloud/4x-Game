@@ -68,7 +68,7 @@ levels.
 | `OrdnanceDesign.cs` | Missile/ordnance design data (wet/dry mass, burn rate, exhaust velocity, payload). |
 | `OrdnanceDesignFromJson.cs` | JSON loading for ordnance designs. |
 | `OrdnancePayloadAtb.cs` | Component attribute: warhead payload type. |
-| `SetFireControlOrder.cs` | Order to assign a fire control to a target and set fire mode (OpenFire / CeaseFire). |
+| `SetFireControlOrder.cs` | Order to assign a fire control to a target and set fire mode (OpenFire / CeaseFire). **+ `SetOrdinanceToWpnOrder`** — assigns a picked ordnance to a launcher (`MissileLauncherAtb.AssignOrdnance`). **C-guided (2026-08-18):** `Execute` now also RECOMPUTES the ship's `Combat.ShipCombatValueDB` after assigning (flag-gated on `EnableGuidedWarheadFirepower` → byte-identical off) — the auto-resolver rates a launcher off its LOADED warhead (`PickedWarheadFirepower`), but the combat value is cached at build when nothing's loaded, so the assignment must refresh it. |
 | `IFireWeaponInstr.cs` | Interface: `FireWeapon(owner, target, shots)`. Implemented by weapon component attributes. |
 | `WeaponUtils.cs` | Static helpers: `TimeToTarget()`, `ToHitChance()`, `PredictTargetPositionAndTime()`. |
 
