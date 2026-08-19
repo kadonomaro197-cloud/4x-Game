@@ -224,13 +224,6 @@
           "PropertyFormula": "TechData('tech-conductors') + 10"
         },
         {
-          "Name": "Watt per kg",
-          "Units": "Watt",
-          "DescriptionFormula": "''",
-          "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "(1000 * PropertyValue('Power Output')) / [Mass]"
-        },
-        {
           "Name": "Structural Material",
           "Units": "kg",
           "DescriptionFormula": "'Structural material amount'",
@@ -477,13 +470,6 @@
           "DescriptionFormula": "'Absorption efficiency at bandwidth edges'",
           "GuiHint": "GuiTextDisplay",
           "PropertyFormula": "PropertyValue('Best Efficiency') * 0.5"
-        },
-        {
-          "Name": "Area ",
-          "Units": "m^2",
-          "DescriptionFormula": "'Panel surface area'",
-          "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "PropertyValue('Area')"
         },
         {
           "Name": "DB",

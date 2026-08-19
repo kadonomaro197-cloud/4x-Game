@@ -285,17 +285,6 @@ namespace Pulsar4X.Tests
                 new List<(ComponentDesign, int)> { (warhead, 1) }, id, startResearched: true);
         }
 
-        /// <summary>Give a ship an ordnance hold directly — because NO base-mod cargo hold provides "ordnance-storage"
-        /// yet (see DockTools.EnableCarrierRearm). This isolates the ENGINE capability from the missing DATA rung. Handles
-        /// a ship with an existing cargo store (add the type) or none (attach a fresh single-type store).</summary>
-        private static void GiveOrdnanceHold(Entity ship, double maxVolume)
-        {
-            if (ship.TryGetDataBlob<CargoStorageDB>(out var cargo))
-                cargo.TypeStores[OrdnanceCargoTypeId] = new TypeStore(maxVolume);
-            else
-                ship.SetDataBlob(new CargoStorageDB(OrdnanceCargoTypeId, maxVolume));
-        }
-
         private static long OrdnanceUnits(Entity ship, OrdnanceDesign ord)
         {
             var cargo = ship.GetDataBlob<CargoStorageDB>();
@@ -305,28 +294,31 @@ namespace Pulsar4X.Tests
         [Test]
         [Description("E12 slice 2c — REARM ORDNANCE ON RECOVERY (the ordnance twin of the fuel refuel): "
                      + "DockTools.RearmOrdnanceFromCarrier moves ordnance rounds from the CARRIER's ordnance hold into a "
-                     + "recovered craft's, conserved (carrier lost == craft gained), take-what-fits (a smaller craft hold "
-                     + "caps the pull; a full/self craft is a no-op). The ENGINE CAPABILITY is gauged here on HAND-INJECTED "
-                     + "ordnance-storage holds, because NO base-mod cargo hold provides 'ordnance-storage' yet (the "
-                     + "ordnance-cargo-hold template mislabels itself general-storage) — that DATA rung is a deferred "
-                     + "developer decision; this proves the code is correct for when it lands.")]
+                     + "recovered craft's, conserved (carrier lost == craft gained), take-what-fits (the craft's hold caps "
+                     + "the pull; a full/self craft is a no-op). Gauged on the REAL base-mod Sovereign Carrier + Kestrel "
+                     + "Parasite, whose ordnance-rack components (default-design-ordnance-rack-2.5t → CargoStorageAtb"
+                     + "('ordnance-storage', ...)) give them real ordnance holds — so this proves the whole chain, not a "
+                     + "hand-injected hold. Driven directly (no berth door) so the transfer is deterministic.")]
         public void RearmOrdnanceFromCarrier_MovesOrdnance_ConservesIt_TakesWhatFits()
         {
             var s = TestScenario.CreateWithColony();
-            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.ToList();
-            var light = Lightest(s, designs);
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
 
-            var carrier = Spawn(s, light, "Carrier");
-            var craft = Spawn(s, light, "Parasite");
-            GiveOrdnanceHold(carrier, 5000);   // ~500 rounds at 10 m³ each
-            GiveOrdnanceHold(craft, 1000);     // ~100 rounds — deliberately SMALLER than the carrier's stock, to exercise take-what-fits
+            var carrier = Spawn(s, designs[CarrierDesignId], "Sovereign");   // 2 ordnance racks
+            var craft = Spawn(s, designs[ParasiteDesignId], "Kestrel");      // 1 ordnance rack + a missile launcher
+
+            // The ordnance-rack gives each ship a real "ordnance-storage" TypeStore (CargoStorageAtb first arg).
+            Assert.That(carrier.GetDataBlob<CargoStorageDB>().TypeStores.ContainsKey(OrdnanceCargoTypeId), Is.True,
+                "the carrier's ordnance rack provides a real ordnance-storage hold");
+            Assert.That(craft.GetDataBlob<CargoStorageDB>().TypeStores.ContainsKey(OrdnanceCargoTypeId), Is.True,
+                "the parasite's ordnance rack provides a real ordnance-storage hold");
 
             var ord = RegisterOrdnance(s, "e12", 100, 10);
             long stocked = (long)CargoTransferProcessor.AddCargoItems(carrier, ord, 300);
-            Assert.That(stocked, Is.GreaterThan(0), "the carrier is stocked with ordnance");
+            Assert.That(stocked, Is.GreaterThan(0), "the carrier is stocked with ordnance in its real rack");
             long carrierBefore = OrdnanceUnits(carrier, ord);
             long craftBefore = OrdnanceUnits(craft, ord);
-            Assert.That(craftBefore, Is.EqualTo(0), "the craft starts with an empty ordnance hold");
+            Assert.That(craftBefore, Is.EqualTo(0), "the parasite starts with an empty ordnance hold");
 
             // NO-OP: a full/self craft draws nothing, and it never throws.
             DockTools.RearmOrdnanceFromCarrier(carrier, carrier);

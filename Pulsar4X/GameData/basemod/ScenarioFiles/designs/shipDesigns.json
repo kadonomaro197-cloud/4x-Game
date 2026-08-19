@@ -379,6 +379,7 @@
         { "Id": "default-design-railgun-weapon", "Amount": 2 },
         { "Id": "default-design-heavy-berth", "Amount": 1 },
         { "Id": "default-design-fuel-tank-1000", "Amount": 3 },
+        { "Id": "default-design-ordnance-rack-2.5t", "Amount": 2 },
         { "Id": "default-design-battery-2t", "Amount": 4 },
         { "Id": "default-design-reactor-2t", "Amount": 3 },
         { "Id": "default-design-NTR1.8", "Amount": 2 },
@@ -395,7 +396,8 @@
       "Components": [
         { "Id": "default-design-ship-hull", "Amount": 1 },
         { "Id": "default-design-passive-sensor-s50", "Amount": 1 },
-        { "Id": "default-design-railgun-weapon", "Amount": 1 },
+        { "Id": "default-design-missle-tube-500", "Amount": 1 },
+        { "Id": "default-design-ordnance-rack-2.5t", "Amount": 1 },
         { "Id": "default-design-fuel-tank-1000", "Amount": 1 },
         { "Id": "default-design-reactor-2t", "Amount": 1 },
         { "Id": "default-design-battery-2t", "Amount": 1 },

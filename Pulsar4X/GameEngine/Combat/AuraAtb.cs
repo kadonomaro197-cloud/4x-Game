@@ -6,16 +6,22 @@ using Pulsar4X.Datablobs;
 
 namespace Pulsar4X.Combat
 {
-    /// <summary>WHAT an aura does to the units in its field (E14). Rally/Dread act on a unit MORALE/steadiness field
-    /// that does not exist yet (so they wait on that field); Command/Ward feed the read-time <c>BonusesDB</c> channel
-    /// (Firepower / Toughness); Jamming cuts enemy detection+accuracy (the detection channel).</summary>
+    /// <summary>WHAT an aura does to the units in its field (E14).
+    /// <para>🔒 v1 SCOPE (developer's call, 2026-08-19 — "ship Command/Ward, shelve Rally/Dread"): only <b>Command</b>
+    /// (→ fleet/battalion Firepower) and <b>Ward</b> (→ Toughness) have a LIVE combat effect (folded into
+    /// <c>CombatEngagement.FleetAuraMult</c> + <c>GroundCommandAura.MultFor</c>). <b>Rally</b>/<b>Dread</b> act on a unit
+    /// MORALE/steadiness field that DOES NOT EXIST YET, and <b>Jamming</b>'s enemy-detection debuff has no fold either —
+    /// all three are DELIBERATELY SHELVED for v1 (they select but do nothing). The enum values are kept (not deleted) so
+    /// saves referencing them still load; building the morale field + the jamming fold is a later slice. The base-mod
+    /// aura templates default to Command/Ward — a designer who dials an unwired effect gets no effect (a known v1 limit,
+    /// not a bug).</para></summary>
     public enum AuraEffect : byte
     {
-        Rally = 0,   // friendly morale/steadiness UP     (needs a unit-morale field — pending)
-        Dread,       // enemy    morale/steadiness DOWN    (needs a unit-morale field — pending)
-        Command,     // friendly firepower/coordination UP (feeds BonusesDB Firepower)
-        Jamming,     // enemy    detection/accuracy DOWN   (feeds the detection/accuracy channel)
-        Ward         // friendly damage-mitigation UP      (feeds BonusesDB Toughness)
+        Rally = 0,   // friendly morale/steadiness UP     (SHELVED v1 — needs a unit-morale field)
+        Dread,       // enemy    morale/steadiness DOWN    (SHELVED v1 — needs a unit-morale field)
+        Command,     // friendly firepower/coordination UP (LIVE — feeds BonusesDB Firepower)
+        Jamming,     // enemy    detection/accuracy DOWN   (SHELVED v1 — no fold wired yet)
+        Ward         // friendly damage-mitigation UP      (LIVE — feeds BonusesDB Toughness)
     }
 
     /// <summary>WHO an aura's field lands on (IFF).</summary>

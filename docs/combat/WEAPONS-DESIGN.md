@@ -543,3 +543,23 @@ ship takes damage (the v2 "recalc-on-damage" hook on `ShipCombatValueDB`).
 > Corollary (the developer's words): *"the further this goes, the less it's about the individual and the more
 > about the assembly of individuals."* That is correct and intended — it is what lets the model scale to
 > thousands of ships and stay legible.
+
+---
+
+## Deliberate WON'T-BUILD: weapon firing-arc / facing (developer's call, 2026-08-19)
+
+**We are not building weapon firing arcs, turret traverse, or ship facing.** A firing-arc model asks "is the
+target within this weapon's cone, given the ship's current orientation?" — which only means something when
+ships have *positions and headings* that the combat resolver tracks and updates. Ours doesn't, on purpose:
+the auto-resolver is **aggregate** (see the section above — fleets fight as counts and tiers, a ship is
+whole-or-dead, there are no per-ship battle positions or headings). A facing model would contradict that
+foundation — it would force the resolver to simulate individual ship geometry, which is exactly the per-pixel
+positional sim the whole design routes around (`docs/AUTO-RESOLVER-GROUND-TRUTH-2026-07-29.md`).
+
+So facing/arc is a **written won't-build**, not an oversight: the thing it would model (which of my guns can
+bear on that target right now) has no place to live in an aggregate resolver, and adding one would cost the
+scalability the aggregate model exists to buy. The realism it represents (broadsides, blind spots) is instead
+folded into the aggregate stats where it belongs — evasion, saturation, the weapon triangle — not re-derived
+per-ship per-tick. If a future design ever adds a genuine 2D tactical arena (the parked `resolversim.html`
+horizon), facing could be revisited *there*, as a property of that arena — never bolted onto the aggregate
+strength math.

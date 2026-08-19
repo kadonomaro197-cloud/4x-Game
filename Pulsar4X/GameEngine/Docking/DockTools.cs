@@ -33,17 +33,16 @@ namespace Pulsar4X.Docking
     /// </summary>
     public static class DockTools
     {
-        /// <summary>E12 slice 2 — REARM/REFUEL ON RECOVERY: when a craft docks, top off its fuel (and ordnance) from the
+        /// <summary>E12 slice 2 — REARM/REFUEL ON RECOVERY: when a craft docks, top off its fuel AND ordnance from the
         /// CARRIER's own stock (a carrier resupplies the parasites it recovers). Default OFF → byte-identical
         /// (<see cref="TryDock"/> only re-parents the position, exactly as before); the client turns it on. Inert without
         /// a carrier that mounts a bay AND a parasite with a matching hold, so a stock game never touches it.
-        /// <para>The FUEL half (<see cref="RefuelFromCarrier"/>) is LIVE and gauged — fuel tanks provide the real
-        /// <c>fuel-storage</c> cargo type. The ORDNANCE half (<see cref="RearmOrdnanceFromCarrier"/>) is built + gauged as
-        /// an engine capability but is INERT in the base mod: NO base-mod cargo hold actually provides
-        /// <c>ordnance-storage</c> (the <c>ordnance-cargo-hold</c> template mislabels itself <c>general-storage</c>), so no
-        /// real ship carries ordnance and the guard short-circuits. Making it live is a deferred DATA/developer decision —
-        /// fix the <c>ordnance-cargo-hold</c> cargo type (blast radius: the base-mod missile ship + the CI-blind missile
-        /// load/fire path) or add a new ordnance-hold template — bundled with the parked ordnance-magazine Phase B.</para></summary>
+        /// <para>BOTH halves are LIVE + gauged: <see cref="RefuelFromCarrier"/> moves the craft's fuel (fuel tanks provide
+        /// the real <c>fuel-storage</c> cargo type), and <see cref="RearmOrdnanceFromCarrier"/> moves its ordnance rounds
+        /// (the <c>ordnance-rack-2.5t</c> component installs a real <c>ordnance-storage</c> hold — its
+        /// <c>CargoStorageAtb('ordnance-storage', …)</c> args, not the top-level <c>CargoTypeID</c> which only says where the
+        /// component itself is HAULED). The base-mod Sovereign Carrier + Kestrel Parasite pair exercises both (gauge
+        /// <c>CarrierSortieTests</c>).</para></summary>
         public static bool EnableCarrierRearm = false;
 
         /// <summary>Total berth capacity installed on <paramref name="carrier"/>, in kg of docked hull. Summed ON DEMAND
@@ -249,10 +248,10 @@ namespace Pulsar4X.Docking
         /// exactly what moved (conservation) — so a launcher's magazine is refilled by its mothership. A no-op (never
         /// throws) if either side lacks an ordnance hold, or the carrier carries no ordnance. Only reached when
         /// <see cref="EnableCarrierRearm"/> is on; <c>internal</c> so the gauge can drive it without the berth door gate.
-        /// <para><b>INERT in the base mod today:</b> the <c>ContainsKey("ordnance-storage")</c> guard is always false
-        /// because no base-mod cargo hold provides that type (see <see cref="EnableCarrierRearm"/>). The engine capability
-        /// is gauged (<c>CarrierSortieTests.RearmOrdnanceFromCarrier_*</c>) on hand-injected holds so it is correct the
-        /// moment a real ordnance hold lands — a deferred DATA rung, not dead code.</para>
+        /// <para>LIVE in the base mod: a ship mounting an <c>ordnance-rack-2.5t</c> carries a real <c>ordnance-storage</c>
+        /// hold (its <c>CargoStorageAtb('ordnance-storage', …)</c> args — NOT the top-level <c>CargoTypeID</c>, which only
+        /// says where the component itself is hauled), so the <c>ContainsKey("ordnance-storage")</c> guard passes on a real
+        /// carrier/parasite. Gauged end-to-end on the base-mod pair (<c>CarrierSortieTests.RearmOrdnanceFromCarrier_*</c>).</para>
         /// </summary>
         internal static void RearmOrdnanceFromCarrier(Entity carrier, Entity ship)
         {

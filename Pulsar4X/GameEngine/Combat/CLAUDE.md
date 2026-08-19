@@ -248,24 +248,26 @@ or holds none of the craft's fuel. **Byte-identical OFF** (TryDock only re-paren
 
 **E12 PLAYABLE (2026-08-19, this batch — the base-mod carrier/parasite pair + client flags ON):** two real base-mod ships
 now let a played game fly the loop — the **Sovereign Fleet Carrier** (`default-ship-design-test-carrier`: heavy hull + a
-`heavy-berth` docking bay + 2 railguns + 3× fuel-tank-1000 + reactors/NTRs/alcubierre) and the **Kestrel Parasite Craft**
-(`default-ship-design-test-parasite`: medium hull + railgun + a fuel-tank-1000 + drives), both registered in `earth.json`
-ShipDesigns. `NewGameMenu` flips **`EnableCarrierSortie` + `EnableCarrierRearm` ON** so a menu game gets held-in-hangar +
-refuel-on-recovery. Gauge: `CarrierSortieTests.RealBaseModCarrier_AdmitsParasite` (both designs load + build with their
-parts — the gotcha-10 JSON→ship sensor, since nothing else builds the base-mod earth ShipDesigns; the carrier's berth gives
-real bay capacity; it admits the parasite through the door — `Assume`-guarded on the measured masses so a too-heavy pair is
-inconclusive, not red).
+`heavy-berth` docking bay + 2 railguns + 3× fuel-tank-1000 + **2 ordnance racks** + reactors/NTRs/alcubierre) and the
+**Kestrel Parasite Craft** (`default-ship-design-test-parasite`: medium hull + a **missile launcher** + an **ordnance rack** +
+a fuel-tank-1000 + drives — a missile strike craft), both registered in `earth.json` ShipDesigns. `NewGameMenu` flips
+**`EnableCarrierSortie` + `EnableCarrierRearm` ON** so a menu game gets held-in-hangar + refuel-**and-rearm**-on-recovery.
+Gauge: `CarrierSortieTests.RealBaseModCarrier_AdmitsParasite` (both designs load + build with their parts — the gotcha-10
+JSON→ship sensor, since nothing else builds the base-mod earth ShipDesigns; the carrier's berth gives real bay capacity; it
+admits the parasite through the door — `Assume`-guarded on the measured masses so a too-heavy pair is inconclusive, not red).
 
-**ORDNANCE-on-recovery — engine CAPABILITY built + gauged, DATA rung DEFERRED (slice 2c):** `DockTools.RearmOrdnanceFromCarrier`
-(the ordnance twin of `RefuelFromCarrier` — move every round from the carrier's `ordnance-storage` hold to the craft's,
-conserved/take-what-fits) is wired into the same `TryDock` hook and gauged by
-`CarrierSortieTests.RearmOrdnanceFromCarrier_MovesOrdnance_ConservesIt_TakesWhatFits`. But it is **INERT in the base mod**:
-the Prime-Directive "check the other end" found that **no base-mod cargo hold provides `ordnance-storage`** — the
-`ordnance-cargo-hold` template (its `default-design-ordnance-rack-2.5t`) mislabels itself `general-storage`, so no real ship
-carries ordnance and the `ContainsKey("ordnance-storage")` guard short-circuits. The gauge proves the code is correct on
-hand-injected holds; making it live is a **deferred developer decision** — fix `ordnance-cargo-hold`'s cargo type (blast
-radius: the base-mod missile ship + the CI-blind missile load/fire path) or add a new ordnance-hold template — bundled with
-the parked ordnance-magazine Phase B.
+**ORDNANCE-on-recovery — LIVE + gauged on the real pair (2026-08-19).** `DockTools.RearmOrdnanceFromCarrier` (the ordnance
+twin of `RefuelFromCarrier` — move every round from the carrier's `ordnance-storage` hold to the craft's, conserved /
+take-what-fits) is wired into the same `TryDock` hook and runs on real ships. ⚠ **CORRECTION of an earlier claim in this
+file:** a first pass reported this INERT because "no base-mod cargo hold provides `ordnance-storage`" — **that was WRONG.**
+The `ordnance-rack-2.5t` component (template `ordnance-cargo-hold`) provides a REAL `ordnance-storage` hold: its installed
+`CargoStorageAtb` is built with `AtbConstrArgs('ordnance-storage', …)` (`CargoStorageAtb`'s first arg is the TypeStore key).
+The template's top-level `CargoTypeID: "general-storage"` is a SEPARATE, correct field — it says where the component ITSELF
+is HAULED as cargo (`ComponentInstance.CargoTypeID` → `LogisticsProcessor`), not what the installed hold stores. The Prime-
+Directive check mis-read that metadata field instead of the atb args. So the carrier + missile parasite each carry a real
+ordnance hold, and the gauge `CarrierSortieTests.RearmOrdnanceFromCarrier_MovesOrdnance_ConservesIt_TakesWhatFits` now proves
+the whole chain on the REAL base-mod pair (not a hand-injected hold). **Lesson: for a cargo component, the storage type is
+the `CargoStorageAtb` first arg, NOT the template's top-level `CargoTypeID`.**
 
 The slice-1 gauge stays: `CarrierSortieTests.DockedCraft_HeldInHangar_WhenSortieOn_LaunchesOnUndock` (a docked fighter is
 skipped flag-ON, still enrolled flag-OFF; undock relaunches it; the carrier always fights).

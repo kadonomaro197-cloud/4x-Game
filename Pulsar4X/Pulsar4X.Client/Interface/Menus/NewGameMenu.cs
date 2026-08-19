@@ -630,11 +630,10 @@ public class NewGameMenu : PulsarGuiWindow
         // once a projector is built.
         Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;
         Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;
-        // E12 carriers (now playable — the base-mod Sovereign Fleet Carrier mounts a docking bay, the Kestrel parasite
-        // carries a fuel hold): a DOCKED craft is held in the hangar (out of the fight) and REFUELLED from the carrier on
-        // recovery. Both default OFF in the engine (byte-identical — no bay in the test process) → ON so a played game gets
-        // the carrier loop. One-line revert each. (Ordnance-on-recovery rides EnableCarrierRearm too but is INERT until a
-        // base-mod ordnance-storage cargo hold exists — see DockTools.EnableCarrierRearm — so this ships the fuel loop.)
+        // E12 carriers (playable — the base-mod Sovereign Fleet Carrier mounts a docking bay + ordnance racks; the Kestrel
+        // parasite is a missile strike craft with a fuel hold + an ordnance rack): a DOCKED craft is held in the hangar
+        // (out of the fight) and REFUELLED + REARMED (ordnance) from the carrier on recovery. Both default OFF in the engine
+        // (byte-identical — no bay in the test process) → ON so a played game gets the full carrier loop. One-line revert each.
         Pulsar4X.Combat.CombatEngagement.EnableCarrierSortie = true;
         Pulsar4X.Docking.DockTools.EnableCarrierRearm = true;
 

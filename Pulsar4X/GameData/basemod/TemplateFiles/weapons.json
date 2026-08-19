@@ -41,16 +41,6 @@
           "PropertyFormula": "5000"
         },
         {
-          "Name": "ReloadRate",
-          "Units": "s",
-          "DescriptionFormula": "'(Legacy) How much of a delay there is between laser pulses'",
-          "GuiHint": "GuiSelectionMaxMin",
-          "MaxFormula": "100",
-          "MinFormula": "1",
-          "StepFormula": "1",
-          "PropertyFormula": "10"
-        },
-        {
           "Name": "Power Input",
           "Units": "W",
           "DescriptionFormula": "'How much power the laser consumes'",
@@ -206,13 +196,6 @@
           "PropertyFormula": "(PropertyValue('Power Input') * PropertyValue('Charge Period') - PropertyValue('Pulse Energy')) / PropertyValue('Charge Period')"
         },
         {
-          "Name": "Beam waist",
-          "Units": "M",
-          "DescriptionFormula": "'Width of beam at focal length (debug)'",
-          "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": " PropertyValue('Operating Temprature') * PropertyValue('Operating Temprature') * PropertyValue('Focal Length') * 0.000000001 * PropertyValue('Target Wavelength') * ( 1 / PropertyValue('Lens Diameter') ) "
-        },
-        {
           "Name": "genericWpnAtbArgs",
           "DescriptionFormula": "'int magSize, int reloadPerSec, int amountPerShot, int minShotsPerfire. MagSize=100 abstract units; one shot costs 100 units; reload rate fills one charge period worth per second.",
           "GuiHint": "None",
@@ -304,12 +287,6 @@
           "DescriptionFormula": "'In MegaJules.'",
           "GuiHint": "None",
           "PropertyFormula": "TechData('tech-capacitors') * PropertyValue('Max Calibre') * PropertyValue('Max Length')"
-        },
-        {
-          "Name": "Power Efficency",
-          "Units": "unknown",
-          "GuiHint": "None",
-          "PropertyFormula": "45 + TechData('tech-conductors')"
         },
         {
           "Name": "Launch Force",
