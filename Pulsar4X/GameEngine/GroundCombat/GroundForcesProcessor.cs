@@ -7,6 +7,7 @@ using Pulsar4X.Colonies;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Hazards;
 using Pulsar4X.Factions;   // FactionInfoDB — C7 capture-transfer registry move
+using Pulsar4X.Combat;     // AuraEffect — E14 slice 3b battalion-wide command aura (GroundCommandAura)
 
 namespace Pulsar4X.GroundCombat
 {
@@ -524,7 +525,8 @@ namespace Pulsar4X.GroundCombat
                                 double atk = m.Attack
                                     * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
                                     * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
-                                    * GroundFormationDoctrine.AttackMult(forces, u);
+                                    * GroundFormationDoctrine.AttackMult(forces, u)
+                                    * GroundCommandAura.MultFor(forces.OwningEntity, u.FactionOwnerID, AuraEffect.Command);
                                 double pool = atk * SalvoScale;
                                 if (gIsDefender && coverFort > 0) pool /= coverFort;
                                 FireWeaponAtReachable(u, reachable, pool, GroundCombatant.ToWeaponProfile(u, m));
@@ -557,7 +559,8 @@ namespace Pulsar4X.GroundCombat
                         double atkC = u.Attack
                             * GroundTerrain.TerrainAttackMult(u.UnitType, terrain)
                             * GroundTerrain.LocomotionTerrainMult(roughHandling, terrain)
-                            * GroundFormationDoctrine.AttackMult(forces, u);
+                            * GroundFormationDoctrine.AttackMult(forces, u)
+                            * GroundCommandAura.MultFor(forces.OwningEntity, u.FactionOwnerID, AuraEffect.Command);
                         double poolC = atkC * SalvoScale;
                         if (gIsDefender && coverFort > 0) poolC /= coverFort;
 
@@ -577,6 +580,10 @@ namespace Pulsar4X.GroundCombat
                 if (t.Health <= 0) continue;
                 double dtm = GroundFormationDoctrine.DamageTakenMult(forces, t);
                 if (dtm <= 0) dtm = 1.0;
+                // E14 slice 3b: a friendly Ward command building on the body toughens the whole battalion — divide the
+                // damage-taken mult by (1 + ward), so it takes less (the ground echo of the space per-ship toughness
+                // fold). ÷1.0 when the aura is off → byte-identical.
+                dtm /= GroundCommandAura.MultFor(forces.OwningEntity, t.FactionOwnerID, AuraEffect.Ward);
                 t.Health -= Math.Min(t.Health, kv.Value * dtm);
             }
 
