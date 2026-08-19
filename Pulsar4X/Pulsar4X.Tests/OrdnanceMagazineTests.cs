@@ -82,6 +82,49 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("Phase B — the CHARGE-BASED reload (ReloadCharge) reuses the launcher's abstract charge counter as "
+                     + "the ready-locker, converting charge↔whole rounds and pulling from the bulk hold only when a round "
+                     + "COMPLETES. Pins: (a) partial progress toward a round pulls nothing; (b) crossing a round boundary "
+                     + "with ammo pulls exactly one; (c) an EMPTY hold holds the charge just below the boundary (no unbacked "
+                     + "round, no progress lost); (d) the base-mod floor-trap case (reload 1 / amountPerShot 120) still "
+                     + "completes a round over 120 ticks instead of flooring to 0; (e) conservation + a full mag pulls 0.")]
+        public void ReloadCharge_ConvertsChargeToRounds_PullsFromHold_NoFloorTrap()
+        {
+            // (a) partial progress — well short of the next round boundary → no pull, charge just accrues.
+            var (c1, p1) = OrdnanceMagazineTools.ReloadCharge(currentCharge: 0, reloadPerTick: 10, magSize: 1000, amountPerShot: 100, holdAvailable: 5);
+            Assert.That(c1, Is.EqualTo(10), "partial charge accrues");
+            Assert.That(p1, Is.EqualTo(0), "no whole round completed → nothing pulled from the hold");
+
+            // (b) crossing a round boundary with ammo → completes one round, pulls exactly one.
+            var (c2, p2) = OrdnanceMagazineTools.ReloadCharge(currentCharge: 95, reloadPerTick: 10, magSize: 1000, amountPerShot: 100, holdAvailable: 5);
+            Assert.That(c2, Is.EqualTo(105), "charge crosses the 100 boundary");
+            Assert.That(p2, Is.EqualTo(1), "one whole round completed → one pulled");
+
+            // (c) crossing a boundary with an EMPTY hold → held just below the boundary, no round completes, no pull.
+            var (c3, p3) = OrdnanceMagazineTools.ReloadCharge(currentCharge: 95, reloadPerTick: 10, magSize: 1000, amountPerShot: 100, holdAvailable: 0);
+            Assert.That(p3, Is.EqualTo(0), "empty hold → nothing pulled (grave rung)");
+            Assert.That(c3 / 100, Is.EqualTo(0), "no whole round completed without ammo");
+            Assert.That(c3, Is.GreaterThanOrEqualTo(95), "no reload progress lost (charge held just below the boundary)");
+
+            // (d) the floor-trap case: a base-mod-style launcher (reload 1 charge/tick, 120 charge/round) must still
+            //     complete a round over 120 ticks — the rounds-based Reload floored 1/120 rounds/sec to 0.
+            int charge = 0; int pulls = 0;
+            for (int t = 0; t < 120; t++)
+            {
+                var (nc, np) = OrdnanceMagazineTools.ReloadCharge(charge, reloadPerTick: 1, magSize: 120, amountPerShot: 120, holdAvailable: 3);
+                charge = nc; pulls += np;
+            }
+            Assert.That(charge / 120, Is.EqualTo(1), "after 120 ticks a whole round is ready (no floor-trap)");
+            Assert.That(pulls, Is.EqualTo(1), "exactly one round pulled from the hold for the one completed round (conserved)");
+
+            // (e) full magazine → no pull.
+            var (c5, p5) = OrdnanceMagazineTools.ReloadCharge(currentCharge: 1000, reloadPerTick: 10, magSize: 1000, amountPerShot: 100, holdAvailable: 5);
+            Assert.That(c5, Is.EqualTo(1000), "full mag stays full");
+            Assert.That(p5, Is.EqualTo(0), "full mag pulls nothing");
+            Log("ReloadCharge: charge↔round conversion, hold-gated completion, no floor-trap, conserved");
+        }
+
+        [Test]
         [Description("Byte-identity: the ordnance-magazine activation flag defaults OFF, so the live firing path is "
                      + "untouched until the developer turns it on and verifies live (CI can't run the firing path).")]
         public void OrdnanceMagazine_DefaultsOff()

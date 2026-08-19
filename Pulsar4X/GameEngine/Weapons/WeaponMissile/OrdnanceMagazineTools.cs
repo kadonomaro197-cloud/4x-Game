@@ -67,5 +67,46 @@ namespace Pulsar4X.Weapons
 
             return (readyRounds + pull, pull);
         }
+
+        /// <summary>
+        /// The CHARGE-BASED reload (Phase B, the developer's ruling 2026-08-18: "REUSE the charge-counter with a
+        /// conversion"). Instead of the rounds-based <see cref="Reload"/> above — whose <c>reloadRate × dt</c> FLOORS to
+        /// 0 for a base-mod launcher that reloads 1 charge-point/sec (= 1 round per 120 s), silencing it forever — this
+        /// reuses the launcher's existing abstract charge counter (<c>GenericFiringWeaponsDB.InternalMagQty</c>) as the
+        /// ready-locker and converts charge↔whole rounds: the SAME charge accumulation as today drives timing, but a
+        /// round only COMPLETES into the locker (crosses an <paramref name="amountPerShot"/> boundary) when a physical
+        /// round is pulled from the bulk <c>ordnance-storage</c> hold; with an empty hold the charge is HELD just below
+        /// the next boundary (never completing an unbacked round) until ammo arrives — the grave rung, no floor-trap.
+        /// PURE (charge units in, charge units + whole rounds-pulled out) so the conversion is CI-gauged even though the
+        /// live firing path it wires into cannot be run headless.
+        /// </summary>
+        /// <returns><c>(newCharge, roundsPulledFromHold)</c> — the caller sets <c>InternalMagQty = newCharge</c> and
+        /// removes EXACTLY <c>roundsPulledFromHold</c> whole rounds from the bulk hold (conservation: a round leaves the
+        /// deep magazine exactly when it enters the ready-locker).</returns>
+        public static (int newCharge, int roundsPulledFromHold) ReloadCharge(
+            int currentCharge, int reloadPerTick, int magSize, int amountPerShot, long holdAvailable)
+        {
+            if (amountPerShot <= 0) return (currentCharge, 0);            // no per-shot cost → no round conversion possible
+            if (currentCharge < 0) currentCharge = 0;
+            if (holdAvailable < 0) holdAvailable = 0;
+
+            int wouldBe = currentCharge + (reloadPerTick < 0 ? 0 : reloadPerTick);
+            if (wouldBe > magSize) wouldBe = magSize;
+            if (wouldBe <= currentCharge) return (currentCharge, 0);      // already full / no gain this tick
+
+            int roundsBefore = currentCharge / amountPerShot;            // whole rounds already ready in the locker
+            int roundsAfter  = wouldBe / amountPerShot;
+            int newRounds = roundsAfter - roundsBefore;                  // whole rounds this reload would newly COMPLETE
+            if (newRounds <= 0) return (wouldBe, 0);                     // only partial progress toward the next round → free, no ammo needed
+
+            int pulled = (int)(holdAvailable < newRounds ? holdAvailable : newRounds);
+            if (pulled >= newRounds) return (wouldBe, pulled);           // the hold backs every new round → charge as the reload rate allowed
+
+            // The hold couldn't back all the new rounds: complete only (roundsBefore + pulled), and hold the charge just
+            // below the next (unbacked) round boundary so no round completes without ammo — and no reload progress is lost.
+            int cap = (roundsBefore + pulled) * amountPerShot + (amountPerShot - 1);
+            if (cap > wouldBe) cap = wouldBe;
+            return (cap, pulled);
+        }
     }
 }

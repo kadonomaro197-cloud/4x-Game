@@ -26,11 +26,17 @@ namespace Pulsar4X.Weapons
                 targetEntityOrbit = targetEntity.GetDataBlob<OrbitUpdateOftenDB>();
 
             //MissileLauncherAtb launcherAtb;
-            CargoStorageDB cargo = launchingEntity.GetDataBlob<CargoStorageDB>();
-
-            long numMis = cargo.TypeStores[missileDesign.CargoTypeID].CurrentStoreInUnits[missileDesign.ID];
-            if (numMis < 1)
-                return;
+            // Flag OFF (byte-identical): fire straight from the bulk hold — gate on it holding ≥1 round of this design.
+            // Flag ON (Phase B): the round was drawn from the hold into the launcher's ready-magazine at RELOAD
+            //   (GenericFiringWeaponsProcessor), and the ready-mag/charge gate already passed there, so DON'T re-gate on
+            //   the bulk hold here (it may be empty precisely because its rounds are now in the locker).
+            if (!OrdnanceMagazineTools.EnableOrdnanceMagazine)
+            {
+                CargoStorageDB cargo = launchingEntity.GetDataBlob<CargoStorageDB>();
+                long numMis = cargo.TypeStores[missileDesign.CargoTypeID].CurrentStoreInUnits[missileDesign.ID];
+                if (numMis < 1)
+                    return;
+            }
 
 
 
@@ -131,7 +137,12 @@ namespace Pulsar4X.Weapons
                 var cargoLibrary = newMissile.GetFactionOwner.GetDataBlob<FactionInfoDB>().Data.CargoGoods;
                 NewtonThrustCommand.CreateCommands(cargoLibrary, newMissile, manuvers);
             }
-            CargoTransferProcessor.RemoveCargoItems(launchingEntity, missileDesign, 1);//remove missile from parent.
+            // Flag OFF (byte-identical): fire straight from the bulk hold — debit one round here (a salvo debits 1
+            //   regardless of `count`, a pre-existing quirk left unchanged for byte-identity). Flag ON (Phase B): the hold
+            //   was already debited whole-round at RELOAD, so firing only depletes the ready-magazine (the charge counter,
+            //   in GenericFiringWeaponsProcessor) — don't double-debit the hold here.
+            if (!OrdnanceMagazineTools.EnableOrdnanceMagazine)
+                CargoTransferProcessor.RemoveCargoItems(launchingEntity, missileDesign, 1);//remove missile from parent.
         }
     }
 }

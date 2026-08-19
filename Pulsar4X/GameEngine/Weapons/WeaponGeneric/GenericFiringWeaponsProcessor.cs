@@ -3,6 +3,7 @@ using Pulsar4X.Engine;
 using Pulsar4X.Engine.Orders;
 using Pulsar4X.Energy;
 using Pulsar4X.Interfaces;
+using Pulsar4X.Storage;   // CargoStorageDB / CargoTransferProcessor — the ordnance-magazine reload (Phase B)
 
 namespace Pulsar4X.Weapons;
 
@@ -97,9 +98,36 @@ public class GenericFiringWeaponsProcessor : IHotloopProcessor
         for (int i = 0; i < db.WpnIDs.Length; i++)
         {
             var tickReloadAmount = db.ReloadAmountsPerSec[i];
-            var magQty = Math.Min(db.InternalMagQty[i] + tickReloadAmount, db.InternalMagSizes[i]);
-            db.InternalMagQty[i] = magQty;
-            db.WeaponStates[i].InternalMagCurAmount = magQty;
+
+            // PHASE B (flag-gated, byte-identical OFF): a missile launcher with a loaded ordnance reloads its ready-locker
+            // from the ship's bulk ordnance-storage hold — a whole round only completes into the locker when a physical
+            // round is pulled (OrdnanceMagazineTools.ReloadCharge does the charge↔round conversion, no floor-trap). Every
+            // other slot (beams, or a launcher with nothing loaded) takes the unchanged "refill from nothing" path.
+            if (OrdnanceMagazineTools.EnableOrdnanceMagazine
+                && db.FireInstructions[i] is MissileLauncherAtb launcherAtb
+                && launcherAtb.AssignedOrdnance != null
+                && db.OwningEntity != null
+                && db.OwningEntity.TryGetDataBlob<CargoStorageDB>(out var reloadCargo))
+            {
+                var ord = launcherAtb.AssignedOrdnance;
+                long holdAvail = 0;
+                if (reloadCargo.TypeStores.TryGetValue(ord.CargoTypeID, out var ordStore)
+                    && ordStore.CurrentStoreInUnits.TryGetValue(ord.ID, out var have))
+                    holdAvail = have;
+
+                var (newCharge, pulled) = OrdnanceMagazineTools.ReloadCharge(
+                    db.InternalMagQty[i], tickReloadAmount, db.InternalMagSizes[i], db.AmountPerShot[i], holdAvail);
+                db.InternalMagQty[i] = newCharge;
+                db.WeaponStates[i].InternalMagCurAmount = newCharge;
+                if (pulled > 0)
+                    CargoTransferProcessor.RemoveCargoItems(db.OwningEntity, ord, pulled);   // a round left the deep magazine as it entered the locker
+            }
+            else
+            {
+                var magQty = Math.Min(db.InternalMagQty[i] + tickReloadAmount, db.InternalMagSizes[i]);
+                db.InternalMagQty[i] = magQty;
+                db.WeaponStates[i].InternalMagCurAmount = magQty;
+            }
         }
     }
 
