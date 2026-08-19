@@ -621,6 +621,11 @@ public class NewGameMenu : PulsarGuiWindow
         // population casualty (installations/stockpiles/survivors ride the entity). OFF in the engine suite
         // (byte-identical — nothing captures a whole colony there); ON so a menu game gets the real transfer.
         Pulsar4X.GroundCombat.GroundForcesProcessor.EnableCaptureTransfer = true;
+        // E14 auras (Fork B GROUND, slice 3b): a friendly Command/Ward AURA BUILDING on a world (the buildable
+        // "Command Aura Post") buffs every friendly battalion there — firepower (Command) or toughness (Ward). OFF in
+        // the engine suite (byte-identical — ×1.0 / ÷1.0 no-ops); ON so a menu game gets the real battalion buff once
+        // a post is built. Its space twin (EnableAuraCommandBuff) turns on with the ship-projector template slice.
+        Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems

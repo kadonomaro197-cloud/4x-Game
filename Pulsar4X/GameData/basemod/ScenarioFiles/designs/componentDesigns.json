@@ -696,6 +696,14 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-aura-command-post",
+      "Name": "Command Aura Post",
+      "TemplateId": "aura-command-post"
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-warehouse",
       "Name": "Warehouse",
       "TemplateId": "warehouse-facility",

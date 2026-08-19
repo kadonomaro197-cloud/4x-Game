@@ -1010,6 +1010,81 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "aura-command-post",
+      "Name": "Command Aura Post",
+      "Formulas": {
+        "Description": "A planetary command post whose officer projects a battalion-wide field over every friendly ground unit on this world — a Command field lifts their firepower, a Ward field toughens them. The strongest post of its kind wins; knock it out and the field drops.",
+        "Mass": "500 + PropertyValue('Magnitude') * 1000",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "50",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "iron": "[Mass] * 0.5",
+        "aluminium": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.1",
+        "plastic": "[Mass] * 0.1",
+        "stainless-steel": "[Mass] * 0.1"
+      },
+      "ComponentType": "Admin",
+      "MountType": "PlanetInstallation, ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Magnitude",
+          "Units": "fraction",
+          "DescriptionFormula": "'Field strength. 0.5 = a +50% firepower (Command) or damage-mitigation (Ward) buff to every friendly battalion on this world.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.5"
+        },
+        {
+          "Name": "Effect",
+          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens. (Rally/Dread/Jamming need systems not yet built.)'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.AuraEffect",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Target",
+          "DescriptionFormula": "'Who the field lands on: Friends, Foes, or Everyone.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.AuraTarget",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Radius",
+          "DescriptionFormula": "'Field reach in metres. Latent under the current battalion-wide model — the field covers the whole world.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
+          "PropertyFormula": "1000"
+        },
+        {
+          "Name": "auraAtbArgs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Radius'), PropertyValue('Magnitude'), PropertyValue('Effect'), PropertyValue('Target'))",
+          "AttributeType": "Pulsar4X.Combat.AuraAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "spaceport",
       "Name": "Planetary Spaceport Complex",
       "Formulas": {
