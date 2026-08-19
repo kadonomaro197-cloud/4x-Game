@@ -149,5 +149,40 @@ namespace Pulsar4X.Tests
             CombatEngagement.EnableAuraCommandBuff = true;
             Assert.That(Fp(fleet, wing), Is.EqualTo(baseFp).Within(1e-9), "a hostile-only field does not buff its own fleet");
         }
+
+        [Test]
+        [Description("The REAL base-mod projector feeds the fleet-wide buff end-to-end: a Herald Command Cruiser "
+                     + "(mounts default-design-aura-projector) built through ShipFactory has its AuraProjectorDB seeded "
+                     + "by the install hook, and it raises the WHOLE fleet's firepower — the JSON→atb→install→roster→"
+                     + "FleetAuraMult chain on real data. Flag OFF → byte-identical.")]
+        public void RealBaseModProjector_OnAHerald_BuffsTheFleet_FlagGated()
+        {
+            var s = TestScenario.CreateWithColony();
+            var shipDesigns = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(shipDesigns.ContainsKey("default-ship-design-test-aura"), Is.True,
+                "the Herald Command Cruiser is a registered start-faction ship design");
+
+            var herald = shipDesigns["default-ship-design-test-aura"];
+            var plainKey = shipDesigns.Keys.First(k => k != "default-ship-design-test-aura");
+            var plain = shipDesigns[plainKey];   // a wingman that carries NO projector — the ship we measure
+
+            var fleet = FleetFactory.Create(s.StartingSystem, s.Faction.Id, "Herald Group");
+            var flagship = Spawn(s, herald, "Herald");
+            var wing = Spawn(s, plain, "Wingman");
+            Assign(s, fleet, flagship);
+            Assign(s, fleet, wing);
+
+            Assert.That(flagship.HasDataBlob<AuraProjectorDB>(), Is.True,
+                "building the Herald installed its aura projector → the install hook seeded the roster");
+
+            CombatEngagement.EnableAuraCommandBuff = false;
+            double baseFp = Fp(fleet, wing);
+            Assert.That(Fp(fleet, wing), Is.EqualTo(baseFp).Within(1e-9), "flag off: byte-identical with the real projector present");
+
+            CombatEngagement.EnableAuraCommandBuff = true;
+            Assert.That(Fp(fleet, wing), Is.EqualTo(baseFp * 1.5).Within(1e-9),
+                "the built Herald's +0.5 Command projector buffs the whole fleet (+50%) — the real base-mod data path");
+            Log($"real base-mod projector: fleet firepower {baseFp:0.###} → {Fp(fleet, wing):0.###} with the Herald present");
+        }
     }
 }

@@ -6,6 +6,8 @@ using Pulsar4X.Movement;     // ⚠ PositionDB — the LIVE one. Engine/Datablob
                              //   Pulsar4X.Datablobs for it silently gets you nothing.
 using Pulsar4X.Engine;
 using Pulsar4X.Galaxy;       // MassVolumeDB
+using Pulsar4X.Storage;      // CargoStorageDB, CargoTransferProcessor, CargoMath (E12 slice 2 rearm)
+using Pulsar4X.Factions;     // FactionInfoDB — resolve the fuel material for rearm
 
 namespace Pulsar4X.Docking
 {
@@ -31,6 +33,13 @@ namespace Pulsar4X.Docking
     /// </summary>
     public static class DockTools
     {
+        /// <summary>E12 slice 2 — REARM/REFUEL ON RECOVERY: when a craft docks, top off its fuel from the CARRIER's own
+        /// fuel stock (a carrier resupplies the parasites it recovers). Default OFF → byte-identical (<see cref="TryDock"/>
+        /// only re-parents the position, exactly as before); the client turns it on. Inert without a carrier that mounts
+        /// a bay AND a parasite with a fuel-storage hold, so a stock game never touches it. Ordnance-on-recovery is a
+        /// follow-up (slice 2c — needs the ordnance-rack registered on the start faction + per-round enumeration).</summary>
+        public static bool EnableCarrierRearm = false;
+
         /// <summary>Total berth capacity installed on <paramref name="carrier"/>, in kg of docked hull. Summed ON DEMAND
         /// from its <see cref="DockBayAtb"/> components (the fortification / GroundBayAtb pattern), scaled by component
         /// health — a shot-up bay holds less — so install/uninstall need no bookkeeping.</summary>
@@ -175,6 +184,10 @@ namespace Pulsar4X.Docking
                 if (ship.TryGetDataBlob<PositionDB>(out var pos))
                     pos.SetParent(carrier);
 
+                // E12 slice 2: a recovered craft tops off its fuel from the carrier (flag-gated, byte-identical off).
+                if (EnableCarrierRearm)
+                    RefuelFromCarrier(carrier, ship);
+
                 return true;
             }
             catch
@@ -182,6 +195,40 @@ namespace Pulsar4X.Docking
                 reason = "docking failed";
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Top off a just-recovered craft's fuel from the CARRIER's own fuel stock (E12 slice 2). Mirrors
+        /// ShipFactory.FillFuelTanks but SOURCES the fuel from the carrier instead of an infinite sentinel:
+        /// take-what's-available — add up to the craft's free tank space, capped by what the carrier actually holds, then
+        /// drain the carrier by exactly what was moved (conservation). A no-op (never throws) if the craft has no
+        /// thruster / no fuel-tank bay, the carrier has no cargo store, the fuel type isn't a defined material, or the
+        /// carrier holds none of it. Only reached when <see cref="EnableCarrierRearm"/> is on (TryDock gates the call);
+        /// <c>internal</c> so the gauge can drive the transfer deterministically without the berth door gate.
+        /// </summary>
+        internal static void RefuelFromCarrier(Entity carrier, Entity ship)
+        {
+            if (carrier == null || ship == null) return;
+            // The craft must burn a fuel and have a tank to put it in; the carrier must have a store to give from.
+            if (!ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) || string.IsNullOrEmpty(thrust.FuelType)) return;
+            if (!ship.TryGetDataBlob<CargoStorageDB>(out var shipCargo)) return;
+            if (!carrier.TryGetDataBlob<CargoStorageDB>(out var carrierCargo)) return;
+
+            var factionInfo = ship.GetFactionOwner?.GetDataBlob<FactionInfoDB>();
+            if (factionInfo == null) return;
+            var fuel = factionInfo.Data.CargoGoods.GetAny(thrust.FuelType)
+                     ?? factionInfo.Data.LockedCargoGoods.GetAny(thrust.FuelType);
+            if (fuel == null) return;
+
+            long carrierHas = carrierCargo.GetUnitsStored(fuel, false);   // what the carrier can give
+            long shipFree = shipCargo.GetFreeUnitSpace(fuel);             // what the craft's tank can take
+            if (carrierHas <= 0 || shipFree <= 0) return;
+
+            long toMove = carrierHas < shipFree ? carrierHas : shipFree;
+            if (toMove > int.MaxValue) toMove = int.MaxValue;
+            double added = CargoTransferProcessor.AddCargoItems(ship, fuel, (int)toMove);   // caps at the tank's free volume
+            if (added > 0)
+                CargoTransferProcessor.RemoveCargoItems(carrier, fuel, (int)added);          // drain the carrier by what actually moved
         }
 
         /// <summary>

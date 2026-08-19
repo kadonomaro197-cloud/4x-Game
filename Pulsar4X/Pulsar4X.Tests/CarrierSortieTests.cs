@@ -8,7 +8,9 @@ using Pulsar4X.Engine;
 using Pulsar4X.Factions;
 using Pulsar4X.Fleets;
 using Pulsar4X.Galaxy;
+using Pulsar4X.Movement;   // NewtonThrustAbilityDB (fuel type)
 using Pulsar4X.Ships;
+using Pulsar4X.Storage;    // CargoStorageDB, CargoMath (fuel readout for the rearm gauge)
 
 namespace Pulsar4X.Tests
 {
@@ -93,6 +95,113 @@ namespace Pulsar4X.Tests
                 Log("docked fighter held in hangar (flag on); undock relaunches it into the fight");
             }
             finally { CombatEngagement.EnableCarrierSortie = saved; }
+        }
+
+        private const string FuelTank = "default-design-fuel-tank-1000";   // a fuel-storage hold (the Wasp has none)
+
+        private static ComponentDesign FuelTankDesign(TestScenario s)
+        {
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ComponentDesigns;
+            Assert.That(designs.ContainsKey(FuelTank), Is.True, $"'{FuelTank}' should be built for the start faction");
+            return designs[FuelTank];
+        }
+
+        /// <summary>Units of the ship's own fuel type currently stored aboard (resolved the same way DockTools does).</summary>
+        private static long FuelUnits(TestScenario s, Entity ship)
+        {
+            if (!ship.TryGetDataBlob<NewtonThrustAbilityDB>(out var thrust) || string.IsNullOrEmpty(thrust.FuelType)) return 0;
+            if (!ship.TryGetDataBlob<CargoStorageDB>(out var cargo)) return 0;
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            var fuel = fi.Data.CargoGoods.GetAny(thrust.FuelType) ?? fi.Data.LockedCargoGoods.GetAny(thrust.FuelType);
+            return fuel == null ? 0 : cargo.GetUnitsStored(fuel, false);
+        }
+
+        [Test]
+        [Description("E12 slice 2 — REARM ON RECOVERY: DockTools.RefuelFromCarrier tops off a recovered craft's fuel "
+                     + "from the CARRIER's own stock. The craft's fuel rises and the carrier's drops by exactly the same "
+                     + "amount (conservation); a second pass adds no more once the tank is full (take-what's-available); "
+                     + "a full craft draws nothing (no-op). Driven directly (no berth door) so the transfer is proven "
+                     + "deterministically. Carrier + parasite share ONE light design → the same fuel type, so the "
+                     + "transfer can never silently mismatch materials.")]
+        public void RefuelFromCarrier_MovesFuel_ConservesIt_TakesWhatFits()
+        {
+            var s = TestScenario.CreateWithColony();
+            var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+            var designs = factionInfo.ShipDesigns.Values.ToList();
+            var lightDesign = Lightest(s, designs);   // both hulls share this design → identical fuel type
+
+            // Carrier: the light hull + a fuel-storage hold, filled so it has fuel to hand out.
+            var carrier = Spawn(s, lightDesign, "Carrier");
+            carrier.AddComponent(FuelTankDesign(s));
+            ShipFactory.FillFuelTanks(carrier, factionInfo);
+            long carrierBefore = FuelUnits(s, carrier);
+            Assert.That(carrierBefore, Is.GreaterThan(0), "the carrier holds fuel to hand out");
+
+            // Parasite: the SAME light hull + a fuel-storage hold (freshly built → empty tank).
+            var fighter = Spawn(s, lightDesign, "Fighter");
+            fighter.AddComponent(FuelTankDesign(s));
+            long fighterBefore = FuelUnits(s, fighter);
+            Assert.That(fighterBefore, Is.EqualTo(0), "a freshly built parasite starts with empty tanks");
+
+            // NO-OP: a FULL craft (the carrier itself) draws nothing — the take-what-fits guard, and it never throws.
+            DockTools.RefuelFromCarrier(carrier, carrier);
+            Assert.That(FuelUnits(s, carrier), Is.EqualTo(carrierBefore), "a full/self craft draws nothing (no-op)");
+
+            // THE TRANSFER: fuel flows carrier → parasite, conserved.
+            DockTools.RefuelFromCarrier(carrier, fighter);
+            long fighterAfter = FuelUnits(s, fighter);
+            long carrierAfter = FuelUnits(s, carrier);
+            Log($"rearm: fighter {fighterBefore}→{fighterAfter}, carrier {carrierBefore}→{carrierAfter}");
+            Assert.That(fighterAfter, Is.GreaterThan(fighterBefore), "the recovered craft gained fuel from the carrier");
+            Assert.That(carrierAfter, Is.LessThan(carrierBefore), "the carrier's fuel dropped by what it handed over");
+            Assert.That(carrierBefore - carrierAfter, Is.EqualTo(fighterAfter - fighterBefore),
+                "conservation: exactly what the carrier lost, the craft gained");
+
+            // TAKE-WHAT'S-AVAILABLE: a second pass adds nothing more than free space allows (never a duplication).
+            long fighterFull = FuelUnits(s, fighter);
+            DockTools.RefuelFromCarrier(carrier, fighter);
+            Assert.That(FuelUnits(s, fighter), Is.LessThanOrEqualTo(fighterFull + 1),
+                "a second rearm tops off no further than free space allows (bounded)");
+        }
+
+        [Test]
+        [Description("The rearm is FLAG-GATED at TryDock: with EnableCarrierRearm ON a docked craft is refuelled; with "
+                     + "it OFF the dock only re-parents the position and the craft's fuel is unchanged (byte-identical). "
+                     + "Assume-guarded on the berth door — if the parasite+tank is too big for the 60t berth this is "
+                     + "inconclusive, not a failure (the door math is DockBayTests' job; this gauge is the flag).")]
+        public void TryDock_RefuelsOnlyWhenRearmFlagOn()
+        {
+            long DockAndReadFuel(bool rearmOn, out bool docked)
+            {
+                var s = TestScenario.CreateWithColony();
+                var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
+                var designs = factionInfo.ShipDesigns.Values.ToList();
+                var lightDesign = Lightest(s, designs);   // carrier + parasite share the design → identical fuel type
+
+                var carrier = Spawn(s, lightDesign, "Carrier");
+                carrier.AddComponent(BayDesign(s));         // the bay makes it a carrier
+                carrier.AddComponent(FuelTankDesign(s));    // a hold to hand fuel from
+                ShipFactory.FillFuelTanks(carrier, factionInfo);
+                var fighter = Spawn(s, lightDesign, "Fighter");
+                fighter.AddComponent(FuelTankDesign(s));
+
+                DockTools.EnableCarrierRearm = rearmOn;
+                try
+                {
+                    docked = DockTools.TryDock(carrier, fighter, out _);
+                    return docked ? FuelUnits(s, fighter) : -1;
+                }
+                finally { DockTools.EnableCarrierRearm = false; }
+            }
+
+            long onFuel = DockAndReadFuel(true, out bool fitOn);
+            Assume.That(fitOn, "the parasite+tank must fit the 60t berth to exercise the rearm-on-dock path");
+            long offFuel = DockAndReadFuel(false, out bool fitOff);
+            Assume.That(fitOff, "the parasite+tank must fit the 60t berth");
+
+            Assert.That(onFuel, Is.GreaterThan(0), "flag ON: docking refuelled the recovered craft");
+            Assert.That(offFuel, Is.EqualTo(0), "flag OFF: docking left the craft's fuel untouched (byte-identical)");
+            Log($"flag-gated rearm on dock — on={onFuel} off={offFuel}");
         }
     }
 }

@@ -73,5 +73,32 @@ namespace Pulsar4X.Tests
             }
             finally { GroundCommandAura.EnableGroundCommandAura = saved; }
         }
+
+        [Test]
+        [Description("The SPACE Command Aura Projector (aura-projector) loads onto the start faction and binds its "
+                     + "AuraAtb from JSON with the Magnitude + enum dials (Effect=Command, Target=Friends) — the ship "
+                     + "twin of the colony command post, same gotcha-10 six-point registration.")]
+        public void AuraProjector_LoadsFromJson_BindsItsAtb_WithDials()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns;
+
+            Assert.That(designs.ContainsKey("default-design-aura-projector"), Is.True,
+                "the aura projector loads onto the faction — its template is in StartingItems + its design in ComponentDesigns");
+
+            var design = designs["default-design-aura-projector"] as ComponentDesign;
+            Assert.That(design, Is.Not.Null, "default-design-aura-projector is a ComponentDesign");
+
+            Assert.That(design.HasAttribute<AuraAtb>(), Is.True,
+                "the design binds an AuraAtb — the AttributeType FQN resolved and the 4 ctor args matched");
+
+            var atb = design.GetAttribute<AuraAtb>();
+            TestContext.Progress.WriteLine(
+                $"[aura-projector] effect={atb.Effect} target={atb.Target} magnitude={atb.Magnitude} radius={atb.Radius_m}");
+
+            Assert.That(atb.Effect, Is.EqualTo(AuraEffect.Command), "the enum Effect dial bound from the template default (index 2 = Command)");
+            Assert.That(atb.Target, Is.EqualTo(AuraTarget.Friends), "the enum Target dial bound from the template default (index 0 = Friends)");
+            Assert.That(atb.Magnitude, Is.EqualTo(0.5).Within(1e-9), "magnitude bound from the template default");
+        }
     }
 }

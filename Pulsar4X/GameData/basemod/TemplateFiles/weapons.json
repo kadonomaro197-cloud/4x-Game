@@ -652,6 +652,79 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "aura-projector",
+      "Name": "Command Aura Projector",
+      "Formulas": {
+        "Description": "A shipborne command projector whose officer casts a FLEET-WIDE field over every friendly ship in the fleet — a Command field lifts the fleet's firepower, a Ward field toughens it. The strongest projector in the fleet wins; knock it out and the field drops. The space twin of the planetary Command Aura Post.",
+        "Mass": "500 + PropertyValue('Magnitude') * 1000",
+        "Volume": "[Mass] * 0.1",
+        "HTK": "0.5",
+        "CrewReq": "10",
+        "ResearchCost": "50",
+        "CreditCost": "200",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.3",
+        "aluminium": "[Mass] * 0.3",
+        "copper": "[Mass] * 0.2"
+      },
+      "ComponentType": "Augment",
+      "MountType": "ShipComponent, ShipCargo",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Magnitude",
+          "Units": "fraction",
+          "DescriptionFormula": "'Field strength. 0.5 = a +50% firepower (Command) or damage-mitigation (Ward) buff to every friendly ship in the fleet.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2",
+          "MinFormula": "0",
+          "StepFormula": "0.05",
+          "PropertyFormula": "0.5"
+        },
+        {
+          "Name": "Effect",
+          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens. (Rally/Dread/Jamming need systems not yet built.)'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.AuraEffect",
+          "MaxFormula": "5",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "2"
+        },
+        {
+          "Name": "Target",
+          "DescriptionFormula": "'Who the field lands on: Friends, Foes, or Everyone.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.AuraTarget",
+          "MaxFormula": "3",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Radius",
+          "DescriptionFormula": "'Field reach in metres. Latent under the current fleet-wide model — the field covers the whole fleet.'",
+          "GuiHint": "GuiSelectionMaxMinInt",
+          "MaxFormula": "100000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
+          "PropertyFormula": "1000"
+        },
+        {
+          "Name": "auraAtbArgs",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Radius'), PropertyValue('Magnitude'), PropertyValue('Effect'), PropertyValue('Target'))",
+          "AttributeType": "Pulsar4X.Combat.AuraAtb"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "armour-hardening",
       "Name": "Ablative Hull Plating",
       "Formulas": {

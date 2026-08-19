@@ -624,8 +624,12 @@ public class NewGameMenu : PulsarGuiWindow
         // E14 auras (Fork B GROUND, slice 3b): a friendly Command/Ward AURA BUILDING on a world (the buildable
         // "Command Aura Post") buffs every friendly battalion there — firepower (Command) or toughness (Ward). OFF in
         // the engine suite (byte-identical — ×1.0 / ÷1.0 no-ops); ON so a menu game gets the real battalion buff once
-        // a post is built. Its space twin (EnableAuraCommandBuff) turns on with the ship-projector template slice.
+        // a post is built. Its space twin (EnableAuraCommandBuff) is now on too — the buildable ship "Command Aura
+        // Projector" (Herald Command Cruiser) buffs its whole fleet's firepower (Command) / toughness (Ward). OFF in
+        // the engine suite (byte-identical — no stock fleet mounts a projector there); ON so a menu game gets the buff
+        // once a projector is built.
         Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;
+        Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
