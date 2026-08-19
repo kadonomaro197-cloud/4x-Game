@@ -426,14 +426,23 @@ namespace Pulsar4X.Combat
         /// <see cref="EnableClosingRange"/>; seeding is gated on this flag alone so it can be tested in isolation.</summary>
         public static bool EnableGroupPlane = false;
 
-        /// <summary>E-env slice 2b (OPERATION BLUEPRINT-TO-STEEL, 2026-08-17): when ON, a battle is fought in the
-        /// ENVIRONMENT where it happens — each fleet's <see cref="FleetCombatStateDB.Conditions"/> is seeded from
-        /// <see cref="CombatConditions.ReadAt"/> (a nebula/hazard cuts accuracy), and the DEFENDER's
-        /// <c>Conditions.Accuracy</c> is threaded into <see cref="LandedFraction"/> → the shared kernel so poor
-        /// visibility lands less fire. Default FALSE → conditions stay <see cref="CombatConditions.Clean"/>
-        /// (accuracy 1.0, <c>hit *= 1.0</c> exact → byte-identical); the client (NewGameMenu) turns it on. Design:
+        /// <summary>E-env (OPERATION BLUEPRINT-TO-STEEL): when ON, a battle is fought in the ENVIRONMENT where it
+        /// happens — each fleet's <see cref="FleetCombatStateDB.Conditions"/> is seeded from
+        /// <see cref="CombatConditions.ReadAt"/> (a nebula/hazard cuts accuracy, corrodes hulls), and every coefficient
+        /// is threaded into the resolve: <b>slice 2b</b> — the DEFENDER's <c>Conditions.Accuracy</c> into
+        /// <see cref="LandedFraction"/> → the shared kernel (poor visibility lands less fire); <b>slice 3</b> — the
+        /// standing <c>AmbientDoT_Jps</c> grinds every ship each step (even one with no attacker on it), the ATTACKER's
+        /// <c>Firepower</c> scales its outgoing fire (a hot corona chokes beams), the DEFENDER's <c>ShieldRegen</c>
+        /// scales its shield recharge (an ion storm), and the DEFENDER's <c>Cover</c> adds to evasion (debris). Default
+        /// FALSE → conditions stay <see cref="CombatConditions.Clean"/> (accuracy 1.0/firepower 1.0/regen 1.0/cover 0/
+        /// DoT 0 → every fold is an exact identity → byte-identical); the client (NewGameMenu) turns it on. Design:
         /// docs/combat/ENVIRONMENT-CONDITIONS-DESIGN.md Part 4 steps 2-3.</summary>
         public static bool EnableCombatConditions = false;
+
+        /// <summary>A shared empty fire mix for the E-env slice-3 ambient-DoT casualty pass on a fleet with NO
+        /// attacker this step (see StepEngagementGroup). <see cref="ApplyCasualties"/> never mutates its
+        /// <c>incomingFire</c>, and an empty mix reads <see cref="LandedFraction"/> 1.0 (ambient is undodgeable).</summary>
+        private static readonly List<WeaponProfile> EmptyFireMix = new List<WeaponProfile>();
 
         /// <summary>Closing-rate dial (m/s): the gap-change speed of a maximally-maneuverable fleet (evasion 1.0); a
         /// fleet changes the gap proportional to its maneuverability (min evasion over its ships — it moves as one).
@@ -847,7 +856,29 @@ namespace Pulsar4X.Combat
                 if (!live[i].TryGetDataBlob<FleetCombatStateDB>(out var state)) continue;
                 state.StepsFought++;
                 totalFire += TotalDamage(fire[i]);
-                if (attackersOf[i].Count == 0) continue; // nobody shooting at this fleet this step (it may still be shooting others)
+
+                // E-env slice 3: AMBIENT damage-over-time — the environment ITSELF (a corrosive nebula, hard radiation)
+                // grinds every ship each step, whether or not anyone is shooting it. joules/sec × dt × ship count, and
+                // UNDODGEABLE (you can't juke corrosion), so it is NOT scaled by SalvoDamageScale (that paces WEAPON
+                // salvos, not a standing field). Flag-off / clean space => 0 => byte-identical.
+                double ambient = (EnableCombatConditions && state.Conditions.AmbientDoT_Jps > 0)
+                    ? state.Conditions.AmbientDoT_Jps * dt * ships[i].Count
+                    : 0.0;
+
+                if (attackersOf[i].Count == 0)
+                {
+                    // Nobody is shooting this fleet this step (a one-sided aggressor, or a lull), but the MURK still
+                    // bites: bank the ambient DoT and resolve casualties from it — an EMPTY incoming mix reads
+                    // LandedFraction 1.0 (undodgeable) — so a fleet fighting inside a hazard still takes environmental
+                    // losses even with no attacker on it this step (the fix for the old bare `continue`). No ambient =>
+                    // nothing happens => byte-identical to the old skip.
+                    if (ambient > 0)
+                    {
+                        state.DamageTakenPool += ambient;
+                        ApplyCasualties(ships[i], state, EmptyFireMix, SeparationOf(live[i]), ambient, "the hazard");
+                    }
+                    continue; // nobody shooting at this fleet this step (it may still be shooting others)
+                }
 
                 state.OpponentFleetId = live[attackersOf[i][0]].Id; // keep the readout pointing at a fleet shooting it
 
@@ -856,7 +887,12 @@ namespace Pulsar4X.Combat
                 {
                     int split = targetsOf[g].Count; // attacker g divides its fire across the targets IT can engage
                     if (split <= 0) continue;
-                    AddScaledFire(incoming, fire[g], 1.0 / split);
+                    // E-env slice 3: the attacker's OWN environment can CHOKE its firepower (a hot corona scatters
+                    // beams). 1.0 from the raw hazard query today => flag-off / clean => byte-identical (and flag-off
+                    // short-circuits the blob read).
+                    double fpMult = (EnableCombatConditions && live[g].TryGetDataBlob<FleetCombatStateDB>(out var gState))
+                        ? gState.Conditions.Firepower : 1.0;
+                    AddScaledFire(incoming, fire[g], fpMult / split);
                 }
                 // POINT-DEFENSE (W6): this fleet's PD screen intercepts a saturating fraction of the incoming GUIDED
                 // (missile) fire, shooting those missiles out of the salvo before it's totalled — so a big anti-missile
@@ -881,7 +917,7 @@ namespace Pulsar4X.Combat
                 // byte-identical (every current ship, until a nature-hardened plate is fitted).
                 double armourSoak = FleetArmourSoakFraction(ships[i], incoming);
                 if (armourSoak > 0) dmgThisSalvo *= (1.0 - armourSoak);
-                state.DamageTakenPool += dmgThisSalvo;
+                state.DamageTakenPool += dmgThisSalvo + ambient;   // + the standing environmental DoT (E-env slice 3)
                 string attackerLabel = FleetLabel(live[attackersOf[i][0]])
                     + (attackersOf[i].Count > 1 ? " +" + (attackersOf[i].Count - 1) + " more" : "");
                 // TARGET PRIORITY (Phase 5): WHO in this defender fleet dies first is decided by the doctrine of the
@@ -1008,7 +1044,13 @@ namespace Pulsar4X.Combat
                 {
                     // E-env 2b: the environment's visibility/accuracy coefficient — flag-off => 1.0 => byte-identical.
                     double accuracy = EnableCombatConditions ? state.Conditions.Accuracy : 1.0;
-                    double landed = LandedFraction(incomingFire, cv.Evasion, separation_m, accuracy);
+                    // E-env slice 3: additive COVER the environment grants the DEFENDER (debris, a planet's limb) —
+                    // added to each ship's evasion, capped so nothing is ever untouchable. 0 from the raw hazard query
+                    // today (an authored-environment/body read fills it) => flag-off / clean => byte-identical.
+                    double cover = EnableCombatConditions ? state.Conditions.Cover : 0.0;
+                    double evasion = cv.Evasion + cover;
+                    if (evasion > ShipCombatValueDB.EvasionCap) evasion = ShipCombatValueDB.EvasionCap;
+                    double landed = LandedFraction(incomingFire, evasion, separation_m, accuracy);
                     b = new CasualtyBucket
                     {
                         RoleWeight = cv.RoleWeight,
@@ -1723,7 +1765,10 @@ namespace Pulsar4X.Combat
 
             double soakFraction = SoakFractionOf(incoming);
             double before = state.ShieldPool_J;
-            var (absorbed, newPool) = ResolveShield(before, capacity, regen, dmgThisSalvo, soakFraction, dt);
+            // E-env slice 3: an authored environment can suppress shield REGEN (an ion storm won't let shields
+            // recharge). 1.0 from the raw hazard query today => flag-off / clean => regen unchanged => byte-identical.
+            double regenMult = EnableCombatConditions ? state.Conditions.ShieldRegen : 1.0;
+            var (absorbed, newPool) = ResolveShield(before, capacity, regen * regenMult, dmgThisSalvo, soakFraction, dt);
             state.ShieldPool_J = newPool;
 
             // Narration (client-on): the Battle Report's "shields holding … DOWN!" beat — only when a shield actually
