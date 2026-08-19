@@ -1603,8 +1603,12 @@ namespace Pulsar4X.Client
         {
             try
             {
-                int moved = GroundForces.OrderFormationMove(body, formation, target);
-                _status = moved > 0 ? $"'{formation.Name}' marches {moved} unit(s) to Region {target + 1}" : "formation couldn't march (adjacency/transit)";
+                // The ONE queued FORMATION verb both seats issue (D-units follow-up, One-Verb-Both-Seats): SetFormationOrder
+                // (replace = "march now") — the SAME primitive the AI drives (GroundTacticalBrain), not the loose-unit
+                // OrderFormationMove bypass. The order is validated + executed on the next ground tick (like every fleet
+                // order), so there's no immediate "moved" count to report.
+                GroundForces.SetFormationOrder(formation, GroundOrder.MoveRegion(target));
+                _status = $"'{formation.Name}' ordered to march to Region {target + 1}";
             }
             catch (Exception ex) { _status = "formation march failed (logged)"; Console.WriteLine($"[RenderError] PlanetViewWindow formation march threw: {ex}"); }
         }

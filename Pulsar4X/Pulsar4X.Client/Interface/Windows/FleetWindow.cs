@@ -1649,9 +1649,11 @@ namespace Pulsar4X.Client
         {
             try
             {
-                int moved = GroundForces.OrderFormationMove(body, f, target);
-                _battStatus = moved > 0 ? $"'{f.Name}' marches {moved} unit(s) to Region {target + 1}"
-                                        : "battalion couldn't march (adjacency/transit)";
+                // The ONE queued FORMATION verb both seats issue (D-units follow-up, One-Verb-Both-Seats): SetFormationOrder
+                // (replace = "march now") — the SAME primitive the AI drives, not the loose-unit OrderFormationMove bypass.
+                // Validated + executed on the next ground tick, so there's no immediate "moved" count to report.
+                GroundForces.SetFormationOrder(f, GroundOrder.MoveRegion(target));
+                _battStatus = $"'{f.Name}' ordered to march to Region {target + 1}";
             }
             catch(Exception ex) { _battStatus = "march failed (logged)"; Console.WriteLine($"[RenderError] FleetWindow battalion march threw: {ex}"); }
         }
