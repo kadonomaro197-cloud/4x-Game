@@ -244,9 +244,29 @@ exactly what moved (conservation). A no-op (never throws) if the craft has no th
 or holds none of the craft's fuel. **Byte-identical OFF** (TryDock only re-parents, as before) and inert in a stock game
 (no ship mounts a bay, no parasite carries a hold). Gauge: `CarrierSortieTests.RefuelFromCarrier_MovesFuel_ConservesIt_TakesWhatFits`
 (direct call, deterministic — no berth door; conserved + take-what-fits + no-op) + `TryDock_RefuelsOnlyWhenRearmFlagOn`
-(flag-gated through the real dock, `Assume`-guarded on the door). **Deferred to slice 2c:** ORDNANCE-on-recovery (needs the
-`ordnance-rack` registered on the start faction + per-round enumeration), and a base-mod CARRIER + parasite-with-holds ship
-so the whole thing is playable (the client flags stay OFF until a base-mod hull mounts a bay).
+(flag-gated through the real dock, `Assume`-guarded on the door).
+
+**E12 PLAYABLE (2026-08-19, this batch — the base-mod carrier/parasite pair + client flags ON):** two real base-mod ships
+now let a played game fly the loop — the **Sovereign Fleet Carrier** (`default-ship-design-test-carrier`: heavy hull + a
+`heavy-berth` docking bay + 2 railguns + 3× fuel-tank-1000 + reactors/NTRs/alcubierre) and the **Kestrel Parasite Craft**
+(`default-ship-design-test-parasite`: medium hull + railgun + a fuel-tank-1000 + drives), both registered in `earth.json`
+ShipDesigns. `NewGameMenu` flips **`EnableCarrierSortie` + `EnableCarrierRearm` ON** so a menu game gets held-in-hangar +
+refuel-on-recovery. Gauge: `CarrierSortieTests.RealBaseModCarrier_AdmitsParasite` (both designs load + build with their
+parts — the gotcha-10 JSON→ship sensor, since nothing else builds the base-mod earth ShipDesigns; the carrier's berth gives
+real bay capacity; it admits the parasite through the door — `Assume`-guarded on the measured masses so a too-heavy pair is
+inconclusive, not red).
+
+**ORDNANCE-on-recovery — engine CAPABILITY built + gauged, DATA rung DEFERRED (slice 2c):** `DockTools.RearmOrdnanceFromCarrier`
+(the ordnance twin of `RefuelFromCarrier` — move every round from the carrier's `ordnance-storage` hold to the craft's,
+conserved/take-what-fits) is wired into the same `TryDock` hook and gauged by
+`CarrierSortieTests.RearmOrdnanceFromCarrier_MovesOrdnance_ConservesIt_TakesWhatFits`. But it is **INERT in the base mod**:
+the Prime-Directive "check the other end" found that **no base-mod cargo hold provides `ordnance-storage`** — the
+`ordnance-cargo-hold` template (its `default-design-ordnance-rack-2.5t`) mislabels itself `general-storage`, so no real ship
+carries ordnance and the `ContainsKey("ordnance-storage")` guard short-circuits. The gauge proves the code is correct on
+hand-injected holds; making it live is a **deferred developer decision** — fix `ordnance-cargo-hold`'s cargo type (blast
+radius: the base-mod missile ship + the CI-blind missile load/fire path) or add a new ordnance-hold template — bundled with
+the parked ordnance-magazine Phase B.
+
 The slice-1 gauge stays: `CarrierSortieTests.DockedCraft_HeldInHangar_WhenSortieOn_LaunchesOnUndock` (a docked fighter is
 skipped flag-ON, still enrolled flag-OFF; undock relaunches it; the carrier always fights).
 

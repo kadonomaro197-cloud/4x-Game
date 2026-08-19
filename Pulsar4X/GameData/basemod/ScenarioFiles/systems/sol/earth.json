@@ -381,6 +381,8 @@
         "default-ship-design-test-flak",
         "default-ship-design-test-fighter",
         "default-ship-design-test-capital",
+        "default-ship-design-test-carrier",
+        "default-ship-design-test-parasite",
         "default-ship-design-test-shielded",
         "default-ship-design-test-aura",
         "default-ship-design-test-ironclad",

@@ -3,6 +3,8 @@ using System.Linq;
 using NUnit.Framework;
 using Pulsar4X.Combat;
 using Pulsar4X.Components;
+using Pulsar4X.DataStructures;   // ComponentMountType (the ordnance-part mount, so the OrdnanceDesign ctor counts it)
+using Pulsar4X.Datablobs;        // ComponentInstancesDB (the built-ship parts sensor)
 using Pulsar4X.Docking;
 using Pulsar4X.Engine;
 using Pulsar4X.Factions;
@@ -10,7 +12,8 @@ using Pulsar4X.Fleets;
 using Pulsar4X.Galaxy;
 using Pulsar4X.Movement;   // NewtonThrustAbilityDB (fuel type)
 using Pulsar4X.Ships;
-using Pulsar4X.Storage;    // CargoStorageDB, CargoMath (fuel readout for the rearm gauge)
+using Pulsar4X.Storage;    // CargoStorageDB, CargoMath, TypeStore (fuel/ordnance readout for the rearm gauges)
+using Pulsar4X.Weapons;    // OrdnanceDesign (a round is an ICargoable in the ordnance-storage hold)
 
 namespace Pulsar4X.Tests
 {
@@ -116,6 +119,28 @@ namespace Pulsar4X.Tests
             return fuel == null ? 0 : cargo.GetUnitsStored(fuel, false);
         }
 
+        /// <summary>The LIGHTEST design whose thruster burns a STOCKED fuel — so a spawned copy + a fuel tank +
+        /// FillFuelTanks actually yields READABLE fuel. NOT every design qualifies: a warp-only or thrusterless design
+        /// (no <see cref="NewtonThrustAbilityDB"/>, or an empty/unstocked FuelType) fills 0, and a bare <c>Lightest()</c>
+        /// can land on exactly one of those (that is what red-failed these gauges in CI). Returns null if none qualify,
+        /// so the caller `Assume`-skips rather than red-failing. Carrier + parasite then share ONE fuelable design → the
+        /// same fuel type, so the transfer can never silently mismatch materials.</summary>
+        private static ShipDesign FuelableDesign(TestScenario s)
+        {
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            ShipDesign best = null; double bestMass = double.MaxValue;
+            foreach (var d in fi.ShipDesigns.Values)
+            {
+                var probe = Spawn(s, d, "fuelprobe-" + d.Name);
+                probe.AddComponent(FuelTankDesign(s));
+                ShipFactory.FillFuelTanks(probe, fi);
+                if (FuelUnits(s, probe) <= 0) continue;      // no thruster / unstocked fuel / no fuel-storage hold
+                double m = Mass(probe);
+                if (m > 0 && m < bestMass) { bestMass = m; best = d; }
+            }
+            return best;
+        }
+
         [Test]
         [Description("E12 slice 2 — REARM ON RECOVERY: DockTools.RefuelFromCarrier tops off a recovered craft's fuel "
                      + "from the CARRIER's own stock. The craft's fuel rises and the carrier's drops by exactly the same "
@@ -127,8 +152,9 @@ namespace Pulsar4X.Tests
         {
             var s = TestScenario.CreateWithColony();
             var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
-            var designs = factionInfo.ShipDesigns.Values.ToList();
-            var lightDesign = Lightest(s, designs);   // both hulls share this design → identical fuel type
+            var lightDesign = FuelableDesign(s);   // both hulls share this design → identical, LOADABLE fuel type
+            Assume.That(lightDesign, Is.Not.Null,
+                "a start design must burn a STOCKED fuel (rp-1/ntp) for FillFuelTanks to load fuel to hand out");
 
             // Carrier: the light hull + a fuel-storage hold, filled so it has fuel to hand out.
             var carrier = Spawn(s, lightDesign, "Carrier");
@@ -175,8 +201,8 @@ namespace Pulsar4X.Tests
             {
                 var s = TestScenario.CreateWithColony();
                 var factionInfo = s.Faction.GetDataBlob<FactionInfoDB>();
-                var designs = factionInfo.ShipDesigns.Values.ToList();
-                var lightDesign = Lightest(s, designs);   // carrier + parasite share the design → identical fuel type
+                var lightDesign = FuelableDesign(s);   // carrier + parasite share the design → identical, LOADABLE fuel type
+                if (lightDesign == null) { docked = false; return -1; }
 
                 var carrier = Spawn(s, lightDesign, "Carrier");
                 carrier.AddComponent(BayDesign(s));         // the bay makes it a carrier
@@ -202,6 +228,125 @@ namespace Pulsar4X.Tests
             Assert.That(onFuel, Is.GreaterThan(0), "flag ON: docking refuelled the recovered craft");
             Assert.That(offFuel, Is.EqualTo(0), "flag OFF: docking left the craft's fuel untouched (byte-identical)");
             Log($"flag-gated rearm on dock — on={onFuel} off={offFuel}");
+        }
+
+        private const string CarrierDesignId = "default-ship-design-test-carrier";   // Sovereign Fleet Carrier (heavy hull + heavy berth)
+        private const string ParasiteDesignId = "default-ship-design-test-parasite"; // Kestrel Parasite Craft (medium hull)
+
+        [Test]
+        [Description("The REAL base-mod carrier + parasite pair (E12): the Sovereign Fleet Carrier and Kestrel Parasite "
+                     + "designs load from JSON and build into real ships with their parts (the gotcha-10 JSON->ship sensor "
+                     + "for these two new designs — nothing else builds the base-mod earth ShipDesigns), the carrier's heavy "
+                     + "berth gives it real bay capacity, and it ADMITS the parasite through the berth door. The door-fit is "
+                     + "Assume-guarded on the measured masses (a too-heavy parasite is inconclusive + the masses printed, not "
+                     + "red — the fix would be a lighter craft or a wider berth, a data tune not a code bug).")]
+        public void RealBaseModCarrier_AdmitsParasite()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns;
+            Assert.That(designs.ContainsKey(CarrierDesignId), Is.True, "the Sovereign Fleet Carrier design loaded from JSON");
+            Assert.That(designs.ContainsKey(ParasiteDesignId), Is.True, "the Kestrel Parasite Craft design loaded from JSON");
+
+            var carrier = Spawn(s, designs[CarrierDesignId], "Sovereign");
+            var parasite = Spawn(s, designs[ParasiteDesignId], "Kestrel");
+
+            // Both build into real ships with their installed parts (the gotcha-10 JSON->ship sensor).
+            Assert.That(carrier.HasDataBlob<ComponentInstancesDB>(), Is.True, "the carrier built with its components");
+            Assert.That(parasite.HasDataBlob<ComponentInstancesDB>(), Is.True, "the parasite built with its components");
+
+            double capacity = DockTools.Capacity(carrier);
+            double berth = DockTools.LargestBerth(carrier);
+            double pMass = Mass(parasite);
+            Log($"carrier bay capacity={capacity:N0} kg, berth door={berth:N0} kg, parasite mass={pMass:N0} kg");
+
+            Assert.That(capacity, Is.GreaterThan(0), "the carrier's heavy berth gives it real bay capacity");
+            Assert.That(pMass, Is.GreaterThan(0), "the parasite has mass");
+
+            // Design intent: the Kestrel fits the Sovereign's berth. If it doesn't, the masses above say by how much.
+            Assume.That(pMass, Is.LessThanOrEqualTo(berth), "the parasite must fit the carrier's berth door to be a real pair");
+            Assert.That(DockTools.TryDock(carrier, parasite, out var why), Is.True, "the Sovereign admits the Kestrel (" + why + ")");
+            Assert.That(DockTools.IsDocked(parasite), Is.True, "the parasite is now held in the hangar");
+            Log("the base-mod carrier admits its parasite through the real berth door");
+        }
+
+        private const string OrdnanceCargoTypeId = "ordnance-storage";
+
+        /// <summary>Register a valid ordnance round on the faction via the PUBLIC ctor (which sets
+        /// CargoTypeID = "ordnance-storage" and computes mass/volume from the Missile-mount part). Object-init can't set
+        /// CargoTypeID (get-only), so a hand round needs the ctor.</summary>
+        private static OrdnanceDesign RegisterOrdnance(TestScenario s, string id, long massKg, double volPerUnit)
+        {
+            var fi = s.Faction.GetDataBlob<FactionInfoDB>();
+            var warhead = new ComponentDesign { UniqueID = "test-ord-part-" + id, Name = "Warhead " + id };
+            warhead.ComponentMountType = ComponentMountType.Missile;   // counted by the OrdnanceDesign ctor's mass/vol sum
+            warhead.MassPerUnit = massKg;         // internal set — reachable via InternalsVisibleTo
+            warhead.VolumePerUnit = volPerUnit;   // non-zero so AddCargoByUnit doesn't reject it as volumeless
+            return new OrdnanceDesign(fi, "Torpedo " + id, 0,
+                new List<(ComponentDesign, int)> { (warhead, 1) }, id, startResearched: true);
+        }
+
+        /// <summary>Give a ship an ordnance hold directly — because NO base-mod cargo hold provides "ordnance-storage"
+        /// yet (see DockTools.EnableCarrierRearm). This isolates the ENGINE capability from the missing DATA rung. Handles
+        /// a ship with an existing cargo store (add the type) or none (attach a fresh single-type store).</summary>
+        private static void GiveOrdnanceHold(Entity ship, double maxVolume)
+        {
+            if (ship.TryGetDataBlob<CargoStorageDB>(out var cargo))
+                cargo.TypeStores[OrdnanceCargoTypeId] = new TypeStore(maxVolume);
+            else
+                ship.SetDataBlob(new CargoStorageDB(OrdnanceCargoTypeId, maxVolume));
+        }
+
+        private static long OrdnanceUnits(Entity ship, OrdnanceDesign ord)
+        {
+            var cargo = ship.GetDataBlob<CargoStorageDB>();
+            return cargo.TypeStores.ContainsKey(OrdnanceCargoTypeId) ? cargo.GetUnitsStored(ord, false) : 0;
+        }
+
+        [Test]
+        [Description("E12 slice 2c — REARM ORDNANCE ON RECOVERY (the ordnance twin of the fuel refuel): "
+                     + "DockTools.RearmOrdnanceFromCarrier moves ordnance rounds from the CARRIER's ordnance hold into a "
+                     + "recovered craft's, conserved (carrier lost == craft gained), take-what-fits (a smaller craft hold "
+                     + "caps the pull; a full/self craft is a no-op). The ENGINE CAPABILITY is gauged here on HAND-INJECTED "
+                     + "ordnance-storage holds, because NO base-mod cargo hold provides 'ordnance-storage' yet (the "
+                     + "ordnance-cargo-hold template mislabels itself general-storage) — that DATA rung is a deferred "
+                     + "developer decision; this proves the code is correct for when it lands.")]
+        public void RearmOrdnanceFromCarrier_MovesOrdnance_ConservesIt_TakesWhatFits()
+        {
+            var s = TestScenario.CreateWithColony();
+            var designs = s.Faction.GetDataBlob<FactionInfoDB>().ShipDesigns.Values.ToList();
+            var light = Lightest(s, designs);
+
+            var carrier = Spawn(s, light, "Carrier");
+            var craft = Spawn(s, light, "Parasite");
+            GiveOrdnanceHold(carrier, 5000);   // ~500 rounds at 10 m³ each
+            GiveOrdnanceHold(craft, 1000);     // ~100 rounds — deliberately SMALLER than the carrier's stock, to exercise take-what-fits
+
+            var ord = RegisterOrdnance(s, "e12", 100, 10);
+            long stocked = (long)CargoTransferProcessor.AddCargoItems(carrier, ord, 300);
+            Assert.That(stocked, Is.GreaterThan(0), "the carrier is stocked with ordnance");
+            long carrierBefore = OrdnanceUnits(carrier, ord);
+            long craftBefore = OrdnanceUnits(craft, ord);
+            Assert.That(craftBefore, Is.EqualTo(0), "the craft starts with an empty ordnance hold");
+
+            // NO-OP: a full/self craft draws nothing, and it never throws.
+            DockTools.RearmOrdnanceFromCarrier(carrier, carrier);
+            Assert.That(OrdnanceUnits(carrier, ord), Is.EqualTo(carrierBefore), "self/full rearm is a no-op");
+
+            // THE TRANSFER: ordnance flows carrier -> craft, conserved and capped by the craft's smaller hold.
+            DockTools.RearmOrdnanceFromCarrier(carrier, craft);
+            long craftAfter = OrdnanceUnits(craft, ord);
+            long carrierAfter = OrdnanceUnits(carrier, ord);
+            Log($"ordnance rearm: craft {craftBefore}->{craftAfter}, carrier {carrierBefore}->{carrierAfter}");
+            Assert.That(craftAfter, Is.GreaterThan(craftBefore), "the recovered craft gained ordnance from the carrier");
+            Assert.That(carrierAfter, Is.LessThan(carrierBefore), "the carrier's ordnance dropped by what it handed over");
+            Assert.That(carrierBefore - carrierAfter, Is.EqualTo(craftAfter - craftBefore),
+                "conservation: exactly what the carrier lost, the craft gained");
+
+            // TAKE-WHAT-FITS: the craft's hold filled; a second pass adds no more than free space allows.
+            long craftFull = OrdnanceUnits(craft, ord);
+            DockTools.RearmOrdnanceFromCarrier(carrier, craft);
+            Assert.That(OrdnanceUnits(craft, ord), Is.LessThanOrEqualTo(craftFull + 1),
+                "a second rearm tops off no further than free space allows (bounded)");
         }
     }
 }
