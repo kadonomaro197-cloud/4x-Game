@@ -113,7 +113,7 @@ footer{padding:24px 0 50px}
 <p class="eyebrow">Pulsar4X · component designer · a PROPOSED new door — projected effects</p>
 <h1>Every other door changes the unit that carries it. This one changes the units around it.</h1>
 <p class="lead">An <b>aura</b> is the one capability that does not fit any door built so far. Weapons, Defense, Enhancers, Propulsion — all of them act on the <b>unit that mounts them</b>. A rally banner, a dread presence, a command net, a jamming bubble, a projected shield — each reaches <b>OUTWARD</b>, changing OTHER units inside a radius. That single difference — <em>it acts on someone else</em> — is why it earns its own door and cannot be an Enhancer.</p>
-<p class="lead" style="margin-top:10px">🔑 <b>The honest headline first, because it governs everything below: this door is a SPEC, not a live designer.</b> The engine has <b>no aura pass</b> — no code that, each tick, walks a unit's neighbours, filters them by friend-or-foe, and applies an effect. Four of the five effects also write a variable that <b>does not exist yet</b> (there is still no morale field — the same wall the <b>Steadiness / fury</b> enhancer hit). So the panel below shows you <em>the shape the engine must build</em>, every readout marked <b>ENGINE-PENDING</b>, so nobody ships an aura button that does nothing.</p>
+<p class="lead" style="margin-top:10px">🔑 <b>The honest headline first, because it governs everything below: this door is mostly still a SPEC — but two of its five effects shipped in 2026-08, in a simpler shape than drawn here.</b> The per-unit <b>aura pass</b> this door proposes — code that each tick walks a unit's neighbours, filters by friend-or-foe, and applies an effect by area — <b>does not exist</b>. What shipped instead is a <b>scalar fold</b>: <b>Command</b> lifts a whole fleet/battalion's firepower and <b>Ward</b> stiffens its toughness (one multiplier over the formation — <code>FleetAuraMult</code> / <code>GroundCommandAura</code>), the way a flagship buffs its group. The other three — Rally, Dread, Jamming — are unbuilt (Rally/Dread still want a morale field that does not exist, the wall the <b>Steadiness / fury</b> enhancer hit). So read the panel below as <em>the richer per-unit shape the engine could still grow into</em>; the two green rows mark what already plays, as a fold.</p>
 </div></div>
 
 <section class="band"><div class="w">
@@ -196,9 +196,9 @@ footer{padding:24px 0 50px}
 <tr><th>Effect</th><th>Lands on</th><th>Writes</th><th>Does the target variable exist?</th><th>Distance from real</th></tr>
 <tr><td><b>Rally</b></td><td>friends</td><td>a morale / steadiness <b>bonus</b></td><td><b class="r">no — there is no morale field</b></td><td>aura pass <b>+</b> the morale state</td></tr>
 <tr><td><b>Dread</b></td><td>foes</td><td>a morale / to-hit <b>penalty</b></td><td><b class="r">no — same missing morale field</b></td><td>aura pass <b>+</b> the morale state</td></tr>
-<tr><td><b>Command</b></td><td>friends</td><td>a switch-cooldown / to-hit <b>bonus</b></td><td><b class="a">partly — <code>SwitchableAfter</code> exists, as a SELF stat</b></td><td>aura pass to apply it by <b>area</b></td></tr>
-<tr><td><b>Jamming</b></td><td>foes</td><td>a detection-range <b>penalty</b></td><td><b class="g">yes — the detection / signature system is real</b></td><td><b class="g">aura pass ONLY</b></td></tr>
-<tr><td><b>Ward</b></td><td>friends</td><td>a projected <b>shield pool</b></td><td><b class="a">partly — the shield pool exists, applied to SELF</b></td><td>aura pass to <b>project</b> it onto others</td></tr>
+<tr><td><b>Command</b></td><td>friends</td><td>a switch-cooldown / to-hit <b>bonus</b> <em>(as drawn)</em></td><td><b class="g">SHIPPED (2026-08) — as a fleet/battalion firepower fold</b></td><td><b class="g">live — a scalar fold, not the per-neighbour cooldown-cut drawn here</b></td></tr>
+<tr><td><b>Jamming</b></td><td>foes</td><td>a detection-range <b>penalty</b></td><td><b class="a">variable exists (detection range) — but SHELVED v1, no fold wired</b></td><td>the aura pass, still to build</td></tr>
+<tr><td><b>Ward</b></td><td>friends</td><td>a projected <b>shield pool</b> <em>(as drawn)</em></td><td><b class="g">SHIPPED (2026-08) — as a fleet/battalion toughness fold</b></td><td><b class="g">live — a scalar fold, not the per-unit projected shield drawn here</b></td></tr>
 </table></div>
 <p class="sub" style="margin-top:11px">🔑 <b>This table is the build order.</b> <b>Jamming ships first</b> — it needs nothing but the pass, and it wires the aura door straight into the sensor and fog-of-war layer, which is where an ECM bubble belongs. <b>Command and Ward are next</b> — their target variables exist, they only need projecting by area. <b>Rally and Dread are last</b>, because they wait on the morale field that the Steadiness / fury enhancer is also waiting on: build that once and two doors light up together.</p>
 </div></section>
@@ -235,7 +235,7 @@ footer{padding:24px 0 50px}
 <tr><td>A banner or leader that keeps a line from routing</td><td><b>Rally</b> (friends, +morale)</td><td><b class="g">✅ the archetypal friendly aura</b></td></tr>
 <tr><td>A presence that makes the enemy break and run</td><td><b>Dread</b> (foes, −morale)</td><td><b class="g">✅ the mirror of rally</b></td></tr>
 <tr><td>A command net that lets a formation react as one</td><td><b>Command</b> (friends, −cooldown / +to-hit)</td><td><b class="g">✅ and it pays off the doctrine-switch lever</b></td></tr>
-<tr><td>An ECM bubble that blinds everything hostile near it</td><td><b>Jamming</b> (foes, −detection)</td><td><b class="g">✅ the one that ships first — the variable exists</b></td></tr>
+<tr><td>An ECM bubble that blinds everything hostile near it</td><td><b>Jamming</b> (foes, −detection)</td><td><b class="g">✅ its variable exists — detection range (shelved v1, still to wire)</b></td></tr>
 <tr><td>A projected barrier that shields a whole squad</td><td><b>Ward</b> (friends, +shield pool)</td><td><b class="g">✅ the shield door, pointed outward</b></td></tr>
 <tr><td>A healing / repair field</td><td><em>would write the same "damaged-but-alive" state self-repair needs</em></td><td>⚠ <b>HELD BACK</b> — blocked on the whole-or-dead ruling, like field repair</td></tr>
 <tr><td>A permanent "presence" that never moves or dies</td><td><em>not a component — cannot be researched, built or lost</em></td><td>🚫 <b>REFUSED</b> — fails cradle-to-grave; "it sounds cool" is not a reason</td></tr>
@@ -246,14 +246,15 @@ footer{padding:24px 0 50px}
 <footer class="w"><div class="state">
 <h3>Where the door stands</h3>
 <p><b>This is a proposed door, and it is honest about being a spec.</b> It gives the projected-effect capability a real home — <b>one forced choice</b> (what it projects) <b>+ a target choice</b> (friend / foe / all) <b>+ two dials</b> (strength, radius) — and it passes the intrinsic test for every dial while keeping "how many it hits" as an emergent readout, never a knob.</p>
-<p>⚠ <b>Nothing here reaches the running game yet.</b> The engine has no aura pass, and four of the five effects also write a variable that does not exist (there is still no morale field — the wall the Steadiness / fury enhancer hit). <b>Jamming is the exception</b>: its target variable — detection range — is real, so it is the one effect that needs only the pass, and the one to build first.</p>
-<p><b>The build order falls out of the table:</b> ① the aura pass + Jamming (wires straight into sensors / fog-of-war); ② Command and Ward (their variables exist, they need projecting by area); ③ Rally and Dread (build the morale field once and these light up alongside the fury enhancer). Two guard-rails are non-negotiable: <b>take-the-best not sum</b> (no free stacking) and <b>a destroyed projector drops its field that tick</b> (the grave rung that makes the beacon-bearer a target).</p>
+<p>⚠ <b>Two of the five effects now reach the running game — Command and Ward, shipped 2026-08 as fleet/battalion scalar folds</b> (firepower and toughness, one multiplier over the formation). The per-unit <b>aura pass</b> this door draws — walking a unit's neighbours and applying an effect by area — <b>still does not exist</b>, so the richer per-neighbour shapes remain a spec. The other three write a variable that is not there: Rally and Dread need a morale field (the wall the Steadiness / fury enhancer hit), and <b>Jamming was shelved for v1</b> even though its target variable — detection range — is real.</p>
+<p><b>What is left to build:</b> ① the per-unit aura pass + Jamming (wires straight into sensors / fog-of-war — the variable already exists); ② the per-neighbour, by-area versions of Command and Ward, if the richer shape is ever wanted over the shipped fold; ③ Rally and Dread (build the morale field once and these light up alongside the fury enhancer). Two guard-rails stay non-negotiable for any aura pass: <b>take-the-best not sum</b> (no free stacking) and <b>a destroyed projector drops its field that tick</b> (the grave rung that makes the beacon-bearer a target).</p>
 </div></footer>
 
 <script>
-// ── This door is a SPEC. No effect reaches the running game yet: there is no aura pass, and four of the
-//    five effects write a variable that does not exist (no morale field — same wall as the fury enhancer).
-//    Jamming is the exception — its target variable (detection range) is real, so it needs only the pass.
+// ── This door is mostly a SPEC, but two effects shipped 2026-08 as fleet/battalion scalar folds:
+//    Command = firepower fold, Ward = toughness fold (FleetAuraMult / GroundCommandAura) — one multiplier
+//    over a formation, NOT the per-neighbour aura pass drawn here (which still does not exist).
+//    Rally/Dread need a morale field that does not exist; Jamming was shelved v1 (its detection variable is real).
 // ── Verbatim anchors used for the honesty rows:
 //    · Enhancers thesis: "an enhancer is a scalar multiplier on a stat the unit already has" (acts on SELF).
 //    · SwitchableAfter — the doctrine/stance switch cooldown the Command effect would cut (exists, SELF-only).
@@ -276,21 +277,22 @@ const EFFECT={
    why:'<b>ENGINE-PENDING, twice over.</b> No aura pass, and the same missing morale field — this is rally pointed at the enemy, and it lights up the same day the morale state is built.'},
  command:{n:'Command uplink', tgt:'friends', noun:'Command Uplink',
    variable:'switch-cooldown / to-hit (+)', mlab:'cooldown cut', mlo:0, mhi:60, munit:'%',
-   read:'partial', pend:'aura pass to apply it by AREA',
+   read:'built', pend:'SHIPPED (2026-08) — a fleet/battalion-wide Firepower fold (FleetAuraMult / GroundCommandAura), not the per-neighbour cooldown-cut proposed here',
    desc:'A coordination field — friendly units in range re-task faster and fight in concert, cutting the doctrine / stance switch cooldown. It writes to the switch timer.',
-   why:'<b>ENGINE-PENDING, but closer.</b> The variable it would write — <code>SwitchableAfter</code>, the doctrine/stance switch cooldown — is <b>real</b>, and the Interface enhancer already cuts it for a SELF host. What is missing is the pass that applies that cut over an <b>area</b> to a unit\'s neighbours.'},
+   why:'<b>SHIPPED (2026-08), in a different shape than drawn here.</b> The live effect is a <b>fleet / battalion-wide Firepower fold</b> — one commander lifts the whole formation\'s firepower — not the per-neighbour cooldown-cut this mock proposes. The cooldown variable it drew (<code>SwitchableAfter</code>) is real and the Interface enhancer already cuts it for a SELF host, but the aura that shipped folds firepower over the group, not cooldown over neighbours.'},
  jamming:{n:'Jamming array', tgt:'foes', noun:'Jamming Array',
    variable:'detection range (−)', mlab:'detection cut', mlo:0, mhi:60, munit:'%',
-   read:'yes', pend:'aura pass ONLY — the variable exists',
+   read:'partial', pend:'SHELVED v1 — detection variable exists, but no aura fold was wired for it',
    desc:'An ECM bubble — hostile units in range see less far, their sensors degraded. It writes a penalty onto enemy detection range.',
-   why:'<b>The one effect whose target variable ALREADY EXISTS.</b> The detection / signature system is real and rigorous; a jamming aura simply lowers an enemy\'s detection range while inside the bubble. It needs <b>only the aura pass</b> — no new variable — which is why it ships first and wires this door straight into sensors and fog-of-war.'},
+   why:'<b>The variable ALREADY EXISTS — but this effect was shelved for v1.</b> The detection / signature system is real and rigorous; a jamming aura would simply lower an enemy\'s detection range while inside the bubble, needing only the aura pass. When v1 shipped, only the Command (firepower) and Ward (toughness) folds were wired; jamming was deliberately left for a later pass into sensors and fog-of-war.'},
  ward:   {n:'Aegis projector', tgt:'friends', noun:'Aegis Projector',
    variable:'projected shield pool (+)', mlab:'shield pool', mlo:0, mhi:800, munit:' pts',
-   read:'partial', pend:'aura pass to PROJECT it onto others',
+   read:'built', pend:'SHIPPED (2026-08) — a fleet/battalion-wide Toughness fold, not the per-unit projected shield pool proposed here',
    desc:'A barrier thrown over friendly units in range — a shared shield pool that soaks hits before their own health. It writes a shield buffer onto each covered unit.',
-   why:'<b>ENGINE-PENDING, but closer.</b> The shield pool it would grant is <b>real</b> — the Defense door builds exactly this, as a layer on the unit\'s OWN sheet. What is missing is the pass that <b>projects</b> that pool onto a unit\'s neighbours instead of itself.'}
+   why:'<b>SHIPPED (2026-08), in a different shape than drawn here.</b> The live effect is a <b>fleet / battalion-wide Toughness fold</b> — one commander stiffens the whole formation\'s survivability — not the per-unit projected shield pool this mock proposes. The unit\'s own shield pool is real (the Defense door builds it on the OWN sheet); the aura that shipped folds toughness over the group rather than projecting a shield buffer onto neighbours.'}
 };
 const READMAP={
+ built:  {cls:'g', badge:'shipped',             m4:'shipped as a scalar fold',s4:'a fleet/battalion-wide fold (FleetAuraMult / GroundCommandAura), not the per-neighbour aura proposed here'},
  yes:    {cls:'g', badge:'aura pass only',      m4:'aura pass only',        s4:'the target variable EXISTS (detection range)'},
  partial:{cls:'a', badge:'variable exists',     m4:'variable exists, no pass',s4:'the variable is real but applied to SELF, not by area'},
  no:     {cls:'r', badge:'no variable yet',     m4:'no — needs both',        s4:'no aura pass AND no morale field to write'}
@@ -355,10 +357,11 @@ function render(){
 
  // ── the worth panel — every row states its build state
  const R=READMAP[E.read];
+ const shipped = E.read==='built';
  set('l_m1','The variable it writes');
  set('m_1', E.variable);
  set('s_m1','on each '+TGT[tgt]+' in range');
- $('k_m1').className='mk pend'; $('k_m1').textContent='pending';
+ $('k_m1').className=shipped?'mk sim':'mk pend'; $('k_m1').textContent=shipped?'shipped':'pending';
  $('m_1').parentElement.className='mt '+R.cls;
 
  set('l_m2','Its effect at strength');
@@ -375,15 +378,15 @@ function render(){
  set('l_m4','Can the engine read it?');
  set('m_4', R.m4);
  set('s_m4', R.s4);
- $('k_m4').className='mk pend'; $('k_m4').textContent='pending';
+ $('k_m4').className=shipped?'mk sim':'mk pend'; $('k_m4').textContent=shipped?'shipped':'pending';
  $('m_4').parentElement.className='mt '+R.cls;
 
  // verdict
  let verdict;
- if(E.read==='yes'){
-  verdict = '<b>The nearest to real in the whole door.</b> Jamming lowers an enemy\'s detection range — and that variable is <b>already in the simulation</b>. Everything else this door needs is the one shared aura pass. Build the pass, and this effect is playable the same day, wiring auras into the sensor and fog-of-war layer where an ECM bubble belongs.';
+ if(E.read==='built'){
+  verdict = '<b>SHIPPED (2026-08) — as a fold, not the per-neighbour aura drawn here.</b> '+(eff==='command'?'Command lifts the whole formation\'s <b>firepower</b>':'Ward stiffens the whole formation\'s <b>toughness</b>')+' — one commander folds a single multiplier over a fleet or battalion (<code>FleetAuraMult</code> / <code>GroundCommandAura</code>), the same way a flagship buffs its group. The per-unit, by-area shape this mock proposes ('+(eff==='command'?'a neighbour-by-neighbour cooldown cut':'a projected shield pool')+') is a richer, later build; the scalar fold is what plays today.';
  } else if(E.read==='partial'){
-  verdict = '<b>Half-real.</b> The variable this effect writes — '+(eff==='command'?'the doctrine/stance switch cooldown':'a shield pool')+' — <b>exists in the game today</b>, but only ever applied to a unit\'s OWN sheet. What is missing is the pass that projects it by area onto a unit\'s neighbours. So it is a shorter build than rally or dread, and a longer one than jamming.';
+  verdict = '<b>Half-real — shelved for v1.</b> The variable this effect writes — an enemy\'s <b>detection range</b> — <b>exists in the game today</b>, rigorous and rich. What is missing is the aura pass that would lower it inside a bubble. When v1 shipped it wired only the Command (firepower) and Ward (toughness) folds; the jamming bubble was left for a later pass into the sensor and fog-of-war layer where an ECM effect belongs.';
  } else {
   verdict = '<b>The farthest from real — and honest about it.</b> This effect writes a morale bonus or penalty, and <b>the game has no morale field at all</b>: a unit is whole-or-dead and never routs. So it waits on the same missing state as the Steadiness / fury enhancer. Build the morale field once, and this aura and that enhancer come alive together — which is exactly why the shape is designed and marked now, not shipped as a dead knob.';
  }

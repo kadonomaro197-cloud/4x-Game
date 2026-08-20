@@ -16,7 +16,7 @@ These are **self-contained, clickable design prototypes** (open in a browser). T
 | `chassisderived.html` | **Chassis** — the hull (mass + structure budget everything else spends) |
 | `commandderived.html` | **Command** — bridge / admin seats / span-of-control |
 | `enhancersderived.html` | **Enhancers** — capability boosts (e.g. the caliber-firepower multiplier) |
-| `auraderived.html` | **Aura** — field-effect emitters (buff/debuff auras — an unbuilt proposal) |
+| `auraderived.html` | **Aura** — field-effect emitters (buff/debuff auras — mostly a proposal; Command + Ward shipped 2026-08 as fleet/battalion scalar folds, Rally/Dread/Jamming still unbuilt) |
 | `logisticalderived.html` | **Logistical** — cargo / fuel / transfer / logistics modules |
 | `industrialderived.html` | **Industrial** — production / mining facilities (crew coefficients live here) |
 | `civicderived.html` | **Civic** — colony infrastructure (jobs / amenity / public-order / commerce dials) |

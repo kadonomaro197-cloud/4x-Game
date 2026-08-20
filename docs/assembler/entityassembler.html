@@ -425,9 +425,9 @@ var CAT=[
    cost:{bp:260,cr:34,rp:6,steel:90,elec:70,mats:{'ree-magnetics':16}},
    honesty:'FTL. Cruise speed scales with reactor-power ÷ mass. Engine-exact energy: opening the bubble needs a 1.25 GJ stored-energy buffer (drawn from capacitors at departure — gated: no battery, no jump); sustaining it draws just 2.5 MW the whole crossing. So FTL\'s real cost is a big one-time BATTERY charge, not a big continuous draw.'},
  {id:'fighterbay',cat:'Bay',name:'Flight Deck — StrikeCraft bay',hosts:['ship','station'],
-   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:true,bayClass:'StrikeCraft',cycleRate:6,
+   mass:280,vol:340,crew:18,hp:26,draw:3,supply:0,fighters:70,launchPending:false,bayClass:'StrikeCraft',cycleRate:6,
    cost:{bp:300,cr:40,rp:5,steel:160,elec:60,mats:{'reinforced-trusswork':40}},
-   honesty:'ONE generalized BayAtb, dialed to the StrikeCraft class (CARRIER-DESIGN §5 — the flight deck IS the troop bay IS the passenger berth, one component class-dialed). Holds ~70 strike craft + a Cycle Rate (the sortie tempo). A carried fighter is just a small ship whose CHASSIS carry-class is StrikeCraft (§13a — the deployable "flag" lives on the chassis, never as a boolean on the unit). THE carrier capability, with the honest gap: launch-as-a-sub-fleet is a PENDING output (the Docking bay exists, but no order launches a wing — §3). A fighter breaks off by recover-to-host, and if the carrier dies the aloft wing is STRANDED (§13b-c).'},
+   honesty:'ONE generalized BayAtb, dialed to the StrikeCraft class (CARRIER-DESIGN §5 — the flight deck IS the troop bay IS the passenger berth, one component class-dialed). Holds ~70 strike craft + a Cycle Rate (the sortie tempo). A carried fighter is just a small ship whose CHASSIS carry-class is StrikeCraft (§13a — the deployable "flag" lives on the chassis, never as a boolean on the unit). THE carrier capability, now LIVE at the engine: launch = undock, recover = dock — the carrier holds docked craft in the hangar and relaunches them on undock, reusing the existing DockOrder / DockTools verbs (E12 carrier-sortie, 2026-08-18/19, flag-gated and ON in menu games; gauged by CarrierSortieTests). A fighter breaks off by recover-to-host (dock=recover). Scope note: what shipped is undock/dock of a docked ship out of a DockBayAtb berth — the "aloft wing STRANDED if the carrier dies" rule (§13b-c) is not yet wired.'},
  {id:'vehiclebay',cat:'Bay',name:'Troop & Vehicle Bay — Personnel · Vehicle',hosts:['ship','station'],
    mass:300,vol:360,crew:10,hp:24,draw:2,supply:0,vehicles:16,troopsLive:true,bayClass:'Personnel · Vehicle',cycleRate:4,
    cost:{bp:280,cr:36,rp:4,steel:150,elec:40,mats:{'reinforced-trusswork':40}},
@@ -1115,13 +1115,13 @@ function renderGates(S){
   // generalized bay (CARRIER-DESIGN §5 + §13) — the deployable / carried-unit capability, all classes as ONE component
   if(S.bayClasses && S.bayClasses.length){
     var bayBits=[];
-    if(S.hasFighterBay) bayBits.push(fmt(S.fighters)+' strike craft (StrikeCraft — launch PENDING)');
+    if(S.hasFighterBay) bayBits.push(fmt(S.fighters)+' strike craft (StrikeCraft — launch LIVE: undock=launch, dock=recover, flag-gated)');
     if(S.hasVehicleBay) bayBits.push(fmt(S.vehicles)+' troops/vehicles (Personnel·Vehicle — LIVE, one-way)');
     if(S.hasPassengerBay) bayBits.push(fmt(S.passengers)+' passengers (Passenger — future)');
     if(S.hasShuttleBay) bayBits.push(fmt(S.shuttles)+' shuttles (Shuttle — future)');
-    var bayLive = S.hasVehicleBay;   // Personnel/Vehicle is the one live class today
+    var bayLive = S.hasVehicleBay || S.hasFighterBay;   // both live now: Personnel/Vehicle one-way, StrikeCraft round-trip via undock/dock
     gate(bayLive?'pass':'pend','Generalized bay — deployable / carried units',
-      'ONE BayAtb, class-dialed (CARRIER-DESIGN §5): '+bayBits.join(' · ')+'. Cycle/sortie rate '+fmt(S.cycleRate)+'/pulse. A carried unit is designated by its CHASSIS carry-class (§13a — not a boolean on the unit). LAUNCH is one order for every class (§13b); RECOVER is per-class — a fighter docks round-trip, a marine deploys one-way. Kill the host and an aloft StrikeCraft wing is STRANDED (§13c). Personnel/Vehicle is LIVE (GroundBayAtb→GroundTransport); StrikeCraft launch is the PENDING wire.');
+      'ONE BayAtb, class-dialed (CARRIER-DESIGN §5): '+bayBits.join(' · ')+'. Cycle/sortie rate '+fmt(S.cycleRate)+'/pulse. A carried unit is designated by its CHASSIS carry-class (§13a — not a boolean on the unit). LAUNCH is one order for every class (§13b); RECOVER is per-class — a fighter docks round-trip, a marine deploys one-way. Personnel/Vehicle is LIVE (GroundBayAtb→GroundTransport); StrikeCraft launch is LIVE too (undock=launch / dock=recover via DockOrder, E12 flag-gated). Still to wire: the aloft-wing-STRANDED-if-host-dies rule (§13c).');
   }
   // tractor beams — pending payoff
   if(S.tractors>0){
@@ -1157,7 +1157,7 @@ function renderGauges(S){
   if(S.ecmBonus>0)bits.push('<b style="color:var(--ac2)">ECM +'+(S.ecmBonus*100).toFixed(0)+'%</b> hit-avoidance (LIVE)');
   if(S.energyStore>0)bits.push('Capacitors '+fmtE(S.energyStore*1000)+' stored (warp-jump buffer)');
   if(S.hasFlag)bits.push('Flagship — fleet command suite aboard');
-  if(S.hasFighterBay)bits.push('<b style="color:var(--warn)">'+fmt(S.fighters)+' strike craft (StrikeCraft bay) — launch PENDING.</b>');
+  if(S.hasFighterBay)bits.push('<b style="color:var(--ok)">'+fmt(S.fighters)+' strike craft (StrikeCraft bay) — launch LIVE: undock=launch, dock=recover (flag-gated).</b>');
   if(S.hasVehicleBay)bits.push('<b style="color:var(--ok)">Lands '+fmt(S.vehicles)+' troops/vehicles — invasion chain LIVE.</b>');
   if(S.hasPassengerBay)bits.push(fmt(S.passengers)+' passengers (Passenger bay — future).');
   if(S.hasShuttleBay)bits.push(fmt(S.shuttles)+' shuttles (Shuttle bay — future).');
