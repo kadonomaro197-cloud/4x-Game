@@ -373,15 +373,15 @@
     <div class="scroll"><table class="build">
       <thead><tr><th>Slice</th><th>What</th><th>Grade</th></tr></thead>
       <tbody>
-        <tr><td class="s">S1</td><td><b>Point the Battalions tab at the built helper</b> AllFormationsFor, and scope to PlayerFaction. Pure reuse.</td><td><span class="gr DATA">DATA</span></td></tr>
-        <tr><td class="s">S2</td><td><b>The engine classifier</b> <code>ShipRoleTools.ClassifyRole</code> (+ a test) reusing the emergent predicates that already exist; expose the ground one. The Mil/Civ + Class column, read by window <em>and</em> AI.</td><td><span class="gr BUILD">BUILD</span></td></tr>
-        <tr><td class="s">S3</td><td><b>Make the two existing table rows reusable</b> — extract the ship combat row; confirm the battalion row is callable.</td><td><span class="gr DATA">DATA</span></td></tr>
-        <tr><td class="s">S4</td><td><b>One "selected unit" abstraction</b> unifying the fleet + battalion selection. The load-bearing refactor everything below rides on.</td><td><span class="gr BUILD">BUILD</span></td></tr>
-        <tr><td class="s">S5</td><td><b>The new "All Forces" flat roster tab</b> — one table over S2/S3/S4, with Domain / Mil-Civ / Class / Location filters and a detail panel that swaps by unit kind.</td><td><span class="gr BUILD">BUILD</span></td></tr>
-        <tr><td class="s">S6</td><td><b>Per-individual ground-unit rows</b> + the engine sibling AllUnitsFor (includes unformed units). Closes "list <em>every</em> unit".</td><td><span class="gr BUILD">BUILD</span></td></tr>
-        <tr><td class="s">S7</td><td><b>Civilian-ship detail panel</b> — promote the logistics manifest/routes/dV into the roster.</td><td><span class="gr DATA">DATA</span></td></tr>
-        <tr><td class="s">S8</td><td><b>Aggregate Health + Fuel gauges</b> — build the missing engine accessors so those columns become real numbers.</td><td><span class="gr BUILD">BUILD</span></td></tr>
-        <tr><td class="s">S9</td><td><b>Stations + colonies as rows</b> (with a live-owner cross-check) + assign-commander UI. Scope-gated, last.</td><td><span class="gr BUILD">BUILD</span></td></tr>
+        <tr><td class="s">S1</td><td><b>Point the Battalions tab at the built helper</b> AllFormationsFor, and scope to PlayerFaction. Pure reuse.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S2</td><td><b>The engine classifier</b> <code>ShipRoleTools.ClassifyRole</code> (+ a test) reusing the emergent predicates that already exist; expose the ground one. The Mil/Civ + Class column, read by window <em>and</em> AI.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S3</td><td><b>Make the two existing table rows reusable</b> — extract the ship combat row; confirm the battalion row is callable.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S4</td><td><b>One "selected unit" abstraction</b> unifying the fleet + battalion selection. The load-bearing refactor everything below rides on.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S5</td><td><b>The new "All Forces" flat roster tab</b> — one table over S2/S3/S4, with Domain / Mil-Civ / Class / Location filters and a detail panel that swaps by unit kind.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S6</td><td><b>Per-individual ground-unit rows</b> + the engine sibling AllUnitsFor (includes unformed units). Closes "list <em>every</em> unit".</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S7</td><td><b>Civilian-ship detail panel</b> — promote the logistics manifest/routes/dV into the roster.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S8</td><td><b>Aggregate Health + Fuel gauges</b> — build the missing engine accessors so those columns become real numbers.</td><td><span class="gr LIVE">LIVE</span></td></tr>
+        <tr><td class="s">S9</td><td><b>Stations + colonies as rows</b> (with a live-owner cross-check) + assign-commander UI. Scope-gated, last.</td><td><span class="gr LIVE">LIVE</span></td></tr>
       </tbody>
     </table></div>
     <div class="note"><b>Open decisions for you</b> (I picked sensible defaults for this prototype, say the word to change them): <b>(1) Scope</b> — I included holdings (colonies/stations) so it's a true order of battle, not just mobile forces. <b>(2) Ground granularity</b> — formations are rows, individual units expand underneath. <b>(3) Classification home</b> — a derived engine helper, not the dead flag. <b>(4) Capture-stale registries</b> — a cheap window-side owner check now, the deeper engine fix later.</div>
