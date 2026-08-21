@@ -56,6 +56,27 @@ namespace Pulsar4X.Colonies
         /// </summary>
         public static double DefaultPerCapitaFoodDemand = 1.0e-6;
 
+        /// <summary>
+        /// POWER→MORALE demand turn-on (the power twin of <see cref="EnableFoodDemand"/>). Default OFF → the power loop
+        /// stays neutral-when-absent (byte-identical: <see cref="ColonySustenanceDB.PerCapitaPowerDemand"/> is 0 → 0 demand
+        /// → 0 shortage), so the engine suite is unchanged. <c>NewGameMenu</c> flips it ON for a menu game (the food/
+        /// employment pattern). When on, a colony that hasn't authored its own per-capita power demand uses
+        /// <see cref="DefaultPerCapitaPowerDemand"/> — so a brownout (generation below the population's draw) SOURS morale,
+        /// the way starvation does. The morale wire itself (`PowerShortage` → `MoraleInputs.PowerShortage`,
+        /// `MaxPowerShortagePenalty` 30) was already built + CI-green; this only turns the DEMAND on. SAFE on the start
+        /// colony because Earth installs a fission reactor (~75,000 kW) against a default demand of ~8,200 kW (≈9× headroom)
+        /// → power-positive by construction. A powerless colony reads a real shortage (the grave rung: build generation).
+        /// </summary>
+        public static bool EnablePowerDemand = false;
+
+        /// <summary>
+        /// The default per-capita power demand applied (when <see cref="EnablePowerDemand"/> is on) to any colony that
+        /// hasn't set its own. 1.0e-6 kW/person lands the ~8.2e9 start homeworld at ~8,200 kW — comfortably under its
+        /// fission reactor's ~75,000 kW (≈9× headroom, power-positive invariant), while a colony with no/low generation
+        /// reads a real shortage. A mutable static, scenario/DevTools-tunable, like <see cref="DefaultPerCapitaFoodDemand"/>.
+        /// </summary>
+        public static double DefaultPerCapitaPowerDemand = 1.0e-6;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds) => Recalc(entity);
@@ -77,7 +98,12 @@ namespace Pulsar4X.Colonies
             long pop = PopulationOf(province);
 
             // Power: demand = pop × per-capita; supply = the host's own generation (0 if it has no reactor/solar).
-            double powerDemand = pop * sust.PerCapitaPowerDemand;
+            // Flag-gated menu-on (mirrors food below): when EnablePowerDemand is on, a colony that hasn't authored its own
+            // per-capita power demand uses the default, so a brownout sours morale. Default off → 0 demand → byte-identical.
+            double perCapitaPower = (EnablePowerDemand && sust.PerCapitaPowerDemand <= 0.0)
+                ? DefaultPerCapitaPowerDemand
+                : sust.PerCapitaPowerDemand;
+            double powerDemand = pop * perCapitaPower;
             double powerSupply = province.TryGetDataBlob<EnergyGenAbilityDB>(out var egen) ? egen.TotalOutputMax : 0.0;
             sust.PowerShortage = ColonySustenanceDB.Shortage(powerDemand, powerSupply);
 

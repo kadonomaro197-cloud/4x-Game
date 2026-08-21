@@ -590,6 +590,13 @@ public class NewGameMenu : PulsarGuiWindow
         // colony because Earth now installs 4 agri-complexes (20,000 food/day) vs ~8,200/day demand → food-positive by
         // construction. One line to revert. Feel is the PC play-test.
         Pulsar4X.Colonies.SustenanceProcessor.EnableFoodDemand = true;
+        // POWER → MORALE. People's quality of life needs power: a colony whose generation can't cover its population's
+        // draw browns out and morale sours (the power twin of food demand — the morale wire was already built + green,
+        // this turns the demand on). Default OFF (engine byte-identical: demand 0). SAFE on the start colony — Earth's
+        // fission reactor (~75,000 kW) vs ~8,200 kW default demand = ~9× headroom, power-positive. A powerless colony
+        // feels it (build generation). Separate from the power PRODUCTION throttle (that paces building; this sours
+        // morale). One line to revert. Feel is the PC play-test.
+        Pulsar4X.Colonies.SustenanceProcessor.EnablePowerDemand = true;
         // Civic dial — colony SECURITY → legitimacy. A province's built precincts prop up its legitimacy (the regime
         // health bar), so a restless world can be policed above the rebellion band. Default OFF (engine byte-identical:
         // no colony ships a precinct). Inert until the player BUILDS a precinct — a decision, not a freebie. One line to revert.
@@ -1058,6 +1065,13 @@ public class NewGameMenu : PulsarGuiWindow
             // TIER 2.5 colony FOOD demand (same as CreateGameCore): people eat (demand = pop × per-capita); Earth's 4
             // agri-complexes cover it (food-positive). Default OFF (engine byte-identical); one line to revert.
             Pulsar4X.Colonies.SustenanceProcessor.EnableFoodDemand = true;
+        // POWER → MORALE. People's quality of life needs power: a colony whose generation can't cover its population's
+        // draw browns out and morale sours (the power twin of food demand — the morale wire was already built + green,
+        // this turns the demand on). Default OFF (engine byte-identical: demand 0). SAFE on the start colony — Earth's
+        // fission reactor (~75,000 kW) vs ~8,200 kW default demand = ~9× headroom, power-positive. A powerless colony
+        // feels it (build generation). Separate from the power PRODUCTION throttle (that paces building; this sours
+        // morale). One line to revert. Feel is the PC play-test.
+        Pulsar4X.Colonies.SustenanceProcessor.EnablePowerDemand = true;
             // Civic SECURITY → legitimacy (same as CreateGameCore): built precincts prop up a restless province's
             // legitimacy. Default OFF (engine byte-identical); inert until a precinct is built. One line to revert.
             Pulsar4X.Colonies.LegitimacyProcessor.EnableSecurityLegitimacy = true;
