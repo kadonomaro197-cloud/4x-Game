@@ -74,6 +74,26 @@ namespace Pulsar4X.Sensors
             return detectionValues;
         }
         
+        /// <summary>Sensor BAND-MATCH FIX toggle (docs sensorsderived.html "Yours to call"). Default OFF → the legacy
+        /// band-match gate (byte-identical) whose RHS never consults the receiver's upper edge. When ON, the correct
+        /// overlap test is used. ⚠ Fixing it ALONE makes an engines-off ship invisible (the reactor's ~1705 nm IR falls
+        /// outside every base-mod VISIBLE receiver — 475–725 nm), so it must be turned on TOGETHER with an infrared
+        /// receiver on the base-mod sensor loadout, then live-verified (combat detection is CI-blind). Same ruling the
+        /// FTL-band question waits on.</summary>
+        public static bool EnableBandMatchFix = false;
+
+        /// <summary>The CORRECT band-overlap test: the receiver window [recvMin,recvMax] overlaps the signal band
+        /// [sigMin,sigMax] iff max(recvMin,sigMin) &lt; min(recvMax,sigMax) — BOTH edges consulted. Pure + testable.</summary>
+        internal static bool BandsOverlapCorrect(double recvMin, double recvMax, double sigMin, double sigMax)
+            => Math.Max(recvMin, sigMin) < Math.Min(recvMax, sigMax);
+
+        /// <summary>The LEGACY band-overlap test as shipped — RHS Math.Max(sigMin,sigMax) reduces to sigMax, so the
+        /// receiver's UPPER edge recvMax is NEVER consulted (it lets through every signal at a LONGER wavelength than the
+        /// receiver's bottom edge, and blocks every shorter one). Kept as the flag-OFF default so behaviour is
+        /// byte-identical. Pure + testable.</summary>
+        internal static bool BandsOverlapLegacy(double recvMin, double recvMax, double sigMin, double sigMax)
+            => Math.Max(recvMin, sigMin) < Math.Max(sigMin, sigMax);
+
         public static SensorReturnValues DetectonQuality(SensorReceiverAtb recever, Dictionary<EMWaveForm, double> signalAtPosition)
         {
             /*
@@ -144,7 +164,15 @@ namespace Pulsar4X.Sensors
 
                 if (signalWaveSpectraMagnatude_kW > recever.BestSensitivity_kW) //check if the sensitivy is enough to pick anything up at any frequency.
                 {
-                    if (Math.Max(receverSensitivityFreqMin, signalWaveSpectraFreqMin) < Math.Max(signalWaveSpectraFreqMin, signalWaveSpectraFreqMax))
+                    // BAND-MATCH GATE — does the receiver's wavelength window overlap the signal's? (sensor band-match fix,
+                    // docs sensorsderived.html "Yours to call"). Flag-gated: default OFF keeps the LEGACY test, whose RHS
+                    // Math.Max(sigMin,sigMax) reduces to sigMax so the receiver's UPPER edge is never consulted — a bug the
+                    // detection game quietly depends on (fix it alone and a visible-light receiver stops seeing the reactor's
+                    // 1705 nm IR, so an engines-off ship goes invisible). Turning it ON must be paired with an infrared
+                    // receiver on the base-mod sensor loadout, together, then live-verified.
+                    if (EnableBandMatchFix
+                        ? BandsOverlapCorrect(receverSensitivityFreqMin, receverSensitivityFreqMax, signalWaveSpectraFreqMin, signalWaveSpectraFreqMax)
+                        : BandsOverlapLegacy(receverSensitivityFreqMin, receverSensitivityFreqMax, signalWaveSpectraFreqMin, signalWaveSpectraFreqMax))
                     {
                         //we've got something we can detect
                         double minDetectableWavelength = Math.Min(receverSensitivityFreqMin, signalWaveSpectraFreqMin);
