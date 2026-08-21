@@ -276,7 +276,7 @@ footer{padding:24px 0 50px}
 <p class="big">Mount types, straight from <code>energy.json</code>. Read the right-hand column and then the row underneath it.</p>
 <div class="scroll"><table class="t">
 <tr><th>Template</th><th>Where it can be installed</th><th>On a colony?</th></tr>
-<tr><td>Reactor</td><td>Ship · Cargo · Fighter · GroundUnit · Station</td><td><b class="r">no</b></td></tr>
+<tr><td>Reactor</td><td>Ship · Cargo · Fighter · GroundUnit · Station · <b>PlanetInstallation</b> <s>was no colony</s></td><td><b class="g">YES — fixed</b></td></tr>
 <tr><td>RTG · Steam turbine</td><td>Ship · Cargo · Fighter · GroundUnit</td><td><b class="r">no</b></td></tr>
 <tr><td>Battery bank</td><td>Ship · Cargo · Fighter</td><td><b class="r">no</b></td></tr>
 <tr><td>Solar array</td><td>✅ <code>ShipComponent, ShipCargo, PlanetInstallation, Station</code> <s>was a raw <code>1</code></s></td><td><b class="g">YES — fixed</b></td></tr>
@@ -284,7 +284,7 @@ footer{padding:24px 0 50px}
 <div class="warnbox"><b>And yet <code>SustenanceProcessor:51</code> already reads it:</b><br>
 <code>double powerSupply = province.TryGetDataBlob&lt;EnergyGenAbilityDB&gt;(out var egen) ? egen.TotalOutputMax : 0.0;</code><br>
 That figure feeds the colony power-shortage term that drives morale. <b>The consumer is built. The producer is unbuildable.</b> It does not bite today only because colony power demand is still calibrated to zero — the moment M5b's demand is switched on, <b>there is no power plant a player can build to answer it.</b></div>
-<p class="sub" style="margin-top:11px">✅ <b>FIXED — and it was the solar array, exactly as expected:</b> the one generator that needs no fuel supply chain, and the first thing any player would try on a new colony. It also had the worst-authored mount in the file — <b>a raw <code>MountType: 1</code> that worked only by numeric coincidence</b> with <code>ComponentMountType.ShipComponent</code>, where every other template names its mounts. It now names them, and includes <code>PlanetInstallation</code> and <code>Station</code>. <b>A colony can build a power plant.</b> 🔴 <b>Still open for the other four</b>, and that is deliberate: whether a colony should be able to build a <em>fission</em> plant is a design call about what a planet is allowed to be, not a typo.</p>
+<p class="sub" style="margin-top:11px">✅ <b>FIXED — and it was the solar array, exactly as expected:</b> the one generator that needs no fuel supply chain, and the first thing any player would try on a new colony. It also had the worst-authored mount in the file — <b>a raw <code>MountType: 1</code> that worked only by numeric coincidence</b> with <code>ComponentMountType.ShipComponent</code>, where every other template names its mounts. It now names them, and includes <code>PlanetInstallation</code> and <code>Station</code>. <b>A colony can build a power plant.</b> ✅ <b>The reactor is now fixed too</b> — <code>PlanetInstallation</code> was added to its mount (<code>energy.json</code>) when the colony power throttle went live, so Earth builds a ~75 MW fission plant to answer M5b demand. That settled the "should a colony build a <em>fission</em> plant" design call: <b>yes</b>. 🔴 <b>Still ship-only: the other three</b> (RTG · steam turbine · battery bank) — deliberate, a design call about what a planet is allowed to be, not a typo.</p>
 </div></section>
 
 <section class="band alt"><div class="w">

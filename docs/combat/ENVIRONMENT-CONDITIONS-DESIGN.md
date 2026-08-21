@@ -2,7 +2,7 @@
 
 **As of 2026-08-05.** Status: **ACCEPTED RESOLVER HOOKS (design-locked) + a live model in the resolver sim.** The
 developer has accepted every environment effect below as an intended input to the combat resolver — this is *how
-environments hook in*. **Wiring into the real engine is a deferred follow-up** (a named seam, not yet built). The
+environments hook in*. **Wiring into the real engine WAS a deferred follow-up; it is now BUILT** (Phase E, 2026-08-16→08-19, behind `CombatEngagement.EnableCombatConditions`, default OFF / client-on → flag-off byte-identical; keystone `CombatKernel.HitFraction` `hit *= accuracy`, plus ambient-DoT / firepower / shield-regen / cover in `StepEngagementGroup`; gauges `CombatConditionsTests` + `CombatConditionsWiringTests`). Accuracy + ambient-DoT are live-from-hazard; firepower/shield-regen/cover are wired-but-dormant (identity until an authored environment fills them); closing/detection are populated but not yet read by the resolver. The
 record half (how the game reads environments today) is verified against source at file:line by a 5-agent survey; the
 per-effect marker now reads as **wiring status**, not a question of whether the hook is accepted.
 
@@ -19,8 +19,10 @@ This doc does three things:
 
 1. **Records** exactly how the game represents environments today, planet-side and space-side, down to the file and
    line — so nobody has to re-derive it.
-2. **Names the one honest gap:** the space combat resolver is **environment-blind** — it reads no terrain, no hazard,
-   no planet, nothing about where the fight is happening. Ground combat, by contrast, already reads its surroundings.
+2. **Names the one honest gap** (now CLOSED — Phase E, 2026-08-16→08-19, wired it): the space combat resolver *was*
+   **environment-blind** — it read no terrain, no hazard, no planet, nothing about where the fight is happening. It now
+   seeds each fleet's conditions from where it fights and threads them through the shared kernel. Ground combat, by
+   contrast, already read its surroundings.
 3. **Proposes the fix** as one simple idea — *an environment is a bundle of multipliers on the shared combat math* —
    and **builds it live in the resolver sim** (`docs/combat/resolversim.html`) so you can pick an environment and
    watch the whole battle change. Thirty of them, space and surface, each effect graded honestly against whether the

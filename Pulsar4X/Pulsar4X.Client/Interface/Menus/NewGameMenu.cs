@@ -1089,6 +1089,13 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableMiniHexCombat = true;               // real-metre range gate (K3)
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // spread + close on the continuous field
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableCaptureTransfer = true;             // C7: registry move + population casualty on capture
+            // E14 auras + E12 carriers — parity with CreateGameCore so the DevTest combat sandbox exercises them too.
+            // All default OFF in the engine (byte-identical); ON here so battalion/fleet command buffs and the carrier
+            // launch/recover+rearm loop are live in the sandbox. One-line revert each.
+            Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;               // E14: battalion-wide Command/Ward buff
+            Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;                        // E14: fleet-wide Command/Ward buff
+            Pulsar4X.Combat.CombatEngagement.EnableCarrierSortie = true;                          // E12: docked craft held in hangar (undock=launch)
+            Pulsar4X.Docking.DockTools.EnableCarrierRearm = true;                                 // E12: refuel + rearm on recovery
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)
