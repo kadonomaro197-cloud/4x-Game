@@ -15,6 +15,16 @@ namespace Pulsar4X.Industry
     public static class IndustryTools
     {
         /// <summary>
+        /// R1b PER-HEX MINING (resource locality, developer ruling 2026-08-10). Default OFF → mining is the aggregate
+        /// body-wide pool (byte-identical); <c>NewGameMenu</c> flips it ON for a menu game (the same default-off/menu-on
+        /// pattern as the other economy flags here). When ON, a mine PLACED ON A HEX works that hex's own located deposit
+        /// into that hex's local <c>GroundHex.Stockpile</c> (the ore sits there until HAULED — <c>HexHaulOrder</c>); a
+        /// colony-level mine (on no hex) still mines the pool. Read by <c>MineResourcesProcessor</c> (which is internal, so
+        /// the flag lives here on the public helper, where the client can flip it beside the other economy flags).
+        /// </summary>
+        public static bool EnablePerHexMining = false;
+
+        /// <summary>
         /// TIER 2.6 workforce→production STAFFING throttle (developer ruling 2026-08-10,
         /// docs/assembler/ENGINE-WIRING-BACKLOG-2026-08-06.md). Default OFF → the engine test suite is byte-identical;
         /// <c>NewGameMenu</c> flips it ON for a menu game (the same default-off/menu-on pattern as

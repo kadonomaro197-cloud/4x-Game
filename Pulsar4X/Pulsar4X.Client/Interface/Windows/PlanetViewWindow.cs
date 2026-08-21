@@ -1316,6 +1316,38 @@ namespace Pulsar4X.Client
                         }
                     }
                 }
+
+                // ── HAUL ore off a hex → the colony stores (H1) ─────────────────────────────
+                // Per-hex mining (EnablePerHexMining) leaves ore sitting in a hex's LOCAL bucket until
+                // something carries it. Offer to haul each good on the selected hex HOME to the colony
+                // via HexHaulOrder (the CI-tested engine path, the same verb the AI issues). Inert until
+                // a bucket holds ore, so this row simply doesn't appear in a stock game.
+                if (hex != null && hex.Stockpile != null && hex.Stockpile.Count > 0 && colony != null)
+                {
+                    var haulNames = BuildMineralNames();
+                    ImGui.Separator();
+                    ImGui.TextDisabled($"Stockpile on hex ({_selGQ},{_selGR}) — haul it home:");
+                    foreach (var kv in hex.Stockpile.ToArray())   // snapshot — the order mutates the dict on execute
+                    {
+                        int goodId = kv.Key;
+                        long amt = kv.Value;
+                        string gname = haulNames.TryGetValue(goodId, out var gn) && !string.IsNullOrEmpty(gn) ? gn : $"good #{goodId}";
+                        if (ImGui.Button($"Haul {amt} {gname} to colony##haul{goodId}"))
+                        {
+                            try
+                            {
+                                var order = HexHaulOrder.CreateHexToColony(colony, _selGQ, _selGR, goodId, 0);   // 0 = all on hand
+                                _uiState.Game.OrderHandler.HandleOrder(order);
+                                _status = $"hauling {gname} from ({_selGQ},{_selGR}) to the colony stores";
+                            }
+                            catch (Exception ex)
+                            {
+                                _status = "haul order failed (logged)";
+                                Console.WriteLine($"[RenderError] PlanetViewWindow haul order threw: {ex}");
+                            }
+                        }
+                    }
+                }
             }
             catch { }
         }

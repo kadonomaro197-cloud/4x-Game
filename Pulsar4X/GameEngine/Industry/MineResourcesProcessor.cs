@@ -15,13 +15,6 @@ namespace Pulsar4X.Industry
 {
     internal class MineResourcesProcessor : IHotloopProcessor, IRecalcProcessor
     {
-        /// <summary>R1b PER-HEX MINING (resource locality, developer ruling 2026-08-10). Default OFF → the aggregate
-        /// body-wide-pool mining is byte-identical. When ON: a mine PLACED ON A HEX works that hex's OWN located deposit
-        /// into that hex's local stockpile (so the ore sits there until HAULED — H1); a colony-level mine (not placed on a
-        /// hex) still mines the body-wide pool into colony cargo (the gradual-retrofit default). Client flips it ON only
-        /// once the haul verb exists, so hex-mined ore is never stranded.</summary>
-        public static bool EnablePerHexMining = false;
-
         private Dictionary<int, Mineral> _minerals;
         public TimeSpan RunFrequency => TimeSpan.FromDays(1);
 
@@ -71,7 +64,7 @@ namespace Pulsar4X.Industry
             // R1b — PER-HEX MINING (flag-gated). When ON and the mined body carries a surface grid, route each mine
             // COMPONENT to its hex's own deposit (if placed on a hex) or the body-wide pool (if colony-level). The ON path
             // REPLACES the aggregate pass entirely, so a hex-placed mine can't double-count against the aggregate rate.
-            if (EnablePerHexMining
+            if (IndustryTools.EnablePerHexMining
                 && MiningHelper.TryGetMiningBody(miningEntity, out var perHexBody)
                 && perHexBody.TryGetDataBlob<PlanetRegionsDB>(out var perHexRegions)
                 && perHexRegions.SurfaceGrid != null

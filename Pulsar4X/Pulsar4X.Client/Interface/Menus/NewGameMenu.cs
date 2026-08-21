@@ -579,6 +579,12 @@ public class NewGameMenu : PulsarGuiWindow
         // (reactors were economically inert on a colony before). INERT on any colony with no power model, so it can never
         // brick production. One line to revert. Feel is the PC play-test.
         Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
+        // R1b PER-HEX MINING — a mine BUILT ON A HEX works that hex's own located deposit into that hex's LOCAL stockpile
+        // (instead of the shared body-wide pool), so the ore SITS there until HAULED home (the planet-view "Haul to colony"
+        // button / HexHaulOrder — the resource-locality ruling: hauling becomes a real job). Default OFF (engine
+        // byte-identical). SAFE on the start colony: Earth's mines are colony-level (not hex-placed), so they keep the pool
+        // path unchanged; only a mine you build ON a deposit hex goes per-hex. One line to revert. Feel is the PC play-test.
+        Pulsar4X.Industry.IndustryTools.EnablePerHexMining = true;
         // TIER 2.5 run-cost — colony FOOD demand. People now EAT (demand = pop × per-capita), so a world that can't farm
         // (or loses its farms to bombardment) starves. Default OFF (engine byte-identical: demand 0). SAFE on the start
         // colony because Earth now installs 4 agri-complexes (20,000 food/day) vs ~8,200/day demand → food-positive by
@@ -1043,6 +1049,12 @@ public class NewGameMenu : PulsarGuiWindow
             // TIER 2.5 colony POWER brownout (same as CreateGameCore): production ×= min(1, reactor+solar supply ÷ Σ
             // installation power demand). Default OFF (engine byte-identical), INERT on a power-less colony; one line to revert.
             Pulsar4X.Industry.IndustryTools.EnablePowerThrottle = true;
+        // R1b PER-HEX MINING — a mine BUILT ON A HEX works that hex's own located deposit into that hex's LOCAL stockpile
+        // (instead of the shared body-wide pool), so the ore SITS there until HAULED home (the planet-view "Haul to colony"
+        // button / HexHaulOrder — the resource-locality ruling: hauling becomes a real job). Default OFF (engine
+        // byte-identical). SAFE on the start colony: Earth's mines are colony-level (not hex-placed), so they keep the pool
+        // path unchanged; only a mine you build ON a deposit hex goes per-hex. One line to revert. Feel is the PC play-test.
+        Pulsar4X.Industry.IndustryTools.EnablePerHexMining = true;
             // TIER 2.5 colony FOOD demand (same as CreateGameCore): people eat (demand = pop × per-capita); Earth's 4
             // agri-complexes cover it (food-positive). Default OFF (engine byte-identical); one line to revert.
             Pulsar4X.Colonies.SustenanceProcessor.EnableFoodDemand = true;
