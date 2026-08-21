@@ -1313,6 +1313,25 @@ namespace Pulsar4X.Client
                     ImGui.SetTooltip("Wet: " + Stringify.Mass(_massDry + _fuelStoreMass));
                 }
 
+                // BUDGETS (the Entity Assembler mockup's "the host's finite room") — the mounted HULL's mass budget vs the
+                // design's current dry mass, so the ship panel shows its budget the same way the ground/station/building
+                // panels already do. Read FRESH off the mounted chassis (no stale design state, no recalc side effect).
+                // Only shown once a hull is mounted (a hull-less ship has no cap — its MassBudget defaults to its own mass).
+                var shipChassis = SelectedChassis();
+                if (shipChassis.HasValue && shipChassis.Value.chassis.BudgetKind == Pulsar4X.Interfaces.ChassisBudgetKind.Mass)
+                {
+                    long hullBudget = (long)shipChassis.Value.chassis.StructuralBudget;
+                    ImGui.TableNextColumn();
+                    ImGui.Text("Mass Budget (hull)");
+                    ImGui.TableNextColumn();
+                    ImGui.Text(Stringify.Mass(_massDry) + " / " + Stringify.Mass(hullBudget));
+                    if (_massDry > hullBudget)
+                    {
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(1f, 0.4f, 0.4f, 1f), "OVER BUDGET");
+                    }
+                }
+
                 ImGui.TableNextColumn();
                 ImGui.Text("Total Thrust");
                 ImGui.TableNextColumn();
