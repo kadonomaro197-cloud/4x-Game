@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Pulsar4X.DataStructures;
@@ -62,6 +63,17 @@ namespace Pulsar4X.Galaxy
         /// <see cref="InstallationIds"/>. Deep-copied below. Design: docs/ground/GROUND-SURFACE-MAP-DESIGN.md.</summary>
         [JsonProperty] public CityGrid CityGrid { get; internal set; }
 
+        /// <summary>The per-hex STOCKPILE — goods physically on hand at THIS hex (cargoable id → units; absent/0 = none).
+        /// The LOCAL bucket the resource-locality ruling needs (SYSTEM-CONNECTION-MAP, developer ruling 2026-08-10: "a
+        /// resource STAYS in its mini-hex; a facility consumes only LOCAL inputs"): a mine on this hex fills it, a hauler
+        /// loads from it, a facility on this hex consumes from it. Keyed by <c>ICargoable.ID</c> — the SAME int
+        /// <c>CargoStorageDB</c> keys items by internally AND the same int as <see cref="DepositMineralId"/>, so mining,
+        /// hauling and consumption all speak ONE language with no translation. NOTHING reads or writes it yet: this is the
+        /// FOUNDATION field for the R1 per-hex-economy slices (docs/ground/UNITS-ON-THE-MAP-DESIGN.md §2 weld #2) — the
+        /// flag-gated mine/consume rewire that fills and drains it lands next, so this field is byte-identical on its own.
+        /// Save-safe (deep-copied below — L12) and never null (the accessors tolerate it anyway).</summary>
+        [JsonProperty] public Dictionary<int, long> Stockpile { get; internal set; } = new Dictionary<int, long>();
+
         public GroundHex() { }
         public GroundHex(int q, int r, RegionFeatureType terrain) { Q = q; R = r; Terrain = terrain; }
         public GroundHex(GroundHex o)
@@ -71,6 +83,7 @@ namespace Pulsar4X.Galaxy
             DepositAssay = o.DepositAssay;   // Masked<long> is an all-value-type struct → this copy is a deep, independent copy
             InstallationIds = o.InstallationIds != null ? new List<int>(o.InstallationIds) : new List<int>();
             CityGrid = o.CityGrid != null ? new CityGrid(o.CityGrid) : null;
+            Stockpile = o.Stockpile != null ? new Dictionary<int, long>(o.Stockpile) : new Dictionary<int, long>();
         }
 
         // ── Per-faction deposit reveal (ground fog, slice 1b) — the two survey tiers grant access on DepositAssay ──
@@ -104,5 +117,36 @@ namespace Pulsar4X.Galaxy
         /// read consumers use instead of the omniscient <see cref="DepositAmount"/>. <paramref name="factionMask"/> is
         /// a faction BIT mask. (For the located/assayed distinction, read <see cref="DepositAssay"/>.Resolve directly.)</summary>
         public long? AssayFor(int factionMask) => DepositMineralId < 0 ? (long?)null : DepositAssay.For(factionMask);
+
+        // ── Per-hex local stockpile (R1 resource locality — the local bucket, foundation slice) ──
+        // Pure helpers so the mine / haul / consume slices don't hand-roll dictionary math on this field. Nothing calls
+        // these yet. The contract mirrors the cargo transfer: a non-positive amount is a no-op, removal is CAPPED at what
+        // is on hand and returns the amount ACTUALLY taken (conserved / take-what-fits), and an emptied key is dropped so
+        // an empty hex carries no stale zero-entries.
+
+        /// <summary>Units of <paramref name="cargoableId"/> (an <c>ICargoable.ID</c>) on hand at this hex; 0 if none.</summary>
+        public long StockpileOf(int cargoableId) => Stockpile != null && Stockpile.TryGetValue(cargoableId, out var n) ? n : 0;
+
+        /// <summary>Add <paramref name="amount"/> units of <paramref name="cargoableId"/> to this hex's stockpile. A
+        /// non-positive amount is a no-op.</summary>
+        public void AddToStockpile(int cargoableId, long amount)
+        {
+            if (amount <= 0) return;
+            Stockpile ??= new Dictionary<int, long>();
+            Stockpile[cargoableId] = (Stockpile.TryGetValue(cargoableId, out var n) ? n : 0) + amount;
+        }
+
+        /// <summary>Remove up to <paramref name="amount"/> units of <paramref name="cargoableId"/> from this hex's
+        /// stockpile, capped at what's on hand. Returns the amount ACTUALLY removed (0 if none / a non-positive request);
+        /// drops the key when it reaches 0.</summary>
+        public long RemoveFromStockpile(int cargoableId, long amount)
+        {
+            if (amount <= 0 || Stockpile == null || !Stockpile.TryGetValue(cargoableId, out var have) || have <= 0) return 0;
+            long taken = Math.Min(amount, have);
+            long left = have - taken;
+            if (left > 0) Stockpile[cargoableId] = left;
+            else Stockpile.Remove(cargoableId);
+            return taken;
+        }
     }
 }
