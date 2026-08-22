@@ -21,6 +21,10 @@ namespace Pulsar4X.Components
         public string Unit { get { return _templateSD.Units; } }
         public GuiHint GuiHint { get { return _templateSD.GuiHint; } }
         public string PairedPropertyName { get { return _templateSD.PairedPropertyName; } }
+        /// <summary>Slice-2 HYBRID designer: this dial is a FINE/secondary setting → the Component Designer tucks it
+        /// behind the "Advanced settings" expander. Authored in the template JSON (<c>"Advanced": true</c>); default
+        /// false = a core dial shown up front.</summary>
+        public bool IsAdvanced { get { return _templateSD.Advanced; } }
         public bool IsEnabled {
             get
             {

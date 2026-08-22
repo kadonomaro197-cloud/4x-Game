@@ -236,12 +236,21 @@ namespace Pulsar4X.Client
             // HYBRID form (the developer's slice-2 ruling): the door (chosen in the tree) and the "Type" dropdown
             // (rendered just above in Display) are the two CHOICES; here we group the SLIDERS so the player sees the
             // handful of dials that ARE the decision up front and the fine physics dials only if they open "Advanced".
-            // A template with a curated core-dial set (CoreDialsByTemplate — the Weapons door for this reference slice)
-            // gets that layout; every other template renders the old flat list UNCHANGED (byte-identical). Either way
-            // it is the SAME render calls in a different order, so a saved design is identical.
-            string? templateId = Template?.UniqueID;
-            if (templateId != null && CoreDialsByTemplate.TryGetValue(templateId, out var coreSet))
-                GuiDesignUIHybrid(uiState, pairedPartners, coreSet);
+            // WHICH dials are fine lives in the TEMPLATE JSON ("Advanced": true → ComponentDesignProperty.IsAdvanced),
+            // so there is NO client code per door — a modder marks a dial and its layout follows. A template that marks
+            // at least one settable dial Advanced gets the split; one that marks none renders the old flat list
+            // UNCHANGED (byte-identical). Either way it is the SAME render calls, so a saved design is identical.
+            bool hasAdvancedDial = false;
+            foreach (var p in _componentDesigner.ComponentDesignProperties.Values)
+            {
+                if (p.IsEnabled && p.IsAdvanced && !pairedPartners.Contains(p.Name) && IsSettableSliderHint(p.GuiHint))
+                {
+                    hasAdvancedDial = true;
+                    break;
+                }
+            }
+            if (hasAdvancedDial)
+                GuiDesignUIHybrid(uiState, pairedPartners);
             else
                 GuiDesignUIFlat(uiState, pairedPartners);
 
@@ -260,9 +269,9 @@ namespace Pulsar4X.Client
         }
 
         /// <summary>The HYBRID layout: CHOICES (enum/list picks) first, then the door's CORE sliders, then an
-        /// "Advanced settings" expander holding the remaining fine dials. Behaviour is unchanged — this only re-groups
-        /// the SAME render calls, so a design made here is identical to one made in the flat layout.</summary>
-        private void GuiDesignUIHybrid(GlobalUIState uiState, HashSet<string> pairedPartners, HashSet<string> coreSet)
+        /// "Advanced settings" expander holding the fine dials the template marked <c>"Advanced": true</c>. Behaviour is
+        /// unchanged — this only re-groups the SAME render calls, so a design made here is identical to the flat layout.</summary>
+        private void GuiDesignUIHybrid(GlobalUIState uiState, HashSet<string> pairedPartners)
         {
             var choices = new List<ComponentDesignProperty>();
             var core = new List<ComponentDesignProperty>();
@@ -274,8 +283,8 @@ namespace Pulsar4X.Client
                 if (pairedPartners.Contains(p.Name)) continue;
                 if (IsChoiceHint(p.GuiHint)) { choices.Add(p); continue; }
                 if (!IsSettableSliderHint(p.GuiHint)) continue; // TextDisplay / None never render in the design panel
-                if (coreSet.Contains(p.Name)) core.Add(p);
-                else advanced.Add(p);
+                if (p.IsAdvanced) advanced.Add(p);
+                else core.Add(p);
             }
 
             foreach (var p in choices) RenderDesignProperty(p, uiState);
@@ -359,23 +368,6 @@ namespace Pulsar4X.Client
             h == GuiHint.GuiSelectionMaxMin
             || h == GuiHint.GuiSelectionMaxMinInt
             || h == GuiHint.GuiSelectionMinMaxRange;
-
-        // The WEAPONS door reference (slice 2). Per weapon template, the handful of dials that ARE the player's decision
-        // (the DESIGNER-NORTH-STAR "core"); every other settable dial on that template falls to the Advanced expander.
-        // Names MUST match the JSON Property "Name" fields exactly (verified against GameData/basemod/TemplateFiles/weapons.json).
-        // A template NOT in this map keeps the flat layout — so the other 10 doors are byte-identical until they get their
-        // own curated set in a follow-up slice.
-        private static readonly Dictionary<string, HashSet<string>> CoreDialsByTemplate = new()
-        {
-            ["laser-weapon"]     = new HashSet<string> { "Range", "Power Input", "Charge Period" },
-            ["pulse-laser"]      = new HashSet<string> { "Range", "Pulse Energy", "Charge Period", "Combat Heat" },
-            ["railgun-weapon"]   = new HashSet<string> { "Muzzle Velocity", "Kinetic Energy Per Shot", "Rounds Per Second" },
-            ["siege-railgun"]    = new HashSet<string> { "Kinetic Energy Per Shot", "Muzzle Velocity", "Rounds Per Second" },
-            ["flak-weapon"]      = new HashSet<string> { "Rounds Per Second", "Pellets Per Shot", "Damage Per Pellet" },
-            ["disruptor-weapon"] = new HashSet<string> { "Energy Per Shot", "Rounds Per Second" },
-            ["plasma-repeater"]  = new HashSet<string> { "Energy Per Shot", "Rounds Per Second", "Bolt Velocity" },
-            ["missile-launcher"] = new HashSet<string> { "Max Mass", "Auto Reloader Mass" },
-        };
 
         private void GuiCostText(GlobalUIState uiState) //Prints a 2 col table with the costs of the part
         {

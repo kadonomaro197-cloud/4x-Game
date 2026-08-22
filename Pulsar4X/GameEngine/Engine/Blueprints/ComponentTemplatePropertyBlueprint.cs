@@ -19,6 +19,15 @@ namespace Pulsar4X.Blueprints
         public string AttributeType { get; set; }
 
         /// <summary>
+        /// Slice-2 designer HYBRID form: when true, this dial is a FINE/secondary setting and the Component
+        /// Designer tucks it behind the "Advanced settings" expander instead of showing it up front. Default false
+        /// (shown as a core dial) — so a template that marks nothing renders the old flat list unchanged. The split
+        /// lives in the DATA next to the dial (per the DESIGNER-NORTH-STAR "the door is derived from the data"), so
+        /// no client code is needed per template. Absent in JSON → false.
+        /// </summary>
+        public bool Advanced { get; set; }
+
+        /// <summary>
         /// For GuiSelectionMinMaxRange: the Name of the partner property
         /// (the upper bound when this property is the lower bound).
         /// </summary>
