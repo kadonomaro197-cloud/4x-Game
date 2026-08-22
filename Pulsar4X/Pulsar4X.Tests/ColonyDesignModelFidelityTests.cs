@@ -478,8 +478,14 @@ namespace Pulsar4X.Tests
             Assert.That(p.HousingComfort, Near(lHouse.Comfort), "infra HousingAtbDB.Comfort model == live");
             Assert.That(p.InfrastructureCapacity, Near(lInfra.Capacity), "infra InfrastructureCapacityAtb.Capacity model == live");
             Assert.That(p.StorageAmount, Near(lStore.MaxVolume), "infra CargoStorageAtb.MaxVolume (Storage Amount) model == live");
-            Assert.That(p.MinGravity, Near(lGrav.MinGravity), "infra GravityToleranceAtb.MinGravity model == live");
-            Assert.That(p.MaxGravity, Near(lGrav.MaxGravity), "infra GravityToleranceAtb.MaxGravity model == live");
+            // GravityTolerance is NOT cross-checked model==live here — it is TECH-CLAMPED at instantiation (gotcha L7).
+            // The template authors Min/Max Gravity 8.8/10.8, but ComponentDesigner clamps them to the infra-gravity-range
+            // tech window 9.81*(1±0.1) = [8.829, 10.791], so the LIVE atb reads 8.829/10.791 while the pure design-time
+            // model faithfully reproduces the AUTHORED dial (8.8/10.8). A pure model does not apply the faction-tech clamp,
+            // so model==live cannot hold for this field — it is NOT a model bug (the authored value is pinned by the pure
+            // CivicDesignModelTests). We log the live clamped value for visibility and skip the model==live assert.
+            // (Pressure BELOW sits exactly at its tech window — 1.0±0.1 = 0.9/1.1 — so it is NOT clamped and IS asserted.)
+            Log($"  gravity: model authored {p.MinGravity}/{p.MaxGravity}; live tech-clamped {lGrav.MinGravity}/{lGrav.MaxGravity} (L7 — not cross-checked here)");
             Assert.That(p.MinPressure, Near(lPress.MinPressure), "infra PressureToleranceAtb.MinPressure model == live");
             Assert.That(p.MaxPressure, Near(lPress.MaxPressure), "infra PressureToleranceAtb.MaxPressure model == live");
             AssertCivicScalarsAndResources(id, p);
