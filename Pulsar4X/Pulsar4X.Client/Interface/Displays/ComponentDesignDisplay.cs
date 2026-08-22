@@ -217,85 +217,165 @@ namespace Pulsar4X.Client
 
         internal void GuiDesignUI(GlobalUIState uiState) //Creates all UI elements need for designing the Component
         {
-            // FIXME: compact mode should be an option in the game settings?
-            // if (ImGui.Button("Compact"))
-            // {
-            //     compactmod = !compactmod;
-            // }
-
-            //ImGui.NewLine();
-
-            if (_componentDesigner != null) //Make sure comp is selected
-            {
-                // Build the set of properties consumed as "partners" by a range slider — don't render them on their own.
-                var pairedPartners = new HashSet<string>();
-                foreach (var p in _componentDesigner.ComponentDesignProperties.Values)
-                {
-                    if (p.GuiHint == GuiHint.GuiSelectionMinMaxRange && !string.IsNullOrEmpty(p.PairedPropertyName))
-                        pairedPartners.Add(p.PairedPropertyName);
-                }
-
-                foreach (ComponentDesignProperty attribute in _componentDesigner.ComponentDesignProperties.Values) //For each property of the comp type
-                {
-                    if (pairedPartners.Contains(attribute.Name)) continue;
-
-                    ImGui.PushID(attribute.Name);
-
-                    if (attribute.IsEnabled)
-                    {
-                        switch (attribute.GuiHint) //Either
-                        {
-                            case 0:
-                                break;
-                            case GuiHint.None:
-                                break;
-                            case GuiHint.GuiTechSelectionList: //Let the user pick a type from a list
-                                GuiHintTechSelection(attribute, uiState);
-                                break;
-                            case GuiHint.GuiSelectionMaxMin: //Set a value
-                                GuiHintMaxMin(attribute);
-                                break;
-                            case GuiHint.GuiSelectionMaxMinInt:
-                                GuiHintMaxMinInt(attribute);
-                                break;
-                            case GuiHint.GuiSelectionMinMaxRange:
-                                GuiHintMinMaxRange(attribute);
-                                break;
-                            case GuiHint.GuiTextDisplay: //Display a stat
-                                //GuiHintText(attribute);
-                                break;
-                            case GuiHint.GuiEnumSelectionList: //Let the user pick a type from a hard coded list
-                                GuiHintEnumSelection(attribute);
-                                break;
-                            case GuiHint.GuiOrdnanceSelectionList:
-                                GuiHintOrdnanceSelection(attribute, uiState);
-                                break;
-                            case GuiHint.GuiTextSelectionFormula:
-                                GuiHintTextSelectionFormula(attribute);
-                                break;
-                            case GuiHint.GuiFuelTypeSelection:
-                                GuiHintFuelTypeSelection(attribute, uiState);
-                                break;
-                            case GuiHint.GuiTechCategorySelection:
-                                GuiHintTechCategorySelection(attribute, uiState);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                    }
-
-                    ImGui.PopID();
-                }
-
-                ImGui.NewLine();
-            }
-            else //Tell the user they don't have a comp type selected
+            if (_componentDesigner == null) //Tell the user they don't have a comp type selected
             {
                 ImGui.NewLine();
                 ImGui.Text("No component type selected");
                 ImGui.NewLine();
+                return;
+            }
+
+            // Build the set of properties consumed as "partners" by a range slider — don't render them on their own.
+            var pairedPartners = new HashSet<string>();
+            foreach (var p in _componentDesigner.ComponentDesignProperties.Values)
+            {
+                if (p.GuiHint == GuiHint.GuiSelectionMinMaxRange && !string.IsNullOrEmpty(p.PairedPropertyName))
+                    pairedPartners.Add(p.PairedPropertyName);
+            }
+
+            // HYBRID form (the developer's slice-2 ruling): the door (chosen in the tree) and the "Type" dropdown
+            // (rendered just above in Display) are the two CHOICES; here we group the SLIDERS so the player sees the
+            // handful of dials that ARE the decision up front and the fine physics dials only if they open "Advanced".
+            // A template with a curated core-dial set (CoreDialsByTemplate — the Weapons door for this reference slice)
+            // gets that layout; every other template renders the old flat list UNCHANGED (byte-identical). Either way
+            // it is the SAME render calls in a different order, so a saved design is identical.
+            string? templateId = Template?.UniqueID;
+            if (templateId != null && CoreDialsByTemplate.TryGetValue(templateId, out var coreSet))
+                GuiDesignUIHybrid(uiState, pairedPartners, coreSet);
+            else
+                GuiDesignUIFlat(uiState, pairedPartners);
+
+            ImGui.NewLine();
+        }
+
+        /// <summary>The old flat property list — every enabled, settable dial in template order. The default layout for
+        /// any door that hasn't been given a curated core-dial set yet.</summary>
+        private void GuiDesignUIFlat(GlobalUIState uiState, HashSet<string> pairedPartners)
+        {
+            foreach (ComponentDesignProperty attribute in _componentDesigner.ComponentDesignProperties.Values)
+            {
+                if (pairedPartners.Contains(attribute.Name)) continue;
+                RenderDesignProperty(attribute, uiState);
             }
         }
+
+        /// <summary>The HYBRID layout: CHOICES (enum/list picks) first, then the door's CORE sliders, then an
+        /// "Advanced settings" expander holding the remaining fine dials. Behaviour is unchanged — this only re-groups
+        /// the SAME render calls, so a design made here is identical to one made in the flat layout.</summary>
+        private void GuiDesignUIHybrid(GlobalUIState uiState, HashSet<string> pairedPartners, HashSet<string> coreSet)
+        {
+            var choices = new List<ComponentDesignProperty>();
+            var core = new List<ComponentDesignProperty>();
+            var advanced = new List<ComponentDesignProperty>();
+
+            foreach (ComponentDesignProperty p in _componentDesigner.ComponentDesignProperties.Values)
+            {
+                if (!p.IsEnabled) continue;
+                if (pairedPartners.Contains(p.Name)) continue;
+                if (IsChoiceHint(p.GuiHint)) { choices.Add(p); continue; }
+                if (!IsSettableSliderHint(p.GuiHint)) continue; // TextDisplay / None never render in the design panel
+                if (coreSet.Contains(p.Name)) core.Add(p);
+                else advanced.Add(p);
+            }
+
+            foreach (var p in choices) RenderDesignProperty(p, uiState);
+            if (choices.Count > 0) ImGui.Separator();
+
+            foreach (var p in core) RenderDesignProperty(p, uiState);
+
+            if (advanced.Count > 0)
+            {
+                // Defaults CLOSED — the whole point is to hide the fine physics dials until the player wants them.
+                if (ImGui.CollapsingHeader("Advanced settings"))
+                {
+                    foreach (var p in advanced) RenderDesignProperty(p, uiState);
+                }
+            }
+        }
+
+        /// <summary>Render one design dial by its GuiHint — the switch every layout shares (kept in one place so the
+        /// flat and hybrid layouts can't diverge). PushID/PopID keep the ImGui id stack balanced per property.</summary>
+        private void RenderDesignProperty(ComponentDesignProperty attribute, GlobalUIState uiState)
+        {
+            ImGui.PushID(attribute.Name);
+
+            if (attribute.IsEnabled)
+            {
+                switch (attribute.GuiHint) //Either
+                {
+                    case 0:
+                        break;
+                    case GuiHint.None:
+                        break;
+                    case GuiHint.GuiTechSelectionList: //Let the user pick a type from a list
+                        GuiHintTechSelection(attribute, uiState);
+                        break;
+                    case GuiHint.GuiSelectionMaxMin: //Set a value
+                        GuiHintMaxMin(attribute);
+                        break;
+                    case GuiHint.GuiSelectionMaxMinInt:
+                        GuiHintMaxMinInt(attribute);
+                        break;
+                    case GuiHint.GuiSelectionMinMaxRange:
+                        GuiHintMinMaxRange(attribute);
+                        break;
+                    case GuiHint.GuiTextDisplay: //Display a stat
+                        //GuiHintText(attribute);
+                        break;
+                    case GuiHint.GuiEnumSelectionList: //Let the user pick a type from a hard coded list
+                        GuiHintEnumSelection(attribute);
+                        break;
+                    case GuiHint.GuiOrdnanceSelectionList:
+                        GuiHintOrdnanceSelection(attribute, uiState);
+                        break;
+                    case GuiHint.GuiTextSelectionFormula:
+                        GuiHintTextSelectionFormula(attribute);
+                        break;
+                    case GuiHint.GuiFuelTypeSelection:
+                        GuiHintFuelTypeSelection(attribute, uiState);
+                        break;
+                    case GuiHint.GuiTechCategorySelection:
+                        GuiHintTechCategorySelection(attribute, uiState);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            ImGui.PopID();
+        }
+
+        // A "choice" dial is a pick-one-from-a-list (the enum/tech/fuel/ordnance selections) — shown at the top of the
+        // hybrid form as a design CHOICE. Everything else settable is a numeric SLIDER.
+        private static bool IsChoiceHint(GuiHint h) =>
+            h == GuiHint.GuiEnumSelectionList
+            || h == GuiHint.GuiTechSelectionList
+            || h == GuiHint.GuiFuelTypeSelection
+            || h == GuiHint.GuiOrdnanceSelectionList
+            || h == GuiHint.GuiTextSelectionFormula
+            || h == GuiHint.GuiTechCategorySelection;
+
+        private static bool IsSettableSliderHint(GuiHint h) =>
+            h == GuiHint.GuiSelectionMaxMin
+            || h == GuiHint.GuiSelectionMaxMinInt
+            || h == GuiHint.GuiSelectionMinMaxRange;
+
+        // The WEAPONS door reference (slice 2). Per weapon template, the handful of dials that ARE the player's decision
+        // (the DESIGNER-NORTH-STAR "core"); every other settable dial on that template falls to the Advanced expander.
+        // Names MUST match the JSON Property "Name" fields exactly (verified against GameData/basemod/TemplateFiles/weapons.json).
+        // A template NOT in this map keeps the flat layout — so the other 10 doors are byte-identical until they get their
+        // own curated set in a follow-up slice.
+        private static readonly Dictionary<string, HashSet<string>> CoreDialsByTemplate = new()
+        {
+            ["laser-weapon"]     = new HashSet<string> { "Range", "Power Input", "Charge Period" },
+            ["pulse-laser"]      = new HashSet<string> { "Range", "Pulse Energy", "Charge Period", "Combat Heat" },
+            ["railgun-weapon"]   = new HashSet<string> { "Muzzle Velocity", "Kinetic Energy Per Shot", "Rounds Per Second" },
+            ["siege-railgun"]    = new HashSet<string> { "Kinetic Energy Per Shot", "Muzzle Velocity", "Rounds Per Second" },
+            ["flak-weapon"]      = new HashSet<string> { "Rounds Per Second", "Pellets Per Shot", "Damage Per Pellet" },
+            ["disruptor-weapon"] = new HashSet<string> { "Energy Per Shot", "Rounds Per Second" },
+            ["plasma-repeater"]  = new HashSet<string> { "Energy Per Shot", "Rounds Per Second", "Bolt Velocity" },
+            ["missile-launcher"] = new HashSet<string> { "Max Mass", "Auto Reloader Mass" },
+        };
 
         private void GuiCostText(GlobalUIState uiState) //Prints a 2 col table with the costs of the part
         {
