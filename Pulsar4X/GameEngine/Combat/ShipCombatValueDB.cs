@@ -459,6 +459,22 @@ namespace Pulsar4X.Combat
                     }
                 }
 
+                // Parametric weapons (OPERATION BLUEPRINT-TO-STEEL Phase C / Path B): the GENERIC weapon designed by
+                // delivery × nature + the numbers — the HTML weapons designer's collapse. Its BuildProfile() runs the
+                // fidelity-proven WeaponsDesignModel, which reproduces the EXACT WeaponProfile of the matching per-type
+                // weapon above — so a parametric design fights identically to its hand-authored equivalent. Health-scales
+                // its dps like every block. ADDITIVE / byte-identical until a design mounts one (no base-mod ship does yet).
+                if (instances.TryGetComponentsByAttribute<ParametricWeaponAtb>(out var parametrics))
+                {
+                    foreach (var comp in parametrics)
+                    {
+                        if (comp.Design.TryGetAttribute<ParametricWeaponAtb>(out var pw))
+                        {
+                            weapons.Add(pw.BuildProfile(comp.HealthPercent));
+                        }
+                    }
+                }
+
                 // Missile launchers: flat damage stub each (warhead energy is v2); slow + guided (tracks) — the
                 // weapon flak answers. Velocity/tracking/saturation are v1 stubs.
                 if (instances.TryGetComponentsByAttribute<MissileLauncherAtb>(out var launchers))
