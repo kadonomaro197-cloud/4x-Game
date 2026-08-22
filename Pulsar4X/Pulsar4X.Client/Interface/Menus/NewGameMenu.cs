@@ -639,6 +639,7 @@ public class NewGameMenu : PulsarGuiWindow
         // hex. OFF in the engine suite (byte-identical — nothing fills a hex bucket there); ON so a menu game's AI
         // keeps its ground ore flowing. Inert until per-hex mining (EnablePerHexMining, flipped above) fills a bucket.
         Pulsar4X.GroundCombat.GroundHaulAI.EnableGroundHaulAI = true;
+        Pulsar4X.GroundCombat.GroundStormSight.EnableStormSight = true;   // D-planfn-A: storms dim ground sight (radar reach)
         // E14 auras (Fork B GROUND, slice 3b): a friendly Command/Ward AURA BUILDING on a world (the buildable
         // "Command Aura Post") buffs every friendly battalion there — firepower (Command) or toughness (Ward). OFF in
         // the engine suite (byte-identical — ×1.0 / ÷1.0 no-ops); ON so a menu game gets the real battalion buff once
@@ -1103,6 +1104,7 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableInitialEngagementSpread = true;     // spread + close on the continuous field
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableCaptureTransfer = true;             // C7: registry move + population casualty on capture
             Pulsar4X.GroundCombat.GroundHaulAI.EnableGroundHaulAI = true;                          // DS-AI-hook: NPC keeps ground ore flowing (inert until per-hex mining fills a bucket)
+            Pulsar4X.GroundCombat.GroundStormSight.EnableStormSight = true;                        // D-planfn-A: storms dim ground sight (radar reach)
             // E14 auras + E12 carriers — parity with CreateGameCore so the DevTest combat sandbox exercises them too.
             // All default OFF in the engine (byte-identical); ON here so battalion/fleet command buffs and the carrier
             // launch/recover+rearm loop are live in the sandbox. One-line revert each.

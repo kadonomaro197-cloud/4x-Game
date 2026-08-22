@@ -80,6 +80,7 @@ namespace Pulsar4X.GroundCombat
 
                 if (!body.TryGetDataBlob<PlanetRegionsDB>(out var regions)
                     || unit.RegionIndex < 0 || unit.RegionIndex >= regions.Regions.Count) return 0;
+                rangeKm *= GroundStormSight.SightMultAt(body, unit.RegionIndex);   // D-planfn-A: a storm dims sight (1.0 when off)
                 double pitch = GroundRangeTools.HexPitchKm(regions.Regions[unit.RegionIndex]);
                 return pitch > 0 ? rangeKm / pitch : 0;
             }
@@ -123,6 +124,7 @@ namespace Pulsar4X.GroundCombat
                     }
                     if (unit.RegionIndex < 0 || unit.RegionIndex >= regions.Regions.Count) continue;
                     var region = regions.Regions[unit.RegionIndex];
+                    rangeKm *= GroundStormSight.SightMultAt(body, unit.RegionIndex);   // D-planfn-A: a storm dims sight (1.0 when off)
 
                     foreach (var ri in RegionsInReach(region, unit.RegionIndex, unit.GlobalQ, rangeKm, cols, regionCount))
                     {

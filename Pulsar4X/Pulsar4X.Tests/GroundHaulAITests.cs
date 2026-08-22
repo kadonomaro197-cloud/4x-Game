@@ -64,14 +64,22 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
-        public void StockGame_NoOreOnAnyHex_ReturnsNull()
+        public void DepotButNoOreOnAnyHex_ReturnsNull()
         {
             var s = TestScenario.CreateWithColony();
-            // No SetUp — a fresh colony has empty hex stockpiles (nothing fills a bucket until per-hex mining is on).
+            // A depot EXISTS (a built-up hex) but NO hex holds ore — this isolates "no surplus" as the sole cause of
+            // inaction (a fresh colony has empty hex stockpiles; nothing fills a bucket until per-hex mining is on).
+            // Without the depot the rung would short-circuit at "no depot" and never reach the ore check, so this test
+            // pins the intended path, not the depot-null exit.
+            PlanetRegionsFactory.GenerateForSystem(s.StartingSystem, surveyed: true);
+            var body = GroundReinforcement.GarrisonBodyOf(s.Colony);
+            var grid = PlanetGridFactory.EnsureGridForBody(body);
+            Assert.That(grid.Hexes.Count, Is.GreaterThan(1));
+            for (int i = 0; i < 100; i++) grid.Hexes[0].InstallationIds.Add(900000 + i);   // a depot, but no ore anywhere
             GroundHaulAI.EnableGroundHaulAI = true;
 
             var action = GroundHaulAI.TryConsolidateOre(FactionState.Snapshot(s.Faction));
-            Assert.IsNull(action, "with no ore on any hex the rung is inert (stock game byte-identical)");
+            Assert.IsNull(action, "a depot with no surplus ore on any hex → nothing to consolidate (stock game byte-identical)");
         }
 
         [Test]
