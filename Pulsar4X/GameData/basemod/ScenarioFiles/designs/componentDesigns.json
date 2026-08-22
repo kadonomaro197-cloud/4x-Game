@@ -922,6 +922,28 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-elite-cadre",
+      "Name": "Elite Veteran Cadre",
+      "TemplateId": "unit-caliber",
+      "Properties": [
+        { "Key": "Firepower Caliber", "Value": 2.0 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-heavy-power-armor",
+      "Name": "Heavy Power Armour",
+      "TemplateId": "power-armor",
+      "Properties": [
+        { "Key": "StrengthBonus", "Value": 800 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-ground-plating",
       "Name": "Composite Plating",
       "TemplateId": "ground-plating"

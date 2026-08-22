@@ -683,13 +683,6 @@
           "PropertyFormula": "(4 / 3) * Pi * Pow(PropertyValue('Tank Radius'), 3)"
         },
         {
-          "Name": "Dry Weight",
-          "Units": "kg",
-          "DescriptionFormula": "'The weight of the empty tank'",
-          "GuiHint": "GuiTextDisplay",
-          "PropertyFormula": "(4 * Pi * PropertyValue('Tank Radius') * PropertyValue('Tank Radius')) * 23.5 "
-        },
-        {
           "Name": "DBargs",
           "GuiHint": "None",
           "PropertyFormula": "AtbConstrArgs('fuel-storage', PropertyValue('Tank Volume'))",
@@ -2582,7 +2575,7 @@
       "Name": "Power Armour",
       "Formulas": {
         "Description": "Servo-assisted armour — its strength boost (+300) lets a human frame carry weapons it never could bare-handed (the Space Marine story), and it toughens the wearer.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('StrengthBonus') - 300) * 0.1 + Max(0, PropertyValue('EvasionBonus') - 0) * 200 + Max(0, PropertyValue('ToughnessBonus') - 0.2) * 100 + Max(0, PropertyValue('Shield') - 0) * 0.5",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -3117,7 +3110,7 @@
       "Name": "Shield Generator",
       "Formulas": {
         "Description": "A personal energy shield — a flat pool of incoming damage it soaks before HP is touched (survive-by-shield; drops once depleted).",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('StrengthBonus') - 0) * 0.1 + Max(0, PropertyValue('EvasionBonus') - 0) * 200 + Max(0, PropertyValue('ToughnessBonus') - 0) * 100 + Max(0, PropertyValue('Shield') - 150) * 0.5",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -3196,7 +3189,7 @@
       "Name": "Ward Projector",
       "Formulas": {
         "Description": "A fast-cycling shield ward (⚙3 Defence: the capacity-vs-recharge decision). It holds a SMALLER pool than a big Shield Generator, but recharges much faster between salvos — so it shrugs off sustained chip-fire (the pool is back before the next volley) where a big slow shield eats one alpha then stays down. The trade is burst-durability vs one-hit-buffer. Recharge + capacity dials flagged for a balance pass.",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('StrengthBonus') - 0) * 0.1 + Max(0, PropertyValue('EvasionBonus') - 0) * 200 + Max(0, PropertyValue('ToughnessBonus') - 0) * 100 + Max(0, PropertyValue('Shield') - 60) * 0.5 + Max(0, PropertyValue('ShieldRegenFraction') - 1.0) * 20",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
@@ -3284,7 +3277,7 @@
       "Name": "Reflex Booster",
       "Formulas": {
         "Description": "Reflex-enhancing wetware/servos — raises the unit's chance to simply avoid a hit (survive-by-dodge; useless against saturation fire).",
-        "Mass": "PropertyValue('CarryMass')",
+        "Mass": "PropertyValue('CarryMass') + Max(0, PropertyValue('StrengthBonus') - 0) * 0.1 + Max(0, PropertyValue('EvasionBonus') - 0.4) * 200 + Max(0, PropertyValue('ToughnessBonus') - 0) * 100 + Max(0, PropertyValue('Shield') - 0) * 0.5",
         "Volume": "[Mass] * 0.01",
         "HTK": "1.0",
         "CrewReq": "0",
