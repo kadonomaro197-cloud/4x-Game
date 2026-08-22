@@ -23,6 +23,14 @@ namespace Pulsar4X.Factions
         {
             if (state == null) return PlannerAction.None;
 
+            // DS-AI-hook — logistics before new builds: if per-hex mining has piled ore on a hex, set a STANDING haul
+            // route consolidating that surplus toward the faction's built-up hex (the SAME GroundHaulRoutes.AddRoute a
+            // player clicks — One Verb, Both Seats). Flag-gated (default OFF → this returns null → byte-identical) and
+            // inert until a hex bucket holds ore, so a stock game is unchanged; idempotent (won't stack an existing
+            // route), so it settles after a few cycles and the build rungs below resume.
+            var haulStep = Pulsar4X.GroundCombat.GroundHaulAI.TryConsolidateOre(state);
+            if (haulStep != null) return haulStep;
+
             // Rung B — heal a STALLED build by acquiring the raw mineral it's starved for. This slice handles the MINE
             // case (the mineral is present + accessible on the colony's own body but unmined); logistics (P1-c) and
             // survey (P1-d) are the other branches of the mineral-floor bridge.
