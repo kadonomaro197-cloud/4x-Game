@@ -82,6 +82,19 @@ namespace Pulsar4X.Sensors
         /// FTL-band question waits on.</summary>
         public static bool EnableBandMatchFix = false;
 
+        /// <summary>Sensor RESOLUTION→FIDELITY toggle. Default OFF → Resolution is ignored and SignalQuality is the pure
+        /// band-alignment score (byte-identical to today). When ON, a receiver's resolving power
+        /// (<see cref="SensorReceiverAtb.Resolution"/>, MegaPixels) caps how well a contact is RESOLVED: a low-res
+        /// sensor detects *something* but not *what* (the field's own comment + the long-dead Resolution block below).
+        /// Does NOT change whether a target is detected (that is strength/band-match) — only the fidelity number.
+        /// Safe to flip standalone (unlike the band-match fix); client-on via NewGameMenu. Gauge SensorResolutionQualityTests.</summary>
+        public static bool EnableResolutionQuality = false;
+
+        /// <summary>MegaPixels for the resolution factor's soft knee: resFactor = Res/(Res+knee), so ~knee MP ≈ half
+        /// fidelity and stock high-res sensors (100/200 MP) sit ≈ full-ID while a low-res (~1 MP) sensor caps at partial
+        /// ID. Tunable like DetectionSensitivityScale.</summary>
+        public const double ResolutionFullIdKnee_MP = 1.0;
+
         /// <summary>The CORRECT band-overlap test: the receiver window [recvMin,recvMax] overlaps the signal band
         /// [sigMin,sigMax] iff max(recvMin,sigMin) &lt; min(recvMax,sigMax) — BOTH edges consulted. Pure + testable.</summary>
         internal static bool BandsOverlapCorrect(double recvMin, double recvMax, double sigMin, double sigMax)
@@ -236,6 +249,20 @@ namespace Pulsar4X.Sensors
                         // (SystemBodyInfoDB / StarInfoDB read it against 0.20 / 0.80), survey reveal was random too.
                         // See Sensors/CLAUDE.md "Detection-quality bug".
                         quality = new PercentValue((float)Math.Clamp(1.0 - distortion / signalWaveSpectraFreqMax, 0.0, 1.0));
+
+                        // RESOLUTION → FIDELITY (flag-gated; default OFF → the line above stands → byte-identical).
+                        // Scales the band-alignment quality by a saturating resolution factor so a low-res receiver
+                        // tops out at partial ID while a high-res one reaches full ID (SensorReceiverAtb.Resolution's
+                        // documented job — the dead block above admitted "resolution should play into how much gets
+                        // detected"). res<=0 → no ID. Never raises quality above the band-alignment score, so it can
+                        // only make detection LESS certain, never more — it cannot manufacture a detection.
+                        if (EnableResolutionQuality)
+                        {
+                            double res = recever.Resolution;
+                            double resFactor = res <= 0 ? 0.0 : res / (res + ResolutionFullIdKnee_MP);
+                            float alignQuality = quality; // PercentValue → float (implicit operator)
+                            quality = new PercentValue((float)Math.Clamp(alignQuality * resFactor, 0.0, 1.0));
+                        }
 
                     }
                 }

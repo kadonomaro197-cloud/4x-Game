@@ -77,6 +77,11 @@ public class AdminSpaceProcessor : IInstanceProcessor
 
             if (existing != null)
             {
+                // Match is by ComponentName (identity — carries the seated officer across a recalc), but APPLY the
+                // component's current AdminLevel to the carried seat so a redesigned/retiered command component's scope
+                // can't go stale. This is the "use the level, not just the name" half of finishing the AdminLevel dial:
+                // the seat's SeatType is what CanOfficerHoldSeat / AssignAdministratorOrder.IsValidCommand gate on.
+                existing.SeatType = level;
                 carried.Add(existing);
                 result.Add(existing);
             }

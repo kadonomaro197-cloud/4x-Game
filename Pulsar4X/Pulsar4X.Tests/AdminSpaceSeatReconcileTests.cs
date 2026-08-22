@@ -44,6 +44,32 @@ namespace Pulsar4X.Tests
         }
 
         [Test]
+        [Description("The by-level finish: a carried seat's SeatType is REFRESHED from the component's CURRENT AdminLevel " +
+                     "(match by name to keep the officer, but apply the level), so a redesigned/retiered command component's " +
+                     "scope can't go stale — the scope AssignAdministratorOrder.IsValidCommand / CanOfficerHoldSeat gate on.")]
+        public void ReconcileSeats_RefreshesSeatType_WhenComponentLevelChanges()
+        {
+            // A colony-scope seat with an officer sitting in it.
+            var seat = new AdminSpaceAbilityState(AdminLevel.Colony, "admin-complex");
+            var commander = new CommanderDB();
+            seat.CommanderID = 42;
+            seat.Commander = commander;
+
+            var previous = new List<AdminSpaceAbilityState> { seat };
+            // The SAME component (by name) but now at a BROADER scope (researched a higher admin tier / redesigned).
+            var current = new List<(AdminLevel level, string name)> { (AdminLevel.Planet, "admin-complex") };
+
+            var result = AdminSpaceProcessor.ReconcileSeats(previous, current);
+
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(ReferenceEquals(result[0], seat), Is.True, "the officer's seat is carried (matched by name), not rebuilt");
+            Assert.That(result[0].CommanderID, Is.EqualTo(42), "the seated officer survives the scope change");
+            Assert.That(result[0].SeatType, Is.EqualTo(AdminLevel.Planet),
+                "the carried seat's scope is refreshed to the component's current AdminLevel (by-level, not just by-name)");
+            Log("carried seat refreshed to the component's new AdminLevel, officer intact");
+        }
+
+        [Test]
         [Description("A newly-installed admin component adds a fresh empty seat.")]
         public void ReconcileSeats_AddsSeat_ForNewComponent()
         {

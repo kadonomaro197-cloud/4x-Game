@@ -649,6 +649,14 @@ public class NewGameMenu : PulsarGuiWindow
         // (byte-identical — no bay in the test process) → ON so a played game gets the full carrier loop. One-line revert each.
         Pulsar4X.Combat.CombatEngagement.EnableCarrierSortie = true;
         Pulsar4X.Docking.DockTools.EnableCarrierRearm = true;
+        // Sensor RESOLUTION → fidelity: a receiver's resolving power now caps how well a contact is RESOLVED (a low-res
+        // sensor detects *something* but not *what*). OFF in the engine (byte-identical); ON so a played game reads it.
+        // Safe standalone (only refines the fidelity number; never changes detect-yes/no, so it can't blind a ship).
+        Pulsar4X.Sensors.SensorTools.EnableResolutionQuality = true;
+        // AdminLevel now bites on seat assignment: a broader command SCOPE demands a more senior officer. OFF in the
+        // engine (byte-identical); ON here. Safe — every stock admin seat is scope <= Colony (required rank 0), so no
+        // assignment is refused; the gate only bites once a Planet+ scope command component is designed.
+        Pulsar4X.People.Orders.AssignAdministratorOrder.EnableAdminRankGate = true;
 
         // Generate random systems up to the number of "Galaxy Size" minus the
         // number of included pre-made systems
@@ -1096,6 +1104,8 @@ public class NewGameMenu : PulsarGuiWindow
             Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;                        // E14: fleet-wide Command/Ward buff
             Pulsar4X.Combat.CombatEngagement.EnableCarrierSortie = true;                          // E12: docked craft held in hangar (undock=launch)
             Pulsar4X.Docking.DockTools.EnableCarrierRearm = true;                                 // E12: refuel + rearm on recovery
+            Pulsar4X.Sensors.SensorTools.EnableResolutionQuality = true;                          // sensor Resolution -> contact fidelity
+            Pulsar4X.People.Orders.AssignAdministratorOrder.EnableAdminRankGate = true;           // AdminLevel gates seat assignment by scope
 
             var startingSystem = game.Systems.Find(s => s.ID.Equals(startingSystemId));
             if (startingSystem == null)
