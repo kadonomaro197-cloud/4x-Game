@@ -104,6 +104,7 @@
         },
         {
           "Name": "Ideal Detection Wavelength",
+          "Advanced": true,
           "Units": "nm",
           "DescriptionFormula": "'The wavelength this sensor is most efficient at detecting'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -114,6 +115,7 @@
         },
         {
           "Name": "Detection Bandwidth",
+          "Advanced": true,
           "Units": "nm",
           "DescriptionFormula": "'How far from the ideal wavelength will this still detect a signal'",
           "GuiHint": "GuiSelectionMaxMin",

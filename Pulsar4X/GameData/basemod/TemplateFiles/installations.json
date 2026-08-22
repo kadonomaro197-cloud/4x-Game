@@ -966,6 +966,7 @@
         },
         {
           "Name": "Support",
+          "Advanced": true,
           "DescriptionFormula": "'A flat competence boost to the leader posted in this berth.'",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "50",
@@ -984,6 +985,7 @@
         },
         {
           "Name": "Span",
+          "Advanced": true,
           "DescriptionFormula": "'The force size this berth can command at the site (matters once sites are fought over).'",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "10",
@@ -1199,6 +1201,7 @@
         },
         {
           "Name": "Storage Amount",
+          "Advanced": true,
           "DescriptionFormula": "'The amount of space that is dedicated to storage space. '",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "5000",
@@ -1217,6 +1220,7 @@
         },
         {
           "Name": "Housing Comfort",
+          "Advanced": true,
           "DescriptionFormula": "'Quality-of-life comfort this infrastructure provides — a capped morale bonus on top of bare life-support. Basic utilities and housing keep colonists content, not just alive.'",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "50",
@@ -1226,6 +1230,7 @@
         },
         {
           "Name": "Min Gravity",
+          "Advanced": true,
           "DescriptionFormula": "'Surface gravity range (m/s²) this infrastructure can operate in. Earth standard is 9.81 m/s². Drag the left/right handles to set the bounds; drag the bar between them to shift the whole range.'",
           "GuiHint": "GuiSelectionMinMaxRange",
           "PairedPropertyName": "Max Gravity",
@@ -1246,6 +1251,7 @@
         },
         {
           "Name": "Min Pressure",
+          "Advanced": true,
           "DescriptionFormula": "'Atmospheric pressure range (Earth atmospheres) this infrastructure can operate in. Drag the handles to set the bounds; drag the bar between them to shift the whole range.'",
           "GuiHint": "GuiSelectionMinMaxRange",
           "PairedPropertyName": "Max Pressure",
@@ -1341,6 +1347,7 @@
         },
         {
           "Name": "Storage Amount",
+          "Advanced": true,
           "DescriptionFormula": "'The amount of space that is dedicated to storage space. '",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "5000",
@@ -1359,6 +1366,7 @@
         },
         {
           "Name": "Housing Comfort",
+          "Advanced": true,
           "DescriptionFormula": "'Quality-of-life comfort this sealed habitat provides — a capped morale bonus for the station crew.'",
           "GuiHint": "GuiSelectionMaxMinInt",
           "MaxFormula": "50",
@@ -1649,6 +1657,7 @@
         },
         {
           "Name": "TileFootprint",
+          "Advanced": true,
           "Units": "tiles",
           "DescriptionFormula": "'How many fine city-tiles this base occupies once the city sub-grid is built.'",
           "GuiHint": "GuiSelectionMaxMinInt",
@@ -1896,6 +1905,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - how much of an enemy''s armour this unit ignores. Infantry small arms bounce off heavy plate (0).'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -1906,6 +1916,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - how much of this unit''s attack lands in ONE shot. Small arms put many little rounds downrange (10), so they chip and mostly bounce off armour.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -2001,6 +2012,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - a tank''s AP main gun cracks plate that bounces small arms (ignores this much of an enemy''s Defense).'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -2011,6 +2023,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - a tank''s main gun lands its whole attack in ONE big shell (140), an alpha that punches flat armour instead of chipping at it.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -2106,6 +2119,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Armour penetration - shaped-charge / HE shells shrug off some plating (ignores this much of an enemy''s Defense), between infantry and a tank''s AP gun.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -2116,6 +2130,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "Units": "str",
           "DescriptionFormula": "'Per-shot size - artillery fires a few big HE shells (80 each), between a tank''s single alpha and an infantry spray - each shell is a real hit against armour.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -2241,6 +2256,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2287,6 +2303,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100",
@@ -2296,6 +2313,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5000",
@@ -2400,6 +2418,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2427,6 +2446,7 @@
         },
         {
           "Name": "VsKinetic",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2436,6 +2456,7 @@
         },
         {
           "Name": "VsEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2445,6 +2466,7 @@
         },
         {
           "Name": "VsExplosive",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2454,6 +2476,7 @@
         },
         {
           "Name": "VsExotic",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2497,6 +2520,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2524,6 +2548,7 @@
         },
         {
           "Name": "VsKinetic",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs KINETIC (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2533,6 +2558,7 @@
         },
         {
           "Name": "VsEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs ENERGY (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2542,6 +2568,7 @@
         },
         {
           "Name": "VsExplosive",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs EXPLOSIVE (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2551,6 +2578,7 @@
         },
         {
           "Name": "VsExotic",
+          "Advanced": true,
           "DescriptionFormula": "'Soak effectiveness vs EXOTIC (1.0 = plain plate). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5",
@@ -2594,6 +2622,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2612,6 +2641,7 @@
         },
         {
           "Name": "EvasionBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Dodge bonus.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1",
@@ -2630,6 +2660,7 @@
         },
         {
           "Name": "Shield",
+          "Advanced": true,
           "DescriptionFormula": "'Flat incoming-damage soak.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1000",
@@ -2673,6 +2704,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2719,6 +2751,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100",
@@ -2728,6 +2761,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5000",
@@ -2852,6 +2886,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -2898,6 +2933,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100",
@@ -2907,6 +2943,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5000",
@@ -3031,6 +3068,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -3077,6 +3115,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal round that bounces off plate, high = AP/sabot). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100",
@@ -3086,6 +3125,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Alpha vs chip — energy in one shot; a few big shots (high) punch plate, a spray of small shots (low) bounces off. FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5000",
@@ -3138,6 +3178,7 @@
         },
         {
           "Name": "StrengthBonus",
+          "Advanced": true,
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1000",
@@ -3147,6 +3188,7 @@
         },
         {
           "Name": "EvasionBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1",
@@ -3156,6 +3198,7 @@
         },
         {
           "Name": "ToughnessBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Survivability multiplier.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2",
@@ -3208,6 +3251,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -3217,6 +3261,7 @@
         },
         {
           "Name": "StrengthBonus",
+          "Advanced": true,
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1000",
@@ -3226,6 +3271,7 @@
         },
         {
           "Name": "EvasionBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Dodge bonus (System 1 survivability).'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1",
@@ -3235,6 +3281,7 @@
         },
         {
           "Name": "ToughnessBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Survivability multiplier.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2",
@@ -3305,6 +3352,7 @@
         },
         {
           "Name": "StrengthBonus",
+          "Advanced": true,
           "DescriptionFormula": "'ADDED to the frame's carry budget.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1000",
@@ -3323,6 +3371,7 @@
         },
         {
           "Name": "ToughnessBonus",
+          "Advanced": true,
           "DescriptionFormula": "'Survivability multiplier.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2",
@@ -3332,6 +3381,7 @@
         },
         {
           "Name": "Shield",
+          "Advanced": true,
           "DescriptionFormula": "'Flat incoming-damage soak (System 1 survivability).'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "1000",
@@ -3585,6 +3635,7 @@
       "Properties": [
         {
           "Name": "CarryMass",
+          "Advanced": true,
           "DescriptionFormula": "'What the frame must bear.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "2000",
@@ -3631,6 +3682,7 @@
         },
         {
           "Name": "Penetration",
+          "Advanced": true,
           "DescriptionFormula": "'Armour cracked — how much of the target flat armour this shot ignores (0 = a normal strike that bounces off plate, high = a rending/power weapon). FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "100",
@@ -3640,6 +3692,7 @@
         },
         {
           "Name": "PerShotEnergy",
+          "Advanced": true,
           "DescriptionFormula": "'Alpha vs chip — energy in one strike; a heavy blow (high) punches plate, a flurry (low) glances off. FLAGGED balance value.'",
           "GuiHint": "GuiSelectionMaxMin",
           "MaxFormula": "5000",

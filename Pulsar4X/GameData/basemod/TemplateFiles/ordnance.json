@@ -90,6 +90,7 @@
         },
         {
           "Name": "Frag Cone Angle",
+          "Advanced": true,
           "Units": "kg",
           "DescriptionFormula": "'Cone angle, larger is more efficent per fragment'",
           "GuiIsEnabledFormula" : "if(PropertyValue('Payload Type') = 0, true, false)",
@@ -127,6 +128,7 @@
         },
         {
           "Name": "Liner Cone Height",
+          "Advanced": true,
           "Units": "mm",
           "DescriptionFormula": "'Affects the shape and velocity of the slug'",
           "GuiIsEnabledFormula" : "if(PropertyValue('Payload Type') = 1, true, false)",
@@ -138,6 +140,7 @@
         },
         {
           "Name": "Liner Thickness",
+          "Advanced": true,
           "Units": "mm",
           "DescriptionFormula": "'Affects the shape and velocity of the slug'",
           "GuiIsEnabledFormula" : "if(PropertyValue('Payload Type') = 1, true, false)",
@@ -347,6 +350,7 @@
 
         {
           "Name": "Ideal Detection Wavelength",
+          "Advanced": true,
           "GuiIsEnabledFormula" : "if(PropertyValue('Guidance Type') = 2 || PropertyValue('Guidance Type') = 3, true, false)",
           "Units": "nm",
           "DescriptionFormula": "'The wavelength this sensor is most efficient at detecting'",
@@ -358,6 +362,7 @@
         },
         {
           "Name": "Detection Bandwidth",
+          "Advanced": true,
           "GuiIsEnabledFormula" : "if(PropertyValue('Guidance Type') = 2 || PropertyValue('Guidance Type') = 3, true, false)",
           "Units": "nm",
           "DescriptionFormula": "'How far from the ideal wavelength will this still detect a signal'",

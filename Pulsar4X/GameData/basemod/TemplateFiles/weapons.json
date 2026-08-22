@@ -384,6 +384,7 @@
         },
         {
           "Name": "Tracking",
+          "Advanced": true,
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). A railgun is ballistic, so near zero.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -462,6 +463,7 @@
         },
         {
           "Name": "Tracking",
+          "Advanced": true,
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). Ballistic, so near zero — and recoil cuts it further on a light hull.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -472,6 +474,7 @@
         },
         {
           "Name": "Recoil",
+          "Advanced": true,
           "Units": "kg",
           "DescriptionFormula": "'How hard the gun kicks its own ship each shot. On a light hull this throws the aim off (lower effective tracking = chassisMass/(chassisMass+Recoil)); a heavy warship barely notices.'",
           "GuiHint": "GuiSelectionMaxMinInt",
@@ -560,6 +563,7 @@
         },
         {
           "Name": "Tracking",
+          "Advanced": true,
           "Units": "",
           "DescriptionFormula": "'How well the cloud follows an evasive target (0..1). Medium — the spread helps.'",
           "GuiHint": "GuiSelectionMaxMin",
@@ -1109,6 +1113,7 @@
         },
         {
           "Name": "Tracking",
+          "Advanced": true,
           "Units": "",
           "DescriptionFormula": "'How well it follows an evasive target (0..1). A dumb bolt is low.'",
           "GuiHint": "GuiSelectionMaxMin",
