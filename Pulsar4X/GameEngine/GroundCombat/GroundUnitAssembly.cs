@@ -200,7 +200,12 @@ namespace Pulsar4X.GroundCombat
                 if (d.HasAttribute<GroundAugmentAtb>())
                 {
                     var g = d.GetAttribute<GroundAugmentAtb>();
-                    itemMass = g.Mass;
+                    // Carry-weight = the augment's PRICED build mass (MassPerUnit), floored at its dialed CarryMass —
+                    // so an above-baseline survivability bonus eats frame carry-capacity too, not just build cost (the
+                    // carry axis of the Bucket-2 free-dial fix; the augment analog of the weapon Attack floor). At
+                    // baseline MassPerUnit == CarryMass (the priced terms are all zero) → Math.Max = CarryMass →
+                    // byte-identical; only an upgraded augment costs extra carry-capacity, un-bypassably.
+                    itemMass = Math.Max(g.Mass, d.MassPerUnit);
                     r.Evasion += g.EvasionBonus * c;
                     r.Shield += g.Shield * c;
                     toughness += g.ToughnessBonus * c;

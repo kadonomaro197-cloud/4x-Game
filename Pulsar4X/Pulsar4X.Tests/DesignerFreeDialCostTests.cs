@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using NUnit.Framework;
+using Pulsar4X.Components;
 using Pulsar4X.Factions;
+using Pulsar4X.GroundCombat;
 
 namespace Pulsar4X.Tests
 {
@@ -16,10 +19,14 @@ namespace Pulsar4X.Tests
     /// above-baseline demo design costs the exact expected delta). Reads MassPerUnit off the real start faction, the
     /// same way <see cref="GroundWeaponAttackCostTests"/> / <see cref="ShipLongRangeLaserTests"/> do. Engine-only → CI.
     ///
-    /// NOTE (flagged, not in scope here): for the GROUND augments the assembler's CARRY gate reads the atb's Mass
-    /// (= the CarryMass ctor arg), not the component MassPerUnit — so this Mass-formula pricing costs the BUILD but
-    /// not the frame carry-weight. Pricing the carry axis too (as GroundWeaponAttackCostTests did for Attack) is a
-    /// flagged follow-up; the ship components (unit-caliber / crew-automation) are fully priced since Mass IS ship mass.
+    /// CARRY AXIS (now DONE — the flagged follow-up landed): for the GROUND augments the assembler's CARRY gate read
+    /// the atb's Mass (= the CarryMass ctor arg), not the component MassPerUnit — so the Mass-formula pricing above cost
+    /// the BUILD but not the frame carry-weight. <see cref="GroundUnitAssembly.Compute"/> now floors an augment's
+    /// effective carry-mass at <c>Math.Max(g.Mass, d.MassPerUnit)</c> — exactly what <see cref="GroundWeaponAttackCostTests"/>
+    /// did for the weapon Attack dial, and reusing this bucket's own priced MassPerUnit. At baseline the priced terms are
+    /// zero so MassPerUnit == CarryMass → <c>Math.Max</c> is a no-op → byte-identical; only an above-baseline (upgraded)
+    /// augment eats extra frame carry-capacity, un-bypassably. <see cref="AboveBaselineAugment_CostsCarryWeight_ViaTheFloor"/>
+    /// pins it. (The ship components — unit-caliber / crew-automation — were fully priced from the start since Mass IS ship mass.)
     /// </summary>
     [TestFixture]
     public class DesignerFreeDialCostTests
@@ -68,6 +75,24 @@ namespace Pulsar4X.Tests
             Log($"heavy power armour = {heavyArmour}, stock = {stockArmour}, delta = {heavyArmour - stockArmour}");
             Assert.That(heavyArmour, Is.EqualTo(80), "StrengthBonus 800 adds exactly (800-300)*0.1 = 50 mass");
             Assert.That(heavyArmour, Is.GreaterThan(stockArmour), "a stronger power armour now weighs more — the bonus is earned");
+        }
+
+        [Test]
+        [Description("CARRY-WEIGHT axis (the augment analog of GroundWeaponAttackCostTests): on the same frame the Heavy Power Armour eats more carry-capacity than the stock armour — its effective carry-mass is floored at its priced MassPerUnit (80) vs the stock armour's CarryMass (30), so the delta is exactly 50. The stock armour's MassPerUnit (30) equals its CarryMass (30), so it's byte-identical.")]
+        public void AboveBaselineAugment_CostsCarryWeight_ViaTheFloor()
+        {
+            var s = TestScenario.CreateWithColony();
+            ComponentDesign Part(string id) => (ComponentDesign)s.Faction.GetDataBlob<FactionInfoDB>().IndustryDesigns[id];
+            var frame = Part("default-design-human-frame");
+
+            var stock = GroundUnitAssembly.Compute(frame, new List<(ComponentDesign, int)> { (Part("default-design-power-armor"), 1) });
+            var heavy = GroundUnitAssembly.Compute(frame, new List<(ComponentDesign, int)> { (Part("default-design-heavy-power-armor"), 1) });
+            Log($"carry used: stock armour {stock.UsedCapacity:0}, heavy armour {heavy.UsedCapacity:0}, delta {heavy.UsedCapacity - stock.UsedCapacity:0}");
+
+            Assert.That(stock.UsedCapacity, Is.EqualTo(30).Within(1e-9),
+                "the stock power armour's carry cost is its CarryMass (30) — its priced MassPerUnit (30) equals it → byte-identical");
+            Assert.That(heavy.UsedCapacity - stock.UsedCapacity, Is.EqualTo(50).Within(1e-9),
+                "the heavy power armour is floored to its priced MassPerUnit (80) carry-weight (vs 30) — the survivability bonus now un-bypassably costs carry-capacity");
         }
     }
 }
