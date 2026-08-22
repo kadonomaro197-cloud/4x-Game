@@ -45,6 +45,10 @@ namespace Pulsar4X.Tests
             var unit = GroundForces.RaiseUnit(body, design, s.Faction.Id, 0);
             Assert.That(unit.BackingEntityId, Is.GreaterThanOrEqualTo(0), "the radar unit has a backing entity carrying the radar");
             Assert.That(unit.RegionIndex, Is.EqualTo(0));
+            // The harness's Earth generates REAL weather — PlanetEnvironmentFactory puts a genuine SensorJam storm
+            // (~0.5) on some regions from its physics (which is the feature working on real data, NOT a bug). Clear it
+            // so each test controls exactly the storm it adds and the "clean" baseline is truly storm-free.
+            if (body.TryGetDataBlob<PlanetEnvironmentsDB>(out var env)) env.Environments.Clear();
             return (body, unit);
         }
 
