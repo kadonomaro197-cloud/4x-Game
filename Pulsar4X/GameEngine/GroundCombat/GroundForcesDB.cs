@@ -220,6 +220,20 @@ namespace Pulsar4X.GroundCombat
         /// </summary>
         [JsonProperty] public Dictionary<HazardEffectType, double> EnvResistance { get; internal set; }
 
+        /// <summary>
+        /// DS-HAULER — the MINERAL CARGO this unit physically carries (cargoable id → units), mirroring
+        /// <see cref="Pulsar4X.Galaxy.GroundHex.Stockpile"/> exactly (same <c>ICargoable.ID</c> key, so mine / haul /
+        /// consume speak ONE language with no translation). <b>DEFAULT EMPTY</b> → every existing/raised unit carries
+        /// nothing, so live combat + movement are byte-identical (nothing in the engine populates this field on any
+        /// existing path). A hauler LOADS ore from its current hex onto this field (<see cref="GroundHauler.LoadFromHex"/>),
+        /// the ore RIDES for free while the unit marches (it's just a unit field the move path never touches), UNLOADS at
+        /// the destination hex (<see cref="GroundHauler.UnloadToHex"/>) — and the GRAVE RUNG: if the unit is KILLED
+        /// mid-haul its load is STRANDED onto the hex it died on (<see cref="GroundHauler.StrandOnDeath"/>), recoverable,
+        /// NOT teleported home. Save-safe: <c>[JsonProperty]</c> + deep-copied in the copy-ctor below (L12) and never null
+        /// (the <see cref="GroundHauler"/> helpers tolerate null anyway, like <c>GroundHex</c>'s stockpile accessors).
+        /// </summary>
+        [JsonProperty] public Dictionary<int, long> MineralCargo { get; internal set; } = new Dictionary<int, long>();
+
         /// <summary>Fraction (0..1) of <paramref name="effect"/>'s attrition this unit's gear negates (0 if none).</summary>
         public double ResistanceTo(HazardEffectType effect)
         {
@@ -268,6 +282,10 @@ namespace Pulsar4X.GroundCombat
                 foreach (var h in o.GlobalPath) GlobalPath.Add(new Pulsar4X.Galaxy.GroundHex(h));
             }
             if (o.EnvResistance != null) EnvResistance = new Dictionary<HazardEffectType, double>(o.EnvResistance);
+            // DS-HAULER: deep-copy the mineral cargo so a cloned/moved/saved unit keeps its load (L12). Never null —
+            // an old save that lacks the property keeps the initializer's empty dict (Newtonsoft leaves an absent
+            // property at its ctor value), so this is the same never-null shape GroundHex.Stockpile uses.
+            MineralCargo = o.MineralCargo != null ? new Dictionary<int, long>(o.MineralCargo) : new Dictionary<int, long>();
         }
     }
 

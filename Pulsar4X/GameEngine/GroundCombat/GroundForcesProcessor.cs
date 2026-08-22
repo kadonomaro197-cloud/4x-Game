@@ -368,6 +368,16 @@ namespace Pulsar4X.GroundCombat
                 body.Manager?.Game?.TimePulse?.RequestCombatHalt();
             forces.WasInBattle = anyFightThisTick;
 
+            // DS-HAULER — the GRAVE RUNG: a killed hauler STRANDS its mineral cargo onto the hex it died on (recoverable),
+            // instead of the load teleporting home or vanishing with the unit. Runs BEFORE the removal below so the dead
+            // unit's position is still readable. BYTE-IDENTICAL without a flag: nothing in the engine populates a unit's
+            // MineralCargo on any existing path, so a cargo-less unit (every unit in a stock game) strands nothing — the
+            // loop touches a hex stockpile only for a dead unit that was actually carrying ore. Defensive (GroundHauler
+            // never throws) inside the hotloop's try/catch (L4).
+            foreach (var u in forces.Units)
+                if (u.Health <= 0 && u.MineralCargo != null && u.MineralCargo.Count > 0)
+                    GroundHauler.StrandOnDeath(body, u);
+
             // Remove destroyed units.
             forces.Units.RemoveAll(u => u.Health <= 0);
 
