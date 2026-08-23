@@ -591,6 +591,74 @@ namespace Pulsar4X.Client
                 }
 
                 DisplayWeaponProfileReadout(uiState);
+                DisplayDoorReadout(uiState);
+            }
+        }
+
+        /// <summary>
+        /// OPERATION BLUEPRINT-TO-STEEL — the per-DOOR "Design reads as" panel (all 12 doors, the design HTMLs' theme in game).
+        /// The stat table above already prints each template's computed numbers (its <c>GuiTextDisplay</c> readouts — power
+        /// output, sensitivity, exhaust velocity, construction points, …). What the design tools foreground that the game
+        /// did NOT show is the CONNECTIONS — which sim system each component's output feeds — plus a door's headline
+        /// BEHAVIOUR (the weapon's triangle/matchup being the first). This adds both, dispatched by
+        /// <see cref="ComponentDoors.Classify"/>: a per-door "Feeds →" line (static text, so it can never fail) and, for the
+        /// Defense door, the nature matchup computed from its real Vs* dials. Fully defensive — the whole body is guarded, and
+        /// the one computed part reads dials through <c>TryGetValue</c>, so a bad read just omits a line. Display only, so the
+        /// design/save (cradle-to-grave) path is byte-identical; the parametric weapon keeps its richer profile readout above.
+        /// </summary>
+        private void DisplayDoorReadout(GlobalUIState uiState)
+        {
+            if (_componentDesigner == null || Template == null) return;
+
+            string cat;
+            try { cat = ComponentDoors.Classify(Template.UniqueID, _componentDesigner.ComponentType).category; }
+            catch { return; }
+
+            string feeds = cat switch
+            {
+                "Weapons"    => "Feeds → the auto-resolver: damage/second sums into Firepower; delivery × nature decide what dodges it and what soaks it; range starts the fight.",
+                "Power"      => "Feeds → the power budget (EnergyGenAbilityDB): warp, energy weapons and shields all draw from it, and fuel endurance limits how long it can run.",
+                "Sensors"    => "Feeds → what you can SEE (contacts + fog of war): sensitivity sets detection range, so whoever sees first shoots first; a cloak or jammer bends the enemy's.",
+                "Propulsion" => "Feeds → thrust and delta-V: agility (evasion) in a fight, travel time between bodies, and — for warp — your operational reach and fuel burn.",
+                "Defense"    => "Feeds → survivability: shields deplete-and-regen by the attack's NATURE, armour soaks flat per hit; the matchup below is what gets through.",
+                "Enhancers"  => "Feeds → a per-hull multiplier at build time (caliber → firepower/toughness, automation → crew) — the only per-unit combat edge besides doctrine.",
+                "Industrial" => "Feeds → the production line: construction points set how fast a colony or station builds what you design.",
+                "Logistical" => "Feeds → carry capacity (CargoStorageDB): what a ship or colony can hold and move; a hold too small silently can't carry the good.",
+                "Civic"      => "Feeds → colony society: population support + housing comfort → morale, security → legitimacy, food → sustenance.",
+                "Command"    => "Feeds → span-of-control (AdminLevel) and the command bonuses a seated officer projects over the fleet or colony.",
+                "Chassis"    => "Feeds → the structural budget every mounted part spends (mass / carry / footprint) — the platform only closes if the parts fit.",
+                _ => null
+            };
+            if (feeds == null) return;
+
+            ImGui.NewLine();
+            DisplayHelpers.Header("Design reads as",
+                "What the sim reads off this component and what it connects to — the design tool's theme, in game.");
+            ImGui.TextWrapped(feeds);
+
+            // Defense: the door's headline DERIVED behaviour (the armour/shield analog of the weapon triangle) — read from
+            // the real per-nature Vs* dials, fully guarded so a template without them (or a mid-edit value) just omits it.
+            if (cat == "Defense")
+            {
+                try
+                {
+                    var props = _componentDesigner.ComponentDesignProperties;
+                    double Dial(string n) => props.TryGetValue(n, out var p) ? p.Value : double.NaN;
+                    var nat = new (string name, double v)[]
+                    {
+                        ("Kinetic", Dial("VsKinetic")), ("Energy", Dial("VsEnergy")),
+                        ("Explosive", Dial("VsExplosive")), ("Exotic", Dial("VsExotic")),
+                    };
+                    var have = nat.Where(x => !double.IsNaN(x.v)).ToArray();
+                    if (have.Length >= 2)
+                    {
+                        var best = have.OrderByDescending(x => x.v).First();
+                        var worst = have.OrderBy(x => x.v).First();
+                        if (best.name != worst.name)
+                            ImGui.TextUnformatted("  Nature matchup: strongest vs " + best.name + ", weakest vs " + worst.name);
+                    }
+                }
+                catch { /* a mid-edit dial read can't be trusted this frame — omit the matchup line */ }
             }
         }
 
