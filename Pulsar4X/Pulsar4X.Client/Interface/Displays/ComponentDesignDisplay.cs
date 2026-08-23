@@ -677,6 +677,18 @@ namespace Pulsar4X.Client
             ImGui.TextUnformatted("Does it land?");
             ImGui.TextUnformatted("  vs a nimble target (evasion 0.9):   " + vsNimble.ToString("P0"));
             ImGui.TextUnformatted("  vs a sluggish target (evasion 0.1): " + vsHeavy.ToString("P0"));
+
+            // "What gets through?" — the weapon-triangle Axis 2 (what it's good AGAINST): the NATURE decides how a
+            // shield treats it (kinetic is soaked hard, energy bleeds, exotic bypasses), and penetration decides how
+            // it treats armour. Reads the SAME CombatKernel.ShieldSoakFraction the resolver's shield math uses.
+            double shieldSoak = CombatKernel.ShieldSoakFraction(profile.Nature);
+            ImGui.NewLine();
+            ImGui.TextUnformatted("What gets through?");
+            ImGui.TextUnformatted("  vs shields: " + (1.0 - shieldSoak).ToString("P0") + " bleeds through"
+                + (shieldSoak <= 0.0001 ? " (bypasses shields)" : ""));
+            ImGui.TextUnformatted(profile.Penetration > 0
+                ? "  vs armour: ignores " + profile.Penetration.ToString(Styles.DecimalFormat) + " flat armour (an armour-cracker)"
+                : "  vs armour: normal rounds (soaked flat, per hit)");
         }
 
         private void GuiHintText(ComponentDesignProperty property)
