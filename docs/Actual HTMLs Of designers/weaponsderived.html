@@ -279,7 +279,7 @@ footer{padding:24px 0 50px}
 <footer><div class="w">
 <div class="state">
 <h3>Status</h3>
-<p><b>Weapons:</b> re-derived above &mdash; 5 doors and 41 dial groups become <b>2 choices and 4 sliders</b>. This is a proposal that reproduces every existing gun, not yet the shipped designer.</p>
+<p><b>Weapons:</b> re-derived above &mdash; 5 doors and 41 dial groups become <b>2 choices and 4 sliders</b>. <b>SHIPPED (Operation Blueprint-to-Steel, Path B, 2026-08-23):</b> the parametric weapon is a real buildable component in-game &mdash; the Component Designer's <b>Weapons &rarr; Parametric</b> door drives the ten values (Delivery &times; Nature + the sliders) into a live <code>ParametricWeaponAtb</code> that the auto-resolver reads (via <code>WeaponsDesignModel.BuildProfile</code>), with the ten-numbers / triangle-corner / does-it-land / what-gets-through readout drawn beside it; <code>ParametricWeaponTests</code> proves the one form reproduces every gun-type's regime, cradle-to-grave. <b>Still open:</b> retiring the per-type weapon templates so the pile actually shrinks (parametric + the 15 old templates coexist for now) &mdash; that collapse is developer-decision-gated (B4).</p>
 <p>The template pile that this replaces grew 67 &rarr; 89 &rarr; 96 &mdash; expanding exactly where the derivation says it should shrink. Two intrinsic tests gate every dial: <b>which sim variable does it write</b>, and <b>can it be set knowing only the component</b> (if not, it is an assembly decision or an emergent readout, never a dial).</p>
 </div>
 </div></footer>
