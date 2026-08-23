@@ -26,7 +26,7 @@ namespace Pulsar4X.Client
         /// <summary>Door display order within each category (doors not listed sort after, alphabetically).</summary>
         public static readonly Dictionary<string, string[]> DoorOrder = new()
         {
-            ["Weapons"]    = new[] { "Energy", "Ballistic", "Melee", "Guided", "Exotic" },
+            ["Weapons"]    = new[] { "Parametric", "Energy", "Ballistic", "Melee", "Guided", "Exotic" },
             ["Propulsion"] = new[] { "Reaction", "Traction", "Fluid", "Warp", "Exotic" },
             ["Sensors"]    = new[] { "Detection", "Survey", "Fire Control", "Electronic Warfare" },
             ["Power"]      = new[] { "Generation", "Storage" },
@@ -43,6 +43,10 @@ namespace Pulsar4X.Client
         private static readonly Dictionary<string, (string cat, string door)> Map = new()
         {
             // 1. Weapons
+            // The GENERIC parametric weapon (Operation Blueprint-to-Steel Path B) — the ONE form the weapons HTML
+            // draws (Delivery × Nature + the numbers → any gun). Its own "Parametric" door, first, so it reads as the
+            // primary way to design a weapon; the per-type templates below are the pre-collapse legacy (retiring them is B4).
+            ["parametric-weapon"] = ("Weapons", "Parametric"),
             ["laser-weapon"] = ("Weapons", "Energy"),
             ["pulse-laser"] = ("Weapons", "Energy"),
             ["energy-weapon"] = ("Weapons", "Energy"),
