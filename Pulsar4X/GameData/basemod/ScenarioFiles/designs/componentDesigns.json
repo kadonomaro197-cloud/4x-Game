@@ -1500,5 +1500,13 @@
         { "Key": "Mass", "Value": 3000 }
       ]
     }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-parametric-laser",
+      "Name": "Parametric Laser",
+      "TemplateId": "parametric-weapon"
+    }
   }
 ]

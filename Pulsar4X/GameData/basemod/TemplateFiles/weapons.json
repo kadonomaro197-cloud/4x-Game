@@ -1131,5 +1131,143 @@
         }
       ]
     }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "parametric-weapon",
+      "Name": "Parametric Weapon",
+      "Formulas": {
+        "Description": "The ONE weapon form (OPERATION BLUEPRINT-TO-STEEL, weaponsderived.html): pick how it DELIVERS its hit (Beam / Bolt / Slug / Cloud / Guided) and what NATURE of damage it does (Kinetic / Energy / Explosive / Exotic), set the numbers, and any gun in the game falls out of one design. Defaults to a Beam / Energy laser.",
+        "Mass": "PropertyValue('Damage Per Second') / 1000 + Max(0, PropertyValue('Range') - 5000) * 0.5 + 100",
+        "Volume": "[Mass] * 0.5",
+        "HTK": "0.5",
+        "CrewReq": "[Mass] * 0.1",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "aluminium": "[Mass] * 0.25",
+        "stainless-steel": "[Mass] * 0.2",
+        "copper": "[Mass] * 0.15",
+        "tungsten": "[Mass] * 0.2",
+        "titanium": "[Mass] * 0.1",
+        "graphite": "[Mass] * 0.1"
+      },
+      "ComponentType": "Weapon",
+      "MountType": "ShipComponent, ShipCargo, PlanetInstallation, GroundUnit",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "component-construction",
+      "Properties": [
+        {
+          "Name": "Delivery",
+          "DescriptionFormula": "'How the weapon delivers its hit (what meets the DODGE): Beam / Bolt / Slug / Cloud / Guided. Forces the velocity + range regime.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.WeaponDelivery",
+          "MaxFormula": "6",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Nature",
+          "DescriptionFormula": "'What the weapon does to the DEFENCE (shields/armour): Kinetic / Energy / Explosive / Exotic.'",
+          "GuiHint": "GuiEnumSelectionList",
+          "EnumTypeName": "Pulsar4X.Combat.WeaponNature",
+          "MaxFormula": "4",
+          "MinFormula": "0",
+          "StepFormula": "1",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Damage Per Second",
+          "Units": "J/s",
+          "DescriptionFormula": "'Total damage per second — summed into the ship''s Firepower.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "100000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "100000"
+        },
+        {
+          "Name": "Saturation",
+          "Units": "/s",
+          "DescriptionFormula": "'Effective tracks per second (rate x projectiles): the floor on how much fire still lands on an evasive target.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000",
+          "MinFormula": "0.1",
+          "StepFormula": "0.1",
+          "PropertyFormula": "1"
+        },
+        {
+          "Name": "Range",
+          "Units": "m",
+          "DescriptionFormula": "'Reach in metres. Only a non-exotic Beam writes its OWN reach; every other delivery takes a fixed class range.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000000",
+          "MinFormula": "1000",
+          "StepFormula": "1000",
+          "PropertyFormula": "5000"
+        },
+        {
+          "Name": "Velocity",
+          "Units": "m/s",
+          "DescriptionFormula": "'Shot velocity. 0 lets the delivery force its default (Beam = light-speed); a finite delivery (Slug/Bolt/Cloud) sets its own.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Tracking",
+          "Units": "",
+          "DescriptionFormula": "'How well it follows an evasive target, 0..1. -1 lets the delivery force its default.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1",
+          "MinFormula": "-1",
+          "StepFormula": "0.05",
+          "PropertyFormula": "-1"
+        },
+        {
+          "Name": "Penetration",
+          "Units": "",
+          "DescriptionFormula": "'Flat armour this weapon ignores (0 = a normal round).'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "1000000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Per Shot Energy",
+          "Units": "J",
+          "DescriptionFormula": "'Joules in one shot (the alpha-vs-chip dial). 0 = treat the fire as one lump.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "10000000",
+          "MinFormula": "0",
+          "StepFormula": "1000",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "Heat Per Second",
+          "Units": "kJ/s",
+          "DescriptionFormula": "'Waste heat dumped into the ship while firing. 0 for a cool weapon.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000000",
+          "MinFormula": "0",
+          "StepFormula": "10000",
+          "PropertyFormula": "0"
+        },
+        {
+          "Name": "parametricWeaponAtbArgs",
+          "DescriptionFormula": "'double delivery, double nature, double dps, double saturation, double range, double velocity, double tracking, double penetration, double perShotEnergy, double heat'",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Delivery'), PropertyValue('Nature'), PropertyValue('Damage Per Second'), PropertyValue('Saturation'), PropertyValue('Range'), PropertyValue('Velocity'), PropertyValue('Tracking'), PropertyValue('Penetration'), PropertyValue('Per Shot Energy'), PropertyValue('Heat Per Second'))",
+          "AttributeType": "Pulsar4X.Weapons.ParametricWeaponAtb"
+        }
+      ]
+    }
   }
 ]
