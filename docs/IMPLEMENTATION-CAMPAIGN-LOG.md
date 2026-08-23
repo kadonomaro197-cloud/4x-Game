@@ -1339,3 +1339,39 @@ existing `AllFormationsFor`.
   ENGINE-WIRING-BACKLOG, DESIGNER-NORTH-STAR method) + CONVENTIONS + the full FORCES-WINDOW-DESIGN. Launched a
   6-agent recon workflow (`wf_98ffad13-d66`) mapping the 5 Phase-A welds + the HTML badges against real source.
   Created this ledger.
+
+- **2026-08-23, session — the DESIGNER-FIDELITY reckoning (the honest per-door state) + Path B / B2 landed.**
+  The developer locked the objective (twice, verbatim): *"I need the designers themselves from the htmls built
+  to the same level of detail the htmls have, everything i can design in the htmls and their connections must be
+  done in game."* Then: *"do all the coding now, no more CI until all the coding is complete."* I ran the honest
+  cross-check of every `*derived.html` against the shipped templates + `*Atb` classes (myself — the workflow
+  fan-out is **broken in this environment**: every subagent's tool parameters are stripped, so an 11-agent gap
+  audit returned 11 non-results; the earlier 12:14 doorspecs DID read files and are valid grounding).
+
+  **The finding (evidence-backed, changes the shape of the remaining work):** for **almost every door the game
+  ALREADY lets you design what the HTML shows.** The doorspecs prove it by *reproduction* — every shipped
+  component (each reactor / sensor / shield / engine / cargo hold / colony building) is reproducible from the exact
+  dials the HTML exposes; the per-type templates exist, the dials are wired to real engine fields, CI proves them
+  buildable. **Weapons was the one door that genuinely needed a new thing** (a free-form Nature×Delivery gun the
+  locked per-type templates couldn't express) — built + green (B1a/B1b), now mapped into the door (B2) + a live
+  readout (B2). The other doors are **heterogeneous** (Defense = shields+armour+hardening+fort; Power =
+  generate/collect/store across 3 atbs) so there is NO single parametric component to build for them.
+
+  **The genuinely-missing pieces are ENGINE-PENDING FEATURES, not designer dials** (each marked pending/unbuilt in
+  its own HTML's honesty vocabulary, each a developer-decision-gated proposal in the adjudication queue): Aura
+  Rally/Dread/Jamming (need a per-unit morale-aura pass); Command espionage covert-action seat; Propulsion FTL
+  boxes 2–5 (jump-lane travel); Logistical carrier LAUNCH verb (partly built via `EnableCarrierSortie`); Enhancers
+  temperament + Veteran/Experience compounding; Industrial Training Depot; Civic residency/recreation/market +
+  2-dial security/medical. **None is a safe JSON fill — each is real machinery needing a design ruling.** So there
+  is **no large body of safe "just code it" designer work left**; the remaining work needs the developer's call on
+  which feature and how it behaves. Surfaced to the developer with this evidence + a recommendation (carrier launch
+  first — closest to done).
+
+  **B2 landed (pushed):** `fee42ca` maps `parametric-weapon` into the Weapons door menu (its own "Parametric" door,
+  first); `e55c7a2` adds `DisplayWeaponProfileReadout` — the HTML's "ten numbers / triangle corner / does-it-land"
+  panel in the in-game designer for the parametric weapon (content-gated → every other template byte-identical;
+  reads the fidelity-proven `WeaponsDesignModel` + `CombatKernel.HitFraction`, display-only so cradle-to-grave save
+  is untouched; defensive). Client-only, engine byte-identical. **The Entity Assembler is functionally complete**
+  across all four host kinds (prior decision: its cosmetic panel delta is deliberately NOT blind-edited — a
+  critical window with the Window.End/cascade/printf landmines). **Awaiting the developer's pick** of which
+  engine-pending feature to build (or a correction if I've mis-read the objective).
