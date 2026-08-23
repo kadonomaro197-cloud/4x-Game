@@ -13,6 +13,8 @@ using Pulsar4X.Factions;
 using Pulsar4X.Storage;
 using Pulsar4X.Technology;
 using Pulsar4X.Weapons;
+using Pulsar4X.Combat;
+using Pulsar4X.Components.Designers;
 
 namespace Pulsar4X.Client
 {
@@ -587,7 +589,94 @@ namespace Pulsar4X.Client
                     }
                     ImGui.EndTable();
                 }
+
+                DisplayWeaponProfileReadout(uiState);
             }
+        }
+
+        /// <summary>
+        /// OPERATION BLUEPRINT-TO-STEEL, Path B / B2 — the WEAPONS-door LIVE READOUT (the HTML's "ten numbers reach the
+        /// fight" panel, in game). When the design in the bench is the generic PARAMETRIC WEAPON (it carries the
+        /// Delivery / Nature / Damage-Per-Second dials), this shows what the combat resolver will actually read off it:
+        /// the RESOLVED profile — the delivery FORCES the velocity + reach (a Beam knifes at light-speed, a Slug takes the
+        /// railgun class range: numbers the raw dials don't show) — the emergent weapon-triangle CORNER
+        /// (<see cref="WeaponClass"/>, computed, never chosen), and the "does it land?" answer (the fraction of fire that
+        /// reaches a nimble vs a sluggish target). It reads the SAME <see cref="WeaponsDesignModel"/> the fidelity gauge
+        /// proves reproduces every base-mod gun, so the readout is the true fight value, not a parallel estimate.
+        ///
+        /// GATED ON CONTENT, byte-identical elsewhere: it draws only when the three parametric dials are present, so every
+        /// other template (laser, reactor, cargo hold, …) renders exactly as before. Fully defensive — a value caught
+        /// mid-edit just omits the panel this frame; it never throws into the design panel (the cascade rule).
+        /// </summary>
+        private void DisplayWeaponProfileReadout(GlobalUIState uiState)
+        {
+            if (_componentDesigner == null) return;
+            var props = _componentDesigner.ComponentDesignProperties;
+            // Content gate: the generic parametric weapon is the only template carrying all three of these dials.
+            if (!props.ContainsKey("Delivery") || !props.ContainsKey("Nature") || !props.ContainsKey("Damage Per Second"))
+                return;
+
+            WeaponProfile profile;
+            try
+            {
+                double Dial(string name) => props.TryGetValue(name, out var p) ? p.Value : 0.0;
+                var delivery = (WeaponDelivery)(int)Dial("Delivery");
+                var nature = (WeaponNature)(int)Dial("Nature");
+                profile = new WeaponsDesignModel(
+                    nature, delivery,
+                    Dial("Damage Per Second"),
+                    Dial("Saturation"),
+                    Dial("Range"),
+                    Dial("Velocity"),
+                    props.ContainsKey("Tracking") ? Dial("Tracking") : WeaponsDesignModel.UseDeliveryDefault,
+                    Dial("Penetration"),
+                    Dial("Per Shot Energy"),
+                    Dial("Heat Per Second")).BuildProfile();
+            }
+            catch
+            {
+                return; // a mid-edit value can't be read cleanly this frame — omit the panel rather than throw
+            }
+
+            ImGui.NewLine();
+            DisplayHelpers.Header("Weapon Profile",
+                "What the combat resolver reads off this weapon. The delivery you pick FORCES the velocity and reach;\n" +
+                "the triangle corner emerges from the numbers — it isn't a separate choice.");
+
+            if (ImGui.BeginTable("WeaponProfileTable", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg))
+            {
+                ImGui.TableSetupColumn("Reads as", ImGuiTableColumnFlags.None);
+                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None);
+                ImGui.TableHeadersRow();
+
+                void Row(string label, string value)
+                {
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted(label);
+                    ImGui.TableNextColumn(); ImGui.TextUnformatted(value);
+                }
+
+                Row("Triangle corner", profile.Class.ToString());
+                Row("Nature x Delivery", profile.Nature + " / " + profile.Delivery);
+                Row("Damage / second", Stringify.Energy(profile.DamagePerSecond) + "/s");
+                Row("Shot velocity", profile.Velocity >= 1e8 ? "~light-speed (undodgeable)" : Stringify.Velocity(profile.Velocity));
+                Row("Reach", profile.Range_m > 0 ? Stringify.Distance(profile.Range_m) : "class default / unbounded");
+                Row("Saturation (tracks/s)", profile.Saturation.ToString(Styles.DecimalFormat));
+                Row("Tracking (vs evasion)", profile.Tracking.ToString("0.00"));
+                if (profile.Penetration > 0) Row("Armour penetration", profile.Penetration.ToString(Styles.DecimalFormat));
+                if (profile.PerShotEnergy > 0) Row("Per-shot energy", Stringify.Energy(profile.PerShotEnergy));
+
+                ImGui.EndTable();
+            }
+
+            // "Does it land?" — the fraction of this weapon's fire that reaches an evasive vs a sluggish target, through
+            // the SAME kernel the resolver uses (a beam ignores evasion; a slug is juked by the nimble). ToString("P0")
+            // carries a literal '%' → TextUnformatted (not ImGui.Text) so ImGui's printf never sees it (the % trap).
+            double vsNimble = CombatKernel.HitFraction(profile, 0.9);
+            double vsHeavy = CombatKernel.HitFraction(profile, 0.1);
+            ImGui.NewLine();
+            ImGui.TextUnformatted("Does it land?");
+            ImGui.TextUnformatted("  vs a nimble target (evasion 0.9):   " + vsNimble.ToString("P0"));
+            ImGui.TextUnformatted("  vs a sluggish target (evasion 0.1): " + vsHeavy.ToString("P0"));
         }
 
         private void GuiHintText(ComponentDesignProperty property)
