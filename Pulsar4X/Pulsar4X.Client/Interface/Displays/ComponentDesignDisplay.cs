@@ -636,30 +636,60 @@ namespace Pulsar4X.Client
                 "What the sim reads off this component and what it connects to — the design tool's theme, in game.");
             ImGui.TextWrapped(feeds);
 
-            // Defense: the door's headline DERIVED behaviour (the armour/shield analog of the weapon triangle) — read from
-            // the real per-nature Vs* dials, fully guarded so a template without them (or a mid-edit value) just omits it.
-            if (cat == "Defense")
+            // Per-door headline DERIVED readouts — the ones the stat table doesn't already print. All read the REAL dial
+            // names (verified against the templates) through TryGetValue, and the whole switch is guarded, so a template
+            // without a dial (or a mid-edit value) simply omits the line — it can never throw into the design panel.
+            var props = _componentDesigner.ComponentDesignProperties;
+            double Dial(string n) => props.TryGetValue(n, out var p) ? p.Value : double.NaN;
+            try
             {
-                try
+                switch (cat)
                 {
-                    var props = _componentDesigner.ComponentDesignProperties;
-                    double Dial(string n) => props.TryGetValue(n, out var p) ? p.Value : double.NaN;
-                    var nat = new (string name, double v)[]
+                    case "Defense":   // the armour/shield analog of the weapon triangle — which damage nature gets through
                     {
-                        ("Kinetic", Dial("VsKinetic")), ("Energy", Dial("VsEnergy")),
-                        ("Explosive", Dial("VsExplosive")), ("Exotic", Dial("VsExotic")),
-                    };
-                    var have = nat.Where(x => !double.IsNaN(x.v)).ToArray();
-                    if (have.Length >= 2)
+                        var nat = new (string name, double v)[]
+                        {
+                            ("Kinetic", Dial("VsKinetic")), ("Energy", Dial("VsEnergy")),
+                            ("Explosive", Dial("VsExplosive")), ("Exotic", Dial("VsExotic")),
+                        };
+                        var have = nat.Where(x => !double.IsNaN(x.v)).ToArray();
+                        if (have.Length >= 2)
+                        {
+                            var best = have.OrderByDescending(x => x.v).First();
+                            var worst = have.OrderBy(x => x.v).First();
+                            if (best.name != worst.name)
+                                ImGui.TextUnformatted("  Nature matchup: strongest vs " + best.name + ", weakest vs " + worst.name);
+                        }
+                        break;
+                    }
+                    case "Enhancers":   // the per-hull elite stamp read as a multiplier (ShipCaliberTests: the dial IS the x-mult, 1.30/1.20)
                     {
-                        var best = have.OrderByDescending(x => x.v).First();
-                        var worst = have.OrderBy(x => x.v).First();
-                        if (best.name != worst.name)
-                            ImGui.TextUnformatted("  Nature matchup: strongest vs " + best.name + ", weakest vs " + worst.name);
+                        double fc = Dial("Firepower Caliber"), tc = Dial("Toughness Caliber");
+                        if (!double.IsNaN(fc) || !double.IsNaN(tc))
+                            ImGui.TextUnformatted("  At build: "
+                                + (double.IsNaN(fc) ? "" : "firepower x" + fc.ToString("0.00") + "   ")
+                                + (double.IsNaN(tc) ? "" : "toughness x" + tc.ToString("0.00")));
+                        break;
+                    }
+                    case "Civic":   // the two dials that feed colony morale, surfaced with what they connect to
+                    {
+                        double sc = Dial("Support Colonists"), hc = Dial("Housing Comfort");
+                        if (!double.IsNaN(sc) || !double.IsNaN(hc))
+                            ImGui.TextUnformatted("  "
+                                + (double.IsNaN(sc) ? "" : "Supports " + sc.ToString("N0") + " colonists   ")
+                                + (double.IsNaN(hc) ? "" : "+" + hc.ToString("0") + " comfort -> morale"));
+                        break;
+                    }
+                    case "Power":   // the reactor's endurance in human terms (its Lifetime dial is in hours)
+                    {
+                        double life = Dial("Lifetime");
+                        if (!double.IsNaN(life) && life > 0)
+                            ImGui.TextUnformatted("  Runs about " + life.ToString("N0") + " h on a full fuel load");
+                        break;
                     }
                 }
-                catch { /* a mid-edit dial read can't be trusted this frame — omit the matchup line */ }
             }
+            catch { /* a mid-edit dial read can't be trusted this frame — omit the derived line */ }
         }
 
         /// <summary>
