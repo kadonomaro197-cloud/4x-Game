@@ -71,6 +71,10 @@ namespace Pulsar4X.Colonies
         /// <summary>Cap on the health-care morale bonus a colony's MEDICAL institutions (hospitals) can give — good care
         /// lifts morale, but medicine alone can't make a miserable world happy (the Medical civic dial).</summary>
         public const double MaxHealthBonus = 20.0;
+        /// <summary>Cap on the recreation/leisure morale bonus a colony's AMENITY buildings (parks, arenas, theatres)
+        /// can give — leisure lifts morale, but entertainment alone can't make a miserable world happy (the Recreation
+        /// civic dial, the sibling of <see cref="MaxHealthBonus"/>).</summary>
+        public const double MaxAmenityBonus = 20.0;
         /// <summary>Max fraction of population that migrates per month at morale 0 (out) or 100 (in).</summary>
         public const double MaxMigrationRate = 0.05;
 
@@ -203,6 +207,17 @@ namespace Pulsar4X.Colonies
                 factorsOut?.Add("health", health);
             }
 
+            // Amenity (Recreation civic dial) — a colony's PARKS/ARENAS/THEATRES lift morale: the designer's leisure
+            // strength as morale points, capped by MaxAmenityBonus. 0 (the default / flag-off / no recreation building)
+            // contributes nothing and adds NO factor, so it's byte-identical until a colony actually has somewhere to
+            // relax. Recorded only when it fires, so an amenity-less colony's breakdown is unchanged.
+            double amenity = Math.Min(MaxAmenityBonus, Math.Max(0.0, inp.AmenityStrength));
+            if (amenity > 0.0)
+            {
+                morale += amenity;
+                factorsOut?.Add("amenity", amenity);
+            }
+
             if (morale < 0.0) morale = 0.0;
             if (morale > 100.0) morale = 100.0;
             return morale;
@@ -247,5 +262,9 @@ namespace Pulsar4X.Colonies
         /// <summary>Total MEDICAL (health-care strength) the colony's installed hospitals provide — a positive morale
         /// term, capped by <see cref="ColonyMoraleDB.MaxHealthBonus"/>. 0 (the default) = no care → no bonus.</summary>
         public double HealthStrength;
+        /// <summary>Total AMENITY (recreation/leisure strength) the colony's installed recreation buildings provide — a
+        /// positive morale term, capped by <see cref="ColonyMoraleDB.MaxAmenityBonus"/>. 0 (the default) = no leisure →
+        /// no bonus.</summary>
+        public double AmenityStrength;
     }
 }

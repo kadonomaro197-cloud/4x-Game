@@ -151,6 +151,92 @@
   {
     "Type": "ComponentTemplate",
     "Payload": {
+      "UniqueID": "recreation-center",
+      "Name": "Recreation Center",
+      "Formulas": {
+        "Description": "'Parks, arenas, theatres and leisure services that make a colony a nicer place to live. Their combined amenity strength LIFTS the colony MORALE - people are content where there is something to do, a sibling of good health care and a good food supply. Better amenities cost more to build and staff, and cannot on their own make a miserable world happy.'",
+        "Mass": "PropertyValue('Amenity Rating') * 400",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, PropertyValue('Amenity Rating') * 5)",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.6",
+        "plastic": "[Mass] * 0.4"
+      },
+      "ComponentType": "Facility",
+      "MountType": "ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Amenity Rating",
+          "Units": "amenity",
+          "DescriptionFormula": "'The leisure strength this recreation center provides. A colony sums the amenity across all its recreation buildings (health-scaled) into a morale bonus, capped so amenities alone cannot make a miserable world happy. Higher amenity costs more to build and staff.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "20",
+          "MinFormula": "1",
+          "StepFormula": "1",
+          "PropertyFormula": "10"
+        },
+        {
+          "Name": "amenity-atb",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Amenity Rating'))",
+          "AttributeType": "Pulsar4X.Colonies.AmenityAtbDB"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
+      "UniqueID": "commerce-market",
+      "Name": "Commercial Exchange",
+      "Formulas": {
+        "Description": "'Markets, exchanges and trade halls that turn a colony population into local trade revenue. Their combined trade value is booked as INCOME on your treasury each month - a money source distinct from population tax and from inter-faction trade agreements. Bigger exchanges cost more to build and staff, and earn proportionally more.'",
+        "Mass": "PropertyValue('Trade Value') * 4",
+        "Volume": "[Mass]",
+        "HTK": "0.5",
+        "CrewReq": "Max(1, PropertyValue('Trade Value') * 0.05)",
+        "ResearchCost": "[Mass]",
+        "CreditCost": "[Mass]",
+        "BuildPointCost": "[Mass]"
+      },
+      "ResourceCost": {
+        "stainless-steel": "[Mass] * 0.6",
+        "plastic": "[Mass] * 0.4"
+      },
+      "ComponentType": "Facility",
+      "MountType": "ShipCargo, PlanetInstallation",
+      "CargoTypeID": "general-storage",
+      "IndustryTypeID": "installation-construction",
+      "Properties": [
+        {
+          "Name": "Trade Value",
+          "Units": "credits/month",
+          "DescriptionFormula": "'The monthly trade revenue (credits) this exchange generates. A colony sums the trade value across all its markets (health-scaled) and books it as income on your treasury. Higher trade value costs more to build and staff.'",
+          "GuiHint": "GuiSelectionMaxMin",
+          "MaxFormula": "2000",
+          "MinFormula": "100",
+          "StepFormula": "100",
+          "PropertyFormula": "1000"
+        },
+        {
+          "Name": "commerce-atb",
+          "GuiHint": "None",
+          "PropertyFormula": "AtbConstrArgs(PropertyValue('Trade Value'))",
+          "AttributeType": "Pulsar4X.Colonies.CommerceAtbDB"
+        }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentTemplate",
+    "Payload": {
       "UniqueID": "ship-hull",
       "Name": "Ship Hull",
       "Formulas": {
@@ -1041,7 +1127,7 @@
         },
         {
           "Name": "Effect",
-          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens. (Rally/Dread/Jamming need systems not yet built.)'",
+          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens, Rally steadies your battalions (they hold and retreat later), Dread shakes the enemy (they break sooner). (Jamming needs a system not yet built.)'",
           "GuiHint": "GuiEnumSelectionList",
           "EnumTypeName": "Pulsar4X.Combat.AuraEffect",
           "MaxFormula": "5",

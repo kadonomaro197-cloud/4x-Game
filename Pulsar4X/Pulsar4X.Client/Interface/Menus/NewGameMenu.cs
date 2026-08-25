@@ -605,6 +605,14 @@ public class NewGameMenu : PulsarGuiWindow
         // the offset a harsh world needs). Default OFF (engine byte-identical: no colony ships a hospital). Inert until
         // the player BUILDS a hospital — a decision, not a freebie. One line to revert.
         Pulsar4X.Colonies.PopulationProcessor.EnableMedicalMorale = true;
+        // Civic dial — colony RECREATION → morale. A colony's built recreation centers lift its morale (people are
+        // content where there is something to do — a sibling of good health care). Default OFF (engine byte-identical:
+        // no colony ships one). Inert until the player BUILDS one — a decision, not a freebie. One line to revert.
+        Pulsar4X.Colonies.PopulationProcessor.EnableAmenityMorale = true;
+        // Civic dial — colony COMMERCE → income. A colony's built markets earn trade revenue for the treasury each
+        // month (a money source distinct from tax). Default OFF (engine byte-identical: no colony ships one). Inert
+        // until the player BUILDS a market — a decision, not a freebie. One line to revert.
+        Pulsar4X.Colonies.ColonyEconomyProcessor.EnableCommerceIncome = true;
         // Operation Earthfall — the GROUND invasion on-switch (PW). The ground tactical brain (puts battalions in
         // postures the ConquerResolver's infra-raze rung reads) and auto-form-up (loose landed/raised units become
         // commandable battalions) default OFF so the engine suite stays byte-identical; a real menu-started game turns
@@ -640,13 +648,15 @@ public class NewGameMenu : PulsarGuiWindow
         // keeps its ground ore flowing. Inert until per-hex mining (EnablePerHexMining, flipped above) fills a bucket.
         Pulsar4X.GroundCombat.GroundHaulAI.EnableGroundHaulAI = true;
         Pulsar4X.GroundCombat.GroundStormSight.EnableStormSight = true;   // D-planfn-A: storms dim ground sight (radar reach)
-        // E14 auras (Fork B GROUND, slice 3b): a friendly Command/Ward AURA BUILDING on a world (the buildable
-        // "Command Aura Post") buffs every friendly battalion there — firepower (Command) or toughness (Ward). OFF in
-        // the engine suite (byte-identical — ×1.0 / ÷1.0 no-ops); ON so a menu game gets the real battalion buff once
-        // a post is built. Its space twin (EnableAuraCommandBuff) is now on too — the buildable ship "Command Aura
-        // Projector" (Herald Command Cruiser) buffs its whole fleet's firepower (Command) / toughness (Ward). OFF in
-        // the engine suite (byte-identical — no stock fleet mounts a projector there); ON so a menu game gets the buff
-        // once a projector is built.
+        // E14 auras (Fork B GROUND, slice 3b + Rally/Dread steadiness): a friendly AURA BUILDING on a world (the
+        // buildable "Command Aura Post", Effect dial = Command/Ward/Rally/Dread) buffs every friendly battalion there —
+        // firepower (Command), toughness (Ward), or combat MORALE (Rally lifts your steadiness → you hold and retreat
+        // later; an enemy Dread post drops it → you break sooner, via the ground tactical brain's retreat decision). OFF
+        // in the engine suite (byte-identical — ×1.0 / ÷1.0 no-ops, steadiness 1.0); ON so a menu game gets the real
+        // battalion buff once a post is built. Its space twin (EnableAuraCommandBuff) is now on too — the buildable ship
+        // "Command Aura Projector" (Herald Command Cruiser) buffs its whole fleet's firepower (Command) / toughness
+        // (Ward). OFF in the engine suite (byte-identical — no stock fleet mounts a projector there); ON so a menu game
+        // gets the buff once a projector is built.
         Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;
         Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;
         // E12 carriers (playable — the base-mod Sovereign Fleet Carrier mounts a docking bay + ordnance racks; the Kestrel
@@ -1092,6 +1102,12 @@ public class NewGameMenu : PulsarGuiWindow
             // Civic MEDICAL → morale (same as CreateGameCore): built hospitals lift a colony's morale. Default OFF
             // (engine byte-identical); inert until a hospital is built. One line to revert.
             Pulsar4X.Colonies.PopulationProcessor.EnableMedicalMorale = true;
+            // Civic RECREATION → morale (same as CreateGameCore): built recreation centers lift a colony's morale.
+            // Default OFF (engine byte-identical); inert until one is built. One line to revert.
+            Pulsar4X.Colonies.PopulationProcessor.EnableAmenityMorale = true;
+            // Civic COMMERCE → income (same as CreateGameCore): built markets earn trade revenue for the treasury.
+            // Default OFF (engine byte-identical); inert until a market is built. One line to revert.
+            Pulsar4X.Colonies.ColonyEconomyProcessor.EnableCommerceIncome = true;
             // Operation Earthfall — the GROUND invasion on-switch (same as CreateGameCore): the ground tactical brain +
             // auto-form-up, default OFF (engine byte-identical), ON for a DevTest sandbox so the invasion plays out.
             Pulsar4X.GroundCombat.GroundForcesProcessor.EnableGroundTacticalAI = true;
@@ -1108,7 +1124,7 @@ public class NewGameMenu : PulsarGuiWindow
             // E14 auras + E12 carriers — parity with CreateGameCore so the DevTest combat sandbox exercises them too.
             // All default OFF in the engine (byte-identical); ON here so battalion/fleet command buffs and the carrier
             // launch/recover+rearm loop are live in the sandbox. One-line revert each.
-            Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;               // E14: battalion-wide Command/Ward buff
+            Pulsar4X.GroundCombat.GroundCommandAura.EnableGroundCommandAura = true;               // E14: battalion-wide Command/Ward buff + Rally/Dread steadiness
             Pulsar4X.Combat.CombatEngagement.EnableAuraCommandBuff = true;                        // E14: fleet-wide Command/Ward buff
             Pulsar4X.Combat.CombatEngagement.EnableCarrierSortie = true;                          // E12: docked craft held in hangar (undock=launch)
             Pulsar4X.Docking.DockTools.EnableCarrierRearm = true;                                 // E12: refuel + rearm on recovery

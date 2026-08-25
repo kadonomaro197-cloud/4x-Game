@@ -62,6 +62,14 @@ namespace Pulsar4X.GroundCombat
         /// <see cref="Attack"/> and <see cref="MaxHealth"/> at raise; do NOT re-apply it in the resolver. 1.0 = green/
         /// untrained (byte-identical). Lets the UI show "Veteran ×1.3" without recomputing.</summary>
         [JsonProperty] public double TrainingMultiplier { get; internal set; } = 1.0;
+        /// <summary>E14 auras — STEADINESS READOUT (combat morale): the aura-derived multiplier on this unit's effective
+        /// resolve, stamped each tick by <see cref="GroundTacticalBrain"/> from the auras on the body (a friendly RALLY
+        /// building lifts it &gt; 1, an enemy DREAD building drops it &lt; 1, the strongest of each wins —
+        /// <see cref="GroundCommandAura.SteadinessMultFor"/>). <b>READOUT ONLY</b> — the DECISION reads the fresh aura
+        /// value (<c>GroundTacticsContext.Steadiness</c>), not this stamped field, so there's no stale-value bug; this
+        /// lets the client show "rallied ×1.5" / "shaken ×0.7" on a unit token. 1.0 = neutral (no aura / flag off) →
+        /// byte-identical; the initializer is the old-save fallback.</summary>
+        [JsonProperty] public double Steadiness { get; internal set; } = 1.0;
         /// <summary>E13 — the chassis SUBSTRATE (Mechanical / Organic / Synthetic), snapshot of the design's
         /// <see cref="GroundUnitDesign.Substrate"/>. Decides how the unit sustains itself: an <c>Organic</c> unit
         /// self-repairs over time (<see cref="GroundForcesProcessor.OrganicRegenTick"/>, flagged), a Mechanical/Synthetic
@@ -260,7 +268,7 @@ namespace Pulsar4X.GroundCombat
             DesignId = o.DesignId; BackingEntityId = o.BackingEntityId; Name = o.Name; FactionOwnerID = o.FactionOwnerID; RegionIndex = o.RegionIndex;
             UnitType = o.UnitType; Attack = o.Attack; Defense = o.Defense; MaxHealth = o.MaxHealth; Health = o.Health; Range = o.Range;
             Range_m = o.Range_m; Speed_kmh = o.Speed_kmh;
-            UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier; Substrate = o.Substrate;
+            UpkeepCredits = o.UpkeepCredits; TrainingMultiplier = o.TrainingMultiplier; Steadiness = o.Steadiness; Substrate = o.Substrate;
             MaxAmmo_kg = o.MaxAmmo_kg; CurrentAmmo_kg = o.CurrentAmmo_kg;
             Evasion = o.Evasion; Shield = o.Shield; CurrentShield = o.CurrentShield; ShieldRegenFraction = o.ShieldRegenFraction; DamageType = o.DamageType; Penetration = o.Penetration; PerShotEnergy = o.PerShotEnergy;
             if (o.WeaponLoadout != null) { WeaponLoadout = new List<GroundWeaponMount>(); foreach (var m in o.WeaponLoadout) WeaponLoadout.Add(new GroundWeaponMount(m)); }

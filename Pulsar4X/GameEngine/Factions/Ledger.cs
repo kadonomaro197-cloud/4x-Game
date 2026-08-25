@@ -29,7 +29,12 @@ public enum TransactionCategory
     // Colony INSTALLATION upkeep (TIER 2.5 run-cost, the colony echo of StationUpkeep/GroundForceUpkeep) — billed
     // monthly by ColonyEconomyProcessor as a fraction of each installed component's build price. Added at the END so
     // existing integer values stay save-stable.
-    ColonyInstallationUpkeep
+    ColonyInstallationUpkeep,
+    // Colony COMMERCE income (the Civic ▸ Commerce door — a colony's MARKETS/EXCHANGES generate local trade revenue,
+    // distinct from the inter-faction Trade category above and from population TAX) — booked monthly by
+    // ColonyEconomyProcessor from installed commerce buildings. Added at the END so existing integer values stay
+    // save-stable.
+    ColonyCommerce
 }
 
 public class Transaction

@@ -37,6 +37,28 @@
   {
     "Type": "ComponentDesign",
     "Payload": {
+      "UniqueId": "default-design-recreation-center",
+      "Name": "Recreation Center",
+      "TemplateId": "recreation-center",
+      "Properties": [
+        { "Key": "Amenity Rating", "Value": 10 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
+      "UniqueId": "default-design-market",
+      "Name": "Commercial Exchange",
+      "TemplateId": "commerce-market",
+      "Properties": [
+        { "Key": "Trade Value", "Value": 1000 }
+      ]
+    }
+  },
+  {
+    "Type": "ComponentDesign",
+    "Payload": {
       "UniqueId": "default-design-hydroponics-arcology",
       "Name": "Hydroponics Arcology",
       "TemplateId": "food-production",

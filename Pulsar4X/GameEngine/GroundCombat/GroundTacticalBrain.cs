@@ -56,6 +56,11 @@ namespace Pulsar4X.GroundCombat
                     if (FormationHasPlayerOrder(formation)) continue;   // §3.5 — a player order queue always overrides
 
                     var ctx = BuildContext(body, forces, regionsDB, formation, factionEntity, fi);
+                    // E14 auras — stamp the aura steadiness onto each member unit as a READOUT (the client shows
+                    // "rallied ×1.5" / "shaken ×0.7" on the token). The DECISION reads ctx.Steadiness (fresh), so this
+                    // stamp is display-only; 1.0 when no aura → byte-identical.
+                    foreach (var u in GroundFormationTools.MembersOf(forces, formation))
+                        if (u != null) u.Steadiness = ctx.Steadiness;
                     var posture = GroundTactics.DecidePosture(ctx);
                     // Audit M2 — the fog-honest own/enemy odds ratio the posture hysteresis is measured from (999 = no
                     // detected enemy). Passed into ApplyStance so a stance holds against tick-to-tick jitter.
@@ -86,6 +91,9 @@ namespace Pulsar4X.GroundCombat
                 IsHomelandDefender = IsHomelandOf(body, factionId),
                 HasOrbitalSupport = HasOrbitalSupport(body, factionId),
                 Blind = GroundThreat.IsBlind(body, factionId, region),
+                // E14 auras — the battalion's combat morale from the body's Rally/Dread buildings (friendly Rally lifts,
+                // enemy Dread drops). Neutral 1.0 when the aura gate is off or nothing projects → byte-identical.
+                Steadiness = GroundCommandAura.SteadinessMultFor(body, factionId),
             };
 
             // Fortification + terrain of the battalion's region (only meaningful when the battalion HOLDS it).

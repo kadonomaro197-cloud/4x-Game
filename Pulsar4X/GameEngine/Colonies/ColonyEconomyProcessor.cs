@@ -37,12 +37,22 @@ namespace Pulsar4X.Colonies
         /// sensible against the existing tax income; tunable in one place.</summary>
         public const decimal UpkeepRatePerMonth = 0.01m;
 
+        /// <summary>
+        /// The Civic ▸ Commerce door — a colony's MARKETS/EXCHANGES (components carrying <see cref="CommerceAtbDB"/>)
+        /// earn local trade revenue each month, booked as <c>TransactionCategory.ColonyCommerce</c> income. Default OFF
+        /// → the engine suite is byte-identical (no colony ships a market, and a market-less colony earns 0); NewGameMenu
+        /// flips it ON for a menu game (the EnableInstallationUpkeep / EnableEmploymentMorale pattern). A NEW money source
+        /// distinct from population TAX and from the standing inter-faction Trade income.
+        /// </summary>
+        public static bool EnableCommerceIncome = false;
+
         public void Init(Game game) { }
 
         public void ProcessEntity(Entity entity, int deltaSeconds)
         {
             CollectTax(entity);
             BillInstallationUpkeep(entity);
+            BillCommerceIncome(entity);
         }
 
         public int ProcessManager(EntityManager manager, int deltaSeconds)
@@ -52,8 +62,43 @@ namespace Pulsar4X.Colonies
             {
                 CollectTax(colony);
                 BillInstallationUpkeep(colony);
+                BillCommerceIncome(colony);
             }
             return colonies.Count;
+        }
+
+        /// <summary>The colony's total monthly commerce income = Σ over installed, enabled components of
+        /// (<see cref="CommerceAtbDB.TradeValue"/> × health). Health-scaled like InstallationUpkeep, and 0
+        /// (byte-identical) for a colony with no market building.</summary>
+        public static decimal CommerceIncome(ComponentInstancesDB comps)
+        {
+            if (comps == null) return 0m;
+            return (decimal)comps.GetTotalCommerce();
+        }
+
+        /// <summary>Book this colony's commerce income as monthly INCOME on the owning faction's ledger. Mirrors
+        /// CollectTax / BillInstallationUpkeep exactly (defensive: capture-mutated FactionOwnerID → TryGetValue, never a
+        /// hard index that would freeze the sim clock; unowned/neutral colony earns for no one).</summary>
+        internal static void BillCommerceIncome(Entity colony)
+        {
+            if (!EnableCommerceIncome) return;
+            if (!colony.TryGetDataBlob<ComponentInstancesDB>(out var comps)) return;
+
+            decimal income = CommerceIncome(comps);
+            if (income <= 0m) return;
+
+            int factionId = colony.FactionOwnerID;
+            if (factionId < 0) return;
+            var game = colony.Manager?.Game;
+            if (game == null) return;
+            if (!game.Factions.TryGetValue(factionId, out var faction)) return;
+            if (!faction.TryGetDataBlob<FactionInfoDB>(out var factionInfo)) return;
+
+            factionInfo.Money.AddIncome(
+                colony.Manager.StarSysDateTime,
+                TransactionCategory.ColonyCommerce,
+                $"Commerce at {colony.GetName(factionId)}",
+                income);
         }
 
         /// <summary>The colony's total monthly installation upkeep = Σ over installed, enabled components of

@@ -71,6 +71,13 @@ namespace Pulsar4X.GroundCombat
         public int AdvanceRegion;
         /// <summary>Is the battalion blind (an adjacent region is un-scouted)? Biases cautious (treat unknown as risk).</summary>
         public bool Blind;
+        /// <summary>E14 auras — the STEADINESS (combat morale) multiplier on this battalion's PERCEIVED strength: a
+        /// friendly RALLY aura lifts it &gt; 1 (holds at worse odds / commits bolder), an enemy DREAD aura drops it &lt; 1
+        /// (breaks sooner), from <see cref="GroundCommandAura.SteadinessMultFor"/>. <b>Unset (0) reads as neutral 1.0</b>
+        /// (the <c>&lt;= 0 ? 1.0</c> sentinel in <see cref="GroundTactics.DecidePosture"/>) — so every context that
+        /// doesn't set it is byte-identical. Scales the retreat/commit thresholds, NOT the damage dealt (that's
+        /// Command/Ward), and NOT the displayed own/enemy numbers.</summary>
+        public double Steadiness;
     }
 
     /// <summary>
@@ -139,19 +146,26 @@ namespace Pulsar4X.GroundCombat
         public static GroundPosture DecidePosture(GroundTacticsContext ctx)
         {
             bool dry = ctx.HasAmmoWeapons && ctx.AmmoFraction <= DryAmmoThreshold;
-            double own = ctx.OwnStrength;
+            double own = ctx.OwnStrength;                                         // RAW strength — the displayed number
             double enemy = ctx.EnemyStrength;
             bool haveThreat = enemy > 0.0;
+
+            // E14 auras — STEADINESS (combat morale) scales the PERCEIVED odds, not the displayed strength: a rallied
+            // battalion (>1) fights as if stronger (holds at worse odds, commits bolder), a dreaded one (<1) as if weaker
+            // (breaks sooner). Unset (0) → neutral 1.0 (the sentinel), so every context that doesn't set it is byte-
+            // identical. effOwn drives the retreat/commit thresholds; the Reason strings keep RAW own for an honest readout.
+            double steadiness = ctx.Steadiness <= 0.0 ? 1.0 : ctx.Steadiness;
+            double effOwn = own * steadiness;
 
             // The odds bar this faction demands (the fleet AI's own curve), nudged by orbital support (down) + blindness (up).
             double required = CombatRisk.RequiredStrengthRatio(ctx.RiskTrait);
             if (ctx.HasOrbitalSupport) required *= OrbitalRequiredFactor;
             if (ctx.Blind) required *= BlindCautionFactor;
 
-            double oddsRatio = haveThreat ? own / enemy : double.PositiveInfinity;
-            bool losingHard = haveThreat && own * RetreatLossRatio <= enemy;      // enemy ≥ own × 4
+            double oddsRatio = haveThreat ? effOwn / enemy : double.PositiveInfinity;
+            bool losingHard = haveThreat && effOwn * RetreatLossRatio <= enemy;   // enemy ≥ (morale-adjusted) own × 4
             bool outnumbered = haveThreat && oddsRatio < ParityFloor;            // clearly fewer guns than the foe
-            bool canCommit = haveThreat ? (own >= enemy * required)             // I have the edge my personality demands
+            bool canCommit = haveThreat ? (effOwn >= enemy * required)          // I have the edge my personality demands
                                         : !ctx.Blind;                           // no threat + scouted = free to press; blind = don't
 
             // ── 1) LOSING HARD (both roles, most severe) — fighting withdrawal, or a cornered last stand. ──

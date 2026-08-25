@@ -114,6 +114,46 @@ namespace Pulsar4X.Extensions
         }
 
         /// <summary>
+        /// The total AMENITY (recreation / leisure strength) the colony's installed recreation buildings provide, from
+        /// <see cref="Pulsar4X.Colonies.AmenityAtbDB"/>, scaled by component health (a bomb-damaged arena entertains
+        /// fewer). Fed into the morale amenity term (PopulationProcessor, behind
+        /// <see cref="Pulsar4X.Colonies.PopulationProcessor.EnableAmenityMorale"/>). Zero when no installation provides
+        /// leisure — so it's neutral until a colony builds one (the grave rung: bombard it, this drops). Mirrors
+        /// <see cref="GetTotalMedical"/>.
+        /// </summary>
+        public static double GetTotalAmenity(this ComponentInstancesDB componentInstances)
+        {
+            double amenity = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.AmenityAtbDB)))
+            {
+                double perComponent = design.GetAttribute<Pulsar4X.Colonies.AmenityAtbDB>().AmenityRating;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    amenity += perComponent * component.HealthPercent;
+            }
+            return amenity;
+        }
+
+        /// <summary>
+        /// The total COMMERCE (monthly trade revenue, credits) the colony's installed market buildings generate, from
+        /// <see cref="Pulsar4X.Colonies.CommerceAtbDB"/>, scaled by component health (a bomb-damaged exchange trades
+        /// less). Booked as income by <see cref="Pulsar4X.Colonies.ColonyEconomyProcessor"/> (behind
+        /// <see cref="Pulsar4X.Colonies.ColonyEconomyProcessor.EnableCommerceIncome"/>). Zero when no installation
+        /// provides commerce — so it's neutral until a colony builds a market (the grave rung: bombard it, this drops).
+        /// Mirrors <see cref="GetTotalAmenity"/>.
+        /// </summary>
+        public static double GetTotalCommerce(this ComponentInstancesDB componentInstances)
+        {
+            double commerce = 0.0;
+            foreach (var design in componentInstances.GetDesignsByType(typeof(Pulsar4X.Colonies.CommerceAtbDB)))
+            {
+                double perComponent = design.GetAttribute<Pulsar4X.Colonies.CommerceAtbDB>().TradeValue;
+                foreach (var component in componentInstances.GetComponentsBySpecificDesign(design.UniqueID).Where(c => c.IsEnabled))
+                    commerce += perComponent * component.HealthPercent;
+            }
+            return commerce;
+        }
+
+        /// <summary>
         /// The colony's average food QUALITY — the OUTPUT-WEIGHTED mean quality across installed food components (so a
         /// tiny gourmet dome doesn't outweigh the bulk farms that actually feed everyone). Health-scaled like the output.
         /// Returns 0 when there is no food production (the caller reads that as "no quality bonus"). M5c.

@@ -1375,3 +1375,34 @@ existing `AllFormationsFor`.
   across all four host kinds (prior decision: its cosmetic panel delta is deliberately NOT blind-edited — a
   critical window with the Window.End/cascade/printf landmines). **Awaiting the developer's pick** of which
   engine-pending feature to build (or a correction if I've mis-read the objective).
+
+- **2026-08-25, session — the THREE SHELVED-FEATURE doors built ("do all of them in one go").** With the honest
+  finding above established (no large body of safe "just code it" designer DIALS remains — the missing pieces are
+  engine-pending FEATURES), the developer's call was to build them. Landed all three shelved Civic/Aura features as
+  additive, flag-gated, byte-identical slices (each with a CI gauge), in one batch:
+
+  1. **Civic ▸ RECREATION** (`AmenityAtbDB`) — a colony builds **recreation centers**; their `AmenityRating` (summed,
+     health-scaled via `GetTotalAmenity`) is a NEW positive morale term (the leisure sibling of the Medical health
+     term), capped at `ColonyMoraleDB.MaxAmenityBonus` 20, behind `PopulationProcessor.EnableAmenityMorale` (default
+     off, `NewGameMenu`-on; read by BOTH morale gatherings). Clones the proven-green `MedicalAtbDB` pattern exactly.
+     Six-point registration (`recreation-center` template + `default-design-recreation-center` + Earth). Gauge
+     `AmenityMoraleTests` (pure math + cradle-to-grave + grave rung).
+  2. **Civic ▸ COMMERCE** (`CommerceAtbDB`) — a colony builds **commercial exchanges**; their `TradeValue`
+     (credits/month, summed via `GetTotalCommerce`) is booked as INCOME on the faction ledger by
+     `ColonyEconomyProcessor.BillCommerceIncome` under the NEW `TransactionCategory.ColonyCommerce` (distinct from
+     TAX and inter-faction Trade), behind `EnableCommerceIncome` (default off, `NewGameMenu`-on). The income wire
+     mirrors `CollectTax`/`BillInstallationUpkeep` (defensive TryGetValue on capture-mutated `FactionOwnerID`).
+     Six-point registration (`commerce-market` + `default-design-market` + Earth). Gauge `CommerceIncomeTests`
+     (calibration-independent RELATIONSHIP asserts + grave rung).
+  3. **Aura ▸ RALLY/DREAD** (the un-shelved shelved aura effects) — Rally/Dread act on a battalion's combat MORALE
+     (not firepower/toughness = Command/Ward). `GroundCommandAura.SteadinessMultFor` = `1 + friendly-Rally −
+     enemy-Dread` (clamped [0.25, 2.0], take-best-not-sum) feeds `GroundTacticsContext.Steadiness` →
+     `GroundTactics.DecidePosture`'s `effOwn = own × steadiness`, so a rallied battalion HOLDS at odds a neutral one
+     flees and a dreaded one BREAKS sooner — riding the EXISTING retreat decision (no new rout state machine). New
+     per-unit `GroundUnit.Steadiness` readout (default 1.0, L12 copy-ctor), stamped by `GroundTacticalBrain`. Same
+     `EnableGroundCommandAura` gate (client-on); unset context reads 1.0 via a `<=0?1.0` sentinel → byte-identical
+     twice over. NO new JSON — the `aura-command-post` Effect dial already covers Rally/Dread and Target covers Foes.
+     Gauge `GroundSteadinessAuraTests` (pure read + the decision consequence + byte-identity tripwire).
+
+  Docs updated in the same batch (Colonies/GroundCombat/Tests CLAUDE.md rows; the `AuraEffect` enum + template Effect
+  description; the two `NewGameMenu` aura comments). Pushed as one batch for the single CI run.

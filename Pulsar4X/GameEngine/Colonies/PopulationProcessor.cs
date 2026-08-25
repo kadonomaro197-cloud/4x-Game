@@ -48,6 +48,11 @@ namespace Pulsar4X.Colonies
         /// </summary>
         public static bool EnableMedicalMorale = false;
 
+        /// <summary>Master gate for the RECREATION → morale civic term (the Amenity dial). OFF (default) →
+        /// AmenityStrength reads 0 → byte-identical; <c>NewGameMenu</c> flips it on with the other civic terms. Grave
+        /// rung: bombard the recreation building → GetTotalAmenity drops → morale falls. Mirrors <see cref="EnableMedicalMorale"/>.</summary>
+        public static bool EnableAmenityMorale = false;
+
         internal void GrowPopulation(Entity colony)
         {
             // Get current population
@@ -130,7 +135,9 @@ namespace Pulsar4X.Colonies
                     // M5c: the colony's output-weighted average food quality → a morale bonus above "not starving".
                     FoodQuality = instancesDB.GetAverageFoodQuality(),
                     // Medical civic dial (flag-gated OFF → byte-identical): the colony's installed hospitals lift morale.
-                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0
+                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0,
+                    // Recreation civic dial (flag-gated OFF → byte-identical): the colony's amenity buildings lift morale.
+                    AmenityStrength = EnableAmenityMorale ? instancesDB.GetTotalAmenity() : 0.0
                 }, moraleDB.Factors);
                 // Government MODULATOR (#30): the regime's MoraleWeight scales how hard public opinion pulls
                 // migration (People-end amplifies it, One-Ruler-end damps it). Neutral (×1.0) at the default Mid
@@ -269,7 +276,9 @@ namespace Pulsar4X.Colonies
                     FoodShortage = foodShortage,
                     FoodQuality = instancesDB.GetAverageFoodQuality(),
                     // Medical civic dial (flag-gated OFF → byte-identical): keep in sync with GrowPopulation above.
-                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0
+                    HealthStrength = EnableMedicalMorale ? instancesDB.GetTotalMedical() : 0.0,
+                    // Recreation civic dial (flag-gated OFF → byte-identical): keep in sync with GrowPopulation above.
+                    AmenityStrength = EnableAmenityMorale ? instancesDB.GetTotalAmenity() : 0.0
                 }, null);
             }
             catch
