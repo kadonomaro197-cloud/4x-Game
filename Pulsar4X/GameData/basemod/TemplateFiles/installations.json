@@ -1127,7 +1127,7 @@
         },
         {
           "Name": "Effect",
-          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens, Rally steadies your battalions (they hold and retreat later), Dread shakes the enemy (they break sooner). (Jamming needs a system not yet built.)'",
+          "DescriptionFormula": "'What the field does: Command lifts firepower, Ward toughens, Rally steadies your battalions (they hold and retreat later), Dread shakes the enemy (they break sooner), Jamming dims the enemy radar (their units reveal less ground). Aim Rally/Ward/Command at Friends, Dread/Jamming at Foes.'",
           "GuiHint": "GuiEnumSelectionList",
           "EnumTypeName": "Pulsar4X.Combat.AuraEffect",
           "MaxFormula": "5",

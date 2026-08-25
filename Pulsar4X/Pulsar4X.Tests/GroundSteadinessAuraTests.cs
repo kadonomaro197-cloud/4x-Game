@@ -8,14 +8,16 @@ using Pulsar4X.GroundCombat;
 namespace Pulsar4X.Tests
 {
     /// <summary>
-    /// E14 — AURAS, the RALLY / DREAD steadiness effects (OPERATION BLUEPRINT-TO-STEEL, the un-shelved shelved effects).
-    /// Rally/Dread act on a battalion's combat MORALE, not its firepower/toughness (those are Command/Ward): a friendly
-    /// RALLY building lifts a faction's <see cref="GroundCommandAura.SteadinessMultFor"/> above 1, an ENEMY DREAD building
-    /// drops it below 1, and that steadiness scales the ground tactical brain's PERCEIVED odds
+    /// E14 — AURAS, the un-shelved shelved effects: RALLY / DREAD (steadiness) + JAMMING (sight) (OPERATION
+    /// BLUEPRINT-TO-STEEL). Rally/Dread act on a battalion's combat MORALE, not its firepower/toughness (those are
+    /// Command/Ward): a friendly RALLY building lifts a faction's <see cref="GroundCommandAura.SteadinessMultFor"/> above
+    /// 1, an ENEMY DREAD building drops it below 1, and that steadiness scales the ground tactical brain's PERCEIVED odds
     /// (<see cref="GroundTactics.DecidePosture"/>) — so a rallied battalion HOLDS at odds a neutral one flees, and a
-    /// dreaded one BREAKS at odds a neutral one holds. No new rout state machine — it rides the existing retreat
-    /// decision. Flag-gated (<see cref="GroundCommandAura.EnableGroundCommandAura"/>) default OFF, and an unset
-    /// steadiness reads neutral 1.0 → byte-identical. Engine-only → CI.
+    /// dreaded one BREAKS at odds a neutral one holds (riding the existing retreat decision, no new rout state machine).
+    /// JAMMING acts on SIGHT (the aura twin of a storm): an enemy Jamming building dims a faction's
+    /// <see cref="GroundCommandAura.JammingMultFor"/> below 1, shrinking its units' radar reveal. Flag-gated
+    /// (<see cref="GroundCommandAura.EnableGroundCommandAura"/>) default OFF, and unset/neutral reads 1.0 → byte-identical.
+    /// Engine-only → CI.
     /// </summary>
     [TestFixture]
     public class GroundSteadinessAuraTests
@@ -108,6 +110,36 @@ namespace Pulsar4X.Tests
             GroundCommandAura.EnableGroundCommandAura = true;
             Assert.That(GroundCommandAura.SteadinessMultFor(body, s.Faction.Id), Is.EqualTo(1.5).Within(1e-9),
                 "two rally beacons (0.3 + 0.5) → 1 + best(0.5) = 1.5, not 1 + 0.8");
+        }
+
+        // ─────────────────────────── JAMMING (the sight debuff) ───────────────────────────
+
+        [Test]
+        [Description("JammingMultFor: an ENEMY Jamming building (Foes-targeted) dims the sight of the faction it's aimed "
+                     + "at, but does NOT dim its own owner's sight. Flag-gated. Clamped so it never fully blinds.")]
+        public void EnemyJamming_DimsTargetSight_NotItsOwner_FlagGatedAndClamped()
+        {
+            var s = TestScenario.CreateWithColony();
+            var body = s.StartingBody;
+            InstallAura(s, AuraEffect.Jamming, 0.5, AuraTarget.Foes);   // the colony faction projects a jam bubble at foes
+
+            GroundCommandAura.EnableGroundCommandAura = true;
+            // The ENEMY faction's units see less — sight ×(1 - 0.5).
+            Assert.That(GroundCommandAura.JammingMultFor(body, EnemyFaction), Is.EqualTo(0.5).Within(1e-9),
+                "an enemy Jamming 0.5 aimed at foes → sight ×0.5 for the foe");
+            // The OWNER of the jammer isn't blinded by its own field.
+            Assert.That(GroundCommandAura.JammingMultFor(body, s.Faction.Id), Is.EqualTo(1.0).Within(1e-9),
+                "a faction's own Jamming building doesn't dim its own sight");
+
+            GroundCommandAura.EnableGroundCommandAura = false;
+            Assert.That(GroundCommandAura.JammingMultFor(body, EnemyFaction), Is.EqualTo(1.0).Within(1e-9),
+                "flag off → no dimming (byte-identical)");
+
+            // An overwhelming jam clamps at MinJammingSight (never fully blind from one aura).
+            GroundCommandAura.EnableGroundCommandAura = true;
+            InstallAura(s, AuraEffect.Jamming, 5.0, AuraTarget.Foes);
+            Assert.That(GroundCommandAura.JammingMultFor(body, EnemyFaction),
+                Is.EqualTo(GroundCommandAura.MinJammingSight).Within(1e-9), "jamming clamps at MinJammingSight");
         }
 
         // ─────────────────────────── the decision consequence (pure DecidePosture) ───────────────────────────

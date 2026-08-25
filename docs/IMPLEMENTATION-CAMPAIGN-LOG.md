@@ -1406,3 +1406,35 @@ existing `AllFormationsFor`.
 
   Docs updated in the same batch (Colonies/GroundCombat/Tests CLAUDE.md rows; the `AuraEffect` enum + template Effect
   description; the two `NewGameMenu` aura comments). Pushed as one batch for the single CI run.
+
+- **2026-08-25, session (cont.) — "do all of them in one go" round 2: Aura JAMMING + the honest triage of what's left.**
+  The developer re-issued "do all of them in one go" after the three shelved features landed. I investigated the rest of
+  the engine-pending list against real source (Prime Directive — check the other end) and built the one clearly-safe,
+  cradle-to-grave piece, while triaging the rest honestly rather than blind-building risky machinery:
+
+  - **Aura ▸ JAMMING (built — the LAST shelved aura effect).** `GroundCommandAura.JammingMultFor(body, factionId)` =
+    `1 − (best enemy Jamming aimed at us)`, clamped [`MinJammingSight` 0.1, 1.0], wired into `GroundSensors`
+    (`RadarReachHexes` + `RevealFromUnits`, beside the storm multiplier) so an enemy Jamming building dims your units'
+    radar reveal — the aura twin of the storm→sight dimming (D-planfn-A). Same `EnableGroundCommandAura` gate (client-on)
+    → 1.0 off / no-jammer → byte-identical. No new JSON (the `aura-command-post` Effect/Target dials already cover it).
+    Gauge `GroundSteadinessAuraTests` (Jamming pure read + clamp). **So all four non-Command/Ward aura effects now have a
+    ground fold** (Rally/Dread→steadiness, Jamming→sight; Command/Ward→firepower/toughness were already live). Their SPACE
+    folds remain later slices.
+
+  - **Civic ▸ RESIDENCY — NOT a gap (Prime-Directive catch, did NOT build).** The civic door's "Residency" job maps to a
+    building carrying `PopulationSupportAtbDB` (capacity) + `HousingAtbDB` (comfort) — and the base-mod **`infrastructure`**
+    template (a colony PlanetInstallation) **already carries BOTH** (verified in `installations.json`). So residency is
+    already designable/buildable; adding a duplicate template would violate CONVENTIONS §6 (don't invent parallel
+    systems). With Recreation + Commerce built and Residency already covered, **the Civic door is complete** across its 9
+    jobs (Food/LifeSupport/Habitat/Officers/Medical/Recreation/Security/Admin/Commerce), except a low-value 2-dial
+    *refinement* on medical/security (a 2nd "capacity/coverage" dial) — skipped because the core morale/legitimacy effect
+    is already live via the single dial, and adding a 2nd `*Atb` ctor arg is an L13 save-load risk for little gain.
+
+  - **DEFERRED with a recommendation (need a real design ruling / large system — NOT safe to blind-build in one batch):**
+    Command espionage covert-action seat (a whole intelligence subsystem — agents, ops catalog, detection bets);
+    Propulsion FTL jump-lane travel (a large navigation feature on top of the existing jump points); Enhancers
+    veteran/experience compounding + Industrial Training Depot (a runtime veterancy-accrual model that changes combat
+    outcomes — needs an accrual rule + calibration ruling). Each is real machinery whose *behaviour* is a developer
+    decision; building them half-baked would violate the cradle-to-grave / decision-earns-weight law. The Logistical
+    carrier LAUNCH verb is already built (`EnableCarrierSortie` + `DockOrder`); only a client button / AI rung remain
+    (incremental). Surfaced to the developer for a pick.

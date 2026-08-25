@@ -15,14 +15,17 @@ namespace Pulsar4X.Combat
     /// sooner (<c>GroundCommandAura.SteadinessMultFor</c> → <c>GroundTactics.DecidePosture</c> → <c>GroundUnit.Steadiness</c>).
     /// Their SPACE fold (a fleet-morale/retreat channel) is still a later slice. <b>Jamming</b>'s enemy-detection debuff
     /// has no fold on either side yet — the one still-shelved effect. All values are kept (not deleted) so saves
-    /// referencing them load. The base-mod aura templates default to Command/Ward; a designer picks Rally/Dread (ground)
-    /// on the same Effect dial.</para></summary>
+    /// referencing them load. <b>Jamming</b> now dims enemy ground SIGHT (an enemy jam bubble shrinks your units' radar
+    /// reveal — <c>GroundCommandAura.JammingMultFor</c> → <c>GroundSensors</c>, the aura twin of a storm), so all four
+    /// non-Command/Ward effects have a ground fold; their SPACE folds (fleet morale + sensor jam) are later slices. The
+    /// base-mod aura templates default to Command/Ward; a designer picks Rally/Dread/Jamming (ground) on the same Effect
+    /// dial.</para></summary>
     public enum AuraEffect : byte
     {
         Rally = 0,   // friendly morale/steadiness UP     (LIVE on GROUND — GroundUnit.Steadiness → retreat decision)
         Dread,       // enemy    morale/steadiness DOWN    (LIVE on GROUND — GroundUnit.Steadiness → retreat decision)
         Command,     // friendly firepower/coordination UP (LIVE — feeds BonusesDB Firepower, ship + ground)
-        Jamming,     // enemy    detection/accuracy DOWN   (SHELVED — no fold wired yet)
+        Jamming,     // enemy    detection/accuracy DOWN   (LIVE on GROUND — dims enemy radar reveal via GroundSensors)
         Ward         // friendly damage-mitigation UP      (LIVE — feeds BonusesDB Toughness, ship + ground)
     }
 

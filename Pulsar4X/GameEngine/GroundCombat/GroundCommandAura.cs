@@ -116,5 +116,51 @@ namespace Pulsar4X.GroundCombat
             if (steadiness > MaxSteadiness) steadiness = MaxSteadiness;
             return steadiness;
         }
+
+        // ── JAMMING (E14 — the last shelved aura effect: enemy detection/accuracy DOWN) ──────────────────────────────
+        // Jamming acts on SIGHT, not morale or firepower — the aura twin of a storm dimming ground radar
+        // (GroundStormSight). An ENEMY Jamming building on the body dims a faction's units' radar reach, so a jammed
+        // scout reveals LESS ground. Read by GroundSensors (RadarReachHexes + RevealFromUnits) alongside the storm
+        // multiplier. Same EnableGroundCommandAura gate → 1.0 off, and 1.0 with no enemy Jamming building → byte-identical.
+
+        /// <summary>Floor on the jamming sight multiplier — a heavily-jammed unit still sees its own ground and a little
+        /// around it (never fully blind from a single aura).</summary>
+        public const double MinJammingSight = 0.1;
+
+        /// <summary>
+        /// The SIGHT multiplier (0..1) enemy JAMMING auras impose on <paramref name="factionId"/>'s units' radar reach on
+        /// <paramref name="body"/>: <c>1 − (best ENEMY <see cref="AuraEffect.Jamming"/> magnitude aimed at us)</c>, clamped
+        /// to [<see cref="MinJammingSight"/>, 1.0]. Only counts buildings owned by a DIFFERENT faction whose field is
+        /// aimed at foes (Foes/Everyone). Returns 1.0 (no dimming) when the gate is off, the body is null, or no enemy
+        /// jammer exists → byte-identical. Defensive; never throws. The aura twin of <c>GroundStormSight.SightMultAt</c>.
+        /// </summary>
+        public static double JammingMultFor(Entity body, int factionId)
+        {
+            if (!EnableGroundCommandAura || body == null)
+                return 1.0;
+
+            double jam = 0.0;   // best ENEMY jamming aimed at us
+            foreach (var comps in GroundBuildings.BodyComponentStores(body))
+            {
+                if (comps?.OwningEntity == null || comps.OwningEntity.FactionOwnerID == factionId)
+                    continue;   // an enemy field only — my own jammer doesn't blind me
+                if (!comps.TryGetComponentsByAttribute<AuraAtb>(out var list))
+                    continue;
+                foreach (var inst in list)
+                {
+                    if (inst?.Design == null || !inst.Design.TryGetAttribute<AuraAtb>(out AuraAtb atb))
+                        continue;
+                    if (atb.Effect != AuraEffect.Jamming || atb.Target == AuraTarget.Friends)
+                        continue;   // must be a Jamming field aimed at foes (i.e. at us)
+                    if (atb.Magnitude > jam)
+                        jam = atb.Magnitude;
+                }
+            }
+
+            double mult = 1.0 - jam;
+            if (mult < MinJammingSight) mult = MinJammingSight;
+            if (mult > 1.0) mult = 1.0;
+            return mult;
+        }
     }
 }
